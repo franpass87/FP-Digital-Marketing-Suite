@@ -14,6 +14,7 @@ use FP\DigitalMarketing\Admin\ClienteMeta;
 use FP\DigitalMarketing\Admin\Settings;
 use FP\DigitalMarketing\Admin\Reports;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
+use FP\DigitalMarketing\Helpers\ReportScheduler;
 
 /**
  * Main application class
@@ -85,6 +86,9 @@ class DigitalMarketingSuite {
 		$this->cliente_meta->init();
 		$this->settings->init();
 		$this->reports->init();
+
+		// Initialize report scheduler.
+		ReportScheduler::init();
 
 		// Ensure metrics cache table exists (in case of manual activation issues).
 		$this->ensure_metrics_cache_table();

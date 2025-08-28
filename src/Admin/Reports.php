@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace FP\DigitalMarketing\Admin;
 
 use FP\DigitalMarketing\Helpers\DataSources;
+use FP\DigitalMarketing\Helpers\ReportGenerator;
+use FP\DigitalMarketing\Helpers\ReportScheduler;
 
 /**
  * Reports class for plugin administration
@@ -32,6 +34,7 @@ class Reports {
 	 */
 	public function init(): void {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		add_action( 'admin_init', [ $this, 'handle_report_actions' ] );
 	}
 
 	/**
@@ -52,6 +55,58 @@ class Reports {
 	}
 
 	/**
+	 * Handle report-related actions (download PDF, generate reports)
+	 *
+	 * @return void
+	 */
+	public function handle_report_actions(): void {
+		if ( ! isset( $_GET['page'] ) || $_GET['page'] !== self::PAGE_SLUG ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Handle PDF download
+		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_pdf' && isset( $_GET['client_id'] ) ) {
+			$this->download_pdf_report( intval( $_GET['client_id'] ) );
+		}
+
+		// Handle manual report generation
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_reports' && wp_verify_nonce( $_POST['_wpnonce'], 'generate_reports' ) ) {
+			$count = ReportScheduler::trigger_manual_generation();
+			add_action( 'admin_notices', function() use ( $count ) {
+				echo '<div class="notice notice-success is-dismissible"><p>';
+				printf( __( 'Generati %d report con successo!', 'fp-digital-marketing' ), $count );
+				echo '</p></div>';
+			} );
+		}
+	}
+
+	/**
+	 * Download PDF report for a client
+	 *
+	 * @param int $client_id Client ID
+	 * @return void
+	 */
+	private function download_pdf_report( int $client_id ): void {
+		$report_data = ReportGenerator::generate_demo_report_data( $client_id );
+		$pdf_content = ReportGenerator::generate_pdf_report( $report_data );
+
+		$filename = sprintf( 'digital-marketing-report-%d-%s.pdf', $client_id, date( 'Y-m-d' ) );
+
+		header( 'Content-Type: application/pdf' );
+		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+		header( 'Content-Length: ' . strlen( $pdf_content ) );
+
+		echo $pdf_content;
+		exit;
+	}
+	 *
+	 * @return void
+	 */
+	/**
 	 * Render the reports page
 	 *
 	 * @return void
@@ -62,6 +117,13 @@ class Reports {
 			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
 		}
 
+		// Get clients for report generation
+		$clientes = get_posts( [
+			'post_type'      => 'cliente',
+			'post_status'    => 'publish',
+			'posts_per_page' => 10,
+		] );
+
 		// Get data sources for debug output.
 		$all_data_sources = fp_dms_get_data_sources();
 		$analytics_sources = fp_dms_get_data_sources( DataSources::TYPE_ANALYTICS );
@@ -69,14 +131,82 @@ class Reports {
 		$planned_sources = DataSources::get_data_sources_by_status( 'planned' );
 		$data_source_types = DataSources::get_data_source_types();
 
+		// Generate demo report for preview
+		$demo_report_data = ReportGenerator::generate_demo_report_data( 1 );
+		$demo_html = ReportGenerator::generate_html_report( $demo_report_data );
+
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
 			
+			<!-- Report Generation Section -->
+			<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+				<h2><?php esc_html_e( 'Generazione Report Automatici', 'fp-digital-marketing' ); ?></h2>
+				
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+					<div class="fp-dms-card" style="background: #f8f9fa; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
+						<h3 style="margin-top: 0;"><?php esc_html_e( 'Scheduler Status', 'fp-digital-marketing' ); ?></h3>
+						<?php if ( ReportScheduler::is_scheduled() ) : ?>
+							<p><span style="color: #00a32a;">●</span> <?php esc_html_e( 'Attivo', 'fp-digital-marketing' ); ?></p>
+							<p><strong><?php esc_html_e( 'Prossima esecuzione:', 'fp-digital-marketing' ); ?></strong><br>
+							<?php echo esc_html( ReportScheduler::get_next_scheduled_time() ); ?></p>
+						<?php else : ?>
+							<p><span style="color: #d63638;">●</span> <?php esc_html_e( 'Non programmato', 'fp-digital-marketing' ); ?></p>
+						<?php endif; ?>
+					</div>
+					
+					<div class="fp-dms-card" style="background: #f8f9fa; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
+						<h3 style="margin-top: 0;"><?php esc_html_e( 'Clienti Disponibili', 'fp-digital-marketing' ); ?></h3>
+						<p><strong><?php echo count( $clientes ); ?></strong> <?php esc_html_e( 'clienti trovati', 'fp-digital-marketing' ); ?></p>
+					</div>
+				</div>
+
+				<div style="margin: 20px 0;">
+					<form method="post" style="display: inline-block;">
+						<?php wp_nonce_field( 'generate_reports' ); ?>
+						<input type="hidden" name="action" value="generate_reports">
+						<button type="submit" class="button button-primary">
+							<?php esc_html_e( 'Genera Report Manualmente', 'fp-digital-marketing' ); ?>
+						</button>
+					</form>
+				</div>
+
+				<?php if ( ! empty( $clientes ) ) : ?>
+					<h3><?php esc_html_e( 'Download Report PDF', 'fp-digital-marketing' ); ?></h3>
+					<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+						<?php foreach ( $clientes as $cliente ) : ?>
+							<div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 4px;">
+								<h4 style="margin: 0 0 10px 0;"><?php echo esc_html( $cliente->post_title ); ?></h4>
+								<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+								   class="button button-secondary">
+									<?php esc_html_e( 'Scarica PDF', 'fp-digital-marketing' ); ?>
+								</a>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				<?php endif; ?>
+			</div>
+
+			<!-- Report Preview Section -->
+			<div class="fp-dms-preview-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+				<h2><?php esc_html_e( 'Anteprima Report Demo', 'fp-digital-marketing' ); ?></h2>
+				<p><?php esc_html_e( 'Questo è un\'anteprima del template del report con dati mock.', 'fp-digital-marketing' ); ?></p>
+				
+				<div style="border: 1px solid #ddd; margin: 20px 0; max-height: 600px; overflow-y: auto;">
+					<?php echo $demo_html; ?>
+				</div>
+				
+				<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => 1 ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+				   class="button button-primary" target="_blank">
+					<?php esc_html_e( 'Scarica Report Demo PDF', 'fp-digital-marketing' ); ?>
+				</a>
+			</div>
+
+			<!-- Debug Section - Data Sources -->
 			<div class="notice notice-info">
 				<p>
 					<strong><?php esc_html_e( 'Debug Output - Data Sources Registry', 'fp-digital-marketing' ); ?></strong><br>
-					<?php esc_html_e( 'Questa pagina mostra lo stato attuale del registro delle sorgenti dati.', 'fp-digital-marketing' ); ?>
+					<?php esc_html_e( 'Questa sezione mostra lo stato attuale del registro delle sorgenti dati.', 'fp-digital-marketing' ); ?>
 				</p>
 			</div>
 
