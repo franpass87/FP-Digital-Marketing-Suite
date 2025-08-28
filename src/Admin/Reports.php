@@ -12,6 +12,9 @@ namespace FP\DigitalMarketing\Admin;
 use FP\DigitalMarketing\Helpers\DataSources;
 use FP\DigitalMarketing\Helpers\ReportGenerator;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
+use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
+use FP\DigitalMarketing\DataSources\GoogleOAuth;
+use FP\DigitalMarketing\Models\MetricsCache;
 
 /**
  * Reports class for plugin administration
@@ -103,9 +106,7 @@ class Reports {
 		echo $pdf_content;
 		exit;
 	}
-	 *
-	 * @return void
-	 */
+
 	/**
 	 * Render the reports page
 	 *
@@ -186,6 +187,9 @@ class Reports {
 					</div>
 				<?php endif; ?>
 			</div>
+
+			<!-- GA4 Metrics Section -->
+			<?php $this->render_ga4_metrics_section(); ?>
 
 			<!-- Report Preview Section -->
 			<div class="fp-dms-preview-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -318,6 +322,171 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 				<p><strong><?php esc_html_e( 'Hook per estensioni:', 'fp-digital-marketing' ); ?></strong></p>
 				<p><?php esc_html_e( 'Utilizza il filtro', 'fp-digital-marketing' ); ?> <code>fp_dms_data_sources</code> <?php esc_html_e( 'per aggiungere nuove sorgenti dati da plugin o temi.', 'fp-digital-marketing' ); ?></p>
 			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render GA4 metrics section
+	 *
+	 * @return void
+	 */
+	private function render_ga4_metrics_section(): void {
+		$oauth = new GoogleOAuth();
+		$connection_status = $oauth->get_connection_status();
+		$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
+		$property_id = $api_keys['ga4_property_id'] ?? '';
+
+		?>
+		<div class="fp-dms-ga4-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Google Analytics 4 - Metriche Live', 'fp-digital-marketing' ); ?></h2>
+			
+			<div class="ga4-connection-info" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+				<h3 style="margin-top: 0;"><?php esc_html_e( 'Stato Connessione', 'fp-digital-marketing' ); ?></h3>
+				<p class="ga4-status <?php echo esc_attr( $connection_status['class'] ); ?>">
+					<span class="status-indicator" style="<?php echo $connection_status['connected'] ? 'color: #00a32a;' : 'color: #d63638;'; ?>">●</span>
+					<?php echo esc_html( $connection_status['status'] ); ?>
+				</p>
+				
+				<?php if ( ! empty( $property_id ) ): ?>
+					<p><strong><?php esc_html_e( 'Property ID:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $property_id ); ?></p>
+				<?php endif; ?>
+			</div>
+
+			<?php if ( $connection_status['connected'] && ! empty( $property_id ) ): ?>
+				<?php $this->render_ga4_demo_metrics( $property_id ); ?>
+				<?php $this->render_cached_ga4_metrics(); ?>
+			<?php else: ?>
+				<div class="notice notice-warning inline">
+					<p>
+						<?php esc_html_e( 'Per visualizzare le metriche GA4, configura prima la connessione nelle', 'fp-digital-marketing' ); ?>
+						<a href="<?php echo esc_url( admin_url( 'options-general.php?page=fp-digital-marketing-settings' ) ); ?>">
+							<?php esc_html_e( 'Impostazioni', 'fp-digital-marketing' ); ?>
+						</a>.
+					</p>
+				</div>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render GA4 demo metrics
+	 *
+	 * @param string $property_id GA4 property ID
+	 * @return void
+	 */
+	private function render_ga4_demo_metrics( string $property_id ): void {
+		// Create GA4 instance and fetch demo data
+		$ga4 = new GoogleAnalytics4( $property_id );
+		$end_date = date( 'Y-m-d' );
+		$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
+		
+		// For demo purposes, we'll show mock data even if not fully connected
+		$demo_metrics = [
+			'sessions' => rand( 1500, 3500 ),
+			'users' => rand( 1200, 2800 ),
+			'conversions' => rand( 25, 85 ),
+			'revenue' => rand( 2500, 8500 ),
+		];
+
+		?>
+		<div class="ga4-demo-metrics">
+			<h3><?php esc_html_e( 'Metriche Demo (Ultimi 30 giorni)', 'fp-digital-marketing' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Questi sono dati dimostrativi. In produzione verrebbero mostrate le metriche reali da GA4.', 'fp-digital-marketing' ); ?></p>
+			
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+				<div class="metric-card" style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 4px; text-align: center;">
+					<h4 style="margin: 0 0 10px 0; color: #1e40af;"><?php esc_html_e( 'Sessioni', 'fp-digital-marketing' ); ?></h4>
+					<div style="font-size: 2em; font-weight: bold; color: #333;"><?php echo number_format( $demo_metrics['sessions'] ); ?></div>
+				</div>
+				
+				<div class="metric-card" style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 4px; text-align: center;">
+					<h4 style="margin: 0 0 10px 0; color: #16a34a;"><?php esc_html_e( 'Utenti', 'fp-digital-marketing' ); ?></h4>
+					<div style="font-size: 2em; font-weight: bold; color: #333;"><?php echo number_format( $demo_metrics['users'] ); ?></div>
+				</div>
+				
+				<div class="metric-card" style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 4px; text-align: center;">
+					<h4 style="margin: 0 0 10px 0; color: #dc2626;"><?php esc_html_e( 'Conversioni', 'fp-digital-marketing' ); ?></h4>
+					<div style="font-size: 2em; font-weight: bold; color: #333;"><?php echo number_format( $demo_metrics['conversions'] ); ?></div>
+				</div>
+				
+				<div class="metric-card" style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 4px; text-align: center;">
+					<h4 style="margin: 0 0 10px 0; color: #7c3aed;"><?php esc_html_e( 'Ricavi', 'fp-digital-marketing' ); ?></h4>
+					<div style="font-size: 2em; font-weight: bold; color: #333;">€<?php echo number_format( $demo_metrics['revenue'] ); ?></div>
+				</div>
+			</div>
+
+			<div style="margin-top: 20px;">
+				<button type="button" class="button button-primary" onclick="location.reload();">
+					<?php esc_html_e( 'Aggiorna Metriche', 'fp-digital-marketing' ); ?>
+				</button>
+				<small style="margin-left: 10px; color: #666;">
+					<?php esc_html_e( 'Ultimo aggiornamento:', 'fp-digital-marketing' ); ?> <?php echo esc_html( current_time( 'H:i:s' ) ); ?>
+				</small>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render cached GA4 metrics from database
+	 *
+	 * @return void
+	 */
+	private function render_cached_ga4_metrics(): void {
+		// Get recent cached metrics
+		$recent_metrics = MetricsCache::get_metrics([
+			'source' => GoogleAnalytics4::SOURCE_ID,
+			'limit' => 10,
+			'order_by' => 'fetched_at'
+		]);
+
+		if ( empty( $recent_metrics ) ) {
+			return;
+		}
+
+		?>
+		<div class="ga4-cached-metrics" style="margin-top: 30px;">
+			<h3><?php esc_html_e( 'Metriche Cache Database', 'fp-digital-marketing' ); ?></h3>
+			<p class="description"><?php esc_html_e( 'Dati storici salvati nel database per reportistica.', 'fp-digital-marketing' ); ?></p>
+			
+			<div style="overflow-x: auto;">
+				<table class="wp-list-table widefat fixed striped">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Metrica', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Valore', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Periodo', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Recuperato', 'fp-digital-marketing' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $recent_metrics as $metric ): ?>
+							<tr>
+								<td><strong><?php echo esc_html( $metric->metric ); ?></strong></td>
+								<td><?php echo esc_html( number_format( (float) $metric->value ) ); ?></td>
+								<td>
+									<?php 
+									echo esc_html( date( 'd/m/Y', strtotime( $metric->period_start ) ) );
+									echo ' - ';
+									echo esc_html( date( 'd/m/Y', strtotime( $metric->period_end ) ) );
+									?>
+								</td>
+								<td><?php echo esc_html( date( 'd/m/Y H:i', strtotime( $metric->fetched_at ) ) ); ?></td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+
+			<p style="margin-top: 15px;">
+				<strong><?php esc_html_e( 'Totale record cache:', 'fp-digital-marketing' ); ?></strong>
+				<?php 
+				$total_cached = MetricsCache::count(['source' => GoogleAnalytics4::SOURCE_ID]);
+				echo esc_html( number_format( $total_cached ) );
+				?>
+			</p>
 		</div>
 		<?php
 	}

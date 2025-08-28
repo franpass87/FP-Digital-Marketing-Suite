@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Admin;
 
+use FP\DigitalMarketing\DataSources\GoogleOAuth;
+use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
+
 /**
  * Settings class for plugin administration
  */
@@ -57,6 +60,7 @@ class Settings {
 	public function init(): void {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
+		add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );
 	}
 
 	/**
@@ -211,18 +215,106 @@ class Settings {
 	 * @return void
 	 */
 	public function render_api_keys_field(): void {
+		$api_keys = get_option( self::OPTION_API_KEYS, [] );
+		$oauth = new GoogleOAuth();
+		$connection_status = $oauth->get_connection_status();
 		?>
-		<div class="api-keys-placeholder">
-			<p class="description">
-				<strong><?php esc_html_e( 'Sezione in sviluppo:', 'fp-digital-marketing' ); ?></strong><br>
-				<?php esc_html_e( 'Qui saranno aggiunte le configurazioni per:', 'fp-digital-marketing' ); ?>
-			</p>
-			<ul style="margin-left: 20px;">
-				<li><?php esc_html_e( '• Google Analytics API', 'fp-digital-marketing' ); ?></li>
-				<li><?php esc_html_e( '• Facebook/Meta Business API', 'fp-digital-marketing' ); ?></li>
-				<li><?php esc_html_e( '• Google Ads API', 'fp-digital-marketing' ); ?></li>
-				<li><?php esc_html_e( '• Altri servizi di marketing', 'fp-digital-marketing' ); ?></li>
-			</ul>
+		<div class="ga4-configuration">
+			<h4><?php esc_html_e( 'Google Analytics 4', 'fp-digital-marketing' ); ?></h4>
+			
+			<table class="form-table">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Client ID', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<input 
+							type="text" 
+							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_id]"
+							value="<?php echo esc_attr( $api_keys['google_client_id'] ?? '' ); ?>"
+							class="regular-text"
+							placeholder="<?php esc_attr_e( 'Google OAuth Client ID', 'fp-digital-marketing' ); ?>"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'ID client OAuth per Google Analytics 4 API', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Client Secret', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<input 
+							type="password" 
+							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_secret]"
+							value="<?php echo esc_attr( $api_keys['google_client_secret'] ?? '' ); ?>"
+							class="regular-text"
+							placeholder="<?php esc_attr_e( 'Google OAuth Client Secret', 'fp-digital-marketing' ); ?>"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'Secret client OAuth per Google Analytics 4 API', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Property ID', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<input 
+							type="text" 
+							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[ga4_property_id]"
+							value="<?php echo esc_attr( $api_keys['ga4_property_id'] ?? '' ); ?>"
+							class="regular-text"
+							placeholder="<?php esc_attr_e( 'GA4 Property ID (es: 123456789)', 'fp-digital-marketing' ); ?>"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'ID della proprietà Google Analytics 4', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+
+			<div class="ga4-connection-status">
+				<h4><?php esc_html_e( 'Stato Connessione', 'fp-digital-marketing' ); ?></h4>
+				<p class="ga4-status <?php echo esc_attr( $connection_status['class'] ); ?>">
+					<span class="status-indicator"></span>
+					<?php echo esc_html( $connection_status['status'] ); ?>
+				</p>
+
+				<?php if ( $oauth->is_configured() ): ?>
+					<?php if ( ! $connection_status['connected'] ): ?>
+						<a href="<?php echo esc_url( $oauth->get_authorization_url() ); ?>" class="button button-primary">
+							<?php esc_html_e( 'Connetti a Google Analytics', 'fp-digital-marketing' ); ?>
+						</a>
+					<?php else: ?>
+						<form method="post" style="display: inline;">
+							<?php wp_nonce_field( 'ga4_disconnect', 'ga4_disconnect_nonce' ); ?>
+							<input type="hidden" name="action" value="ga4_disconnect">
+							<button type="submit" class="button button-secondary">
+								<?php esc_html_e( 'Disconnetti', 'fp-digital-marketing' ); ?>
+							</button>
+						</form>
+						<?php if ( isset( $connection_status['expires_at'] ) ): ?>
+							<p class="description">
+								<?php 
+								printf( 
+									esc_html__( 'Token scade il: %s', 'fp-digital-marketing' ),
+									esc_html( $connection_status['expires_at'] )
+								); 
+								?>
+							</p>
+						<?php endif; ?>
+					<?php endif; ?>
+				<?php else: ?>
+					<p class="description">
+						<?php esc_html_e( 'Salva prima le credenziali Client ID e Client Secret per abilitare la connessione.', 'fp-digital-marketing' ); ?>
+					</p>
+				<?php endif; ?>
+			</div>
+
+			<style>
+				.ga4-status.connected .status-indicator { color: #00a32a; }
+				.ga4-status.disconnected .status-indicator { color: #d63638; }
+				.ga4-status.expired .status-indicator { color: #dba617; }
+				.ga4-status .status-indicator:before { content: "●"; margin-right: 5px; }
+				.ga4-configuration { margin-bottom: 20px; }
+			</style>
 		</div>
 		<?php
 	}
@@ -270,5 +362,89 @@ class Settings {
 	 */
 	public function get_api_keys(): array {
 		return get_option( self::OPTION_API_KEYS, [] );
+	}
+
+	/**
+	 * Handle GA4 OAuth callback
+	 *
+	 * @return void
+	 */
+	public function handle_ga4_oauth_callback(): void {
+		// Handle OAuth callback
+		if ( isset( $_GET['ga4_callback'] ) && $_GET['ga4_callback'] === '1' ) {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+			}
+
+			// Verify state parameter
+			$state = $_GET['state'] ?? '';
+			$stored_state = get_option( 'fp_dms_oauth_state', '' );
+			
+			if ( ! wp_verify_nonce( $state, 'ga4_oauth_state' ) || $state !== $stored_state ) {
+				add_settings_error( 
+					'ga4_oauth', 
+					'invalid_state', 
+					__( 'Errore di sicurezza OAuth. Riprova.', 'fp-digital-marketing' ),
+					'error'
+				);
+				return;
+			}
+
+			// Clean up state
+			delete_option( 'fp_dms_oauth_state' );
+
+			if ( isset( $_GET['code'] ) ) {
+				$oauth = new GoogleOAuth();
+				if ( $oauth->exchange_code_for_tokens( $_GET['code'] ) ) {
+					add_settings_error( 
+						'ga4_oauth', 
+						'connection_success', 
+						__( 'Connessione a Google Analytics 4 completata con successo!', 'fp-digital-marketing' ),
+						'success'
+					);
+				} else {
+					add_settings_error( 
+						'ga4_oauth', 
+						'connection_error', 
+						__( 'Errore durante la connessione a Google Analytics 4.', 'fp-digital-marketing' ),
+						'error'
+					);
+				}
+			} elseif ( isset( $_GET['error'] ) ) {
+				add_settings_error( 
+					'ga4_oauth', 
+					'oauth_error', 
+					sprintf( 
+						__( 'Errore OAuth: %s', 'fp-digital-marketing' ),
+						esc_html( $_GET['error'] )
+					),
+					'error'
+				);
+			}
+
+			// Redirect to clean URL
+			wp_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
+			exit;
+		}
+
+		// Handle disconnect
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'ga4_disconnect' ) {
+			if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $_POST['ga4_disconnect_nonce'], 'ga4_disconnect' ) ) {
+				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+			}
+
+			$oauth = new GoogleOAuth();
+			if ( $oauth->revoke_access() ) {
+				add_settings_error( 
+					'ga4_oauth', 
+					'disconnect_success', 
+					__( 'Disconnessione da Google Analytics 4 completata.', 'fp-digital-marketing' ),
+					'success'
+				);
+			}
+
+			wp_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
+			exit;
+		}
 	}
 }
