@@ -230,6 +230,13 @@ class Settings {
 	/**
 	 * Sanitize API keys data
 	 *
+	 * Security Note: This method sanitizes API keys for storage. In production environments,
+	 * consider implementing additional security measures such as:
+	 * - Encrypting sensitive API keys before database storage
+	 * - Using WordPress constants for production API keys
+	 * - Implementing key rotation procedures
+	 * - Audit logging for API key access
+	 *
 	 * @param mixed $input The input data.
 	 * @return array Sanitized API keys array.
 	 */
@@ -240,6 +247,7 @@ class Settings {
 
 		$sanitized = [];
 		foreach ( $input as $key => $value ) {
+			// Sanitize the key name and value
 			$sanitized[ sanitize_key( $key ) ] = sanitize_text_field( $value );
 		}
 
