@@ -65,3 +65,17 @@ register_deactivation_hook( __FILE__, function () {
 	// Flush rewrite rules on deactivation.
 	flush_rewrite_rules();
 } );
+
+/**
+ * Global helper function to get data sources
+ *
+ * This function provides easy access to the data sources registry.
+ * It can be used throughout the application to retrieve available
+ * data sources for integration with various marketing platforms.
+ *
+ * @param string $type Optional. Filter by data source type.
+ * @return array Array of registered data sources.
+ */
+function fp_dms_get_data_sources( string $type = '' ): array {
+	return \FP\DigitalMarketing\Helpers\DataSources::get_data_sources( $type );
+}
