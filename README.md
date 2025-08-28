@@ -8,6 +8,8 @@ A comprehensive digital marketing toolkit built with PHP, following WordPress co
 - Static analysis with PHPStan
 - Automated CI/CD pipeline
 - Security vulnerability scanning
+- **Settings Page**: Admin interface for plugin configuration
+- **Cliente Management**: Custom post type for client management
 
 ## Requirements
 
@@ -26,6 +28,26 @@ A comprehensive digital marketing toolkit built with PHP, following WordPress co
    ```bash
    composer install
    ```
+
+## Usage
+
+### Settings Page
+
+After plugin activation, the settings page is available in the WordPress admin:
+
+1. **Access Settings**: Navigate to `Settings` > `FP Digital Marketing` in your WordPress admin
+2. **General Settings**: Configure basic plugin options including the demo field for testing
+3. **API Keys Section**: Placeholder section for future API integrations (Google Analytics, Facebook/Meta Business, Google Ads, etc.)
+
+**For Developers:**
+- Settings are saved using WordPress Settings API with proper nonce protection
+- All inputs are sanitized and validated before saving
+- Settings can be accessed programmatically via the `Settings` class methods
+
+**For Users:**
+- The settings page provides a user-friendly interface for plugin configuration
+- All settings are automatically saved when you click "Save Settings"
+- Input validation ensures data integrity
 
 ## Development Tooling
 
