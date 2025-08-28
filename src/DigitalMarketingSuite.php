@@ -9,6 +9,9 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing;
 
+use FP\DigitalMarketing\PostTypes\ClientePostType;
+use FP\DigitalMarketing\Admin\ClienteMeta;
+
 /**
  * Main application class
  */
@@ -20,6 +23,28 @@ class DigitalMarketingSuite {
 	 * @var string
 	 */
 	private string $version = '1.0.0';
+
+	/**
+	 * Cliente Post Type instance
+	 *
+	 * @var ClientePostType
+	 */
+	private ClientePostType $cliente_post_type;
+
+	/**
+	 * Cliente Meta instance
+	 *
+	 * @var ClienteMeta
+	 */
+	private ClienteMeta $cliente_meta;
+
+	/**
+	 * Constructor
+	 */
+	public function __construct() {
+		$this->cliente_post_type = new ClientePostType();
+		$this->cliente_meta = new ClienteMeta();
+	}
 
 	/**
 	 * Get application version
@@ -36,7 +61,11 @@ class DigitalMarketingSuite {
 	 * @return void
 	 */
 	public function init(): void {
-		// Initialization logic will go here.
+		// Initialize components.
+		$this->cliente_post_type->init();
+		$this->cliente_meta->init();
+
+		// Hook for extensibility.
 		do_action( 'fp_digital_marketing_suite_init' );
 	}
 }
