@@ -1,0 +1,55 @@
+# Git attributes for clean exports and security
+
+# Exclude development and CI files from exports
+/.github export-ignore
+/tests export-ignore
+/phpunit.xml export-ignore
+/phpunit.phar export-ignore
+/.phpcs.xml export-ignore
+/phpstan.neon export-ignore
+/phpstan-bootstrap.php export-ignore
+/composer.json export-ignore
+/composer.lock export-ignore
+/.gitignore export-ignore
+/.gitattributes export-ignore
+
+# Exclude documentation files that are not needed in production
+/CLIENTE_IMPLEMENTATION.md export-ignore
+/DATA_SOURCES_IMPLEMENTATION.md export-ignore
+/METRICS_CACHE_IMPLEMENTATION.md export-ignore
+/README.md export-ignore
+/SECURITY.md export-ignore
+
+# Exclude any development configuration
+/.vscode export-ignore
+/.idea export-ignore
+/tmp export-ignore
+/.env export-ignore
+/.env.* export-ignore
+
+# Force text handling for code files
+*.php text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.tar.gz binary
+
+# Ensure shell scripts have correct line endings
+*.sh text eol=lf
+
+# Security: Prevent credential files from being tracked
+.env* filter=git-crypt diff=git-crypt merge=git-crypt
+**/secrets.json filter=git-crypt diff=git-crypt merge=git-crypt
+**/api-keys.json filter=git-crypt diff=git-crypt merge=git-crypt
