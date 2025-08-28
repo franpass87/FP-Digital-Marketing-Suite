@@ -12,6 +12,7 @@ namespace FP\DigitalMarketing;
 use FP\DigitalMarketing\PostTypes\ClientePostType;
 use FP\DigitalMarketing\Admin\ClienteMeta;
 use FP\DigitalMarketing\Admin\Settings;
+use FP\DigitalMarketing\Admin\Reports;
 
 /**
  * Main application class
@@ -47,12 +48,20 @@ class DigitalMarketingSuite {
 	private Settings $settings;
 
 	/**
+	 * Reports instance
+	 *
+	 * @var Reports
+	 */
+	private Reports $reports;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
 		$this->cliente_post_type = new ClientePostType();
 		$this->cliente_meta = new ClienteMeta();
 		$this->settings = new Settings();
+		$this->reports = new Reports();
 	}
 
 	/**
@@ -74,6 +83,7 @@ class DigitalMarketingSuite {
 		$this->cliente_post_type->init();
 		$this->cliente_meta->init();
 		$this->settings->init();
+		$this->reports->init();
 
 		// Hook for extensibility.
 		do_action( 'fp_digital_marketing_suite_init' );
