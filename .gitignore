@@ -1,0 +1,48 @@
+# Dependency directories
+/vendor/
+/node_modules/
+
+# Composer
+composer.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+logs/
+
+# Cache directories
+.cache/
+tmp/
+
+# Build directories
+build/
+dist/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# PHPStan cache
+.phpstan-cache/
+
+# Coverage reports
+coverage/
+.coverage/
+coverage.xml
+clover.xml

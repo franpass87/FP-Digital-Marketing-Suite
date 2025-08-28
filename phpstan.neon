@@ -1,0 +1,28 @@
+parameters:
+    level: 5
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - vendor
+        - node_modules
+    
+    # WordPress bootstrap file
+    bootstrapFiles:
+        - phpstan-bootstrap.php
+    
+    # Ignore missing WordPress functions for now
+    ignoreErrors:
+        - '#Function do_action not found\.#'
+        - '#Function wp_#'
+        - '#Function get_#'
+        - '#Function is_#'
+        - '#Function add_#'
+        - '#Function remove_#'
+        -
+            identifier: missingType.iterableValue
+        -
+            identifier: missingType.generics
+    
+    # Reporting
+    reportUnmatchedIgnoredErrors: false

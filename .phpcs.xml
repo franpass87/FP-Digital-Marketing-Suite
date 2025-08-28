@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<ruleset name="FP Digital Marketing Suite">
+    <description>Coding standards for FP Digital Marketing Suite</description>
+
+    <!-- Include WordPress Coding Standards -->
+    <rule ref="WordPress-Core">
+        <!-- Allow array short syntax -->
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+        <!-- Allow modern file naming conventions -->
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+    </rule>
+    <rule ref="WordPress-Docs"/>
+    <rule ref="WordPress-Extra">
+        <!-- Allow short array syntax -->
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+        <!-- Allow modern file naming -->
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+        <exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+    </rule>
+
+    <!-- Check all PHP files in src and tests directories -->
+    <file>./src</file>
+    <file>./tests</file>
+
+    <!-- Show progress and colors -->
+    <arg value="ps"/>
+    <arg name="colors"/>
+
+    <!-- Check for cross-version compatibility for PHP 7.4+ -->
+    <config name="testVersion" value="7.4-"/>
+
+    <!-- Exclude vendor directory -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+
+    <!-- Set minimum supported WordPress version -->
+    <config name="minimum_supported_wp_version" value="5.0"/>
+</ruleset>
