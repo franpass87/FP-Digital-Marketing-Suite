@@ -41,6 +41,9 @@ dist/
 # PHPStan cache
 .phpstan-cache/
 
+# PHPUnit cache
+.phpunit.result.cache
+
 # Coverage reports
 coverage/
 .coverage/

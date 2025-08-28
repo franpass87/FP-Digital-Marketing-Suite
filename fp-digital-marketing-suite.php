@@ -56,6 +56,9 @@ add_action( 'plugins_loaded', function () {
 
 // Activation hook.
 register_activation_hook( __FILE__, function () {
+	// Create custom database tables.
+	\FP\DigitalMarketing\Database\MetricsCacheTable::create_table();
+	
 	// Flush rewrite rules to ensure custom post types work correctly.
 	flush_rewrite_rules();
 } );
