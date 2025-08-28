@@ -64,16 +64,33 @@ All pushes and pull requests to `main` and `develop` branches trigger the CI pip
 - `.github/workflows/ci.yml` - GitHub Actions CI pipeline
 - `composer.json` - PHP dependencies and scripts
 
+### Development Workflow
+
+Before committing your changes:
+
+1. **Check code standards:**
+   ```bash
+   composer run phpcs
+   ```
+
+2. **Fix automatically fixable issues:**
+   ```bash
+   composer run phpcbf
+   ```
+
+3. **Run static analysis:**
+   ```bash
+   composer run phpstan
+   ```
+
+4. **Ensure all checks pass before pushing** - the CI pipeline will reject PRs that don't meet quality standards.
+
 ### Contributing
 
 1. Fork the repository
 2. Create a feature branch from `develop`
 3. Make your changes following the coding standards
-4. Run the quality tools locally:
-   ```bash
-   composer run phpcs
-   composer run phpstan
-   ```
+4. Follow the [Development Workflow](#development-workflow) to validate your changes
 5. Submit a pull request
 
 The CI pipeline will automatically run on your PR to ensure code quality standards are met.
