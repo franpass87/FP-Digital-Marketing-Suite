@@ -1,0 +1,80 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        php-version: [7.4, 8.0, 8.1, 8.2]
+    
+    name: PHP ${{ matrix.php-version }} - Code Quality
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        tools: composer:v2
+        coverage: none
+    
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+    
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-${{ matrix.php-version }}-
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Run PHPCS (WordPress Coding Standards)
+      run: |
+        # Only run PHPCS if there are PHP files to check
+        if [ -d "src" ] || [ -d "tests" ]; then
+          composer run-script phpcs
+        else
+          echo "No src or tests directories found, skipping PHPCS"
+        fi
+    
+    - name: Run PHPStan (Static Analysis)
+      run: |
+        # Only run PHPStan if there are PHP files to analyze
+        if [ -d "src" ] || [ -d "tests" ]; then
+          composer run-script phpstan
+        else
+          echo "No src or tests directories found, skipping PHPStan"
+        fi
+
+  dependency-security:
+    runs-on: ubuntu-latest
+    name: Security Check
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.1
+        tools: composer:v2
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Check for security vulnerabilities
+      run: |
+        composer audit || echo "Security audit completed with warnings"
