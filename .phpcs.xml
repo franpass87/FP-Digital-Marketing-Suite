@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<ruleset name="FP Digital Marketing Suite">
+    <description>WordPress Coding Standards for FP Digital Marketing Suite</description>
+
+    <!-- What to scan -->
+    <file>.</file>
+    
+    <!-- Exclude paths -->
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/.git/*</exclude-pattern>
+    <exclude-pattern>*/tests/*</exclude-pattern>
+
+    <!-- How to scan -->
+    <!-- Usage instructions: https://github.com/squizlabs/PHP_CodeSniffer/wiki/Usage -->
+    <!-- Annotated ruleset: https://github.com/squizlabs/PHP_CodeSniffer/wiki/Annotated-ruleset.xml -->
+    
+    <!-- Show progress -->
+    <arg value="p"/>
+    
+    <!-- Show sniff codes in all reports -->
+    <arg value="s"/>
+    
+    <!-- Use colors in output -->
+    <arg name="colors"/>
+    
+    <!-- Strip the filepaths down to the relevant bit. -->
+    <arg name="basepath" value="./"/>
+    
+    <!-- Check up to 8 files simultaneously. -->
+    <arg name="parallel" value="8"/>
+
+    <!-- Rules: WordPress Coding Standards -->
+    <!-- https://github.com/WordPress/WordPress-Coding-Standards -->
+    <rule ref="WordPress">
+        <!-- Allow short array syntax -->
+        <exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+        
+        <!-- Allow short ternary operator -->
+        <exclude name="WordPress.PHP.DisallowShortTernary"/>
+    </rule>
+
+    <!-- Rules: WordPress VIP Coding Standards -->
+    <!-- https://github.com/Automattic/VIP-Coding-Standards -->
+    <rule ref="WordPress-VIP-Go"/>
+
+    <!-- PHP compatibility check for PHP 7.4+ -->
+    <rule ref="PHPCompatibilityWP"/>
+    
+    <!-- Minimum PHP version -->
+    <config name="testVersion" value="7.4-"/>
+    
+    <!-- WordPress minimum version -->
+    <config name="minimum_supported_wp_version" value="5.0"/>
+
+    <!-- Rules: WordPress Core -->
+    <rule ref="WordPress-Core">
+        <!-- Allow multiple statements per line -->
+        <exclude name="Squiz.PHP.EmbeddedPhp.MultipleStatements"/>
+    </rule>
+
+    <!-- Rules: WordPress Extra -->
+    <rule ref="WordPress-Extra"/>
+
+    <!-- Rules: WordPress Docs -->
+    <rule ref="WordPress-Docs"/>
+
+    <!-- Check for cross-version compatibility to PHP 7.4+. -->
+    <config name="testVersion" value="7.4-"/>
+</ruleset>

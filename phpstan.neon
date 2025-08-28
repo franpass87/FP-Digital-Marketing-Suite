@@ -1,0 +1,25 @@
+parameters:
+    level: 1
+    paths:
+        - .
+    excludePaths:
+        - vendor/
+        - node_modules/
+        - tests/
+        - .git/
+    ignoreErrors:
+        # WordPress core functions that may not be recognized
+        - '#Function [a-zA-Z_]+\(\) not found#'
+        # WordPress hooks and filters
+        - '#Function (add_action|add_filter|do_action|apply_filters)\(\) not found#'
+    bootstrapFiles:
+        # Uncomment when WordPress core is available
+        # - vendor/wordpress/wordpress/wp-load.php
+    scanDirectories:
+        # Add any additional directories to scan
+    scanFiles:
+        # Add any specific files to scan
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    checkMissingCallableSignature: false
+    reportUnmatchedIgnoredErrors: false

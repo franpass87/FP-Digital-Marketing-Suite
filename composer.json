@@ -1,0 +1,32 @@
+{
+    "name": "franpass87/fp-digital-marketing-suite",
+    "description": "Digital Marketing Suite - WordPress plugin/theme toolkit",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Francesco Passarella",
+            "email": "franpass87@example.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^3.7",
+        "wp-coding-standards/wpcs": "^3.0",
+        "phpcompatibility/phpcompatibility-wp": "^2.1",
+        "phpstan/phpstan": "^1.10",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "scripts": {
+        "phpcs": "vendor/bin/phpcs || ./vendor/squizlabs/php_codesniffer/bin/phpcs || echo 'PHPCS not found - run composer install'",
+        "phpcbf": "vendor/bin/phpcbf || ./vendor/squizlabs/php_codesniffer/bin/phpcbf || echo 'PHPCBF not found - run composer install'",
+        "phpstan": "vendor/bin/phpstan analyse || php vendor/phpstan/phpstan/phpstan analyse || echo 'PHPStan not found - run composer install'"
+    }
+}
