@@ -27,6 +27,7 @@ class SeoMetadata {
 	public const META_TWITTER_TITLE = '_seo_twitter_title';
 	public const META_TWITTER_DESCRIPTION = '_seo_twitter_description';
 	public const META_TWITTER_IMAGE = '_seo_twitter_image';
+	public const META_FOCUS_KEYWORD = '_seo_focus_keyword';
 
 	/**
 	 * Length limits for validation

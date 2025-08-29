@@ -554,6 +554,22 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
+	if ( ! function_exists( 'update_post_meta' ) ) {
+		function update_post_meta( $post_id, $meta_key, $meta_value, $prev_value = '' ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['update_post_meta'] ) ) {
+				return $wp_mock_functions['update_post_meta']( $post_id, $meta_key, $meta_value, $prev_value );
+			}
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'str_contains' ) ) {
+		function str_contains( $haystack, $needle ) {
+			return strpos( $haystack, $needle ) !== false;
+		}
+	}
+
 	// Mock global $wpdb for testing
 	global $wpdb;
 	$wpdb = new stdClass();
