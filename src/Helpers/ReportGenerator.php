@@ -62,22 +62,22 @@ class ReportGenerator {
 			],
 			'channels'      => [
 				[
-					'name'     => 'Organic Search',
+					'name'     => __( 'Organic Search', 'fp-digital-marketing' ),
 					'sessions' => 5680,
 					'revenue'  => 12400.50,
 				],
 				[
-					'name'     => 'Google Ads',
+					'name'     => __( 'Google Ads', 'fp-digital-marketing' ),
 					'sessions' => 3250,
 					'revenue'  => 8900.25,
 				],
 				[
-					'name'     => 'Facebook Ads',
+					'name'     => __( 'Facebook Ads', 'fp-digital-marketing' ),
 					'sessions' => 2100,
 					'revenue'  => 4200.00,
 				],
 				[
-					'name'     => 'Direct',
+					'name'     => __( 'Direct', 'fp-digital-marketing' ),
 					'sessions' => 1420,
 					'revenue'  => 3000.00,
 				],

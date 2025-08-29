@@ -91,6 +91,9 @@ class DigitalMarketingSuite {
 	 * @return void
 	 */
 	public function init(): void {
+		// Load text domain for internationalization.
+		$this->load_textdomain();
+
 		// Initialize components.
 		$this->cliente_post_type->init();
 		$this->cliente_meta->init();
@@ -109,6 +112,19 @@ class DigitalMarketingSuite {
 
 		// Hook for extensibility.
 		do_action( 'fp_digital_marketing_suite_init' );
+	}
+
+	/**
+	 * Load plugin text domain for internationalization
+	 *
+	 * @return void
+	 */
+	private function load_textdomain(): void {
+		load_plugin_textdomain(
+			'fp-digital-marketing',
+			false,
+			dirname( plugin_basename( FP_DIGITAL_MARKETING_PLUGIN_FILE ) ) . '/languages'
+		);
 	}
 
 	/**

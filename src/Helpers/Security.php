@@ -319,15 +319,15 @@ class Security {
 		$latest_version = '6.4'; // This would ideally be fetched from WordPress.org API
 		
 		$check = [
-			'name' => 'WordPress Version',
+			'name' => __( 'WordPress Version', 'fp-digital-marketing' ),
 			'status' => version_compare( $wp_version, '5.0', '>=' ) ? 'pass' : 'fail',
-			'message' => sprintf( 'WordPress version: %s', $wp_version ),
+			'message' => sprintf( __( 'WordPress version: %s', 'fp-digital-marketing' ), $wp_version ),
 			'severity' => version_compare( $wp_version, '5.0', '<' ) ? 'critical' : 'info',
 		];
 
 		if ( version_compare( $wp_version, $latest_version, '<' ) ) {
 			$check['severity'] = 'warning';
-			$check['message'] .= sprintf( ' (Latest: %s)', $latest_version );
+			$check['message'] .= sprintf( __( ' (Latest: %s)', 'fp-digital-marketing' ), $latest_version );
 		}
 
 		self::$audit_results['checks']['wp_version'] = $check;
@@ -340,9 +340,9 @@ class Security {
 		$php_version = PHP_VERSION;
 		
 		$check = [
-			'name' => 'PHP Version',
+			'name' => __( 'PHP Version', 'fp-digital-marketing' ),
 			'status' => version_compare( $php_version, '7.4', '>=' ) ? 'pass' : 'fail',
-			'message' => sprintf( 'PHP version: %s', $php_version ),
+			'message' => sprintf( __( 'PHP version: %s', 'fp-digital-marketing' ), $php_version ),
 			'severity' => version_compare( $php_version, '7.4', '<' ) ? 'critical' : 'info',
 		];
 
@@ -358,9 +358,9 @@ class Security {
 		$readable_perms = $perms !== false ? substr( sprintf( '%o', $perms ), -4 ) : 'unknown';
 		
 		$check = [
-			'name' => 'File Permissions',
+			'name' => __( 'File Permissions', 'fp-digital-marketing' ),
 			'status' => $perms !== false ? 'pass' : 'fail',
-			'message' => sprintf( 'Plugin directory permissions: %s', $readable_perms ),
+			'message' => sprintf( __( 'Plugin directory permissions: %s', 'fp-digital-marketing' ), $readable_perms ),
 			'severity' => 'info',
 		];
 
@@ -386,11 +386,11 @@ class Security {
 		}
 
 		$check = [
-			'name' => 'Security Constants',
+			'name' => __( 'Security Constants', 'fp-digital-marketing' ),
 			'status' => empty( $missing_constants ) ? 'pass' : 'fail',
 			'message' => empty( $missing_constants ) 
-				? 'All security constants are defined'
-				: sprintf( 'Missing constants: %s', implode( ', ', $missing_constants ) ),
+				? __( 'All security constants are defined', 'fp-digital-marketing' )
+				: sprintf( __( 'Missing constants: %s', 'fp-digital-marketing' ), implode( ', ', $missing_constants ) ),
 			'severity' => empty( $missing_constants ) ? 'info' : 'critical',
 		];
 
@@ -404,9 +404,9 @@ class Security {
 		$has_openssl = extension_loaded( 'openssl' );
 		
 		$check = [
-			'name' => 'Encryption Support',
+			'name' => __( 'Encryption Support', 'fp-digital-marketing' ),
 			'status' => $has_openssl ? 'pass' : 'fail',
-			'message' => $has_openssl ? 'OpenSSL extension available' : 'OpenSSL extension not available',
+			'message' => $has_openssl ? __( 'OpenSSL extension available', 'fp-digital-marketing' ) : __( 'OpenSSL extension not available', 'fp-digital-marketing' ),
 			'severity' => $has_openssl ? 'info' : 'critical',
 		];
 
@@ -425,9 +425,9 @@ class Security {
 		}
 		
 		$check = [
-			'name' => 'Database Security',
+			'name' => __( 'Database Security', 'fp-digital-marketing' ),
 			'status' => ! empty( $db_version ) ? 'pass' : 'warning',
-			'message' => ! empty( $db_version ) ? sprintf( 'Database version: %s', $db_version ) : 'Database connection not available in test environment',
+			'message' => ! empty( $db_version ) ? sprintf( __( 'Database version: %s', 'fp-digital-marketing' ), $db_version ) : __( 'Database connection not available in test environment', 'fp-digital-marketing' ),
 			'severity' => ! empty( $db_version ) ? 'info' : 'warning',
 		];
 
@@ -455,9 +455,9 @@ class Security {
 		$status = $total_count === 0 ? 'pass' : ( $encrypted_count === $total_count ? 'pass' : 'warning' );
 		
 		$check = [
-			'name' => 'API Key Storage',
+			'name' => __( 'API Key Storage', 'fp-digital-marketing' ),
 			'status' => $status,
-			'message' => sprintf( 'API keys: %d total, %d encrypted', $total_count, $encrypted_count ),
+			'message' => sprintf( __( 'API keys: %d total, %d encrypted', 'fp-digital-marketing' ), $total_count, $encrypted_count ),
 			'severity' => $status === 'pass' ? 'info' : 'warning',
 		];
 

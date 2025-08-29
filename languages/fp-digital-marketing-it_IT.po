@@ -1,0 +1,274 @@
+# Italian (Italy) language file for FP Digital Marketing Suite
+# Copyright (C) 2025 Francesco Passarelli
+# This file is distributed under the same license as the FP Digital Marketing Suite package.
+# Francesco Passarelli <franpass87@example.com>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: FP Digital Marketing Suite 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/franpass87/FP-Digital-Marketing-Suite/issues\n"
+"POT-Creation-Date: 2025-08-29 06:06:20+00:00\n"
+"PO-Revision-Date: 2025-08-29 06:10:00+00:00\n"
+"Last-Translator: Francesco Passarelli <franpass87@example.com>\n"
+"Language-Team: Italian <it@li.org>\n"
+"Language: it_IT\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: FP i18n Generator\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Informazioni Cliente"
+msgstr "Informazioni Cliente"
+
+msgid "Settore"
+msgstr "Settore"
+
+msgid "Es: Tecnologia, Retail, Servizi..."
+msgstr "Es: Tecnologia, Retail, Servizi..."
+
+msgid "Specifica il settore di attività del cliente."
+msgstr "Specifica il settore di attività del cliente."
+
+msgid "Budget Mensile (€)"
+msgstr "Budget Mensile (€)"
+
+msgid "0.00"
+msgstr "0.00"
+
+msgid "Budget mensile disponibile per le attività di marketing digitale."
+msgstr "Budget mensile disponibile per le attività di marketing digitale."
+
+msgid "Email di Riferimento"
+msgstr "Email di Riferimento"
+
+msgid "contatto@cliente.com"
+msgstr "contatto@cliente.com"
+
+msgid "Indirizzo email del contatto principale per questo cliente."
+msgstr "Indirizzo email del contatto principale per questo cliente."
+
+msgid "Sito Web"
+msgstr "Sito Web"
+
+msgid "https://www.cliente.com"
+msgstr "https://www.cliente.com"
+
+msgid "URL del sito web del cliente."
+msgstr "URL del sito web del cliente."
+
+msgid "Google Analytics 4"
+msgstr "Google Analytics 4"
+
+msgid "Analisi del traffico web e comportamento utenti"
+msgstr "Analisi del traffico web e comportamento utenti"
+
+msgid "Google Search Console"
+msgstr "Google Search Console"
+
+msgid "Dati di performance SEO e ricerca organica"
+msgstr "Dati di performance SEO e ricerca organica"
+
+msgid "Facebook Ads"
+msgstr "Facebook Ads"
+
+msgid "Metriche e performance delle campagne Facebook/Meta"
+msgstr "Metriche e performance delle campagne Facebook/Meta"
+
+msgid "Google Ads"
+msgstr "Google Ads"
+
+msgid "Dati delle campagne pubblicitarie Google"
+msgstr "Dati delle campagne pubblicitarie Google"
+
+msgid "Mailchimp"
+msgstr "Mailchimp"
+
+msgid "Statistiche email marketing e automazione"
+msgstr "Statistiche email marketing e automazione"
+
+msgid "Salva Impostazioni"
+msgstr "Salva Impostazioni"
+
+msgid "Configurazioni generali per il plugin FP Digital Marketing Suite."
+msgstr "Configurazioni generali per il plugin FP Digital Marketing Suite."
+
+msgid "Inserisci valore demo..."
+msgstr "Inserisci valore demo..."
+
+msgid "Questo è un campo di esempio per testare il salvataggio delle opzioni."
+msgstr "Questo è un campo di esempio per testare il salvataggio delle opzioni."
+
+msgid "Configurazione delle chiavi API per i servizi esterni. Questa sezione sarà espansa in future versioni."
+msgstr "Configurazione delle chiavi API per i servizi esterni. Questa sezione sarà espansa in future versioni."
+
+msgid "Salva prima le credenziali Client ID e Client Secret per abilitare la connessione."
+msgstr "Salva prima le credenziali Client ID e Client Secret per abilitare la connessione."
+
+msgid "Impostazioni Generali"
+msgstr "Impostazioni Generali"
+
+msgid "Opzione Demo"
+msgstr "Opzione Demo"
+
+msgid "Chiavi API"
+msgstr "Chiavi API"
+
+msgid "Configurazione API"
+msgstr "Configurazione API"
+
+msgid "WordPress Version"
+msgstr "Versione WordPress"
+
+msgid "WordPress version: %s"
+msgstr "Versione WordPress: %s"
+
+msgid " (Latest: %s)"
+msgstr " (Ultima: %s)"
+
+msgid "PHP Version"
+msgstr "Versione PHP"
+
+msgid "PHP version: %s"
+msgstr "Versione PHP: %s"
+
+msgid "File Permissions"
+msgstr "Permessi File"
+
+msgid "Plugin directory permissions: %s"
+msgstr "Permessi directory plugin: %s"
+
+msgid "Security Constants"
+msgstr "Costanti di Sicurezza"
+
+msgid "All security constants are defined"
+msgstr "Tutte le costanti di sicurezza sono definite"
+
+msgid "Missing constants: %s"
+msgstr "Costanti mancanti: %s"
+
+msgid "Encryption Support"
+msgstr "Supporto Crittografia"
+
+msgid "OpenSSL extension available"
+msgstr "Estensione OpenSSL disponibile"
+
+msgid "OpenSSL extension not available"
+msgstr "Estensione OpenSSL non disponibile"
+
+msgid "Database Security"
+msgstr "Sicurezza Database"
+
+msgid "Database version: %s"
+msgstr "Versione database: %s"
+
+msgid "Database connection not available in test environment"
+msgstr "Connessione database non disponibile nell'ambiente di test"
+
+msgid "API Key Storage"
+msgstr "Archiviazione Chiavi API"
+
+msgid "API keys: %d total, %d encrypted"
+msgstr "Chiavi API: %d totali, %d crittografate"
+
+msgid "Organic Search"
+msgstr "Ricerca Organica"
+
+msgid "Google Ads"
+msgstr "Google Ads"
+
+msgid "Facebook Ads"
+msgstr "Facebook Ads"
+
+msgid "Direct"
+msgstr "Diretto"
+
+msgid "FP Digital Marketing Reports"
+msgstr "Report FP Digital Marketing"
+
+msgid "DM Reports"
+msgstr "Report DM"
+
+msgid "FP DMS Security"
+msgstr "Sicurezza FP DMS"
+
+msgid "Confermi la cancellazione dei log di sicurezza?"
+msgstr "Confermi la cancellazione dei log di sicurezza?"
+
+msgid "Cancella Log Sicurezza"
+msgstr "Cancella Log Sicurezza"
+
+msgid "Clienti"
+msgstr "Clienti"
+
+msgid "Cliente"
+msgstr "Cliente"
+
+msgid "Aggiungi Nuovo"
+msgstr "Aggiungi Nuovo"
+
+msgid "Aggiungi Nuovo Cliente"
+msgstr "Aggiungi Nuovo Cliente"
+
+msgid "Nuovo Cliente"
+msgstr "Nuovo Cliente"
+
+msgid "Modifica Cliente"
+msgstr "Modifica Cliente"
+
+msgid "Visualizza Cliente"
+msgstr "Visualizza Cliente"
+
+msgid "Tutti i Clienti"
+msgstr "Tutti i Clienti"
+
+msgid "Cerca Clienti"
+msgstr "Cerca Clienti"
+
+msgid "Cliente Genitore:"
+msgstr "Cliente Genitore:"
+
+msgid "Nessun cliente trovato."
+msgstr "Nessun cliente trovato."
+
+msgid "Nessun cliente trovato nel cestino."
+msgstr "Nessun cliente trovato nel cestino."
+
+msgid "Immagine Cliente"
+msgstr "Immagine Cliente"
+
+msgid "Imposta immagine cliente"
+msgstr "Imposta immagine cliente"
+
+msgid "Rimuovi immagine cliente"
+msgstr "Rimuovi immagine cliente"
+
+msgid "Usa come immagine cliente"
+msgstr "Usa come immagine cliente"
+
+msgid "Archivi Cliente"
+msgstr "Archivi Cliente"
+
+msgid "Inserisci nel cliente"
+msgstr "Inserisci nel cliente"
+
+msgid "Caricato in questo cliente"
+msgstr "Caricato in questo cliente"
+
+msgid "Filtra lista clienti"
+msgstr "Filtra lista clienti"
+
+msgid "Navigazione lista clienti"
+msgstr "Navigazione lista clienti"
+
+msgid "Lista clienti"
+msgstr "Lista clienti"
+
+msgid "Non connesso"
+msgstr "Non connesso"
+
+msgid "Token scaduto"
+msgstr "Token scaduto"
+
+msgid "Connesso"
+msgstr "Connesso"

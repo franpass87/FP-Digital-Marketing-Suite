@@ -1,0 +1,897 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2025 Francesco Passarelli
+# This file is distributed under the same license as the FP Digital Marketing Suite package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: FP Digital Marketing Suite 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/franpass87/FP-Digital-Marketing-Suite/issues\n"
+"POT-Creation-Date: 2025-08-29 06:06:20+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: FP i18n Generator\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+
+msgid "Informazioni Cliente"
+msgstr ""
+
+msgid "Settore"
+msgstr ""
+
+msgid "Es: Tecnologia, Retail, Servizi..."
+msgstr ""
+
+msgid "Specifica il settore di attività del cliente."
+msgstr ""
+
+msgid "Budget Mensile (€)"
+msgstr ""
+
+msgid "0.00"
+msgstr ""
+
+msgid "Budget mensile disponibile per le attività di marketing digitale."
+msgstr ""
+
+msgid "Email di Riferimento"
+msgstr ""
+
+msgid "contatto@cliente.com"
+msgstr ""
+
+msgid "Indirizzo email del contatto principale per questo cliente."
+msgstr ""
+
+msgid "Stato Cliente"
+msgstr ""
+
+msgid "Cliente Attivo"
+msgstr ""
+
+msgid "Indica se il cliente è attualmente attivo per le attività di marketing."
+msgstr ""
+
+msgid "FP Digital Marketing Reports"
+msgstr ""
+
+msgid "DM Reports"
+msgstr ""
+
+msgid "Non autorizzato"
+msgstr ""
+
+msgid "Generati %d report con successo!"
+msgstr ""
+
+msgid "Non hai i permessi per accedere a questa pagina."
+msgstr ""
+
+msgid "Generazione Report Automatici"
+msgstr ""
+
+msgid "Scheduler Status"
+msgstr ""
+
+msgid "Attivo"
+msgstr ""
+
+msgid "Prossima esecuzione:"
+msgstr ""
+
+msgid "Non programmato"
+msgstr ""
+
+msgid "Clienti Disponibili"
+msgstr ""
+
+msgid "clienti trovati"
+msgstr ""
+
+msgid "Genera Report Manualmente"
+msgstr ""
+
+msgid "Download Report PDF"
+msgstr ""
+
+msgid "Scarica PDF"
+msgstr ""
+
+msgid "Anteprima Report Demo"
+msgstr ""
+
+msgid "Scarica Report Demo PDF"
+msgstr ""
+
+msgid "Debug Output - Data Sources Registry"
+msgstr ""
+
+msgid "Questa sezione mostra lo stato attuale del registro delle sorgenti dati."
+msgstr ""
+
+msgid "Totali"
+msgstr ""
+
+msgid "sorgenti totali"
+msgstr ""
+
+msgid "disponibili"
+msgstr ""
+
+msgid "pianificate"
+msgstr ""
+
+msgid "Tipi Disponibili"
+msgstr ""
+
+msgid "Sorgenti Dati Disponibili"
+msgstr ""
+
+msgid "Nessuna sorgente dati attualmente disponibile."
+msgstr ""
+
+msgid "Tipo:"
+msgstr ""
+
+msgid "Capacità:"
+msgstr ""
+
+msgid "Sorgenti Dati Pianificate"
+msgstr ""
+
+msgid "Nessuna sorgente dati pianificata."
+msgstr ""
+
+msgid "Credenziali Richieste:"
+msgstr ""
+
+msgid "Debug: Dati Grezzi"
+msgstr ""
+
+msgid "Visualizza dati grezzi JSON"
+msgstr ""
+
+msgid "Tutte le sorgenti dati:"
+msgstr ""
+
+msgid "Solo Analytics:"
+msgstr ""
+
+msgid "Informazioni per Sviluppatori"
+msgstr ""
+
+msgid "Funzione Helper:"
+msgstr ""
+
+msgid "Utilizza la funzione"
+msgstr ""
+
+msgid "Esempi di utilizzo:"
+msgstr ""
+
+msgid "Hook per estensioni:"
+msgstr ""
+
+msgid "Utilizza il filtro"
+msgstr ""
+
+msgid "per aggiungere nuove sorgenti dati da plugin o temi."
+msgstr ""
+
+msgid "Google Analytics 4 - Metriche Live"
+msgstr ""
+
+msgid "Stato Connessione"
+msgstr ""
+
+msgid "Property ID:"
+msgstr ""
+
+msgid "Per visualizzare le metriche GA4, configura prima la connessione nelle"
+msgstr ""
+
+msgid "Impostazioni"
+msgstr ""
+
+msgid "Metriche Demo (Ultimi 30 giorni)"
+msgstr ""
+
+msgid "Questi sono dati dimostrativi. In produzione verrebbero mostrate le metriche reali da GA4."
+msgstr ""
+
+msgid "Sessioni"
+msgstr ""
+
+msgid "Utenti"
+msgstr ""
+
+msgid "Conversioni"
+msgstr ""
+
+msgid "Ricavi"
+msgstr ""
+
+msgid "Aggiorna Metriche"
+msgstr ""
+
+msgid "Ultimo aggiornamento:"
+msgstr ""
+
+msgid "Metriche Cache Database"
+msgstr ""
+
+msgid "Dati storici salvati nel database per reportistica."
+msgstr ""
+
+msgid "Metrica"
+msgstr ""
+
+msgid "Valore"
+msgstr ""
+
+msgid "Periodo"
+msgstr ""
+
+msgid "Recuperato"
+msgstr ""
+
+msgid "Totale record cache:"
+msgstr ""
+
+msgid "Sistema di Aggregazione Metriche"
+msgstr ""
+
+msgid "Dimostrazione del layer di aggregazione e normalizzazione per unificare metriche da diverse sorgenti dati."
+msgstr ""
+
+msgid "Schema Comune delle Metriche"
+msgstr ""
+
+msgid "Il sistema normalizza metriche da diverse sorgenti in KPI standardizzati:"
+msgstr ""
+
+msgid "Demo API Interna - Dati Aggregati"
+msgstr ""
+
+msgid "Esempio di interrogazione del sistema di aggregazione con dati mock:"
+msgstr ""
+
+msgid "Aggregazione: %s"
+msgstr ""
+
+msgid "Mappature Sorgenti Dati"
+msgstr ""
+
+msgid "Come le metriche specifiche di ogni sorgente vengono mappate ai KPI standardizzati:"
+msgstr ""
+
+msgid "Sorgente"
+msgstr ""
+
+msgid "Metrica Originale"
+msgstr ""
+
+msgid "KPI Standardizzato"
+msgstr ""
+
+msgid "Formato"
+msgstr ""
+
+msgid "Esempi di Utilizzo API Interna"
+msgstr ""
+
+msgid "Come utilizzare il sistema di aggregazione nel codice:"
+msgstr ""
+
+msgid "Sistema di Fallback"
+msgstr ""
+
+msgid "Il sistema gestisce automaticamente i dati mancanti:"
+msgstr ""
+
+msgid "🔄 Valori di fallback per metriche non disponibili"
+msgstr ""
+
+msgid "📊 Aggregazione intelligente da sorgenti multiple"
+msgstr ""
+
+msgid "⚠️ Segnalazione lacune nei dati"
+msgstr ""
+
+msgid "🎯 Raccomandazioni per migliorare la copertura"
+msgstr ""
+
+msgid "Stato Implementazione:"
+msgstr ""
+
+msgid "Schema comune per normalizzazione metriche"
+msgstr ""
+
+msgid "API interna per interrogazioni aggregate"
+msgstr ""
+
+msgid "Sistema di fallback per dati incompleti"
+msgstr ""
+
+msgid "Test unitari per aggregazione e fallback"
+msgstr ""
+
+msgid "Pronto per estensione con nuove sorgenti dati"
+msgstr ""
+
+msgid "Stato Sync Engine"
+msgstr ""
+
+msgid "Stato Sync"
+msgstr ""
+
+msgid "Programmato ma disabilitato"
+msgstr ""
+
+msgid "Statistiche (7 giorni)"
+msgstr ""
+
+msgid "Sync totali:"
+msgstr ""
+
+msgid "Successi:"
+msgstr ""
+
+msgid "Errori:"
+msgstr ""
+
+msgid "Tasso errori:"
+msgstr ""
+
+msgid "Ultimo Sync"
+msgstr ""
+
+msgid "Ultimo sync:"
+msgstr ""
+
+msgid "Nessun sync eseguito"
+msgstr ""
+
+msgid "Ultimo successo:"
+msgstr ""
+
+msgid "Log Sync Recenti"
+msgstr ""
+
+msgid "Data/Ora"
+msgstr ""
+
+msgid "Tipo"
+msgstr ""
+
+msgid "Stato"
+msgstr ""
+
+msgid "Messaggio"
+msgstr ""
+
+msgid "Nessun log di sincronizzazione disponibile."
+msgstr ""
+
+msgid "Log Errori Recenti"
+msgstr ""
+
+msgid "Stato Implementazione Sync Engine:"
+msgstr ""
+
+msgid "Scheduler con frequenza configurabile"
+msgstr ""
+
+msgid "Sincronizzazione incrementale cache metriche"
+msgstr ""
+
+msgid "Log errori e report sincronizzazioni"
+msgstr ""
+
+msgid "Opzioni configurabili in admin (Settings)"
+msgstr ""
+
+msgid "Demo funzionante ogni ora"
+msgstr ""
+
+msgid "FP DMS Security"
+msgstr ""
+
+msgid "FP Digital Marketing Suite - Security Dashboard"
+msgstr ""
+
+msgid "Esegui Audit Sicurezza"
+msgstr ""
+
+msgid "Confermi la cancellazione dei log di sicurezza?"
+msgstr ""
+
+msgid "Cancella Log Sicurezza"
+msgstr ""
+
+msgid "Punteggio Sicurezza"
+msgstr ""
+
+msgid "Problemi Critici:"
+msgstr ""
+
+msgid "Avvisi:"
+msgstr ""
+
+msgid "Ultimo Audit:"
+msgstr ""
+
+msgid "Informazioni Sistema"
+msgstr ""
+
+msgid "Versione Plugin:"
+msgstr ""
+
+msgid "Versione WordPress:"
+msgstr ""
+
+msgid "Versione PHP:"
+msgstr ""
+
+msgid "Risultati Controlli Sicurezza"
+msgstr ""
+
+msgid "Livello:"
+msgstr ""
+
+msgid "Nessun audit di sicurezza disponibile. Esegui un audit per vedere i risultati."
+msgstr ""
+
+msgid "Log Eventi Sicurezza (Ultimi 20)"
+msgstr ""
+
+msgid "Raccomandazioni Sicurezza"
+msgstr ""
+
+msgid "Mantieni sempre aggiornato WordPress e i plugin"
+msgstr ""
+
+msgid "Controlla regolarmente i log di sicurezza per attività sospette"
+msgstr ""
+
+msgid "Esegui backup regolari del sito e del database"
+msgstr ""
+
+msgid "Limita i tentativi di login e usa plugin di sicurezza"
+msgstr ""
+
+msgid "Audit di sicurezza completato. Punteggio: %d%% - %d problemi critici, %d avvisi"
+msgstr ""
+
+msgid "Log di sicurezza cancellati con successo."
+msgstr ""
+
+msgid "FP Digital Marketing Settings"
+msgstr ""
+
+msgid "FP Digital Marketing"
+msgstr ""
+
+msgid "Impostazioni Generali"
+msgstr ""
+
+msgid "Opzione Demo"
+msgstr ""
+
+msgid "Chiavi API"
+msgstr ""
+
+msgid "Configurazione API"
+msgstr ""
+
+msgid "Sincronizzazione Automatica"
+msgstr ""
+
+msgid "Impostazioni Sync"
+msgstr ""
+
+msgid "Salva Impostazioni"
+msgstr ""
+
+msgid "Configurazioni generali per il plugin FP Digital Marketing Suite."
+msgstr ""
+
+msgid "Inserisci valore demo..."
+msgstr ""
+
+msgid "Questo è un campo di esempio per testare il salvataggio delle opzioni."
+msgstr ""
+
+msgid "Configurazione delle chiavi API per i servizi esterni. Questa sezione sarà espansa in future versioni."
+msgstr ""
+
+msgid "Google Analytics 4"
+msgstr ""
+
+msgid "Client ID"
+msgstr ""
+
+msgid "Google OAuth Client ID"
+msgstr ""
+
+msgid "ID client OAuth per Google Analytics 4 API"
+msgstr ""
+
+msgid "Client Secret"
+msgstr ""
+
+msgid "Google OAuth Client Secret"
+msgstr ""
+
+msgid "Secret client OAuth per Google Analytics 4 API"
+msgstr ""
+
+msgid "Property ID"
+msgstr ""
+
+msgid "GA4 Property ID (es: 123456789)"
+msgstr ""
+
+msgid "ID della proprietà Google Analytics 4"
+msgstr ""
+
+msgid "Connetti a Google Analytics"
+msgstr ""
+
+msgid "Disconnetti"
+msgstr ""
+
+msgid "Token scade il: %s"
+msgstr ""
+
+msgid "Salva prima le credenziali Client ID e Client Secret per abilitare la connessione."
+msgstr ""
+
+msgid "Errore di sicurezza: token non valido"
+msgstr ""
+
+msgid "Errore di sicurezza OAuth. Riprova."
+msgstr ""
+
+msgid "Connessione a Google Analytics 4 completata con successo!"
+msgstr ""
+
+msgid "Errore durante la connessione a Google Analytics 4."
+msgstr ""
+
+msgid "Errore OAuth: %s"
+msgstr ""
+
+msgid "Disconnessione da Google Analytics 4 completata."
+msgstr ""
+
+msgid "Sync manuale completato: %d sorgenti, %d record aggiornati in %ss"
+msgstr ""
+
+msgid "Errore sync manuale: %s"
+msgstr ""
+
+msgid "Configura la sincronizzazione automatica dei dati dalle sorgenti collegate."
+msgstr ""
+
+msgid "Abilita Sync Automatico"
+msgstr ""
+
+msgid "Attiva la sincronizzazione automatica"
+msgstr ""
+
+msgid "Quando attivo, il sistema sincronizzerà automaticamente i dati dalle sorgenti collegate."
+msgstr ""
+
+msgid "Frequenza Sync"
+msgstr ""
+
+msgid "Ogni 15 minuti"
+msgstr ""
+
+msgid "Ogni 30 minuti"
+msgstr ""
+
+msgid "Ogni ora (Demo)"
+msgstr ""
+
+msgid "Due volte al giorno"
+msgstr ""
+
+msgid "Giornaliero"
+msgstr ""
+
+msgid "Stato Sincronizzazione"
+msgstr ""
+
+msgid "Sincronizzazione Attiva"
+msgstr ""
+
+msgid "Prossima sincronizzazione:"
+msgstr ""
+
+msgid "Programmata ma Disabilitata"
+msgstr ""
+
+msgid "Non Programmata"
+msgstr ""
+
+msgid "Esegui Sync Manuale"
+msgstr ""
+
+msgid "Non connesso"
+msgstr ""
+
+msgid "Token scaduto"
+msgstr ""
+
+msgid "Connesso"
+msgstr ""
+
+msgid "Analisi del traffico web e comportamento utenti"
+msgstr ""
+
+msgid "Google Search Console"
+msgstr ""
+
+msgid "Dati di performance SEO e ricerca organica"
+msgstr ""
+
+msgid "Facebook Ads"
+msgstr ""
+
+msgid "Metriche e performance delle campagne Facebook/Meta"
+msgstr ""
+
+msgid "Google Ads"
+msgstr ""
+
+msgid "Dati delle campagne pubblicitarie Google Ads"
+msgstr ""
+
+msgid "Mailchimp"
+msgstr ""
+
+msgid "Statistiche email marketing e automazioni"
+msgstr ""
+
+msgid "Analytics"
+msgstr ""
+
+msgid "Search/SEO"
+msgstr ""
+
+msgid "Social Media"
+msgstr ""
+
+msgid "Advertising"
+msgstr ""
+
+msgid "Email Marketing"
+msgstr ""
+
+msgid "Configura la sorgente dati %s per migliorare la copertura dei dati"
+msgstr ""
+
+msgid "Nessun dato disponibile per la categoria %s"
+msgstr ""
+
+msgid "Ottima copertura dei dati! Tutti i KPI principali sono disponibili."
+msgstr ""
+
+msgid "Numero totale di sessioni sul sito"
+msgstr ""
+
+msgid "Numero di utenti unici"
+msgstr ""
+
+msgid "Visualizzazioni Pagina"
+msgstr ""
+
+msgid "Numero totale di pagine visualizzate"
+msgstr ""
+
+msgid "Frequenza Rimbalzo"
+msgstr ""
+
+msgid "Percentuale di sessioni con una sola pagina visualizzata"
+msgstr ""
+
+msgid "Numero totale di conversioni"
+msgstr ""
+
+msgid "Fatturato"
+msgstr ""
+
+msgid "Fatturato totale generato"
+msgstr ""
+
+msgid "Impressioni"
+msgstr ""
+
+msgid "Numero di volte che un annuncio è stato mostrato"
+msgstr ""
+
+msgid "Clic"
+msgstr ""
+
+msgid "Numero di clic sugli annunci"
+msgstr ""
+
+msgid "CTR"
+msgstr ""
+
+msgid "Click-through rate (percentuale di clic)"
+msgstr ""
+
+msgid "CPC"
+msgstr ""
+
+msgid "Costo per clic medio"
+msgstr ""
+
+msgid "Costo"
+msgstr ""
+
+msgid "Costo totale della campagna"
+msgstr ""
+
+msgid "Clic Organici"
+msgstr ""
+
+msgid "Clic dai risultati di ricerca organici"
+msgstr ""
+
+msgid "Impressioni Organiche"
+msgstr ""
+
+msgid "Impressioni nei risultati di ricerca organici"
+msgstr ""
+
+msgid "Aperture Email"
+msgstr ""
+
+msgid "Numero di email aperte"
+msgstr ""
+
+msgid "Clic Email"
+msgstr ""
+
+msgid "Numero di clic nelle email"
+msgstr ""
+
+msgid "Traffico"
+msgstr ""
+
+msgid "Metriche di traffico del sito web"
+msgstr ""
+
+msgid "Coinvolgimento"
+msgstr ""
+
+msgid "Metriche di coinvolgimento degli utenti"
+msgstr ""
+
+msgid "Metriche di conversione e fatturato"
+msgstr ""
+
+msgid "Pubblicità"
+msgstr ""
+
+msgid "Metriche delle campagne pubblicitarie"
+msgstr ""
+
+msgid "Ricerca"
+msgstr ""
+
+msgid "Metriche di ricerca organica (SEO)"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Metriche di email marketing"
+msgstr ""
+
+msgid "Organic Search"
+msgstr ""
+
+msgid "Direct"
+msgstr ""
+
+msgid "Digital Marketing Report - Client %d"
+msgstr ""
+
+msgid "Canale"
+msgstr ""
+
+msgid "WordPress Version"
+msgstr ""
+
+msgid "WordPress version: %s"
+msgstr ""
+
+msgid " (Latest: %s)"
+msgstr ""
+
+msgid "PHP Version"
+msgstr ""
+
+msgid "PHP version: %s"
+msgstr ""
+
+msgid "File Permissions"
+msgstr ""
+
+msgid "Plugin directory permissions: %s"
+msgstr ""
+
+msgid "Security Constants"
+msgstr ""
+
+msgid "All security constants are defined"
+msgstr ""
+
+msgid "Missing constants: %s"
+msgstr ""
+
+msgid "Encryption Support"
+msgstr ""
+
+msgid "OpenSSL extension available"
+msgstr ""
+
+msgid "OpenSSL extension not available"
+msgstr ""
+
+msgid "Database Security"
+msgstr ""
+
+msgid "Database version: %s"
+msgstr ""
+
+msgid "Database connection not available in test environment"
+msgstr ""
+
+msgid "API Key Storage"
+msgstr ""
+
+msgid "API keys: %d total, %d encrypted"
+msgstr ""
+
+msgid "Aggiungi Nuovo"
+msgstr ""
+
+msgid "Aggiungi Nuovo Cliente"
+msgstr ""
+
+msgid "Nuovo Cliente"
+msgstr ""
+
+msgid "Modifica Cliente"
+msgstr ""
+
+msgid "Visualizza Cliente"
+msgstr ""
+
+msgid "Tutti i Clienti"
+msgstr ""
+
+msgid "Cerca Clienti"
+msgstr ""
+
+msgid "Cliente Genitore:"
+msgstr ""
+
+msgid "Nessun cliente trovato."
+msgstr ""
+
+msgid "Nessun cliente trovato nel cestino."
+msgstr ""

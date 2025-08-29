@@ -130,7 +130,7 @@ class SecurityAdmin {
 				<form method="post" style="display: inline;">
 					<?php wp_nonce_field( 'clear_security_logs' ); ?>
 					<input type="hidden" name="action" value="clear_security_logs">
-					<button type="submit" class="button button-secondary" onclick="return confirm('Confermi la cancellazione dei log di sicurezza?')">
+					<button type="submit" class="button button-secondary" onclick="return confirm('<?php echo esc_js( __( 'Confermi la cancellazione dei log di sicurezza?', 'fp-digital-marketing' ) ); ?>')">>
 						<?php esc_html_e( 'Cancella Log Sicurezza', 'fp-digital-marketing' ); ?>
 					</button>
 				</form>
