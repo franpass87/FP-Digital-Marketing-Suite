@@ -53,6 +53,11 @@ class Settings {
 	private const SECTION_CACHE = 'fp_digital_marketing_cache';
 
 	/**
+	 * SEO settings section
+	 */
+	private const SECTION_SEO = 'fp_digital_marketing_seo';
+
+	/**
 	 * Demo option name
 	 */
 	private const OPTION_DEMO = 'fp_digital_marketing_demo_option';
@@ -71,6 +76,11 @@ class Settings {
 	 * Cache settings option name
 	 */
 	private const OPTION_CACHE = 'fp_digital_marketing_cache_settings';
+
+	/**
+	 * SEO settings option name
+	 */
+	private const OPTION_SEO = 'fp_digital_marketing_seo_settings';
 
 	/**
 	 * Nonce action for settings
@@ -151,6 +161,16 @@ class Settings {
 			]
 		);
 
+		register_setting(
+			self::OPTION_GROUP,
+			self::OPTION_SEO,
+			[
+				'type'              => 'array',
+				'sanitize_callback' => [ $this, 'sanitize_seo_settings' ],
+				'default'           => [],
+			]
+		);
+
 		// Add General section.
 		add_settings_section(
 			self::SECTION_GENERAL,
@@ -217,6 +237,23 @@ class Settings {
 			[ $this, 'render_cache_settings_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_CACHE
+		);
+
+		// Add SEO section.
+		add_settings_section(
+			self::SECTION_SEO,
+			__( 'Configurazione SEO e Social Media', 'fp-digital-marketing' ),
+			[ $this, 'render_seo_section' ],
+			self::PAGE_SLUG
+		);
+
+		// Add SEO settings field.
+		add_settings_field(
+			'seo_settings',
+			__( 'Impostazioni SEO', 'fp-digital-marketing' ),
+			[ $this, 'render_seo_settings_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_SEO
 		);
 	}
 
@@ -1067,5 +1104,229 @@ class Settings {
 		
 		// Ensure TTL is between 60 seconds and 24 hours
 		return max( 60, min( 86400, $ttl ) );
+	}
+
+	/**
+	 * Render SEO section description
+	 *
+	 * @return void
+	 */
+	public function render_seo_section(): void {
+		echo '<p>' . esc_html__( 'Configura le impostazioni SEO predefinite e i template per meta tag.', 'fp-digital-marketing' ) . '</p>';
+	}
+
+	/**
+	 * Render SEO settings field
+	 *
+	 * @return void
+	 */
+	public function render_seo_settings_field(): void {
+		$settings = get_option( self::OPTION_SEO, [
+			'site_title_template' => '{title} - {site_name}',
+			'home_title_template' => '{site_name} - {tagline}',
+			'description_fallback_length' => 155,
+			'auto_generate_descriptions' => true,
+			'default_og_image' => '',
+			'twitter_site' => '',
+			'noindex_post_types' => [],
+			'noindex_taxonomies' => [],
+			'enable_breadcrumbs' => false,
+		] );
+
+		$post_types = get_post_types( [ 'public' => true ], 'objects' );
+		$taxonomies = get_taxonomies( [ 'public' => true ], 'objects' );
+		?>
+		<table class="form-table">
+			<tbody>
+				<tr>
+					<th scope="row">
+						<label for="site_title_template"><?php esc_html_e( 'Template Titolo Pagina', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="text" 
+							id="site_title_template" 
+							name="<?php echo esc_attr( self::OPTION_SEO ); ?>[site_title_template]" 
+							value="<?php echo esc_attr( $settings['site_title_template'] ); ?>" 
+							class="large-text"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'Template per titoli delle pagine. Usa {title} e {site_name}.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="home_title_template"><?php esc_html_e( 'Template Titolo Home', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="text" 
+							id="home_title_template" 
+							name="<?php echo esc_attr( self::OPTION_SEO ); ?>[home_title_template]" 
+							value="<?php echo esc_attr( $settings['home_title_template'] ); ?>" 
+							class="large-text"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'Template per il titolo della home page. Usa {site_name} e {tagline}.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="description_fallback_length"><?php esc_html_e( 'Lunghezza Descrizione Auto', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="number" 
+							id="description_fallback_length" 
+							name="<?php echo esc_attr( self::OPTION_SEO ); ?>[description_fallback_length]" 
+							value="<?php echo esc_attr( $settings['description_fallback_length'] ); ?>" 
+							min="50" 
+							max="300" 
+							step="5"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'Lunghezza del testo estratto automaticamente per le descrizioni.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="auto_generate_descriptions"><?php esc_html_e( 'Genera Descrizioni Auto', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="auto_generate_descriptions" 
+							name="<?php echo esc_attr( self::OPTION_SEO ); ?>[auto_generate_descriptions]" 
+							value="1" 
+							<?php checked( $settings['auto_generate_descriptions'] ); ?>
+						/>
+						<label for="auto_generate_descriptions"><?php esc_html_e( 'Genera automaticamente descrizioni se non specificate', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="default_og_image"><?php esc_html_e( 'Immagine OG Predefinita', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="url" 
+							id="default_og_image" 
+							name="<?php echo esc_attr( self::OPTION_SEO ); ?>[default_og_image]" 
+							value="<?php echo esc_attr( $settings['default_og_image'] ); ?>" 
+							class="large-text"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'URL immagine predefinita per Open Graph quando non specificata.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="twitter_site"><?php esc_html_e( 'Twitter Site', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="text" 
+							id="twitter_site" 
+							name="<?php echo esc_attr( self::OPTION_SEO ); ?>[twitter_site]" 
+							value="<?php echo esc_attr( $settings['twitter_site'] ); ?>" 
+							placeholder="@nomeutente"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'Handle Twitter del sito (es: @nomeutente).', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Tipi di Contenuto da Nascondere', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<fieldset>
+							<?php foreach ( $post_types as $post_type ): ?>
+								<label>
+									<input 
+										type="checkbox" 
+										name="<?php echo esc_attr( self::OPTION_SEO ); ?>[noindex_post_types][]" 
+										value="<?php echo esc_attr( $post_type->name ); ?>"
+										<?php checked( in_array( $post_type->name, $settings['noindex_post_types'], true ) ); ?>
+									/>
+									<?php echo esc_html( $post_type->label ); ?>
+								</label><br>
+							<?php endforeach; ?>
+							<p class="description">
+								<?php esc_html_e( 'Tipi di contenuto che saranno nascosti dai motori di ricerca (noindex, nofollow).', 'fp-digital-marketing' ); ?>
+							</p>
+						</fieldset>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Tassonomie da Nascondere', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<fieldset>
+							<?php foreach ( $taxonomies as $taxonomy ): ?>
+								<label>
+									<input 
+										type="checkbox" 
+										name="<?php echo esc_attr( self::OPTION_SEO ); ?>[noindex_taxonomies][]" 
+										value="<?php echo esc_attr( $taxonomy->name ); ?>"
+										<?php checked( in_array( $taxonomy->name, $settings['noindex_taxonomies'], true ) ); ?>
+									/>
+									<?php echo esc_html( $taxonomy->label ); ?>
+								</label><br>
+							<?php endforeach; ?>
+							<p class="description">
+								<?php esc_html_e( 'Archivi di tassonomie che saranno nascosti dai motori di ricerca.', 'fp-digital-marketing' ); ?>
+							</p>
+						</fieldset>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Sanitize SEO settings
+	 *
+	 * @param array $input Raw input data
+	 * @return array Sanitized data
+	 */
+	public function sanitize_seo_settings( array $input ): array {
+		$sanitized = [];
+
+		// Text templates
+		$sanitized['site_title_template'] = sanitize_text_field( $input['site_title_template'] ?? '{title} - {site_name}' );
+		$sanitized['home_title_template'] = sanitize_text_field( $input['home_title_template'] ?? '{site_name} - {tagline}' );
+
+		// Numeric settings
+		$sanitized['description_fallback_length'] = max( 50, min( 300, intval( $input['description_fallback_length'] ?? 155 ) ) );
+
+		// Boolean settings
+		$sanitized['auto_generate_descriptions'] = isset( $input['auto_generate_descriptions'] ) && $input['auto_generate_descriptions'] === '1';
+
+		// URLs
+		$sanitized['default_og_image'] = esc_url_raw( $input['default_og_image'] ?? '' );
+
+		// Twitter handle
+		$twitter_site = sanitize_text_field( $input['twitter_site'] ?? '' );
+		if ( ! empty( $twitter_site ) && strpos( $twitter_site, '@' ) !== 0 ) {
+			$twitter_site = '@' . $twitter_site;
+		}
+		$sanitized['twitter_site'] = $twitter_site;
+
+		// Arrays
+		$sanitized['noindex_post_types'] = array_map( 'sanitize_key', $input['noindex_post_types'] ?? [] );
+		$sanitized['noindex_taxonomies'] = array_map( 'sanitize_key', $input['noindex_taxonomies'] ?? [] );
+
+		return $sanitized;
 	}
 }
