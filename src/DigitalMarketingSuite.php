@@ -13,6 +13,7 @@ use FP\DigitalMarketing\PostTypes\ClientePostType;
 use FP\DigitalMarketing\Admin\ClienteMeta;
 use FP\DigitalMarketing\Admin\Settings;
 use FP\DigitalMarketing\Admin\Reports;
+use FP\DigitalMarketing\Admin\Dashboard;
 use FP\DigitalMarketing\Admin\SecurityAdmin;
 use FP\DigitalMarketing\Admin\CachePerformance;
 use FP\DigitalMarketing\Admin\OnboardingWizard;
@@ -61,6 +62,13 @@ class DigitalMarketingSuite {
 	private Reports $reports;
 
 	/**
+	 * Dashboard instance
+	 *
+	 * @var Dashboard
+	 */
+	private Dashboard $dashboard;
+
+	/**
 	 * Security Admin instance
 	 *
 	 * @var SecurityAdmin
@@ -89,6 +97,7 @@ class DigitalMarketingSuite {
 		$this->cliente_meta = new ClienteMeta();
 		$this->settings = new Settings();
 		$this->reports = new Reports();
+		$this->dashboard = new Dashboard();
 		$this->security_admin = new SecurityAdmin();
 		$this->cache_performance = new CachePerformance();
 		$this->onboarding_wizard = new OnboardingWizard();
@@ -117,6 +126,7 @@ class DigitalMarketingSuite {
 		$this->cliente_meta->init();
 		$this->settings->init();
 		$this->reports->init();
+		$this->dashboard->init();
 		$this->security_admin->init();
 		$this->cache_performance->init();
 		$this->onboarding_wizard->init();
