@@ -60,3 +60,7 @@ coverage/
 .coverage/
 coverage.xml
 clover.xml
+
+# Temporary i18n generation scripts (not part of the plugin)
+/tmp/generate-pot.php
+/tmp/po-to-mo.php
