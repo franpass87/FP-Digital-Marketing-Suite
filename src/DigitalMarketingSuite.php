@@ -15,6 +15,7 @@ use FP\DigitalMarketing\Admin\Settings;
 use FP\DigitalMarketing\Admin\Reports;
 use FP\DigitalMarketing\Admin\SecurityAdmin;
 use FP\DigitalMarketing\Admin\CachePerformance;
+use FP\DigitalMarketing\Admin\OnboardingWizard;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
@@ -74,6 +75,13 @@ class DigitalMarketingSuite {
 	private CachePerformance $cache_performance;
 
 	/**
+	 * Onboarding Wizard instance
+	 *
+	 * @var OnboardingWizard
+	 */
+	private OnboardingWizard $onboarding_wizard;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -83,6 +91,7 @@ class DigitalMarketingSuite {
 		$this->reports = new Reports();
 		$this->security_admin = new SecurityAdmin();
 		$this->cache_performance = new CachePerformance();
+		$this->onboarding_wizard = new OnboardingWizard();
 	}
 
 	/**
@@ -110,6 +119,7 @@ class DigitalMarketingSuite {
 		$this->reports->init();
 		$this->security_admin->init();
 		$this->cache_performance->init();
+		$this->onboarding_wizard->init();
 
 		// Initialize report scheduler.
 		ReportScheduler::init();
