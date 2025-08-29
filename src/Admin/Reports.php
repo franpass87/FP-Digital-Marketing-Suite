@@ -14,9 +14,11 @@ use FP\DigitalMarketing\Helpers\ReportGenerator;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\MetricsAggregator;
 use FP\DigitalMarketing\Helpers\MetricsSchema;
+use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\Models\MetricsCache;
+use FP\DigitalMarketing\Models\SyncLog;
 
 /**
  * Reports class for plugin administration
@@ -189,6 +191,9 @@ class Reports {
 					</div>
 				<?php endif; ?>
 			</div>
+
+			<!-- Sync Engine Status Section -->
+			<?php $this->render_sync_status_section(); ?>
 
 			<!-- GA4 Metrics Section -->
 			<?php $this->render_ga4_metrics_section(); ?>
@@ -675,6 +680,132 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 					<li>✅ <?php esc_html_e( 'Sistema di fallback per dati incompleti', 'fp-digital-marketing' ); ?></li>
 					<li>✅ <?php esc_html_e( 'Test unitari per aggregazione e fallback', 'fp-digital-marketing' ); ?></li>
 					<li>🔧 <?php esc_html_e( 'Pronto per estensione con nuove sorgenti dati', 'fp-digital-marketing' ); ?></li>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render sync status section
+	 *
+	 * @return void
+	 */
+	private function render_sync_status_section(): void {
+		$sync_stats = SyncLog::get_sync_stats( 7 );
+		$recent_logs = SyncLog::get_all_logs( 10 );
+		$error_logs = SyncLog::get_error_logs( 5 );
+		?>
+		<div class="fp-dms-sync-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Stato Sync Engine', 'fp-digital-marketing' ); ?></h2>
+			
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+				<div class="fp-dms-card" style="background: #f8f9fa; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
+					<h3 style="margin-top: 0;"><?php esc_html_e( 'Stato Sync', 'fp-digital-marketing' ); ?></h3>
+					<?php if ( SyncEngine::is_scheduled() && SyncEngine::is_sync_enabled() ) : ?>
+						<p><span style="color: #00a32a;">●</span> <?php esc_html_e( 'Attivo', 'fp-digital-marketing' ); ?></p>
+						<p><strong><?php esc_html_e( 'Prossima esecuzione:', 'fp-digital-marketing' ); ?></strong><br>
+						<?php echo esc_html( SyncEngine::get_next_scheduled_time() ); ?></p>
+					<?php elseif ( SyncEngine::is_scheduled() ) : ?>
+						<p><span style="color: #dba617;">●</span> <?php esc_html_e( 'Programmato ma disabilitato', 'fp-digital-marketing' ); ?></p>
+					<?php else : ?>
+						<p><span style="color: #d63638;">●</span> <?php esc_html_e( 'Non programmato', 'fp-digital-marketing' ); ?></p>
+					<?php endif; ?>
+				</div>
+				
+				<div class="fp-dms-card" style="background: #f8f9fa; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
+					<h3 style="margin-top: 0;"><?php esc_html_e( 'Statistiche (7 giorni)', 'fp-digital-marketing' ); ?></h3>
+					<p><strong><?php esc_html_e( 'Sync totali:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $sync_stats['total_syncs'] ); ?></p>
+					<p><strong><?php esc_html_e( 'Successi:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $sync_stats['successful_syncs'] ); ?></p>
+					<p><strong><?php esc_html_e( 'Errori:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $sync_stats['failed_syncs'] ); ?></p>
+					<p><strong><?php esc_html_e( 'Tasso errori:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $sync_stats['error_rate'] ); ?>%</p>
+				</div>
+
+				<div class="fp-dms-card" style="background: #f8f9fa; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
+					<h3 style="margin-top: 0;"><?php esc_html_e( 'Ultimo Sync', 'fp-digital-marketing' ); ?></h3>
+					<?php if ( $sync_stats['last_sync'] ) : ?>
+						<p><strong><?php esc_html_e( 'Ultimo sync:', 'fp-digital-marketing' ); ?></strong><br>
+						<?php echo esc_html( date( 'd/m/Y H:i', strtotime( $sync_stats['last_sync'] ) ) ); ?></p>
+					<?php else : ?>
+						<p><?php esc_html_e( 'Nessun sync eseguito', 'fp-digital-marketing' ); ?></p>
+					<?php endif; ?>
+					
+					<?php if ( $sync_stats['last_successful_sync'] ) : ?>
+						<p><strong><?php esc_html_e( 'Ultimo successo:', 'fp-digital-marketing' ); ?></strong><br>
+						<?php echo esc_html( date( 'd/m/Y H:i', strtotime( $sync_stats['last_successful_sync'] ) ) ); ?></p>
+					<?php endif; ?>
+				</div>
+			</div>
+
+			<!-- Recent Sync Logs -->
+			<div style="margin-top: 30px;">
+				<h3><?php esc_html_e( 'Log Sync Recenti', 'fp-digital-marketing' ); ?></h3>
+				<?php if ( ! empty( $recent_logs ) ) : ?>
+					<div style="overflow-x: auto;">
+						<table class="wp-list-table widefat fixed striped" style="margin-top: 10px;">
+							<thead>
+								<tr>
+									<th style="width: 150px;"><?php esc_html_e( 'Data/Ora', 'fp-digital-marketing' ); ?></th>
+									<th style="width: 80px;"><?php esc_html_e( 'Tipo', 'fp-digital-marketing' ); ?></th>
+									<th style="width: 100px;"><?php esc_html_e( 'Stato', 'fp-digital-marketing' ); ?></th>
+									<th><?php esc_html_e( 'Messaggio', 'fp-digital-marketing' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ( $recent_logs as $log ) : ?>
+									<tr>
+										<td><?php echo esc_html( date( 'd/m/Y H:i', strtotime( $log['started_at'] ) ) ); ?></td>
+										<td><?php echo esc_html( ucfirst( $log['sync_type'] ) ); ?></td>
+										<td>
+											<?php
+											$status_colors = [
+												'success' => '#00a32a',
+												'error' => '#d63638',
+												'warning' => '#dba617',
+												'running' => '#0073aa',
+											];
+											$color = $status_colors[ $log['status'] ] ?? '#666';
+											?>
+											<span style="color: <?php echo esc_attr( $color ); ?>;">
+												<?php echo esc_html( ucfirst( $log['status'] ) ); ?>
+											</span>
+										</td>
+										<td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+											<?php echo esc_html( $log['message'] ?? '-' ); ?>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				<?php else : ?>
+					<p><?php esc_html_e( 'Nessun log di sincronizzazione disponibile.', 'fp-digital-marketing' ); ?></p>
+				<?php endif; ?>
+			</div>
+
+			<!-- Error Logs -->
+			<?php if ( ! empty( $error_logs ) ) : ?>
+				<div style="margin-top: 30px;">
+					<h3 style="color: #d63638;"><?php esc_html_e( 'Log Errori Recenti', 'fp-digital-marketing' ); ?></h3>
+					<div style="background: #fef7f7; border: 1px solid #e5c1c1; border-radius: 4px; padding: 15px;">
+						<?php foreach ( $error_logs as $error_log ) : ?>
+							<div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5c1c1;">
+								<strong><?php echo esc_html( date( 'd/m/Y H:i', strtotime( $error_log['started_at'] ) ) ); ?></strong><br>
+								<span style="color: #d63638;"><?php echo esc_html( $error_log['message'] ?? 'Errore non specificato' ); ?></span>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<!-- Implementation Status -->
+			<div style="margin-top: 20px; padding: 15px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px;">
+				<strong><?php esc_html_e( 'Stato Implementazione Sync Engine:', 'fp-digital-marketing' ); ?></strong>
+				<ul style="margin: 10px 0; padding-left: 20px;">
+					<li>✅ <?php esc_html_e( 'Scheduler con frequenza configurabile', 'fp-digital-marketing' ); ?></li>
+					<li>✅ <?php esc_html_e( 'Sincronizzazione incrementale cache metriche', 'fp-digital-marketing' ); ?></li>
+					<li>✅ <?php esc_html_e( 'Log errori e report sincronizzazioni', 'fp-digital-marketing' ); ?></li>
+					<li>✅ <?php esc_html_e( 'Opzioni configurabili in admin (Settings)', 'fp-digital-marketing' ); ?></li>
+					<li>✅ <?php esc_html_e( 'Demo funzionante ogni ora', 'fp-digital-marketing' ); ?></li>
 				</ul>
 			</div>
 		</div>
