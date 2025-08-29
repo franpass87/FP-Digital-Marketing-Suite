@@ -18,6 +18,7 @@ use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
+use FP\DigitalMarketing\DataSources\GoogleSearchConsole;
 use FP\DigitalMarketing\Models\MetricsCache;
 use FP\DigitalMarketing\Models\SyncLog;
 
@@ -206,6 +207,9 @@ class Reports {
 			<!-- GA4 Metrics Section -->
 			<?php $this->render_ga4_metrics_section(); ?>
 
+			<!-- GSC Metrics Section -->
+			<?php $this->render_gsc_metrics_section(); ?>
+
 			<!-- Metrics Aggregator Section -->
 			<?php $this->render_aggregator_section(); ?>
 
@@ -389,6 +393,56 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 	}
 
 	/**
+	 * Render GSC metrics section
+	 *
+	 * @return void
+	 */
+	private function render_gsc_metrics_section(): void {
+		$oauth = new GoogleOAuth();
+		$connection_status = $oauth->get_connection_status();
+		$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
+		$site_url = $api_keys['gsc_site_url'] ?? '';
+
+		?>
+		<div class="fp-dms-gsc-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Google Search Console - Metriche SEO', 'fp-digital-marketing' ); ?></h2>
+			
+			<div class="gsc-connection-info" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+				<h3 style="margin-top: 0;"><?php esc_html_e( 'Stato Connessione', 'fp-digital-marketing' ); ?></h3>
+				<p class="gsc-status" style="<?php echo ( $connection_status['connected'] && ! empty( $site_url ) ) ? 'color: #00a32a;' : 'color: #d63638;'; ?>">
+					<span class="status-indicator">●</span>
+					<?php 
+					if ( $connection_status['connected'] && ! empty( $site_url ) ) {
+						esc_html_e( 'Connesso', 'fp-digital-marketing' );
+					} else {
+						esc_html_e( 'Non connesso', 'fp-digital-marketing' );
+					}
+					?>
+				</p>
+				
+				<?php if ( ! empty( $site_url ) ): ?>
+					<p><strong><?php esc_html_e( 'Site URL:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $site_url ); ?></p>
+				<?php endif; ?>
+			</div>
+
+			<?php if ( $connection_status['connected'] && ! empty( $site_url ) ): ?>
+				<?php $this->render_gsc_demo_metrics( $site_url ); ?>
+				<?php $this->render_cached_gsc_metrics(); ?>
+			<?php else: ?>
+				<div class="notice notice-warning inline">
+					<p>
+						<?php esc_html_e( 'Per visualizzare le metriche Search Console, configura prima la connessione nelle', 'fp-digital-marketing' ); ?>
+						<a href="<?php echo esc_url( admin_url( 'options-general.php?page=fp-digital-marketing-settings' ) ); ?>">
+							<?php esc_html_e( 'Impostazioni', 'fp-digital-marketing' ); ?>
+						</a>.
+					</p>
+				</div>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Render GA4 demo metrics
 	 *
 	 * @param string $property_id GA4 property ID
@@ -502,6 +556,137 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 				<strong><?php esc_html_e( 'Totale record cache:', 'fp-digital-marketing' ); ?></strong>
 				<?php 
 				$total_cached = MetricsCache::count(['source' => GoogleAnalytics4::SOURCE_ID]);
+				echo esc_html( number_format( $total_cached ) );
+				?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render GSC demo metrics
+	 *
+	 * @param string $site_url GSC site URL
+	 * @return void
+	 */
+	private function render_gsc_demo_metrics( string $site_url ): void {
+		// Create GSC instance and fetch demo data
+		$gsc = new GoogleSearchConsole( $site_url );
+		$end_date = date( 'Y-m-d' );
+		$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
+
+		// Fetch demo metrics (mock data)
+		$metrics = $gsc->fetch_metrics( 1, $start_date, $end_date );
+
+		if ( $metrics ) {
+			?>
+			<div class="gsc-demo-metrics" style="margin: 15px 0;">
+				<h3><?php esc_html_e( 'Metriche SEO Demo (Ultimi 30 giorni)', 'fp-digital-marketing' ); ?></h3>
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+					<div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+						<h4 style="margin: 0 0 10px 0; color: #1e73be;"><?php esc_html_e( 'Impressioni', 'fp-digital-marketing' ); ?></h4>
+						<p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;"><?php echo esc_html( number_format( (int) $metrics['impressions'] ) ); ?></p>
+					</div>
+					<div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+						<h4 style="margin: 0 0 10px 0; color: #27ae60;"><?php esc_html_e( 'Clic', 'fp-digital-marketing' ); ?></h4>
+						<p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;"><?php echo esc_html( number_format( (int) $metrics['clicks'] ) ); ?></p>
+					</div>
+					<div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+						<h4 style="margin: 0 0 10px 0; color: #e67e22;"><?php esc_html_e( 'CTR', 'fp-digital-marketing' ); ?></h4>
+						<p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;"><?php echo esc_html( $metrics['ctr'] ); ?>%</p>
+					</div>
+					<div style="background: #f8f9fa; padding: 15px; border-radius: 4px; text-align: center;">
+						<h4 style="margin: 0 0 10px 0; color: #8e44ad;"><?php esc_html_e( 'Posizione Media', 'fp-digital-marketing' ); ?></h4>
+						<p style="font-size: 24px; font-weight: bold; margin: 0; color: #2c3e50;"><?php echo esc_html( $metrics['position'] ); ?></p>
+					</div>
+				</div>
+				<p style="margin: 15px 0 0 0; color: #666; font-style: italic;">
+					<?php esc_html_e( '* Dati demo generati automaticamente. Verranno sostituiti con dati reali quando la connessione API sarà attiva.', 'fp-digital-marketing' ); ?>
+				</p>
+			</div>
+			<?php
+		} else {
+			?>
+			<div class="notice notice-error inline">
+				<p><?php esc_html_e( 'Errore nel recupero delle metriche Search Console demo.', 'fp-digital-marketing' ); ?></p>
+			</div>
+			<?php
+		}
+	}
+
+	/**
+	 * Render cached GSC metrics from database
+	 *
+	 * @return void
+	 */
+	private function render_cached_gsc_metrics(): void {
+		$cached_metrics = MetricsCache::get_metrics([
+			'source' => GoogleSearchConsole::SOURCE_ID,
+			'limit' => 10,
+			'order_by' => 'period_start',
+			'order' => 'DESC'
+		]);
+
+		?>
+		<div class="gsc-cached-metrics" style="margin: 20px 0;">
+			<h3><?php esc_html_e( 'Cronologia Metriche Search Console (Cache)', 'fp-digital-marketing' ); ?></h3>
+			<div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+				<table class="wp-list-table widefat fixed striped" style="margin: 0;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Data', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Metrica', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Valore', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Periodo', 'fp-digital-marketing' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php if ( ! empty( $cached_metrics ) ): ?>
+							<?php foreach ( $cached_metrics as $metric ): ?>
+								<tr>
+									<td><?php echo esc_html( date( 'd/m/Y H:i', strtotime( $metric['created_at'] ) ) ); ?></td>
+									<td>
+										<strong><?php echo esc_html( ucfirst( $metric['metric_name'] ) ); ?></strong>
+										<?php if ( ! empty( $metric['metadata']['site_url'] ) ): ?>
+											<br><small style="color: #666;"><?php echo esc_html( $metric['metadata']['site_url'] ); ?></small>
+										<?php endif; ?>
+									</td>
+									<td>
+										<span style="font-weight: bold; color: #2c3e50;">
+											<?php 
+											if ( $metric['metric_name'] === 'ctr' ) {
+												echo esc_html( $metric['value'] ) . '%';
+											} elseif ( $metric['metric_name'] === 'position' ) {
+												echo esc_html( $metric['value'] );
+											} else {
+												echo esc_html( number_format( (int) $metric['value'] ) );
+											}
+											?>
+										</span>
+									</td>
+									<td>
+										<small style="color: #666;">
+											<?php echo esc_html( date( 'd/m', strtotime( $metric['period_start'] ) ) ); ?> - 
+											<?php echo esc_html( date( 'd/m', strtotime( $metric['period_end'] ) ) ); ?>
+										</small>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						<?php else: ?>
+							<tr>
+								<td colspan="4" style="text-align: center; padding: 20px; color: #666;">
+									<?php esc_html_e( 'Nessuna metrica Search Console in cache. Le metriche appariranno qui dopo la prima sincronizzazione.', 'fp-digital-marketing' ); ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+
+			<p style="margin-top: 15px;">
+				<strong><?php esc_html_e( 'Totale record cache:', 'fp-digital-marketing' ); ?></strong>
+				<?php 
+				$total_cached = MetricsCache::count(['source' => GoogleSearchConsole::SOURCE_ID]);
 				echo esc_html( number_format( $total_cached ) );
 				?>
 			</p>

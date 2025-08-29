@@ -33,6 +33,7 @@ class MetricsSchema {
 	public const KPI_COST = 'cost';
 	public const KPI_ORGANIC_CLICKS = 'organic_clicks';
 	public const KPI_ORGANIC_IMPRESSIONS = 'organic_impressions';
+	public const KPI_AVG_POSITION = 'avg_position';
 	public const KPI_EMAIL_OPENS = 'email_opens';
 	public const KPI_EMAIL_CLICKS = 'email_clicks';
 
@@ -144,6 +145,13 @@ class MetricsSchema {
 				'format' => 'number',
 				'aggregation' => 'sum',
 			],
+			self::KPI_AVG_POSITION => [
+				'name' => __( 'Posizione Media', 'fp-digital-marketing' ),
+				'description' => __( 'Posizione media nei risultati di ricerca', 'fp-digital-marketing' ),
+				'category' => self::CATEGORY_SEARCH,
+				'format' => 'decimal',
+				'aggregation' => 'avg',
+			],
 			self::KPI_EMAIL_OPENS => [
 				'name' => __( 'Aperture Email', 'fp-digital-marketing' ),
 				'description' => __( 'Numero di email aperte', 'fp-digital-marketing' ),
@@ -183,7 +191,7 @@ class MetricsSchema {
 				'clicks' => self::KPI_ORGANIC_CLICKS,
 				'impressions' => self::KPI_ORGANIC_IMPRESSIONS,
 				'ctr' => self::KPI_CTR,
-				'position' => 'avg_position', // Non-standard KPI for search
+				'position' => self::KPI_AVG_POSITION,
 			],
 			'facebook_ads' => [
 				'impressions' => self::KPI_IMPRESSIONS,

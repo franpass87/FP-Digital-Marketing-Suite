@@ -63,7 +63,7 @@ class DataSources {
 				'name'        => __( 'Google Search Console', 'fp-digital-marketing' ),
 				'description' => __( 'Dati di performance SEO e ricerca organica', 'fp-digital-marketing' ),
 				'type'        => self::TYPE_SEARCH,
-				'status'      => 'planned',
+				'status'      => 'available',
 				'version'     => '1.0',
 				'endpoints'   => [
 					'searchanalytics' => 'https://www.googleapis.com/webmasters/v3/sites/{siteUrl}/searchAnalytics/query',
