@@ -26,6 +26,7 @@ use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\SeoFrontendOutput;
 use FP\DigitalMarketing\Helpers\XmlSitemap;
 use FP\DigitalMarketing\Helpers\SchemaGenerator;
+use FP\DigitalMarketing\Helpers\FAQBlock;
 use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
@@ -169,6 +170,9 @@ class DigitalMarketingSuite {
 
 		// Initialize Schema.org structured data generator.
 		SchemaGenerator::init();
+
+		// Initialize FAQ block for Gutenberg.
+		FAQBlock::init();
 
 		// Initialize XML sitemap.
 		XmlSitemap::init();
