@@ -58,6 +58,8 @@ add_action( 'plugins_loaded', function () {
 register_activation_hook( __FILE__, function () {
 	// Create custom database tables.
 	\FP\DigitalMarketing\Database\MetricsCacheTable::create_table();
+	\FP\DigitalMarketing\Database\AnomalyRulesTable::create_table();
+	\FP\DigitalMarketing\Database\DetectedAnomaliesTable::create_table();
 	
 	// Register custom capabilities.
 	\FP\DigitalMarketing\Helpers\Capabilities::register_capabilities();

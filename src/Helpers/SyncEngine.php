@@ -99,21 +99,23 @@ class SyncEngine {
 
 			self::log_sync_complete( $sync_id, $results['errors_count'] > 0 ? 'warning' : 'success', $message );
 
-			// Check alert rules after successful sync
+			// Check alert rules and anomaly detection after successful sync
 			if ( $results['errors_count'] === 0 ) {
 				try {
-					$alert_results = AlertEngine::check_all_rules();
+					// Run combined monitoring (threshold alerts + anomaly detection)
+					$monitoring_results = AlertEngine::check_all_monitoring();
 					
-					// Log alert results if any rules were triggered
-					if ( $alert_results['triggered'] > 0 ) {
+					// Log monitoring results if any alerts were triggered
+					if ( $monitoring_results['total_triggered'] > 0 ) {
 						error_log( sprintf(
-							'FP DMS Alert Check: %d rules triggered, %d notifications sent',
-							$alert_results['triggered'],
-							$alert_results['notifications_sent']
+							'FP DMS Monitoring Check: %d threshold alerts, %d anomalies detected, %d total notifications sent',
+							$monitoring_results['threshold_alerts']['triggered'],
+							$monitoring_results['anomaly_detection']['anomalies_detected'],
+							$monitoring_results['total_notifications']
 						) );
 					}
 				} catch ( \Exception $e ) {
-					error_log( 'FP DMS Alert Check Error: ' . $e->getMessage() );
+					error_log( 'FP DMS Monitoring Check Error: ' . $e->getMessage() );
 				}
 			}
 

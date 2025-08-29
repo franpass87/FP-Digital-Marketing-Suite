@@ -10,8 +10,11 @@ declare(strict_types=1);
 namespace FP\DigitalMarketing\Helpers;
 
 use FP\DigitalMarketing\Models\AlertRule;
+use FP\DigitalMarketing\Models\AnomalyRule;
+use FP\DigitalMarketing\Models\DetectedAnomaly;
 use FP\DigitalMarketing\Helpers\MetricsAggregator;
 use FP\DigitalMarketing\Helpers\MetricsSchema;
+use FP\DigitalMarketing\Helpers\AnomalyDetector;
 
 /**
  * AlertEngine class for evaluating alert rules and triggering notifications
@@ -357,5 +360,356 @@ class AlertEngine {
 		}
 
 		return $logs;
+	}
+
+	/**
+	 * Check all active anomaly detection rules
+	 *
+	 * @return array Array with anomaly check results
+	 */
+	public static function check_all_anomaly_rules(): array {
+		$results = [
+			'checked' => 0,
+			'anomalies_detected' => 0,
+			'errors' => 0,
+			'notifications_sent' => 0,
+		];
+
+		$active_rules = AnomalyRule::get_active_rules();
+		
+		foreach ( $active_rules as $rule ) {
+			$results['checked']++;
+			
+			try {
+				$check_result = self::check_anomaly_rule( $rule );
+				
+				if ( $check_result['is_anomaly'] ) {
+					$results['anomalies_detected']++;
+					
+					// Record the anomaly
+					$anomaly_id = DetectedAnomaly::create(
+						(int) $rule->client_id,
+						$rule->metric,
+						$rule->detection_method,
+						$check_result,
+						(int) $rule->id
+					);
+					
+					if ( $anomaly_id ) {
+						// Record rule trigger
+						AnomalyRule::record_trigger( (int) $rule->id );
+						
+						// Send notifications
+						$notification_result = self::send_anomaly_notifications( $rule, $check_result, $anomaly_id );
+						
+						if ( $notification_result['success'] ) {
+							$results['notifications_sent']++;
+							DetectedAnomaly::mark_notification_sent( $anomaly_id );
+						}
+					}
+				}
+			} catch ( Exception $e ) {
+				$results['errors']++;
+				error_log( 'FP Digital Marketing Anomaly Detection Error: ' . $e->getMessage() );
+			}
+		}
+
+		// Log the check results
+		self::log_anomaly_check_results( $results );
+
+		return $results;
+	}
+
+	/**
+	 * Check a single anomaly detection rule
+	 *
+	 * @param object $rule Anomaly rule object
+	 * @return array Anomaly detection result
+	 */
+	public static function check_anomaly_rule( object $rule ): array {
+		// Get current metric value for the last 24 hours
+		$end_date = current_time( 'mysql' );
+		$start_date = date( 'Y-m-d H:i:s', strtotime( '-24 hours', strtotime( $end_date ) ) );
+
+		// Get the metric value using MetricsAggregator
+		$metrics = MetricsAggregator::get_metrics(
+			(int) $rule->client_id,
+			$start_date,
+			$end_date,
+			[ $rule->metric ]
+		);
+
+		if ( ! isset( $metrics[ $rule->metric ] ) ) {
+			// No data available for this metric
+			return [
+				'is_anomaly' => false,
+				'reason' => 'no_data',
+				'metric' => $rule->metric,
+				'current_value' => 0.0,
+			];
+		}
+
+		$current_value = $metrics[ $rule->metric ]['total_value'];
+
+		// Prepare detection options
+		$options = [
+			'z_score_threshold' => (float) $rule->z_score_threshold,
+			'band_deviations' => (float) $rule->band_deviations,
+			'window_size' => (int) $rule->window_size,
+			'historical_days' => (int) $rule->historical_days,
+		];
+
+		// Perform anomaly detection based on method
+		switch ( $rule->detection_method ) {
+			case AnomalyRule::METHOD_Z_SCORE:
+				return AnomalyDetector::detect_z_score_anomaly(
+					(int) $rule->client_id,
+					$rule->metric,
+					(float) $current_value,
+					$options
+				);
+
+			case AnomalyRule::METHOD_MOVING_AVERAGE:
+				return AnomalyDetector::detect_moving_average_anomaly(
+					(int) $rule->client_id,
+					$rule->metric,
+					(float) $current_value,
+					$options
+				);
+
+			case AnomalyRule::METHOD_COMBINED:
+				return AnomalyDetector::analyze_anomaly(
+					(int) $rule->client_id,
+					$rule->metric,
+					(float) $current_value,
+					$options
+				);
+
+			default:
+				return [
+					'is_anomaly' => false,
+					'reason' => 'unknown_method',
+					'method' => $rule->detection_method,
+				];
+		}
+	}
+
+	/**
+	 * Send notifications for detected anomaly
+	 *
+	 * @param object $rule Anomaly rule object
+	 * @param array $result Anomaly detection result
+	 * @param int $anomaly_id Detected anomaly ID
+	 * @return array Notification result
+	 */
+	private static function send_anomaly_notifications( object $rule, array $result, int $anomaly_id ): array {
+		$notification_result = [
+			'success' => false,
+			'admin_notice_sent' => false,
+			'email_sent' => false,
+			'errors' => [],
+		];
+
+		// Send admin notice
+		if ( $rule->notification_admin_notice ) {
+			$notification_result['admin_notice_sent'] = self::send_anomaly_admin_notice( $rule, $result, $anomaly_id );
+		}
+
+		// Send email notification
+		if ( ! empty( $rule->notification_email ) ) {
+			$notification_result['email_sent'] = self::send_anomaly_email_notification( $rule, $result, $anomaly_id );
+		}
+
+		$notification_result['success'] = $notification_result['admin_notice_sent'] || $notification_result['email_sent'];
+
+		return $notification_result;
+	}
+
+	/**
+	 * Send admin notice for detected anomaly
+	 *
+	 * @param object $rule Anomaly rule object
+	 * @param array $result Anomaly detection result
+	 * @param int $anomaly_id Detected anomaly ID
+	 * @return bool True on success
+	 */
+	private static function send_anomaly_admin_notice( object $rule, array $result, int $anomaly_id ): bool {
+		// Store admin notice in transient for display
+		$notice_key = 'fp_dms_anomaly_' . $rule->id . '_' . time();
+		
+		$notice_data = [
+			'type' => 'anomaly',
+			'rule_name' => $rule->name,
+			'metric' => $rule->metric,
+			'detection_method' => $rule->detection_method,
+			'current_value' => $result['current_value'] ?? 0,
+			'client_id' => $rule->client_id,
+			'anomaly_id' => $anomaly_id,
+			'confidence' => self::get_anomaly_confidence( $result ),
+			'severity' => self::get_anomaly_severity( $result ),
+			'triggered_at' => current_time( 'mysql' ),
+		];
+
+		return set_transient( $notice_key, $notice_data, 24 * HOUR_IN_SECONDS );
+	}
+
+	/**
+	 * Send email notification for detected anomaly
+	 *
+	 * @param object $rule Anomaly rule object
+	 * @param array $result Anomaly detection result
+	 * @param int $anomaly_id Detected anomaly ID
+	 * @return bool True on success
+	 */
+	private static function send_anomaly_email_notification( object $rule, array $result, int $anomaly_id ): bool {
+		$client_name = get_the_title( $rule->client_id ) ?: __( 'Cliente sconosciuto', 'fp-digital-marketing' );
+		$kpi_definitions = MetricsSchema::get_kpi_definitions();
+		$metric_name = $kpi_definitions[ $rule->metric ]['name'] ?? $rule->metric;
+
+		$current_value = $result['current_value'] ?? 0;
+		$confidence = self::get_anomaly_confidence( $result );
+		$severity = self::get_anomaly_severity( $result );
+
+		$subject = sprintf(
+			/* translators: 1: Site name, 2: Rule name */
+			__( '[%1$s] Anomalia Rilevata: %2$s', 'fp-digital-marketing' ),
+			get_bloginfo( 'name' ),
+			$rule->name
+		);
+
+		$message = sprintf(
+			/* translators: 1: Client name, 2: Rule name, 3: Metric name, 4: Current value, 5: Detection method, 6: Confidence, 7: Severity, 8: Date/time */
+			__(
+				"Anomalia rilevata per il cliente: %1\$s\n\n" .
+				"Regola: %2\$s\n" .
+				"Metrica: %3\$s\n" .
+				"Valore attuale: %4\$s\n" .
+				"Metodo di rilevazione: %5\$s\n" .
+				"Confidenza: %6\$s\n" .
+				"Gravità: %7\$s\n\n" .
+				"Data/ora: %8\$s\n\n" .
+				"Per maggiori dettagli, accedi al pannello di amministrazione.\n" .
+				"ID Anomalia: %9\$d",
+				'fp-digital-marketing'
+			),
+			$client_name,
+			$rule->name,
+			$metric_name,
+			self::format_metric_value( $current_value, $rule->metric ),
+			$rule->detection_method,
+			$confidence,
+			$severity,
+			current_time( 'Y-m-d H:i:s' ),
+			$anomaly_id
+		);
+
+		return wp_mail( $rule->notification_email, $subject, $message );
+	}
+
+	/**
+	 * Get anomaly confidence level from result
+	 *
+	 * @param array $result Anomaly detection result
+	 * @return string Confidence level
+	 */
+	private static function get_anomaly_confidence( array $result ): string {
+		if ( isset( $result['combined_confidence'] ) ) {
+			return $result['combined_confidence'];
+		}
+		
+		if ( isset( $result['z_score_analysis']['confidence'] ) ) {
+			return $result['z_score_analysis']['confidence'];
+		}
+		
+		return 'unknown';
+	}
+
+	/**
+	 * Get anomaly severity level from result
+	 *
+	 * @param array $result Anomaly detection result
+	 * @return string Severity level
+	 */
+	private static function get_anomaly_severity( array $result ): string {
+		if ( isset( $result['moving_average_analysis']['severity'] ) ) {
+			return $result['moving_average_analysis']['severity'];
+		}
+		
+		// Map confidence to severity for Z-score
+		$confidence = self::get_anomaly_confidence( $result );
+		switch ( $confidence ) {
+			case 'very_high':
+				return 'critical';
+			case 'high':
+				return 'high';
+			case 'moderate':
+				return 'medium';
+			default:
+				return 'low';
+		}
+	}
+
+	/**
+	 * Log anomaly check results
+	 *
+	 * @param array $results Check results
+	 * @return void
+	 */
+	private static function log_anomaly_check_results( array $results ): void {
+		$log_entry = [
+			'timestamp' => current_time( 'c' ),
+			'type' => 'anomaly_check',
+			'results' => $results,
+		];
+
+		error_log( 'FP Digital Marketing Anomaly Check: ' . wp_json_encode( $log_entry ) );
+
+		// Store in database for admin review (keep last 50 entries)
+		$anomaly_logs = get_option( 'fp_dms_anomaly_logs', [] );
+		
+		if ( count( $anomaly_logs ) >= 50 ) {
+			$anomaly_logs = array_slice( $anomaly_logs, -49 );
+		}
+		
+		$anomaly_logs[] = $log_entry;
+		update_option( 'fp_dms_anomaly_logs', $anomaly_logs, false );
+	}
+
+	/**
+	 * Get anomaly check logs
+	 *
+	 * @param int $limit Number of logs to retrieve
+	 * @return array Array of log entries
+	 */
+	public static function get_anomaly_logs( int $limit = 20 ): array {
+		$logs = get_option( 'fp_dms_anomaly_logs', [] );
+		
+		// Return most recent logs first
+		$logs = array_reverse( $logs );
+		
+		if ( $limit > 0 ) {
+			$logs = array_slice( $logs, 0, $limit );
+		}
+
+		return $logs;
+	}
+
+	/**
+	 * Run combined alert and anomaly checks
+	 *
+	 * @return array Combined results
+	 */
+	public static function check_all_monitoring(): array {
+		$threshold_results = self::check_all_rules();
+		$anomaly_results = self::check_all_anomaly_rules();
+
+		return [
+			'threshold_alerts' => $threshold_results,
+			'anomaly_detection' => $anomaly_results,
+			'total_checks' => $threshold_results['checked'] + $anomaly_results['checked'],
+			'total_triggered' => $threshold_results['triggered'] + $anomaly_results['anomalies_detected'],
+			'total_errors' => $threshold_results['errors'] + $anomaly_results['errors'],
+			'total_notifications' => $threshold_results['notifications_sent'] + $anomaly_results['notifications_sent'],
+		];
 	}
 }
