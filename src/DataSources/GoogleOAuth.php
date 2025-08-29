@@ -40,9 +40,14 @@ class GoogleOAuth {
 	private const SEARCH_CONSOLE_SCOPE = 'https://www.googleapis.com/auth/webmasters.readonly';
 
 	/**
-	 * Combined scopes for both services
+	 * Google Ads scope
 	 */
-	private const COMBINED_SCOPES = self::ANALYTICS_SCOPE . ' ' . self::SEARCH_CONSOLE_SCOPE;
+	private const GOOGLE_ADS_SCOPE = 'https://www.googleapis.com/auth/adwords';
+
+	/**
+	 * Combined scopes for all services
+	 */
+	private const COMBINED_SCOPES = self::ANALYTICS_SCOPE . ' ' . self::SEARCH_CONSOLE_SCOPE . ' ' . self::GOOGLE_ADS_SCOPE;
 
 	/**
 	 * Option name for storing tokens
