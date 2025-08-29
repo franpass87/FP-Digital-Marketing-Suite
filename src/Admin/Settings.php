@@ -15,6 +15,7 @@ use FP\DigitalMarketing\DataSources\GoogleSearchConsole;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
+use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
  * Settings class for plugin administration
@@ -97,7 +98,7 @@ class Settings {
 		add_options_page(
 			__( 'FP Digital Marketing Settings', 'fp-digital-marketing' ),
 			__( 'FP Digital Marketing', 'fp-digital-marketing' ),
-			'manage_options',
+			Capabilities::MANAGE_SETTINGS,
 			self::PAGE_SLUG,
 			[ $this, 'render_settings_page' ]
 		);
@@ -226,7 +227,7 @@ class Settings {
 	 */
 	public function render_settings_page(): void {
 		// Check user capabilities.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
 			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
 		}
 
@@ -473,7 +474,7 @@ class Settings {
 		}
 
 		// Verify user capability
-		if ( ! Security::verify_capability_with_logging( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ) {
 			wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 		}
 
@@ -556,7 +557,7 @@ class Settings {
 		// Handle OAuth callback
 		if ( isset( $_GET['ga4_callback'] ) && $_GET['ga4_callback'] === '1' ) {
 			// Enhanced capability verification with logging
-			if ( ! Security::verify_capability_with_logging( 'manage_options' ) ) {
+			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}
 
@@ -621,7 +622,7 @@ class Settings {
 
 		// Handle disconnect with enhanced security
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'ga4_disconnect' ) {
-			if ( ! Security::verify_capability_with_logging( 'manage_options' ) || 
+			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) || 
 				 ! Security::verify_nonce_with_logging( 'ga4_disconnect', 'ga4_disconnect_nonce' ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}
@@ -642,7 +643,7 @@ class Settings {
 
 		// Handle manual sync trigger with enhanced security
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'trigger_manual_sync' ) {
-			if ( ! Security::verify_capability_with_logging( 'manage_options' ) || 
+			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) || 
 				 ! Security::verify_nonce_with_logging( 'trigger_manual_sync', 'sync_nonce' ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}

@@ -14,6 +14,7 @@ use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Helpers\DataSources;
 use FP\DigitalMarketing\Models\SyncLog;
 use FP\DigitalMarketing\Helpers\Security;
+use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
  * Dashboard class for admin overview
@@ -49,7 +50,7 @@ class Dashboard {
 		add_menu_page(
 			__( 'FP Digital Marketing Dashboard', 'fp-digital-marketing' ),
 			__( 'DM Dashboard', 'fp-digital-marketing' ),
-			'manage_options',
+			Capabilities::VIEW_DASHBOARD,
 			self::PAGE_SLUG,
 			[ $this, 'render_dashboard_page' ],
 			'dashicons-dashboard',
@@ -124,7 +125,7 @@ class Dashboard {
 			wp_die( 'Invalid nonce' );
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
 			wp_die( 'Insufficient permissions' );
 		}
 
@@ -155,7 +156,7 @@ class Dashboard {
 			wp_die( 'Invalid nonce' );
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
 			wp_die( 'Insufficient permissions' );
 		}
 
@@ -289,7 +290,7 @@ class Dashboard {
 	 */
 	public function render_dashboard_page(): void {
 		// Check user capabilities
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
 			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
 		}
 
