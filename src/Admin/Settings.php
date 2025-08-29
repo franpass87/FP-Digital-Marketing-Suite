@@ -11,6 +11,7 @@ namespace FP\DigitalMarketing\Admin;
 
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
+use FP\DigitalMarketing\Helpers\SyncEngine;
 
 /**
  * Settings class for plugin administration
@@ -38,6 +39,11 @@ class Settings {
 	private const SECTION_API_KEYS = 'fp_digital_marketing_api_keys';
 
 	/**
+	 * Sync settings section
+	 */
+	private const SECTION_SYNC = 'fp_digital_marketing_sync';
+
+	/**
 	 * Demo option name
 	 */
 	private const OPTION_DEMO = 'fp_digital_marketing_demo_option';
@@ -46,6 +52,11 @@ class Settings {
 	 * API Keys option name
 	 */
 	private const OPTION_API_KEYS = 'fp_digital_marketing_api_keys';
+
+	/**
+	 * Sync settings option name
+	 */
+	private const OPTION_SYNC = 'fp_digital_marketing_sync_settings';
 
 	/**
 	 * Nonce action for settings
@@ -105,6 +116,16 @@ class Settings {
 			]
 		);
 
+		register_setting(
+			self::OPTION_GROUP,
+			self::OPTION_SYNC,
+			[
+				'type'              => 'array',
+				'sanitize_callback' => [ $this, 'sanitize_sync_settings' ],
+				'default'           => [],
+			]
+		);
+
 		// Add General section.
 		add_settings_section(
 			self::SECTION_GENERAL,
@@ -137,6 +158,23 @@ class Settings {
 			[ $this, 'render_api_keys_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_API_KEYS
+		);
+
+		// Add Sync section.
+		add_settings_section(
+			self::SECTION_SYNC,
+			__( 'Sincronizzazione Automatica', 'fp-digital-marketing' ),
+			[ $this, 'render_sync_section' ],
+			self::PAGE_SLUG
+		);
+
+		// Add sync settings field.
+		add_settings_field(
+			'sync_settings',
+			__( 'Impostazioni Sync', 'fp-digital-marketing' ),
+			[ $this, 'render_sync_settings_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_SYNC
 		);
 	}
 
@@ -446,5 +484,173 @@ class Settings {
 			wp_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
 			exit;
 		}
+
+		// Handle manual sync trigger
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'trigger_manual_sync' ) {
+			if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $_POST['sync_nonce'], 'trigger_manual_sync' ) ) {
+				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+			}
+
+			$results = SyncEngine::trigger_manual_sync();
+			
+			if ( $results['status'] === 'success' ) {
+				add_settings_error( 
+					'manual_sync', 
+					'sync_success', 
+					sprintf(
+						__( 'Sync manuale completato: %d sorgenti, %d record aggiornati in %ss', 'fp-digital-marketing' ),
+						$results['sources_count'],
+						$results['records_updated'],
+						$results['duration']
+					),
+					'success'
+				);
+			} else {
+				add_settings_error( 
+					'manual_sync', 
+					'sync_error', 
+					sprintf( __( 'Errore sync manuale: %s', 'fp-digital-marketing' ), $results['message'] ),
+					'error'
+				);
+			}
+
+			wp_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
+			exit;
+		}
+	}
+
+	/**
+	 * Render sync section description
+	 *
+	 * @return void
+	 */
+	public function render_sync_section(): void {
+		?>
+		<p><?php esc_html_e( 'Configura la sincronizzazione automatica dei dati dalle sorgenti collegate.', 'fp-digital-marketing' ); ?></p>
+		<?php
+	}
+
+	/**
+	 * Render sync settings field
+	 *
+	 * @return void
+	 */
+	public function render_sync_settings_field(): void {
+		$sync_settings = get_option( self::OPTION_SYNC, [] );
+		$sync_enabled = $sync_settings['enable_sync'] ?? false;
+		$sync_frequency = $sync_settings['sync_frequency'] ?? 'hourly';
+		?>
+		<div class="sync-configuration">
+			<table class="form-table">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Abilita Sync Automatico', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<label>
+							<input 
+								type="checkbox" 
+								name="<?php echo esc_attr( self::OPTION_SYNC ); ?>[enable_sync]"
+								value="1"
+								<?php checked( $sync_enabled ); ?>
+							/>
+							<?php esc_html_e( 'Attiva la sincronizzazione automatica', 'fp-digital-marketing' ); ?>
+						</label>
+						<p class="description">
+							<?php esc_html_e( 'Quando attivo, il sistema sincronizzerà automaticamente i dati dalle sorgenti collegate.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Frequenza Sync', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<select name="<?php echo esc_attr( self::OPTION_SYNC ); ?>[sync_frequency]">
+							<option value="every_15_minutes" <?php selected( $sync_frequency, 'every_15_minutes' ); ?>>
+								<?php esc_html_e( 'Ogni 15 minuti', 'fp-digital-marketing' ); ?>
+							</option>
+							<option value="every_30_minutes" <?php selected( $sync_frequency, 'every_30_minutes' ); ?>>
+								<?php esc_html_e( 'Ogni 30 minuti', 'fp-digital-marketing' ); ?>
+							</option>
+							<option value="hourly" <?php selected( $sync_frequency, 'hourly' ); ?>>
+								<?php esc_html_e( 'Ogni ora (Demo)', 'fp-digital-marketing' ); ?>
+							</option>
+							<option value="twice_daily" <?php selected( $sync_frequency, 'twice_daily' ); ?>>
+								<?php esc_html_e( 'Due volte al giorno', 'fp-digital-marketing' ); ?>
+							</option>
+							<option value="daily" <?php selected( $sync_frequency, 'daily' ); ?>>
+								<?php esc_html_e( 'Giornaliero', 'fp-digital-marketing' ); ?>
+							</option>
+						</select>
+						<p class="description">
+							<?php esc_html_e( 'Frequenza con cui eseguire la sincronizzazione automatica. Per la demo è consigliato "Ogni ora".', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+
+			<div class="sync-status" style="margin-top: 20px;">
+				<h4><?php esc_html_e( 'Stato Sincronizzazione', 'fp-digital-marketing' ); ?></h4>
+				<?php if ( SyncEngine::is_scheduled() && SyncEngine::is_sync_enabled() ) : ?>
+					<p><span style="color: #00a32a;">●</span> <?php esc_html_e( 'Sincronizzazione Attiva', 'fp-digital-marketing' ); ?></p>
+					<p><strong><?php esc_html_e( 'Prossima sincronizzazione:', 'fp-digital-marketing' ); ?></strong><br>
+					<?php echo esc_html( SyncEngine::get_next_scheduled_time() ?? 'Non programmata' ); ?></p>
+				<?php elseif ( SyncEngine::is_scheduled() ) : ?>
+					<p><span style="color: #dba617;">●</span> <?php esc_html_e( 'Programmata ma Disabilitata', 'fp-digital-marketing' ); ?></p>
+				<?php else : ?>
+					<p><span style="color: #d63638;">●</span> <?php esc_html_e( 'Non Programmata', 'fp-digital-marketing' ); ?></p>
+				<?php endif; ?>
+
+				<form method="post" style="margin-top: 10px;">
+					<?php wp_nonce_field( 'trigger_manual_sync', 'sync_nonce' ); ?>
+					<input type="hidden" name="action" value="trigger_manual_sync">
+					<button type="submit" class="button button-secondary">
+						<?php esc_html_e( 'Esegui Sync Manuale', 'fp-digital-marketing' ); ?>
+					</button>
+				</form>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Sanitize sync settings data
+	 *
+	 * @param mixed $input The input data.
+	 * @return array Sanitized sync settings array.
+	 */
+	public function sanitize_sync_settings( $input ): array {
+		if ( ! is_array( $input ) ) {
+			return [];
+		}
+
+		$sanitized = [];
+		
+		// Enable sync checkbox
+		$sanitized['enable_sync'] = ! empty( $input['enable_sync'] );
+		
+		// Sync frequency
+		$allowed_frequencies = [ 'every_15_minutes', 'every_30_minutes', 'hourly', 'twice_daily', 'daily' ];
+		$sanitized['sync_frequency'] = in_array( $input['sync_frequency'] ?? '', $allowed_frequencies, true ) 
+			? $input['sync_frequency'] 
+			: 'hourly';
+
+		// If sync settings changed, reschedule the sync
+		$current_settings = get_option( self::OPTION_SYNC, [] );
+		if ( $sanitized !== $current_settings ) {
+			// Unschedule and reschedule with new settings
+			SyncEngine::unschedule_sync();
+			if ( $sanitized['enable_sync'] ) {
+				SyncEngine::schedule_sync();
+			}
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Get sync settings
+	 *
+	 * @return array The sync settings array.
+	 */
+	public function get_sync_settings(): array {
+		return get_option( self::OPTION_SYNC, [] );
 	}
 }

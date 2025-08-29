@@ -15,6 +15,7 @@ use FP\DigitalMarketing\Admin\Settings;
 use FP\DigitalMarketing\Admin\Reports;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
+use FP\DigitalMarketing\Helpers\SyncEngine;
 
 /**
  * Main application class
@@ -89,6 +90,9 @@ class DigitalMarketingSuite {
 
 		// Initialize report scheduler.
 		ReportScheduler::init();
+
+		// Initialize sync engine.
+		SyncEngine::init();
 
 		// Ensure metrics cache table exists (in case of manual activation issues).
 		$this->ensure_metrics_cache_table();
