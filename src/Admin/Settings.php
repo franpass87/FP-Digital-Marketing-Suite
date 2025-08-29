@@ -15,6 +15,7 @@ use FP\DigitalMarketing\DataSources\GoogleSearchConsole;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
+use FP\DigitalMarketing\Helpers\XmlSitemap;
 use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
@@ -58,6 +59,11 @@ class Settings {
 	private const SECTION_SEO = 'fp_digital_marketing_seo';
 
 	/**
+	 * Sitemap settings section
+	 */
+	private const SECTION_SITEMAP = 'fp_digital_marketing_sitemap';
+
+	/**
 	 * Demo option name
 	 */
 	private const OPTION_DEMO = 'fp_digital_marketing_demo_option';
@@ -83,6 +89,11 @@ class Settings {
 	private const OPTION_SEO = 'fp_digital_marketing_seo_settings';
 
 	/**
+	 * Sitemap settings option name
+	 */
+	private const OPTION_SITEMAP = 'fp_digital_marketing_sitemap_settings';
+
+	/**
 	 * Nonce action for settings
 	 */
 	private const NONCE_ACTION = 'fp_digital_marketing_settings_nonce';
@@ -97,6 +108,7 @@ class Settings {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );
 		add_action( 'admin_init', [ $this, 'handle_gsc_oauth_callback' ] );
+		add_action( 'wp_ajax_fp_clear_sitemap_cache', [ $this, 'handle_clear_sitemap_cache' ] );
 	}
 
 	/**
@@ -167,6 +179,16 @@ class Settings {
 			[
 				'type'              => 'array',
 				'sanitize_callback' => [ $this, 'sanitize_seo_settings' ],
+				'default'           => [],
+			]
+		);
+
+		register_setting(
+			self::OPTION_GROUP,
+			self::OPTION_SITEMAP,
+			[
+				'type'              => 'array',
+				'sanitize_callback' => [ $this, 'sanitize_sitemap_settings' ],
 				'default'           => [],
 			]
 		);
@@ -254,6 +276,23 @@ class Settings {
 			[ $this, 'render_seo_settings_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_SEO
+		);
+
+		// Add Sitemap section.
+		add_settings_section(
+			self::SECTION_SITEMAP,
+			__( 'XML Sitemap & Indicizzazione', 'fp-digital-marketing' ),
+			[ $this, 'render_sitemap_section' ],
+			self::PAGE_SLUG
+		);
+
+		// Add sitemap settings field.
+		add_settings_field(
+			'sitemap_settings',
+			__( 'Impostazioni Sitemap', 'fp-digital-marketing' ),
+			[ $this, 'render_sitemap_settings_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_SITEMAP
 		);
 	}
 
@@ -1328,5 +1367,229 @@ class Settings {
 		$sanitized['noindex_taxonomies'] = array_map( 'sanitize_key', $input['noindex_taxonomies'] ?? [] );
 
 		return $sanitized;
+	}
+
+	/**
+	 * Render sitemap section description
+	 *
+	 * @return void
+	 */
+	public function render_sitemap_section(): void {
+		echo '<p>' . esc_html__( 'Configura la generazione di sitemap XML modulari per migliorare l\'indicizzazione del sito.', 'fp-digital-marketing' ) . '</p>';
+		
+		// Show current sitemap URLs
+		$sitemap_url = home_url( 'sitemap.xml' );
+		echo '<p><strong>' . esc_html__( 'URL Sitemap:', 'fp-digital-marketing' ) . '</strong> ';
+		echo '<a href="' . esc_url( $sitemap_url ) . '" target="_blank">' . esc_html( $sitemap_url ) . '</a></p>';
+	}
+
+	/**
+	 * Render sitemap settings field
+	 *
+	 * @return void
+	 */
+	public function render_sitemap_settings_field(): void {
+		$settings = get_option( self::OPTION_SITEMAP, [
+			'enabled_post_types' => [ 'post', 'page' ],
+			'ping_search_engines' => true,
+			'exclude_noindex' => true,
+			'max_urls_per_sitemap' => 50000,
+		] );
+
+		$available_post_types = XmlSitemap::get_available_post_types();
+		?>
+		<table class="form-table">
+			<tbody>
+				<tr>
+					<th scope="row">
+						<label><?php esc_html_e( 'Post Types Inclusi', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<fieldset>
+							<?php foreach ( $available_post_types as $post_type => $post_type_obj ): ?>
+								<label>
+									<input 
+										type="checkbox" 
+										name="<?php echo esc_attr( self::OPTION_SITEMAP ); ?>[enabled_post_types][]" 
+										value="<?php echo esc_attr( $post_type ); ?>"
+										<?php checked( in_array( $post_type, $settings['enabled_post_types'] ?? [], true ) ); ?>
+									/>
+									<?php echo esc_html( $post_type_obj->label ); ?>
+									<small>(<?php echo esc_html( $post_type ); ?>)</small>
+								</label><br>
+							<?php endforeach; ?>
+							<p class="description">
+								<?php esc_html_e( 'Seleziona i tipi di contenuto da includere nei sitemap XML.', 'fp-digital-marketing' ); ?>
+							</p>
+						</fieldset>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="ping_search_engines"><?php esc_html_e( 'Notifica Motori di Ricerca', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="ping_search_engines" 
+							name="<?php echo esc_attr( self::OPTION_SITEMAP ); ?>[ping_search_engines]" 
+							value="1" 
+							<?php checked( $settings['ping_search_engines'] ); ?>
+						/>
+						<label for="ping_search_engines"><?php esc_html_e( 'Notifica automaticamente Google e Bing quando il sitemap viene aggiornato', 'fp-digital-marketing' ); ?></label>
+						<p class="description">
+							<?php esc_html_e( 'Invia ping automatici a Google e Bing per accelerare l\'indicizzazione di nuovi contenuti.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="exclude_noindex"><?php esc_html_e( 'Escludi Contenuti NoIndex', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="exclude_noindex" 
+							name="<?php echo esc_attr( self::OPTION_SITEMAP ); ?>[exclude_noindex]" 
+							value="1" 
+							<?php checked( $settings['exclude_noindex'] ); ?>
+						/>
+						<label for="exclude_noindex"><?php esc_html_e( 'Escludi automaticamente pagine con meta robots "noindex"', 'fp-digital-marketing' ); ?></label>
+						<p class="description">
+							<?php esc_html_e( 'Pagine con il flag noindex non verranno incluse nei sitemap XML.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="max_urls_per_sitemap"><?php esc_html_e( 'URLs per Sitemap', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="number" 
+							id="max_urls_per_sitemap" 
+							name="<?php echo esc_attr( self::OPTION_SITEMAP ); ?>[max_urls_per_sitemap]" 
+							value="<?php echo esc_attr( $settings['max_urls_per_sitemap'] ); ?>" 
+							min="1000" 
+							max="50000" 
+							step="1000"
+							readonly
+						/>
+						<p class="description">
+							<?php esc_html_e( 'Numero massimo di URL per file sitemap (conforme alle specifiche sitemaps.org). Paginazione automatica oltre questo limite.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		<h4><?php esc_html_e( 'Azioni Sitemap', 'fp-digital-marketing' ); ?></h4>
+		<table class="form-table">
+			<tbody>
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Cache Sitemap', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<button type="button" class="button" id="clear-sitemap-cache">
+							<?php esc_html_e( 'Svuota Cache Sitemap', 'fp-digital-marketing' ); ?>
+						</button>
+						<p class="description">
+							<?php esc_html_e( 'Svuota la cache dei sitemap per forzare la rigenerazione al prossimo accesso.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Test Sitemap', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<a href="<?php echo esc_url( $sitemap_url ); ?>" target="_blank" class="button">
+							<?php esc_html_e( 'Visualizza Sitemap Index', 'fp-digital-marketing' ); ?>
+						</a>
+						<p class="description">
+							<?php esc_html_e( 'Apri il sitemap index in una nuova finestra per verificare la corretta generazione.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		<script type="text/javascript">
+			jQuery(document).ready(function($) {
+				$('#clear-sitemap-cache').click(function(e) {
+					e.preventDefault();
+					var button = $(this);
+					button.prop('disabled', true).text('<?php esc_html_e( 'Svuotando...', 'fp-digital-marketing' ); ?>');
+					
+					$.post(ajaxurl, {
+						action: 'fp_clear_sitemap_cache',
+						nonce: '<?php echo esc_js( wp_create_nonce( 'fp_clear_sitemap_cache' ) ); ?>'
+					}, function(response) {
+						if (response.success) {
+							button.text('<?php esc_html_e( 'Cache Svuotata!', 'fp-digital-marketing' ); ?>');
+							setTimeout(function() {
+								button.prop('disabled', false).text('<?php esc_html_e( 'Svuota Cache Sitemap', 'fp-digital-marketing' ); ?>');
+							}, 2000);
+						} else {
+							button.prop('disabled', false).text('<?php esc_html_e( 'Errore - Riprova', 'fp-digital-marketing' ); ?>');
+						}
+					});
+				});
+			});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Sanitize sitemap settings
+	 *
+	 * @param array $input Raw input data
+	 * @return array Sanitized data
+	 */
+	public function sanitize_sitemap_settings( array $input ): array {
+		$sanitized = [];
+
+		// Post types array
+		$available_post_types = array_keys( XmlSitemap::get_available_post_types() );
+		$enabled_post_types = $input['enabled_post_types'] ?? [];
+		$sanitized['enabled_post_types'] = array_intersect( 
+			array_map( 'sanitize_key', (array) $enabled_post_types ), 
+			$available_post_types 
+		);
+
+		// Boolean settings
+		$sanitized['ping_search_engines'] = isset( $input['ping_search_engines'] ) && $input['ping_search_engines'] === '1';
+		$sanitized['exclude_noindex'] = isset( $input['exclude_noindex'] ) && $input['exclude_noindex'] === '1';
+
+		// Numeric settings
+		$sanitized['max_urls_per_sitemap'] = max( 1000, min( 50000, intval( $input['max_urls_per_sitemap'] ?? 50000 ) ) );
+
+		// Update XmlSitemap settings
+		XmlSitemap::update_settings( $sanitized );
+
+		return $sanitized;
+	}
+
+	/**
+	 * Handle AJAX request to clear sitemap cache
+	 *
+	 * @return void
+	 */
+	public function handle_clear_sitemap_cache(): void {
+		// Check nonce
+		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_clear_sitemap_cache' ) ) {
+			wp_send_json_error( 'Invalid nonce' );
+		}
+
+		// Check permissions
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+			wp_send_json_error( 'Insufficient permissions' );
+		}
+
+		// Clear sitemap cache
+		XmlSitemap::invalidate_sitemap_cache();
+
+		wp_send_json_success( 'Sitemap cache cleared successfully' );
 	}
 }

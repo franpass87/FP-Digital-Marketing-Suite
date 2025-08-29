@@ -277,6 +277,143 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
+	// Mock additional functions for XmlSitemap tests
+	if ( ! function_exists( 'home_url' ) ) {
+		function home_url( $path = '', $scheme = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['home_url'] ) ) {
+				return $wp_mock_functions['home_url']( $path );
+			}
+			return 'https://example.com' . $path;
+		}
+	}
+
+	if ( ! function_exists( 'get_posts' ) ) {
+		function get_posts( $args = array() ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_posts'] ) ) {
+				return $wp_mock_functions['get_posts']( $args );
+			}
+			return [];
+		}
+	}
+
+	if ( ! function_exists( 'get_post_types' ) ) {
+		function get_post_types( $args = array(), $output = 'names' ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_post_types'] ) ) {
+				return $wp_mock_functions['get_post_types']( $args, $output );
+			}
+			return [];
+		}
+	}
+
+	if ( ! function_exists( 'get_post_type_object' ) ) {
+		function get_post_type_object( $post_type ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_post_type_object'] ) ) {
+				return $wp_mock_functions['get_post_type_object']( $post_type );
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'wp_count_posts' ) ) {
+		function wp_count_posts( $type = 'post', $perm = '' ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['wp_count_posts'] ) ) {
+				return $wp_mock_functions['wp_count_posts']( $type );
+			}
+			return (object) [ 'publish' => 0 ];
+		}
+	}
+
+	if ( ! function_exists( 'get_post_modified_time' ) ) {
+		function get_post_modified_time( $format, $gmt = false, $post = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_post_modified_time'] ) ) {
+				return $wp_mock_functions['get_post_modified_time']( $format, $gmt, $post );
+			}
+			return gmdate( $format );
+		}
+	}
+
+	if ( ! function_exists( 'esc_xml' ) ) {
+		function esc_xml( $text ) {
+			return htmlspecialchars( $text, ENT_XML1, 'UTF-8' );
+		}
+	}
+
+	if ( ! function_exists( 'wp_cache_get' ) ) {
+		function wp_cache_get( $key, $group = '' ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['wp_cache_get'] ) ) {
+				return $wp_mock_functions['wp_cache_get']( $key, $group );
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'wp_cache_set' ) ) {
+		function wp_cache_set( $key, $data, $group = '', $expire = 0 ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['wp_cache_set'] ) ) {
+				return $wp_mock_functions['wp_cache_set']( $key, $data, $group, $expire );
+			}
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'wp_cache_delete' ) ) {
+		function wp_cache_delete( $key, $group = '' ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['wp_cache_delete'] ) ) {
+				return $wp_mock_functions['wp_cache_delete']( $key, $group );
+			}
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'get_transient' ) ) {
+		function get_transient( $transient ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_transient'] ) ) {
+				return $wp_mock_functions['get_transient']( $transient );
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'set_transient' ) ) {
+		function set_transient( $transient, $value, $expiration = 0 ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['set_transient'] ) ) {
+				return $wp_mock_functions['set_transient']( $transient, $value, $expiration );
+			}
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'delete_transient' ) ) {
+		function delete_transient( $transient ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['delete_transient'] ) ) {
+				return $wp_mock_functions['delete_transient']( $transient );
+			}
+			return true;
+		}
+	}
+
+	if ( ! function_exists( 'update_option' ) ) {
+		function update_option( $option, $value, $autoload = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['update_option'] ) ) {
+				return $wp_mock_functions['update_option']( $option, $value );
+			}
+			return true;
+		}
+	}
+
 	// Mock global $wpdb for testing
 	global $wpdb;
 	$wpdb = new stdClass();
