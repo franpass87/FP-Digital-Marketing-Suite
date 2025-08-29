@@ -406,6 +406,467 @@ class MetricsAggregator {
 	}
 
 	/**
+	 * Advanced metrics query with comprehensive filtering
+	 *
+	 * @param array $query_params Query parameters array
+	 * @return array Query results with metadata
+	 */
+	public static function query_metrics( array $query_params ): array {
+		// Extract and validate query parameters
+		$client_id = $query_params['client_id'] ?? 0;
+		$period_start = $query_params['period_start'] ?? '';
+		$period_end = $query_params['period_end'] ?? '';
+		$kpis = $query_params['kpis'] ?? [];
+		$sources = $query_params['sources'] ?? [];
+		$source_types = $query_params['source_types'] ?? [];
+		$categories = $query_params['categories'] ?? [];
+		$metric_types = $query_params['metric_types'] ?? [];
+		$aggregation_method = $query_params['aggregation'] ?? 'default';
+		$include_trends = $query_params['include_trends'] ?? false;
+		$limit = $query_params['limit'] ?? 0;
+		$offset = $query_params['offset'] ?? 0;
+		$sort_by = $query_params['sort_by'] ?? 'value';
+		$sort_order = $query_params['sort_order'] ?? 'desc';
+
+		// Build base criteria
+		$criteria = [
+			'client_id' => $client_id,
+			'period_start' => $period_start,
+			'period_end' => $period_end,
+		];
+
+		// Apply source filtering
+		if ( ! empty( $sources ) ) {
+			$criteria['source'] = $sources;
+		} elseif ( ! empty( $source_types ) ) {
+			$sources_by_type = self::get_sources_by_types( $source_types );
+			if ( ! empty( $sources_by_type ) ) {
+				$criteria['source'] = $sources_by_type;
+			}
+		}
+
+		// Filter KPIs by categories if specified
+		if ( ! empty( $categories ) ) {
+			$kpis_by_category = [];
+			foreach ( $categories as $category ) {
+				$kpis_by_category = array_merge( $kpis_by_category, MetricsSchema::get_kpis_by_category( $category ) );
+			}
+			$kpis = ! empty( $kpis ) ? array_intersect( $kpis, $kpis_by_category ) : $kpis_by_category;
+		}
+
+		// Get aggregated metrics
+		$aggregated_metrics = self::get_aggregated_metrics( $client_id, $period_start, $period_end, $kpis, $criteria['source'] ?? [] );
+
+		// Filter by metric types if specified
+		if ( ! empty( $metric_types ) ) {
+			$aggregated_metrics = self::filter_by_metric_types( $aggregated_metrics, $metric_types );
+		}
+
+		// Apply custom aggregation if specified
+		if ( $aggregation_method !== 'default' ) {
+			$aggregated_metrics = self::apply_custom_aggregation( $aggregated_metrics, $aggregation_method );
+		}
+
+		// Add trend analysis if requested
+		if ( $include_trends ) {
+			$aggregated_metrics = self::add_trend_analysis( $aggregated_metrics, $client_id, $period_start, $period_end );
+		}
+
+		// Sort results
+		$aggregated_metrics = self::sort_metrics( $aggregated_metrics, $sort_by, $sort_order );
+
+		// Apply pagination
+		if ( $limit > 0 ) {
+			$aggregated_metrics = array_slice( $aggregated_metrics, $offset, $limit, true );
+		}
+
+		return [
+			'query_params' => $query_params,
+			'results' => $aggregated_metrics,
+			'metadata' => [
+				'total_results' => count( $aggregated_metrics ),
+				'query_time' => date( 'Y-m-d H:i:s' ),
+				'has_pagination' => $limit > 0,
+				'offset' => $offset,
+				'limit' => $limit,
+			],
+		];
+	}
+
+	/**
+	 * Get metrics filtered by metric types
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @param array $metric_types Metric types to filter by (traffic, conversion, engagement, etc.)
+	 * @return array Filtered metrics
+	 */
+	public static function get_metrics_by_type( int $client_id, string $period_start, string $period_end, array $metric_types ): array {
+		$kpis_by_type = [];
+		
+		foreach ( $metric_types as $type ) {
+			switch ( $type ) {
+				case 'traffic':
+					$kpis_by_type = array_merge( $kpis_by_type, MetricsSchema::get_kpis_by_category( MetricsSchema::CATEGORY_TRAFFIC ) );
+					break;
+				case 'engagement':
+					$kpis_by_type = array_merge( $kpis_by_type, MetricsSchema::get_kpis_by_category( MetricsSchema::CATEGORY_ENGAGEMENT ) );
+					break;
+				case 'conversion':
+					$kpis_by_type = array_merge( $kpis_by_type, MetricsSchema::get_kpis_by_category( MetricsSchema::CATEGORY_CONVERSIONS ) );
+					break;
+				case 'advertising':
+					$kpis_by_type = array_merge( $kpis_by_type, MetricsSchema::get_kpis_by_category( MetricsSchema::CATEGORY_ADVERTISING ) );
+					break;
+				case 'search':
+					$kpis_by_type = array_merge( $kpis_by_type, MetricsSchema::get_kpis_by_category( MetricsSchema::CATEGORY_SEARCH ) );
+					break;
+				case 'email':
+					$kpis_by_type = array_merge( $kpis_by_type, MetricsSchema::get_kpis_by_category( MetricsSchema::CATEGORY_EMAIL ) );
+					break;
+			}
+		}
+
+		return self::get_aggregated_metrics( $client_id, $period_start, $period_end, array_unique( $kpis_by_type ) );
+	}
+
+	/**
+	 * Get metrics filtered by source types
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @param array $source_types Source types to filter by (analytics, advertising, social, etc.)
+	 * @return array Metrics from specified source types
+	 */
+	public static function get_metrics_by_source_type( int $client_id, string $period_start, string $period_end, array $source_types ): array {
+		$sources = self::get_sources_by_types( $source_types );
+		return self::get_aggregated_metrics( $client_id, $period_start, $period_end, [], $sources );
+	}
+
+	/**
+	 * Get trending metrics with growth analysis
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @param int $trend_periods Number of periods to analyze for trends (default: 4)
+	 * @return array Metrics with trend analysis
+	 */
+	public static function get_trending_metrics( int $client_id, string $period_start, string $period_end, int $trend_periods = 4 ): array {
+		$metrics = self::get_aggregated_metrics( $client_id, $period_start, $period_end );
+		
+		// Calculate period length
+		$start_date = new \DateTime( $period_start );
+		$end_date = new \DateTime( $period_end );
+		$period_length = $start_date->diff( $end_date )->days;
+
+		$trending_metrics = [];
+
+		foreach ( $metrics as $kpi => $data ) {
+			$trend_data = [];
+			
+			// Get historical data for trend analysis
+			for ( $i = $trend_periods; $i > 0; $i-- ) {
+				$trend_start = clone $start_date;
+				$trend_end = clone $end_date;
+				
+				$trend_start->sub( new \DateInterval( "P{$i}D" ) );
+				$trend_end->sub( new \DateInterval( "P{$i}D" ) );
+				
+				$historical_metrics = self::get_aggregated_metrics( 
+					$client_id, 
+					$trend_start->format( 'Y-m-d H:i:s' ), 
+					$trend_end->format( 'Y-m-d H:i:s' ), 
+					[ $kpi ] 
+				);
+				
+				$trend_data[] = $historical_metrics[ $kpi ]['total_value'] ?? 0;
+			}
+
+			// Calculate trend direction and velocity
+			$trend_direction = self::calculate_trend_direction( $trend_data );
+			$trend_velocity = self::calculate_trend_velocity( $trend_data );
+
+			$trending_metrics[ $kpi ] = array_merge( $data, [
+				'trend' => [
+					'direction' => $trend_direction,
+					'velocity' => $trend_velocity,
+					'historical_values' => $trend_data,
+					'periods_analyzed' => $trend_periods,
+				],
+			] );
+		}
+
+		return $trending_metrics;
+	}
+
+	/**
+	 * Search metrics by name or description
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @param string $search_term Search term to match against metric names/descriptions
+	 * @return array Matching metrics
+	 */
+	public static function search_metrics( int $client_id, string $period_start, string $period_end, string $search_term ): array {
+		$all_metrics = self::get_aggregated_metrics( $client_id, $period_start, $period_end );
+		$kpi_definitions = MetricsSchema::get_kpi_definitions();
+		
+		$matching_metrics = [];
+		$search_term_lower = strtolower( $search_term );
+
+		foreach ( $all_metrics as $kpi => $data ) {
+			$definition = $kpi_definitions[ $kpi ] ?? [];
+			$name = $definition['name'] ?? $kpi;
+			$description = $definition['description'] ?? '';
+
+			// Search in KPI key, name, and description
+			if ( 
+				stripos( $kpi, $search_term ) !== false ||
+				stripos( $name, $search_term ) !== false ||
+				stripos( $description, $search_term ) !== false
+			) {
+				$matching_metrics[ $kpi ] = array_merge( $data, [
+					'match_info' => [
+						'matched_kpi' => stripos( $kpi, $search_term ) !== false,
+						'matched_name' => stripos( $name, $search_term ) !== false,
+						'matched_description' => stripos( $description, $search_term ) !== false,
+					],
+				] );
+			}
+		}
+
+		return $matching_metrics;
+	}
+
+	/**
+	 * Get sources by types
+	 *
+	 * @param array $source_types Source types to filter
+	 * @return array Source IDs matching the types
+	 */
+	private static function get_sources_by_types( array $source_types ): array {
+		$all_sources = DataSources::get_data_sources();
+		$matching_sources = [];
+
+		foreach ( $all_sources as $source_id => $source_info ) {
+			if ( in_array( $source_info['type'], $source_types, true ) ) {
+				$matching_sources[] = $source_id;
+			}
+		}
+
+		return $matching_sources;
+	}
+
+	/**
+	 * Filter metrics by metric types
+	 *
+	 * @param array $metrics Metrics to filter
+	 * @param array $metric_types Types to filter by
+	 * @return array Filtered metrics
+	 */
+	private static function filter_by_metric_types( array $metrics, array $metric_types ): array {
+		$kpi_definitions = MetricsSchema::get_kpi_definitions();
+		$filtered = [];
+
+		foreach ( $metrics as $kpi => $data ) {
+			$definition = $kpi_definitions[ $kpi ] ?? [];
+			$category = $definition['category'] ?? '';
+			
+			if ( in_array( $category, $metric_types, true ) ) {
+				$filtered[ $kpi ] = $data;
+			}
+		}
+
+		return $filtered;
+	}
+
+	/**
+	 * Apply custom aggregation method
+	 *
+	 * @param array $metrics Metrics to re-aggregate
+	 * @param string $method Aggregation method (sum, average, max, min)
+	 * @return array Re-aggregated metrics
+	 */
+	private static function apply_custom_aggregation( array $metrics, string $method ): array {
+		foreach ( $metrics as $kpi => &$data ) {
+			if ( empty( $data['values'] ) ) {
+				continue;
+			}
+
+			switch ( $method ) {
+				case 'average':
+					$data['total_value'] = array_sum( $data['values'] ) / count( $data['values'] );
+					break;
+				case 'max':
+					$data['total_value'] = max( $data['values'] );
+					break;
+				case 'min':
+					$data['total_value'] = min( $data['values'] );
+					break;
+				case 'sum':
+				default:
+					$data['total_value'] = array_sum( $data['values'] );
+					break;
+			}
+		}
+
+		return $metrics;
+	}
+
+	/**
+	 * Add trend analysis to metrics
+	 *
+	 * @param array $metrics Current metrics
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date
+	 * @param string $period_end End date
+	 * @return array Metrics with trend data
+	 */
+	private static function add_trend_analysis( array $metrics, int $client_id, string $period_start, string $period_end ): array {
+		// Calculate previous period for comparison
+		$start_date = new \DateTime( $period_start );
+		$end_date = new \DateTime( $period_end );
+		$period_length = $start_date->diff( $end_date )->days;
+
+		$prev_start = clone $start_date;
+		$prev_end = clone $end_date;
+		$prev_start->sub( new \DateInterval( "P{$period_length}D" ) );
+		$prev_end->sub( new \DateInterval( "P{$period_length}D" ) );
+
+		$comparison = self::get_period_comparison( 
+			$client_id, 
+			$period_start, 
+			$period_end, 
+			$prev_start->format( 'Y-m-d H:i:s' ), 
+			$prev_end->format( 'Y-m-d H:i:s' ) 
+		);
+
+		foreach ( $metrics as $kpi => &$data ) {
+			if ( isset( $comparison[ $kpi ] ) ) {
+				$data['trend_analysis'] = [
+					'change' => $comparison[ $kpi ]['change'],
+					'change_percentage' => $comparison[ $kpi ]['change_percentage'],
+					'trend' => $comparison[ $kpi ]['trend'],
+					'previous_value' => $comparison[ $kpi ]['previous_value'],
+				];
+			}
+		}
+
+		return $metrics;
+	}
+
+	/**
+	 * Sort metrics by specified field and order
+	 *
+	 * @param array $metrics Metrics to sort
+	 * @param string $sort_by Field to sort by (value, name, change, etc.)
+	 * @param string $sort_order Order (asc, desc)
+	 * @return array Sorted metrics
+	 */
+	private static function sort_metrics( array $metrics, string $sort_by, string $sort_order ): array {
+		$kpi_definitions = MetricsSchema::get_kpi_definitions();
+
+		uasort( $metrics, function( $a, $b ) use ( $sort_by, $sort_order, $kpi_definitions ) {
+			$value_a = 0;
+			$value_b = 0;
+
+			switch ( $sort_by ) {
+				case 'value':
+					$value_a = $a['total_value'];
+					$value_b = $b['total_value'];
+					break;
+				case 'name':
+					$def_a = $kpi_definitions[ $a['kpi'] ] ?? [];
+					$def_b = $kpi_definitions[ $b['kpi'] ] ?? [];
+					$value_a = $def_a['name'] ?? $a['kpi'];
+					$value_b = $def_b['name'] ?? $b['kpi'];
+					break;
+				case 'change':
+					$value_a = $a['trend_analysis']['change'] ?? 0;
+					$value_b = $b['trend_analysis']['change'] ?? 0;
+					break;
+				case 'change_percentage':
+					$value_a = $a['trend_analysis']['change_percentage'] ?? 0;
+					$value_b = $b['trend_analysis']['change_percentage'] ?? 0;
+					break;
+				default:
+					$value_a = $a['total_value'];
+					$value_b = $b['total_value'];
+					break;
+			}
+
+			if ( $sort_by === 'name' ) {
+				$result = strcmp( $value_a, $value_b );
+			} else {
+				$result = $value_a <=> $value_b;
+			}
+
+			return $sort_order === 'desc' ? -$result : $result;
+		} );
+
+		return $metrics;
+	}
+
+	/**
+	 * Calculate trend direction from historical data
+	 *
+	 * @param array $values Historical values
+	 * @return string Trend direction (up, down, stable)
+	 */
+	private static function calculate_trend_direction( array $values ): string {
+		if ( count( $values ) < 2 ) {
+			return 'stable';
+		}
+
+		$first_half = array_slice( $values, 0, ceil( count( $values ) / 2 ) );
+		$second_half = array_slice( $values, floor( count( $values ) / 2 ) );
+
+		$first_avg = array_sum( $first_half ) / count( $first_half );
+		$second_avg = array_sum( $second_half ) / count( $second_half );
+
+		$change_threshold = 0.05; // 5% threshold for stability
+
+		if ( $second_avg > $first_avg * ( 1 + $change_threshold ) ) {
+			return 'up';
+		} elseif ( $second_avg < $first_avg * ( 1 - $change_threshold ) ) {
+			return 'down';
+		}
+
+		return 'stable';
+	}
+
+	/**
+	 * Calculate trend velocity from historical data
+	 *
+	 * @param array $values Historical values
+	 * @return float Trend velocity (rate of change)
+	 */
+	private static function calculate_trend_velocity( array $values ): float {
+		if ( count( $values ) < 2 ) {
+			return 0.0;
+		}
+
+		// Simple linear regression slope calculation
+		$n = count( $values );
+		$sum_x = ( $n * ( $n + 1 ) ) / 2;
+		$sum_y = array_sum( $values );
+		$sum_xy = 0;
+		$sum_x2 = ( $n * ( $n + 1 ) * ( 2 * $n + 1 ) ) / 6;
+
+		foreach ( $values as $i => $value ) {
+			$sum_xy += ( $i + 1 ) * $value;
+		}
+
+		$slope = ( $n * $sum_xy - $sum_x * $sum_y ) / ( $n * $sum_x2 - $sum_x * $sum_x );
+
+		return round( $slope, 4 );
+	}
+
+	/**
 	 * Generate recommendations based on data quality
 	 *
 	 * @param array $source_availability Source availability data
