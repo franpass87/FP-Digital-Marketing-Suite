@@ -16,6 +16,7 @@ use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
 use FP\DigitalMarketing\Helpers\XmlSitemap;
+use FP\DigitalMarketing\Helpers\SchemaGenerator;
 use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
@@ -64,6 +65,11 @@ class Settings {
 	private const SECTION_SITEMAP = 'fp_digital_marketing_sitemap';
 
 	/**
+	 * Schema settings section
+	 */
+	private const SECTION_SCHEMA = 'fp_digital_marketing_schema';
+
+	/**
 	 * Demo option name
 	 */
 	private const OPTION_DEMO = 'fp_digital_marketing_demo_option';
@@ -92,6 +98,11 @@ class Settings {
 	 * Sitemap settings option name
 	 */
 	private const OPTION_SITEMAP = 'fp_digital_marketing_sitemap_settings';
+
+	/**
+	 * Schema settings option name
+	 */
+	private const OPTION_SCHEMA = 'fp_digital_marketing_schema_settings';
 
 	/**
 	 * Nonce action for settings
@@ -189,6 +200,16 @@ class Settings {
 			[
 				'type'              => 'array',
 				'sanitize_callback' => [ $this, 'sanitize_sitemap_settings' ],
+				'default'           => [],
+			]
+		);
+
+		register_setting(
+			self::OPTION_GROUP,
+			self::OPTION_SCHEMA,
+			[
+				'type'              => 'array',
+				'sanitize_callback' => [ $this, 'sanitize_schema_settings' ],
 				'default'           => [],
 			]
 		);
@@ -293,6 +314,23 @@ class Settings {
 			[ $this, 'render_sitemap_settings_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_SITEMAP
+		);
+
+		// Add Schema section.
+		add_settings_section(
+			self::SECTION_SCHEMA,
+			__( 'Schema.org Structured Data', 'fp-digital-marketing' ),
+			[ $this, 'render_schema_section' ],
+			self::PAGE_SLUG
+		);
+
+		// Add schema settings field.
+		add_settings_field(
+			'schema_settings',
+			__( 'Impostazioni Schema', 'fp-digital-marketing' ),
+			[ $this, 'render_schema_settings_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_SCHEMA
 		);
 	}
 
@@ -1591,5 +1629,208 @@ class Settings {
 		XmlSitemap::invalidate_sitemap_cache();
 
 		wp_send_json_success( 'Sitemap cache cleared successfully' );
+	}
+
+	/**
+	 * Render schema section description
+	 *
+	 * @return void
+	 */
+	public function render_schema_section(): void {
+		echo '<p>';
+		esc_html_e( 'Configura i dati strutturati Schema.org per migliorare i rich results nei motori di ricerca.', 'fp-digital-marketing' );
+		echo '</p>';
+	}
+
+	/**
+	 * Render schema settings field
+	 *
+	 * @return void
+	 */
+	public function render_schema_settings_field(): void {
+		$settings = get_option( self::OPTION_SCHEMA, SchemaGenerator::get_default_settings() );
+		$schema_types = SchemaGenerator::get_schema_types();
+		?>
+		<table class="form-table">
+			<tbody>
+				<tr>
+					<th scope="row">
+						<label><?php esc_html_e( 'Tipi di Schema Abilitati', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<fieldset>
+							<?php foreach ( $schema_types as $type_id => $type_config ): ?>
+								<label>
+									<input 
+										type="checkbox" 
+										name="<?php echo esc_attr( self::OPTION_SCHEMA ); ?>[enabled_types][]" 
+										value="<?php echo esc_attr( $type_id ); ?>"
+										<?php checked( in_array( $type_id, $settings['enabled_types'] ?? [], true ) ); ?>
+									/>
+									<?php echo esc_html( $type_config['name'] ); ?>
+									<small> - <?php echo esc_html( $type_config['description'] ); ?></small>
+								</label><br>
+							<?php endforeach; ?>
+							<p class="description">
+								<?php esc_html_e( 'Seleziona i tipi di dati strutturati da includere nelle pagine del sito.', 'fp-digital-marketing' ); ?>
+							</p>
+						</fieldset>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="organization_name"><?php esc_html_e( 'Nome Organizzazione', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="text" 
+							id="organization_name"
+							name="<?php echo esc_attr( self::OPTION_SCHEMA ); ?>[organization_name]" 
+							value="<?php echo esc_attr( $settings['organization_name'] ?? '' ); ?>"
+							class="regular-text"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'Nome della tua organizzazione o azienda.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="organization_url"><?php esc_html_e( 'URL Organizzazione', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="url" 
+							id="organization_url"
+							name="<?php echo esc_attr( self::OPTION_SCHEMA ); ?>[organization_url]" 
+							value="<?php echo esc_attr( $settings['organization_url'] ?? '' ); ?>"
+							class="regular-text"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'URL principale della tua organizzazione.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="organization_logo"><?php esc_html_e( 'Logo Organizzazione', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="url" 
+							id="organization_logo"
+							name="<?php echo esc_attr( self::OPTION_SCHEMA ); ?>[organization_logo]" 
+							value="<?php echo esc_attr( $settings['organization_logo'] ?? '' ); ?>"
+							class="regular-text"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'URL del logo della tua organizzazione (consigliato: 112x112px minimo).', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="organization_description"><?php esc_html_e( 'Descrizione Organizzazione', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<textarea 
+							id="organization_description"
+							name="<?php echo esc_attr( self::OPTION_SCHEMA ); ?>[organization_description]" 
+							rows="3"
+							class="large-text"
+						><?php echo esc_textarea( $settings['organization_description'] ?? '' ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Breve descrizione della tua organizzazione o attività.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label for="enable_breadcrumbs"><?php esc_html_e( 'Breadcrumb Schema', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="enable_breadcrumbs" 
+							name="<?php echo esc_attr( self::OPTION_SCHEMA ); ?>[enable_breadcrumbs]" 
+							value="1" 
+							<?php checked( $settings['enable_breadcrumbs'] ?? true ); ?>
+						/>
+						<label for="enable_breadcrumbs"><?php esc_html_e( 'Genera markup breadcrumb per la navigazione', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+				
+				<tr>
+					<th scope="row">
+						<label><?php esc_html_e( 'Post Types per FAQ', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<fieldset>
+							<?php 
+							$post_types = get_post_types( [ 'public' => true ], 'objects' );
+							$enabled_faq_types = $settings['faq_post_types'] ?? [ 'post', 'page' ];
+							?>
+							<?php foreach ( $post_types as $post_type ): ?>
+								<label>
+									<input 
+										type="checkbox" 
+										name="<?php echo esc_attr( self::OPTION_SCHEMA ); ?>[faq_post_types][]" 
+										value="<?php echo esc_attr( $post_type->name ); ?>"
+										<?php checked( in_array( $post_type->name, $enabled_faq_types, true ) ); ?>
+									/>
+									<?php echo esc_html( $post_type->label ); ?>
+								</label><br>
+							<?php endforeach; ?>
+							<p class="description">
+								<?php esc_html_e( 'Tipi di contenuto che possono contenere sezioni FAQ.', 'fp-digital-marketing' ); ?>
+							</p>
+						</fieldset>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Sanitize schema settings
+	 *
+	 * @param array $input Input array to sanitize
+	 * @return array Sanitized settings
+	 */
+	public function sanitize_schema_settings( array $input ): array {
+		$sanitized = [];
+
+		// Sanitize enabled types
+		if ( isset( $input['enabled_types'] ) && is_array( $input['enabled_types'] ) ) {
+			$available_types = array_keys( SchemaGenerator::get_schema_types() );
+			$sanitized['enabled_types'] = array_intersect( $input['enabled_types'], $available_types );
+		} else {
+			$sanitized['enabled_types'] = [];
+		}
+
+		// Sanitize organization fields
+		$sanitized['organization_name'] = sanitize_text_field( $input['organization_name'] ?? '' );
+		$sanitized['organization_url'] = esc_url_raw( $input['organization_url'] ?? '' );
+		$sanitized['organization_logo'] = esc_url_raw( $input['organization_logo'] ?? '' );
+		$sanitized['organization_description'] = sanitize_textarea_field( $input['organization_description'] ?? '' );
+
+		// Sanitize boolean settings
+		$sanitized['enable_breadcrumbs'] = ! empty( $input['enable_breadcrumbs'] );
+
+		// Sanitize FAQ post types
+		if ( isset( $input['faq_post_types'] ) && is_array( $input['faq_post_types'] ) ) {
+			$available_post_types = array_keys( get_post_types( [ 'public' => true ] ) );
+			$sanitized['faq_post_types'] = array_intersect( $input['faq_post_types'], $available_post_types );
+		} else {
+			$sanitized['faq_post_types'] = [];
+		}
+
+		return $sanitized;
 	}
 }

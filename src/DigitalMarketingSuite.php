@@ -25,6 +25,7 @@ use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\SeoFrontendOutput;
 use FP\DigitalMarketing\Helpers\XmlSitemap;
+use FP\DigitalMarketing\Helpers\SchemaGenerator;
 use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
@@ -165,6 +166,9 @@ class DigitalMarketingSuite {
 
 		// Initialize SEO frontend output.
 		SeoFrontendOutput::init();
+
+		// Initialize Schema.org structured data generator.
+		SchemaGenerator::init();
 
 		// Initialize XML sitemap.
 		XmlSitemap::init();
