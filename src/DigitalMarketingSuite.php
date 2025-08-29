@@ -21,12 +21,16 @@ use FP\DigitalMarketing\Admin\OnboardingWizard;
 use FP\DigitalMarketing\Admin\AlertingAdmin;
 use FP\DigitalMarketing\Admin\UTMCampaignManager;
 use FP\DigitalMarketing\Admin\ConversionEventsAdmin;
+use FP\DigitalMarketing\Admin\SegmentationAdmin;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Database\AlertRulesTable;
 use FP\DigitalMarketing\Database\UTMCampaignsTable;
 use FP\DigitalMarketing\Database\ConversionEventsTable;
+use FP\DigitalMarketing\Database\AudienceSegmentTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
+use FP\DigitalMarketing\Helpers\SegmentationEngine;
+use FP\DigitalMarketing\API\SegmentationAPI;
 use FP\DigitalMarketing\Helpers\SeoFrontendOutput;
 use FP\DigitalMarketing\Helpers\XmlSitemap;
 use FP\DigitalMarketing\Helpers\SchemaGenerator;
@@ -130,6 +134,13 @@ class DigitalMarketingSuite {
 	private ConversionEventsAdmin $conversion_events_admin;
 
 	/**
+	 * Segmentation Admin instance
+	 *
+	 * @var SegmentationAdmin
+	 */
+	private SegmentationAdmin $segmentation_admin;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -145,6 +156,7 @@ class DigitalMarketingSuite {
 		$this->alerting_admin = new AlertingAdmin();
 		$this->utm_campaign_manager = new UTMCampaignManager();
 		$this->conversion_events_admin = new ConversionEventsAdmin();
+		$this->segmentation_admin = new SegmentationAdmin();
 	}
 
 	/**
@@ -177,6 +189,7 @@ class DigitalMarketingSuite {
 		$this->onboarding_wizard->init();
 		$this->utm_campaign_manager->init();
 		$this->conversion_events_admin->init();
+		$this->segmentation_admin->init();
 
 		// Initialize capabilities system.
 		Capabilities::init();
@@ -186,6 +199,12 @@ class DigitalMarketingSuite {
 
 		// Initialize sync engine.
 		SyncEngine::init();
+
+		// Initialize segmentation engine.
+		SegmentationEngine::init();
+
+		// Initialize segmentation API.
+		SegmentationAPI::init();
 
 		// Initialize SEO frontend output.
 		SeoFrontendOutput::init();
@@ -205,6 +224,7 @@ class DigitalMarketingSuite {
 		$this->ensure_alert_rules_table();
 		$this->ensure_utm_campaigns_table();
 		$this->ensure_conversion_events_table();
+		$this->ensure_audience_segment_tables();
 
 		// Hook for extensibility.
 		do_action( 'fp_digital_marketing_suite_init' );
@@ -264,6 +284,21 @@ class DigitalMarketingSuite {
 	private function ensure_conversion_events_table(): void {
 		if ( ! ConversionEventsTable::table_exists() ) {
 			ConversionEventsTable::create_table();
+		}
+	}
+
+	/**
+	 * Ensure audience segment tables exist
+	 *
+	 * @return void
+	 */
+	private function ensure_audience_segment_tables(): void {
+		if ( ! AudienceSegmentTable::segments_table_exists() ) {
+			AudienceSegmentTable::create_segments_table();
+		}
+		
+		if ( ! AudienceSegmentTable::membership_table_exists() ) {
+			AudienceSegmentTable::create_membership_table();
 		}
 	}
 }

@@ -1,0 +1,230 @@
+/* Segmentation Admin Styles */
+
+.segments-header {
+    margin-bottom: 20px;
+}
+
+.status-active {
+    color: #008000;
+    font-weight: bold;
+}
+
+.status-inactive {
+    color: #999;
+}
+
+/* Rules Builder */
+#rules-builder {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.rules-logic {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.condition-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.condition-row select,
+.condition-row input[type="text"] {
+    min-width: 150px;
+}
+
+.rule-type {
+    flex: 1;
+}
+
+.rule-field {
+    flex: 1;
+}
+
+.rule-operator {
+    flex: 1;
+}
+
+.rule-value {
+    flex: 1;
+}
+
+.remove-condition {
+    background: #d63638;
+    color: #fff;
+    border: none;
+    flex-shrink: 0;
+}
+
+.remove-condition:hover {
+    background: #b32d2e;
+}
+
+#add-condition {
+    margin-top: 10px;
+}
+
+/* Segment Preview */
+.segment-preview {
+    background: #e7f3ff;
+    border: 1px solid #72aee6;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.segment-preview .preview-text {
+    font-style: italic;
+    color: #1e73be;
+}
+
+/* Members List */
+.members-list {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.members-list table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.members-list th,
+.members-list td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.members-list th {
+    background: #f1f1f1;
+    font-weight: bold;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner {
+    visibility: visible;
+    float: none;
+    margin: 5px 10px 0 0;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .condition-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .condition-row select,
+    .condition-row input[type="text"] {
+        min-width: auto;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .remove-condition {
+        align-self: flex-start;
+        margin-top: 10px;
+    }
+}
+
+/* Form Improvements */
+.form-table th {
+    width: 150px;
+}
+
+.segment-form-section {
+    margin-bottom: 30px;
+}
+
+.segment-form-section h3 {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Button Groups */
+.button-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.button-group .button {
+    margin: 0;
+}
+
+/* Notice Improvements */
+.segment-notice {
+    margin: 15px 0;
+    padding: 12px;
+    border-left: 4px solid #72aee6;
+    background: #f0f6fc;
+}
+
+.segment-notice.error {
+    border-left-color: #d63638;
+    background: #fcf0f1;
+}
+
+.segment-notice.success {
+    border-left-color: #00a32a;
+    background: #f0f6fc;
+}
+
+/* Evaluation Results */
+.evaluation-results {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.evaluation-results h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.evaluation-stat {
+    display: inline-block;
+    margin-right: 20px;
+    padding: 5px 10px;
+    background: #f1f1f1;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.evaluation-stat.members {
+    background: #d4edda;
+    color: #155724;
+}
+
+.evaluation-stat.new {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.evaluation-stat.removed {
+    background: #f8d7da;
+    color: #721c24;
+}
