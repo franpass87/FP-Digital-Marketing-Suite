@@ -11,6 +11,7 @@ namespace FP\DigitalMarketing\Admin;
 
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
+use FP\DigitalMarketing\DataSources\GoogleSearchConsole;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
@@ -84,6 +85,7 @@ class Settings {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );
+		add_action( 'admin_init', [ $this, 'handle_gsc_oauth_callback' ] );
 	}
 
 	/**
@@ -391,7 +393,58 @@ class Settings {
 				.ga4-status.expired .status-indicator { color: #dba617; }
 				.ga4-status .status-indicator:before { content: "●"; margin-right: 5px; }
 				.ga4-configuration { margin-bottom: 20px; }
+				.gsc-configuration { margin-bottom: 20px; }
+				.gsc-status.connected .status-indicator { color: #00a32a; }
+				.gsc-status.disconnected .status-indicator { color: #d63638; }
+				.gsc-status.expired .status-indicator { color: #dba617; }
+				.gsc-status .status-indicator:before { content: "●"; margin-right: 5px; }
 			</style>
+		</div>
+
+		<div class="gsc-configuration">
+			<h4><?php esc_html_e( 'Google Search Console', 'fp-digital-marketing' ); ?></h4>
+			
+			<table class="form-table">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Site URL', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<input 
+							type="url" 
+							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[gsc_site_url]"
+							value="<?php echo esc_attr( $api_keys['gsc_site_url'] ?? '' ); ?>"
+							class="regular-text"
+							placeholder="<?php esc_attr_e( 'https://example.com/ o sc-domain:example.com', 'fp-digital-marketing' ); ?>"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'URL del sito o dominio configurato in Search Console', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+
+			<div class="gsc-connection-status">
+				<h4><?php esc_html_e( 'Stato Connessione Search Console', 'fp-digital-marketing' ); ?></h4>
+				<p class="gsc-status <?php echo esc_attr( $connection_status['class'] ); ?>">
+					<span class="status-indicator"></span>
+					<?php 
+					if ( ! empty( $api_keys['gsc_site_url'] ) && $oauth->is_authenticated() ) {
+						esc_html_e( 'Connesso', 'fp-digital-marketing' );
+					} else {
+						esc_html_e( 'Non connesso', 'fp-digital-marketing' );
+					}
+					?>
+				</p>
+
+				<?php if ( $oauth->is_authenticated() && ! empty( $api_keys['gsc_site_url'] ) ): ?>
+					<p class="description">
+						<?php esc_html_e( 'Search Console è configurato e pronto per raccogliere dati.', 'fp-digital-marketing' ); ?>
+					</p>
+				<?php else: ?>
+					<p class="description">
+						<?php esc_html_e( 'Configura prima Google Analytics 4 per abilitare Search Console (stesse credenziali OAuth).', 'fp-digital-marketing' ); ?>
+					</p>
+				<?php endif; ?>
+			</div>
 		</div>
 		<?php
 	}
@@ -620,6 +673,17 @@ class Settings {
 			wp_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
 			exit;
 		}
+	}
+
+	/**
+	 * Handle GSC OAuth callback with enhanced security
+	 *
+	 * @return void
+	 */
+	public function handle_gsc_oauth_callback(): void {
+		// GSC uses the same OAuth flow as GA4, so no separate callback needed
+		// The authentication is shared between both services
+		// This method is included for future extensibility if needed
 	}
 
 	/**

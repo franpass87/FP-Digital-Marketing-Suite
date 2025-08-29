@@ -35,6 +35,16 @@ class GoogleOAuth {
 	private const ANALYTICS_SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
 
 	/**
+	 * Search Console scope
+	 */
+	private const SEARCH_CONSOLE_SCOPE = 'https://www.googleapis.com/auth/webmasters.readonly';
+
+	/**
+	 * Combined scopes for both services
+	 */
+	private const COMBINED_SCOPES = self::ANALYTICS_SCOPE . ' ' . self::SEARCH_CONSOLE_SCOPE;
+
+	/**
 	 * Option name for storing tokens
 	 */
 	private const TOKEN_OPTION = 'fp_dms_google_oauth_tokens';
@@ -98,7 +108,7 @@ class GoogleOAuth {
 		$params = [
 			'client_id' => $this->credentials['client_id'],
 			'redirect_uri' => $this->credentials['redirect_uri'],
-			'scope' => self::ANALYTICS_SCOPE,
+			'scope' => self::COMBINED_SCOPES,
 			'response_type' => 'code',
 			'access_type' => 'offline',
 			'prompt' => 'consent',
