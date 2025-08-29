@@ -272,3 +272,184 @@ msgstr "Token scaduto"
 
 msgid "Connesso"
 msgstr "Connesso"
+
+# Alert system translations
+msgid "Alert e Notifiche"
+msgstr "Alert e Notifiche"
+
+msgid "Regole di Alert"
+msgstr "Regole di Alert"
+
+msgid "Log degli Alert"
+msgstr "Log degli Alert"
+
+msgid "Nuova Regola di Alert"
+msgstr "Nuova Regola di Alert"
+
+msgid "Modifica Regola di Alert"
+msgstr "Modifica Regola di Alert"
+
+msgid "Cliente"
+msgstr "Cliente"
+
+msgid "Seleziona cliente"
+msgstr "Seleziona cliente"
+
+msgid "Nome della Regola"
+msgstr "Nome della Regola"
+
+msgid "Descrizione"
+msgstr "Descrizione"
+
+msgid "Metrica"
+msgstr "Metrica"
+
+msgid "Seleziona metrica"
+msgstr "Seleziona metrica"
+
+msgid "Condizione"
+msgstr "Condizione"
+
+msgid "Seleziona condizione"
+msgstr "Seleziona condizione"
+
+msgid "Maggiore di (>)"
+msgstr "Maggiore di (>)"
+
+msgid "Minore di (<)"
+msgstr "Minore di (<)"
+
+msgid "Maggiore o uguale (>=)"
+msgstr "Maggiore o uguale (>=)"
+
+msgid "Minore o uguale (<=)"
+msgstr "Minore o uguale (<=)"
+
+msgid "Uguale (=)"
+msgstr "Uguale (=)"
+
+msgid "Diverso (!=)"
+msgstr "Diverso (!=)"
+
+msgid "Valore Soglia"
+msgstr "Valore Soglia"
+
+msgid "Email per Notifiche"
+msgstr "Email per Notifiche"
+
+msgid "Lascia vuoto per non inviare email di notifica."
+msgstr "Lascia vuoto per non inviare email di notifica."
+
+msgid "Notifiche"
+msgstr "Notifiche"
+
+msgid "Mostra notifica nell'amministrazione"
+msgstr "Mostra notifica nell'amministrazione"
+
+msgid "Crea Regola"
+msgstr "Crea Regola"
+
+msgid "Aggiorna Regola"
+msgstr "Aggiorna Regola"
+
+msgid "Annulla"
+msgstr "Annulla"
+
+msgid "Tutti i campi obbligatori devono essere compilati."
+msgstr "Tutti i campi obbligatori devono essere compilati."
+
+msgid "Condizione non valida."
+msgstr "Condizione non valida."
+
+msgid "Regola di alert creata con successo."
+msgstr "Regola di alert creata con successo."
+
+msgid "Errore durante la creazione della regola."
+msgstr "Errore durante la creazione della regola."
+
+msgid "Regola aggiornata con successo."
+msgstr "Regola aggiornata con successo."
+
+msgid "Errore durante l'aggiornamento della regola."
+msgstr "Errore durante l'aggiornamento della regola."
+
+msgid "Regola eliminata con successo."
+msgstr "Regola eliminata con successo."
+
+msgid "Errore durante l'eliminazione della regola."
+msgstr "Errore durante l'eliminazione della regola."
+
+msgid "attivata"
+msgstr "attivata"
+
+msgid "disattivata"
+msgstr "disattivata"
+
+msgid "Regola %s con successo."
+msgstr "Regola %s con successo."
+
+msgid "Regole di Alert Esistenti"
+msgstr "Regole di Alert Esistenti"
+
+msgid "Nessuna regola di alert configurata."
+msgstr "Nessuna regola di alert configurata."
+
+msgid "Nome"
+msgstr "Nome"
+
+msgid "Attiva"
+msgstr "Attiva"
+
+msgid "Ultimo Trigger"
+msgstr "Ultimo Trigger"
+
+msgid "Azioni"
+msgstr "Azioni"
+
+msgid "Mai"
+msgstr "Mai"
+
+msgid "Modifica"
+msgstr "Modifica"
+
+msgid "Elimina"
+msgstr "Elimina"
+
+msgid "Sei sicuro di voler eliminare questa regola?"
+msgstr "Sei sicuro di voler eliminare questa regola?"
+
+msgid "Nessun log disponibile."
+msgstr "Nessun log disponibile."
+
+msgid "Data/Ora"
+msgstr "Data/Ora"
+
+msgid "Controllate"
+msgstr "Controllate"
+
+msgid "Attivate"
+msgstr "Attivate"
+
+msgid "Notifiche Inviate"
+msgstr "Notifiche Inviate"
+
+msgid "Errori"
+msgstr "Errori"
+
+msgid "Alert attivato:"
+msgstr "Alert attivato:"
+
+msgid "Cliente: %1$s | Metrica: %2$s | Valore attuale: %3$s %4$s %5$s"
+msgstr "Cliente: %1$s | Metrica: %2$s | Valore attuale: %3$s %4$s %5$s"
+
+msgid "Permessi insufficienti."
+msgstr "Permessi insufficienti."
+
+msgid "Cliente sconosciuto"
+msgstr "Cliente sconosciuto"
+
+msgid "[%s] Alert: %s"
+msgstr "[%s] Alert: %s"
+
+msgid "Alert attivato per il cliente: %s\n\nRegola: %s\nMetrica: %s\nValore attuale: %s\nCondizione: %s %s\nSoglia: %s\n\nData/ora: %s\n\nPer maggiori dettagli, accedi al pannello di amministrazione."
+msgstr "Alert attivato per il cliente: %s\n\nRegola: %s\nMetrica: %s\nValore attuale: %s\nCondizione: %s %s\nSoglia: %s\n\nData/ora: %s\n\nPer maggiori dettagli, accedi al pannello di amministrazione."

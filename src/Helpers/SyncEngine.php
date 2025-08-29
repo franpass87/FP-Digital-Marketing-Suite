@@ -11,6 +11,7 @@ namespace FP\DigitalMarketing\Helpers;
 
 use FP\DigitalMarketing\Models\MetricsCache;
 use FP\DigitalMarketing\Models\SyncLog;
+use FP\DigitalMarketing\Helpers\AlertEngine;
 
 /**
  * SyncEngine class for periodic data source synchronization
@@ -97,6 +98,24 @@ class SyncEngine {
 			);
 
 			self::log_sync_complete( $sync_id, $results['errors_count'] > 0 ? 'warning' : 'success', $message );
+
+			// Check alert rules after successful sync
+			if ( $results['errors_count'] === 0 ) {
+				try {
+					$alert_results = AlertEngine::check_all_rules();
+					
+					// Log alert results if any rules were triggered
+					if ( $alert_results['triggered'] > 0 ) {
+						error_log( sprintf(
+							'FP DMS Alert Check: %d rules triggered, %d notifications sent',
+							$alert_results['triggered'],
+							$alert_results['notifications_sent']
+						) );
+					}
+				} catch ( \Exception $e ) {
+					error_log( 'FP DMS Alert Check Error: ' . $e->getMessage() );
+				}
+			}
 
 		} catch ( \Exception $e ) {
 			$sync_end = microtime( true );

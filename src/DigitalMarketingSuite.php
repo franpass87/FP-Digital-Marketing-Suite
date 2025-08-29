@@ -17,7 +17,9 @@ use FP\DigitalMarketing\Admin\Dashboard;
 use FP\DigitalMarketing\Admin\SecurityAdmin;
 use FP\DigitalMarketing\Admin\CachePerformance;
 use FP\DigitalMarketing\Admin\OnboardingWizard;
+use FP\DigitalMarketing\Admin\AlertingAdmin;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
+use FP\DigitalMarketing\Database\AlertRulesTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 
@@ -90,6 +92,13 @@ class DigitalMarketingSuite {
 	private OnboardingWizard $onboarding_wizard;
 
 	/**
+	 * Alerting Admin instance
+	 *
+	 * @var AlertingAdmin
+	 */
+	private AlertingAdmin $alerting_admin;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -101,6 +110,7 @@ class DigitalMarketingSuite {
 		$this->security_admin = new SecurityAdmin();
 		$this->cache_performance = new CachePerformance();
 		$this->onboarding_wizard = new OnboardingWizard();
+		$this->alerting_admin = new AlertingAdmin();
 	}
 
 	/**
@@ -137,8 +147,9 @@ class DigitalMarketingSuite {
 		// Initialize sync engine.
 		SyncEngine::init();
 
-		// Ensure metrics cache table exists (in case of manual activation issues).
+		// Ensure database tables exist (in case of manual activation issues).
 		$this->ensure_metrics_cache_table();
+		$this->ensure_alert_rules_table();
 
 		// Hook for extensibility.
 		do_action( 'fp_digital_marketing_suite_init' );
@@ -165,6 +176,17 @@ class DigitalMarketingSuite {
 	private function ensure_metrics_cache_table(): void {
 		if ( ! MetricsCacheTable::table_exists() ) {
 			MetricsCacheTable::create_table();
+		}
+	}
+
+	/**
+	 * Ensure alert rules table exists
+	 *
+	 * @return void
+	 */
+	private function ensure_alert_rules_table(): void {
+		if ( ! AlertRulesTable::table_exists() ) {
+			AlertRulesTable::create_table();
 		}
 	}
 }
