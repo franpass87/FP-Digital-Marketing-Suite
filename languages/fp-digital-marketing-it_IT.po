@@ -453,3 +453,249 @@ msgstr "[%s] Alert: %s"
 
 msgid "Alert attivato per il cliente: %s\n\nRegola: %s\nMetrica: %s\nValore attuale: %s\nCondizione: %s %s\nSoglia: %s\n\nData/ora: %s\n\nPer maggiori dettagli, accedi al pannello di amministrazione."
 msgstr "Alert attivato per il cliente: %s\n\nRegola: %s\nMetrica: %s\nValore attuale: %s\nCondizione: %s %s\nSoglia: %s\n\nData/ora: %s\n\nPer maggiori dettagli, accedi al pannello di amministrazione."
+
+# UTM Campaign Manager translations
+msgid "Gestione Campagne UTM"
+msgstr "Gestione Campagne UTM"
+
+msgid "Campagne UTM"
+msgstr "Campagne UTM"
+
+msgid "Aggiungi Nuova Campagna"
+msgstr "Aggiungi Nuova Campagna"
+
+msgid "Nuova Campagna UTM"
+msgstr "Nuova Campagna UTM"
+
+msgid "Modifica Campagna UTM"
+msgstr "Modifica Campagna UTM"
+
+msgid "Nome Campagna"
+msgstr "Nome Campagna"
+
+msgid "URL Base"
+msgstr "URL Base"
+
+msgid "UTM Source"
+msgstr "UTM Source"
+
+msgid "UTM Medium"
+msgstr "UTM Medium"
+
+msgid "UTM Campaign"
+msgstr "UTM Campaign"
+
+msgid "UTM Term"
+msgstr "UTM Term"
+
+msgid "UTM Content"
+msgstr "UTM Content"
+
+msgid "URL Finale"
+msgstr "URL Finale"
+
+msgid "Stato"
+msgstr "Stato"
+
+msgid "Data Creazione"
+msgstr "Data Creazione"
+
+msgid "Azioni"
+msgstr "Azioni"
+
+msgid "Click"
+msgstr "Click"
+
+msgid "Conversioni"
+msgstr "Conversioni"
+
+msgid "Fatturato"
+msgstr "Fatturato"
+
+msgid "Tasso di Conversione"
+msgstr "Tasso di Conversione"
+
+msgid "Attiva"
+msgstr "Attiva"
+
+msgid "In pausa"
+msgstr "In pausa"
+
+msgid "Completata"
+msgstr "Completata"
+
+msgid "Modifica"
+msgstr "Modifica"
+
+msgid "Elimina"
+msgstr "Elimina"
+
+msgid "Preset Campagna"
+msgstr "Preset Campagna"
+
+msgid "Seleziona un preset..."
+msgstr "Seleziona un preset..."
+
+msgid "Seleziona un preset per compilare automaticamente i campi UTM."
+msgstr "Seleziona un preset per compilare automaticamente i campi UTM."
+
+msgid "Nome descrittivo per identificare la campagna."
+msgstr "Nome descrittivo per identificare la campagna."
+
+msgid "URL di destinazione senza parametri UTM."
+msgstr "URL di destinazione senza parametri UTM."
+
+msgid "Es. google, facebook, newsletter"
+msgstr "Es. google, facebook, newsletter"
+
+msgid "Es. cpc, social, email, referral"
+msgstr "Es. cpc, social, email, referral"
+
+msgid "Nome specifico della campagna."
+msgstr "Nome specifico della campagna."
+
+msgid "Parole chiave (opzionale)."
+msgstr "Parole chiave (opzionale)."
+
+msgid "Contenuto specifico (opzionale)."
+msgstr "Contenuto specifico (opzionale)."
+
+msgid "Genera URL"
+msgstr "Genera URL"
+
+msgid "Copia URL"
+msgstr "Copia URL"
+
+msgid "Copia"
+msgstr "Copia"
+
+msgid "Salva Campagna"
+msgstr "Salva Campagna"
+
+msgid "Aggiorna Campagna"
+msgstr "Aggiorna Campagna"
+
+msgid "Annulla"
+msgstr "Annulla"
+
+msgid "Dettagli Campagna"
+msgstr "Dettagli Campagna"
+
+msgid "Statistiche Campagna"
+msgstr "Statistiche Campagna"
+
+msgid "Modifica Campagna"
+msgstr "Modifica Campagna"
+
+msgid "Torna alla Lista"
+msgstr "Torna alla Lista"
+
+msgid "Cerca campagne:"
+msgstr "Cerca campagne:"
+
+msgid "Cerca campagne..."
+msgstr "Cerca campagne..."
+
+msgid "Tutti gli stati"
+msgstr "Tutti gli stati"
+
+msgid "Attive"
+msgstr "Attive"
+
+msgid "In pausa"
+msgstr "In pausa"
+
+msgid "Completate"
+msgstr "Completate"
+
+msgid "Filtra"
+msgstr "Filtra"
+
+msgid "Nessuna campagna trovata."
+msgstr "Nessuna campagna trovata."
+
+msgid "Creata il"
+msgstr "Creata il"
+
+msgid "Source/Medium"
+msgstr "Source/Medium"
+
+msgid "Campaign"
+msgstr "Campaign"
+
+msgid "Nuova Campagna"
+msgstr "Nuova Campagna"
+
+# UTM Generator specific messages
+msgid "Il parametro %s è obbligatorio."
+msgstr "Il parametro %s è obbligatorio."
+
+msgid "Il parametro %s contiene caratteri non validi."
+msgstr "Il parametro %s contiene caratteri non validi."
+
+# UTM Campaign Manager error messages
+msgid "Nonce di sicurezza non valido."
+msgstr "Nonce di sicurezza non valido."
+
+msgid "Non hai i permessi per eseguire questa azione."
+msgstr "Non hai i permessi per eseguire questa azione."
+
+msgid "Tutti i campi obbligatori devono essere compilati."
+msgstr "Tutti i campi obbligatori devono essere compilati."
+
+msgid "Campagna UTM salvata con successo."
+msgstr "Campagna UTM salvata con successo."
+
+msgid "Errore nel salvare la campagna. Verifica che non esistano duplicati."
+msgstr "Errore nel salvare la campagna. Verifica che non esistano duplicati."
+
+msgid "ID campagna non valido."
+msgstr "ID campagna non valido."
+
+msgid "Campagna non trovata."
+msgstr "Campagna non trovata."
+
+msgid "Campagna UTM aggiornata con successo."
+msgstr "Campagna UTM aggiornata con successo."
+
+msgid "Errore nell'aggiornare la campagna."
+msgstr "Errore nell'aggiornare la campagna."
+
+msgid "Non hai i permessi per accedere a questa pagina."
+msgstr "Non hai i permessi per accedere a questa pagina."
+
+# AJAX messages
+msgid "Nonce non valido."
+msgstr "Nonce non valido."
+
+msgid "Permessi insufficienti."
+msgstr "Permessi insufficienti."
+
+msgid "Impossibile generare l'URL. Verifica i parametri."
+msgstr "Impossibile generare l'URL. Verifica i parametri."
+
+msgid "Preset non trovato."
+msgstr "Preset non trovato."
+
+msgid "Campagna eliminata con successo."
+msgstr "Campagna eliminata con successo."
+
+msgid "Errore nell'eliminare la campagna."
+msgstr "Errore nell'eliminare la campagna."
+
+# JavaScript strings
+msgid "Sei sicuro di voler eliminare questa campagna?"
+msgstr "Sei sicuro di voler eliminare questa campagna?"
+
+msgid "URL copiato negli appunti!"
+msgstr "URL copiato negli appunti!"
+
+msgid "Impossibile copiare l'URL. Seleziona e copia manualmente."
+msgstr "Impossibile copiare l'URL. Seleziona e copia manualmente."
+
+msgid "Generazione in corso..."
+msgstr "Generazione in corso..."
+
+msgid "Si è verificato un errore. Riprova."
+msgstr "Si è verificato un errore. Riprova."
+msgstr "Alert attivato per il cliente: %s\n\nRegola: %s\nMetrica: %s\nValore attuale: %s\nCondizione: %s %s\nSoglia: %s\n\nData/ora: %s\n\nPer maggiori dettagli, accedi al pannello di amministrazione."
