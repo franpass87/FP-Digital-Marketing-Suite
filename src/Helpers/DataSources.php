@@ -111,7 +111,7 @@ class DataSources {
 				'name'        => __( 'Google Ads', 'fp-digital-marketing' ),
 				'description' => __( 'Dati delle campagne pubblicitarie Google Ads', 'fp-digital-marketing' ),
 				'type'        => self::TYPE_ADVERTISING,
-				'status'      => 'planned',
+				'status'      => 'available',
 				'version'     => '1.0',
 				'endpoints'   => [
 					'reports' => 'https://googleads.googleapis.com/v14/customers/{customer_id}/googleAds:searchStream',
