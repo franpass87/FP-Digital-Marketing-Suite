@@ -15,6 +15,7 @@ use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\MetricsAggregator;
 use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Helpers\SyncEngine;
+use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\Models\MetricsCache;
@@ -76,12 +77,19 @@ class Reports {
 		}
 
 		// Handle PDF download
+		// Handle PDF download with security verification
 		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_pdf' && isset( $_GET['client_id'] ) ) {
-			$this->download_pdf_report( intval( $_GET['client_id'] ) );
+			if ( Security::verify_capability_with_logging( 'manage_options' ) ) {
+				$this->download_pdf_report( intval( $_GET['client_id'] ) );
+			} else {
+				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+			}
 		}
 
 		// Handle manual report generation
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_reports' && wp_verify_nonce( $_POST['_wpnonce'], 'generate_reports' ) ) {
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_reports' && 
+			 Security::verify_capability_with_logging( 'manage_options' ) &&
+			 Security::verify_nonce_with_logging( 'generate_reports' ) ) {
 			$count = ReportScheduler::trigger_manual_generation();
 			add_action( 'admin_notices', function() use ( $count ) {
 				echo '<div class="notice notice-success is-dismissible"><p>';
