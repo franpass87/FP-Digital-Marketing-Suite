@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\DataSources;
 
+use FP\DigitalMarketing\Helpers\Security;
+
 /**
  * Google OAuth client for handling authentication
  * 
@@ -150,31 +152,45 @@ class GoogleOAuth {
 	}
 
 	/**
-	 * Store tokens securely
+	 * Store tokens securely with encryption
 	 *
 	 * @param array $tokens Token data from Google
 	 * @return void
 	 */
 	private function store_tokens( array $tokens ): void {
 		$token_data = [
-			'access_token' => $tokens['access_token'],
-			'refresh_token' => $tokens['refresh_token'] ?? '',
+			'access_token' => Security::encrypt_sensitive_data( $tokens['access_token'] ),
+			'refresh_token' => isset( $tokens['refresh_token'] ) ? Security::encrypt_sensitive_data( $tokens['refresh_token'] ) : '',
 			'expires_in' => $tokens['expires_in'] ?? 3600,
 			'token_type' => $tokens['token_type'] ?? 'Bearer',
 			'created_at' => time(),
 		];
 
-		update_option( self::TOKEN_OPTION, $token_data );
+		update_option( self::TOKEN_OPTION, $token_data, false ); // autoload = false for security
 	}
 
 	/**
-	 * Get stored tokens
+	 * Get stored tokens with decryption
 	 *
-	 * @return array|false Token data or false if not found
+	 * @return array|false Token data with decrypted sensitive values or false if not found
 	 */
 	private function get_stored_tokens(): array|false {
 		$tokens = get_option( self::TOKEN_OPTION, false );
-		return $tokens ?: false;
+		
+		if ( ! $tokens ) {
+			return false;
+		}
+
+		// Decrypt sensitive token data
+		$decrypted_tokens = [
+			'access_token' => Security::decrypt_sensitive_data( $tokens['access_token'] ),
+			'refresh_token' => ! empty( $tokens['refresh_token'] ) ? Security::decrypt_sensitive_data( $tokens['refresh_token'] ) : '',
+			'expires_in' => $tokens['expires_in'],
+			'token_type' => $tokens['token_type'],
+			'created_at' => $tokens['created_at'],
+		];
+
+		return $decrypted_tokens;
 	}
 
 	/**

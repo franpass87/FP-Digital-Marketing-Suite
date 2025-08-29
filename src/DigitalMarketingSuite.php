@@ -13,6 +13,7 @@ use FP\DigitalMarketing\PostTypes\ClientePostType;
 use FP\DigitalMarketing\Admin\ClienteMeta;
 use FP\DigitalMarketing\Admin\Settings;
 use FP\DigitalMarketing\Admin\Reports;
+use FP\DigitalMarketing\Admin\SecurityAdmin;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
@@ -58,6 +59,13 @@ class DigitalMarketingSuite {
 	private Reports $reports;
 
 	/**
+	 * Security Admin instance
+	 *
+	 * @var SecurityAdmin
+	 */
+	private SecurityAdmin $security_admin;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -65,6 +73,7 @@ class DigitalMarketingSuite {
 		$this->cliente_meta = new ClienteMeta();
 		$this->settings = new Settings();
 		$this->reports = new Reports();
+		$this->security_admin = new SecurityAdmin();
 	}
 
 	/**
@@ -87,6 +96,7 @@ class DigitalMarketingSuite {
 		$this->cliente_meta->init();
 		$this->settings->init();
 		$this->reports->init();
+		$this->security_admin->init();
 
 		// Initialize report scheduler.
 		ReportScheduler::init();
