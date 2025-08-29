@@ -15,6 +15,8 @@ use FP\DigitalMarketing\Helpers\DataSources;
 use FP\DigitalMarketing\Models\SyncLog;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Helpers\CoreWebVitalsHelper;
+use FP\DigitalMarketing\DataSources\CoreWebVitals;
 
 /**
  * Dashboard class for admin overview
@@ -39,6 +41,8 @@ class Dashboard {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_dashboard_assets' ] );
 		add_action( 'wp_ajax_fp_dms_get_dashboard_data', [ $this, 'handle_ajax_dashboard_data' ] );
 		add_action( 'wp_ajax_fp_dms_get_chart_data', [ $this, 'handle_ajax_chart_data' ] );
+		add_action( 'wp_ajax_fp_dms_get_core_web_vitals', [ $this, 'handle_ajax_core_web_vitals' ] );
+		add_action( 'wp_ajax_fp_dms_record_client_vital', [ $this, 'handle_ajax_record_client_vital' ] );
 	}
 
 	/**
@@ -110,7 +114,20 @@ class Dashboard {
 				'clicks' => __( 'Clicks', 'fp-digital-marketing' ),
 				'ctr' => __( 'CTR', 'fp-digital-marketing' ),
 				'revenue' => __( 'Revenue', 'fp-digital-marketing' ),
+				'lcp' => __( 'LCP', 'fp-digital-marketing' ),
+				'inp' => __( 'INP', 'fp-digital-marketing' ),
+				'cls' => __( 'CLS', 'fp-digital-marketing' ),
+				'good' => __( 'Buono', 'fp-digital-marketing' ),
+				'needs_improvement' => __( 'Da migliorare', 'fp-digital-marketing' ),
+				'poor' => __( 'Scarso', 'fp-digital-marketing' ),
+				'recommendations' => __( 'Raccomandazioni', 'fp-digital-marketing' ),
+				'performance_score' => __( 'Punteggio Performance', 'fp-digital-marketing' ),
 			],
+		] );
+
+		// Localize script for Core Web Vitals client-side collection
+		wp_localize_script( 'fp-dms-dashboard', 'fpDmsVitals', [
+			'nonce' => wp_create_nonce( 'fp_dms_client_vitals' ),
 		] );
 	}
 
@@ -389,11 +406,31 @@ class Dashboard {
 								<option value="clicks"><?php esc_html_e( 'Click', 'fp-digital-marketing' ); ?></option>
 								<option value="conversions"><?php esc_html_e( 'Conversioni', 'fp-digital-marketing' ); ?></option>
 								<option value="revenue"><?php esc_html_e( 'Fatturato', 'fp-digital-marketing' ); ?></option>
+								<option value="lcp"><?php esc_html_e( 'LCP (ms)', 'fp-digital-marketing' ); ?></option>
+								<option value="inp"><?php esc_html_e( 'INP (ms)', 'fp-digital-marketing' ); ?></option>
+								<option value="cls"><?php esc_html_e( 'CLS', 'fp-digital-marketing' ); ?></option>
 							</select>
 						</div>
 					</div>
 					<div class="fp-dms-chart-container">
 						<canvas id="trend-chart" aria-label="<?php esc_attr_e( 'Grafico trend metriche', 'fp-digital-marketing' ); ?>"></canvas>
+					</div>
+				</div>
+
+				<!-- Core Web Vitals Section -->
+				<div class="fp-dms-cwv-section">
+					<div class="fp-dms-cwv-header">
+						<h2><?php esc_html_e( 'Core Web Vitals', 'fp-digital-marketing' ); ?></h2>
+						<div class="fp-dms-cwv-info">
+							<span class="fp-dms-info-icon">ℹ️</span>
+							<span><?php esc_html_e( 'Dati ultimi 28 giorni (75° percentile)', 'fp-digital-marketing' ); ?></span>
+						</div>
+					</div>
+					<div class="fp-dms-cwv-widgets" id="cwv-widgets">
+						<!-- Core Web Vitals widgets will be populated by JavaScript -->
+					</div>
+					<div class="fp-dms-cwv-recommendations" id="cwv-recommendations" style="display: none;">
+						<!-- Performance recommendations will be populated by JavaScript -->
 					</div>
 				</div>
 
@@ -414,5 +451,94 @@ class Dashboard {
 
 		</div>
 		<?php
+	}
+
+	/**
+	 * Handle AJAX request for Core Web Vitals data
+	 *
+	 * @return void
+	 */
+	public function handle_ajax_core_web_vitals(): void {
+		// Verify nonce and capabilities
+		if ( ! Security::verify_nonce_with_logging( 'fp_dms_dashboard' ) ) {
+			wp_die( 'Invalid nonce' );
+		}
+
+		if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
+			wp_die( 'Insufficient permissions' );
+		}
+
+		$client_id = intval( $_GET['client_id'] ?? 0 );
+		$origin_url = sanitize_url( $_GET['origin_url'] ?? get_site_url() );
+
+		// Get Core Web Vitals data
+		$cwv = new CoreWebVitals( $origin_url );
+		$period_end = date( 'Y-m-d H:i:s' );
+		$period_start = date( 'Y-m-d H:i:s', strtotime( '-28 days' ) );
+
+		$metrics = $cwv->fetch_metrics( $client_id, $period_start, $period_end );
+
+		if ( $metrics ) {
+			// Get performance recommendations
+			$recommendations = CoreWebVitalsHelper::get_performance_recommendations( $metrics );
+			
+			// Calculate performance score
+			$score = CoreWebVitalsHelper::calculate_performance_score( $metrics );
+
+			// Get status for each metric
+			$statuses = [];
+			foreach ( $metrics as $metric => $value ) {
+				$kpi = MetricsSchema::normalize_metric_name( 'core_web_vitals', $metric );
+				$statuses[ $metric ] = [
+					'status' => MetricsSchema::get_performance_status( $kpi, (float) $value ),
+					'color' => MetricsSchema::get_performance_color( 
+						MetricsSchema::get_performance_status( $kpi, (float) $value )
+					),
+					'formatted_value' => CoreWebVitalsHelper::format_metric_value( $metric, $value ),
+				];
+			}
+
+			wp_send_json_success([
+				'metrics' => $metrics,
+				'statuses' => $statuses,
+				'recommendations' => $recommendations,
+				'score' => $score,
+				'origin_url' => $origin_url,
+			]);
+		} else {
+			wp_send_json_error( __( 'Unable to fetch Core Web Vitals data', 'fp-digital-marketing' ) );
+		}
+	}
+
+	/**
+	 * Handle AJAX request to record client-side vital
+	 *
+	 * @return void
+	 */
+	public function handle_ajax_record_client_vital(): void {
+		// Verify nonce
+		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_dms_client_vitals' ) ) {
+			wp_die( 'Invalid nonce' );
+		}
+
+		$metric = sanitize_text_field( $_POST['metric'] ?? '' );
+		$value = (float) ( $_POST['value'] ?? 0 );
+		$url = sanitize_url( $_POST['url'] ?? '' );
+
+		// Store client-side vital in database
+		if ( in_array( $metric, [ 'lcp', 'inp', 'cls', 'fid' ], true ) && $value > 0 ) {
+			// You could store this in a separate table for real-time monitoring
+			// For now, we'll just log it
+			error_log( sprintf( 
+				'Client-side vital: %s = %s on %s', 
+				$metric, 
+				$value, 
+				$url 
+			) );
+
+			wp_send_json_success( [ 'recorded' => true ] );
+		} else {
+			wp_send_json_error( 'Invalid metric data' );
+		}
 	}
 }

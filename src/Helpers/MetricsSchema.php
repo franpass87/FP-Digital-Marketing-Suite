@@ -36,6 +36,11 @@ class MetricsSchema {
 	public const KPI_AVG_POSITION = 'avg_position';
 	public const KPI_EMAIL_OPENS = 'email_opens';
 	public const KPI_EMAIL_CLICKS = 'email_clicks';
+	
+	// Core Web Vitals metrics
+	public const KPI_LCP = 'lcp'; // Largest Contentful Paint
+	public const KPI_INP = 'inp'; // Interaction to Next Paint
+	public const KPI_CLS = 'cls'; // Cumulative Layout Shift
 
 	/**
 	 * Metric categories for grouping related KPIs
@@ -46,6 +51,7 @@ class MetricsSchema {
 	public const CATEGORY_ADVERTISING = 'advertising';
 	public const CATEGORY_SEARCH = 'search';
 	public const CATEGORY_EMAIL = 'email';
+	public const CATEGORY_PERFORMANCE = 'performance';
 
 	/**
 	 * Get all standard KPI definitions
@@ -166,6 +172,39 @@ class MetricsSchema {
 				'format' => 'number',
 				'aggregation' => 'sum',
 			],
+			self::KPI_LCP => [
+				'name' => __( 'LCP (ms)', 'fp-digital-marketing' ),
+				'description' => __( 'Largest Contentful Paint - tempo di caricamento elemento principale', 'fp-digital-marketing' ),
+				'category' => self::CATEGORY_PERFORMANCE,
+				'format' => 'milliseconds',
+				'aggregation' => 'percentile_75',
+				'thresholds' => [
+					'good' => 2500,
+					'needs_improvement' => 4000,
+				],
+			],
+			self::KPI_INP => [
+				'name' => __( 'INP (ms)', 'fp-digital-marketing' ),
+				'description' => __( 'Interaction to Next Paint - reattività delle interazioni', 'fp-digital-marketing' ),
+				'category' => self::CATEGORY_PERFORMANCE,
+				'format' => 'milliseconds',
+				'aggregation' => 'percentile_75',
+				'thresholds' => [
+					'good' => 200,
+					'needs_improvement' => 500,
+				],
+			],
+			self::KPI_CLS => [
+				'name' => __( 'CLS', 'fp-digital-marketing' ),
+				'description' => __( 'Cumulative Layout Shift - stabilità visuale della pagina', 'fp-digital-marketing' ),
+				'category' => self::CATEGORY_PERFORMANCE,
+				'format' => 'decimal',
+				'aggregation' => 'percentile_75',
+				'thresholds' => [
+					'good' => 0.1,
+					'needs_improvement' => 0.25,
+				],
+			],
 		];
 	}
 
@@ -216,6 +255,12 @@ class MetricsSchema {
 				'clicks' => self::KPI_EMAIL_CLICKS,
 				'open_rate' => 'email_open_rate', // Non-standard KPI
 				'click_rate' => 'email_click_rate', // Non-standard KPI
+			],
+			'core_web_vitals' => [
+				'lcp' => self::KPI_LCP,
+				'inp' => self::KPI_INP,
+				'cls' => self::KPI_CLS,
+				'fid' => self::KPI_INP, // Map FID to INP for backwards compatibility
 			],
 		];
 	}
@@ -288,6 +333,10 @@ class MetricsSchema {
 				'name' => __( 'Email', 'fp-digital-marketing' ),
 				'description' => __( 'Metriche di email marketing', 'fp-digital-marketing' ),
 			],
+			self::CATEGORY_PERFORMANCE => [
+				'name' => __( 'Performance', 'fp-digital-marketing' ),
+				'description' => __( 'Core Web Vitals e metriche di performance', 'fp-digital-marketing' ),
+			],
 		];
 	}
 
@@ -322,5 +371,47 @@ class MetricsSchema {
 	public static function get_format_type( string $kpi ): string {
 		$kpi_definitions = self::get_kpi_definitions();
 		return $kpi_definitions[ $kpi ]['format'] ?? 'number';
+	}
+
+	/**
+	 * Get performance status for Core Web Vitals metrics
+	 *
+	 * @param string $kpi KPI name
+	 * @param float  $value Metric value
+	 * @return string Performance status (good, needs_improvement, poor)
+	 */
+	public static function get_performance_status( string $kpi, float $value ): string {
+		$kpi_definitions = self::get_kpi_definitions();
+		
+		if ( ! isset( $kpi_definitions[ $kpi ]['thresholds'] ) ) {
+			return 'unknown';
+		}
+		
+		$thresholds = $kpi_definitions[ $kpi ]['thresholds'];
+		
+		if ( $value <= $thresholds['good'] ) {
+			return 'good';
+		} elseif ( $value <= $thresholds['needs_improvement'] ) {
+			return 'needs_improvement';
+		} else {
+			return 'poor';
+		}
+	}
+
+	/**
+	 * Get performance status color
+	 *
+	 * @param string $status Performance status
+	 * @return string CSS color class
+	 */
+	public static function get_performance_color( string $status ): string {
+		$colors = [
+			'good' => 'green',
+			'needs_improvement' => 'orange',
+			'poor' => 'red',
+			'unknown' => 'gray',
+		];
+		
+		return $colors[ $status ] ?? 'gray';
 	}
 }

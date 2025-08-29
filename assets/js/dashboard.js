@@ -83,6 +83,7 @@
                 .done((response) => {
                     if (response.success) {
                         this.renderDashboard(response.data);
+                        this.loadCoreWebVitals();
                         this.showContent();
                     } else {
                         this.showError(response.data || fpDmsDashboard.strings.error);
@@ -310,6 +311,136 @@
             return labels[kpi] || kpi;
         }
 
+        loadCoreWebVitals() {
+            const params = {
+                action: 'fp_dms_get_core_web_vitals',
+                _wpnonce: fpDmsDashboard.nonce,
+                client_id: this.currentFilters.client_id,
+                origin_url: window.location.origin
+            };
+
+            $.get(fpDmsDashboard.ajax_url, params)
+                .done((response) => {
+                    if (response.success) {
+                        this.renderCoreWebVitals(response.data);
+                    } else {
+                        console.error('Core Web Vitals error:', response.data);
+                        $('#cwv-widgets').html('<p>Unable to load Core Web Vitals data</p>');
+                    }
+                })
+                .fail(() => {
+                    console.error('Core Web Vitals network error');
+                    $('#cwv-widgets').html('<p>Network error loading Core Web Vitals</p>');
+                });
+        }
+
+        renderCoreWebVitals(data) {
+            const { metrics, statuses, recommendations, score } = data;
+            const cwvContainer = $('#cwv-widgets');
+
+            // Clear existing content
+            cwvContainer.empty();
+
+            // Render Core Web Vitals widgets
+            const vitalsOrder = ['lcp', 'inp', 'cls'];
+            vitalsOrder.forEach(metric => {
+                if (metrics[metric] !== undefined) {
+                    const widget = this.createCWVWidget(metric, metrics[metric], statuses[metric], score.individual[metric]);
+                    cwvContainer.append(widget);
+                }
+            });
+
+            // Add overall performance score
+            if (score.overall > 0) {
+                const scoreWidget = this.createPerformanceScoreWidget(score);
+                cwvContainer.append(scoreWidget);
+            }
+
+            // Render recommendations if available
+            if (recommendations && recommendations.length > 0) {
+                this.renderCWVRecommendations(recommendations);
+            }
+        }
+
+        createCWVWidget(metric, value, status, individualScore) {
+            const metricNames = {
+                lcp: fpDmsDashboard.strings.lcp,
+                inp: fpDmsDashboard.strings.inp,
+                cls: fpDmsDashboard.strings.cls
+            };
+
+            const statusLabels = {
+                good: fpDmsDashboard.strings.good,
+                needs_improvement: fpDmsDashboard.strings.needs_improvement,
+                poor: fpDmsDashboard.strings.poor
+            };
+
+            return $(`
+                <div class="fp-dms-cwv-widget status-${status.status}">
+                    <div class="fp-dms-cwv-metric-name">${metricNames[metric] || metric.toUpperCase()}</div>
+                    <div class="fp-dms-cwv-metric-value">${status.formatted_value}</div>
+                    <div class="fp-dms-cwv-metric-status status-${status.status}">
+                        ${statusLabels[status.status] || status.status}
+                    </div>
+                    ${individualScore ? `
+                        <div class="fp-dms-cwv-score">
+                            <div class="fp-dms-cwv-score-title">Score</div>
+                            <div class="fp-dms-cwv-score-value">${individualScore}/100</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `);
+        }
+
+        createPerformanceScoreWidget(score) {
+            const gradeColors = {
+                A: '#00d084',
+                B: '#7fb800', 
+                C: '#ff8c00',
+                D: '#ff6b35',
+                F: '#dc3545'
+            };
+
+            return $(`
+                <div class="fp-dms-cwv-widget">
+                    <div class="fp-dms-cwv-metric-name">${fpDmsDashboard.strings.performance_score}</div>
+                    <div class="fp-dms-cwv-metric-value">
+                        ${score.overall}/100
+                        <span class="fp-dms-cwv-score-grade" style="background-color: ${gradeColors[score.grade] || '#f0f0f0'}; color: white;">
+                            ${score.grade}
+                        </span>
+                    </div>
+                </div>
+            `);
+        }
+
+        renderCWVRecommendations(recommendations) {
+            const container = $('#cwv-recommendations');
+            
+            if (recommendations.length === 0) {
+                container.hide();
+                return;
+            }
+
+            container.empty();
+            container.append(`<h3>${fpDmsDashboard.strings.recommendations}</h3>`);
+
+            recommendations.forEach(rec => {
+                const recElement = $(`
+                    <div class="fp-dms-cwv-recommendation fp-dms-cwv-priority-${rec.priority}">
+                        <div class="fp-dms-cwv-recommendation-title">${rec.title}</div>
+                        <div class="fp-dms-cwv-recommendation-desc">${rec.description}</div>
+                        <ul class="fp-dms-cwv-recommendation-actions">
+                            ${rec.actions.map(action => `<li>${action}</li>`).join('')}
+                        </ul>
+                    </div>
+                `);
+                container.append(recElement);
+            });
+
+            container.show();
+        }
+
         getKpiIcon(kpi) {
             const icons = {
                 sessions: '👥',
@@ -321,7 +452,10 @@
                 revenue: '💰',
                 conversions: '🎯',
                 organic_clicks: '🔍',
-                organic_impressions: '🌐'
+                organic_impressions: '🌐',
+                lcp: '🚀',
+                inp: '⚡',
+                cls: '📐'
             };
             return icons[kpi] || '📈';
         }
@@ -338,6 +472,11 @@
                     return (value * 100).toFixed(2) + '%';
                 case 'bounce_rate':
                     return value.toFixed(1) + '%';
+                case 'lcp':
+                case 'inp':
+                    return Math.round(value).toLocaleString('it-IT') + ' ms';
+                case 'cls':
+                    return value.toFixed(3);
                 default:
                     return value.toLocaleString('it-IT');
             }

@@ -26,6 +26,7 @@ class DataSources {
 	public const TYPE_SOCIAL = 'social';
 	public const TYPE_ADVERTISING = 'advertising';
 	public const TYPE_EMAIL = 'email';
+	public const TYPE_PERFORMANCE = 'performance';
 
 	/**
 	 * Get all registered data sources
@@ -151,6 +152,28 @@ class DataSources {
 					'audience_growth',
 				],
 			],
+			'core_web_vitals' => [
+				'id'          => 'core_web_vitals',
+				'name'        => __( 'Core Web Vitals', 'fp-digital-marketing' ),
+				'description' => __( 'Metriche di performance (LCP, INP, CLS) da Chrome UX Report', 'fp-digital-marketing' ),
+				'type'        => self::TYPE_PERFORMANCE,
+				'status'      => 'available',
+				'version'     => '1.0',
+				'endpoints'   => [
+					'crux_api' => 'https://chromeuxreport.googleapis.com/v1/records:queryRecord',
+				],
+				'required_credentials' => [
+					'crux_api_key',
+					'origin_url',
+				],
+				'capabilities' => [
+					'core_web_vitals',
+					'performance_monitoring',
+					'real_user_monitoring',
+					'client_side_beacons',
+					'28_day_rolling_data',
+				],
+			],
 		];
 
 		// Apply the hook for extensibility.
@@ -192,6 +215,7 @@ class DataSources {
 			self::TYPE_SOCIAL       => __( 'Social Media', 'fp-digital-marketing' ),
 			self::TYPE_ADVERTISING  => __( 'Advertising', 'fp-digital-marketing' ),
 			self::TYPE_EMAIL        => __( 'Email Marketing', 'fp-digital-marketing' ),
+			self::TYPE_PERFORMANCE  => __( 'Performance', 'fp-digital-marketing' ),
 		];
 	}
 
