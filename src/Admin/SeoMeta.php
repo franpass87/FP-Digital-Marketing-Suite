@@ -11,6 +11,7 @@ namespace FP\DigitalMarketing\Admin;
 
 use FP\DigitalMarketing\Helpers\SeoMetadata;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Helpers\ContentSeoAnalyzer;
 
 /**
  * SEO Meta Fields class for managing SEO metadata in WordPress admin
@@ -36,6 +37,7 @@ class SeoMeta {
 		add_action( 'add_meta_boxes', [ $this, 'add_meta_boxes' ] );
 		add_action( 'save_post', [ $this, 'save_meta_fields' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
+		add_action( 'wp_ajax_fp_analyze_content_seo', [ $this, 'ajax_analyze_content_seo' ] );
 	}
 
 	/**
@@ -82,6 +84,16 @@ class SeoMeta {
 		$twitter_description = get_post_meta( $post->ID, SeoMetadata::META_TWITTER_DESCRIPTION, true );
 		$twitter_image = get_post_meta( $post->ID, SeoMetadata::META_TWITTER_IMAGE, true );
 
+		// Get focus keyword and content analysis data.
+		$focus_keyword = get_post_meta( $post->ID, SeoMetadata::META_FOCUS_KEYWORD, true );
+		$saved_analysis = ContentSeoAnalyzer::get_saved_analysis( $post->ID );
+		
+		// Perform fresh analysis if we have a focus keyword
+		$current_analysis = $saved_analysis;
+		if ( ! empty( $focus_keyword ) ) {
+			$current_analysis = ContentSeoAnalyzer::analyze_content( $post, $focus_keyword );
+		}
+
 		// Get preview data for fallbacks.
 		$preview_title = SeoMetadata::get_title( $post );
 		$preview_description = SeoMetadata::get_description( $post );
@@ -95,6 +107,9 @@ class SeoMeta {
 				<ul class="seo-tab-nav">
 					<li class="seo-tab-nav-item active" data-tab="basic-seo">
 						<?php esc_html_e( 'SEO Base', 'fp-digital-marketing' ); ?>
+					</li>
+					<li class="seo-tab-nav-item" data-tab="content-analysis">
+						<?php esc_html_e( 'Analisi Contenuto', 'fp-digital-marketing' ); ?>
 					</li>
 					<li class="seo-tab-nav-item" data-tab="social-media">
 						<?php esc_html_e( 'Social Media', 'fp-digital-marketing' ); ?>
@@ -160,6 +175,161 @@ class SeoMeta {
 							</tr>
 						</tbody>
 					</table>
+				</div>
+
+				<!-- Content Analysis Tab -->
+				<div class="seo-tab-content" id="content-analysis">
+					<table class="form-table">
+						<tbody>
+							<tr>
+								<th scope="row">
+									<label for="focus_keyword">
+										<?php esc_html_e( 'Parola Chiave Focus', 'fp-digital-marketing' ); ?>
+									</label>
+								</th>
+								<td>
+									<input 
+										type="text" 
+										id="focus_keyword" 
+										name="focus_keyword" 
+										value="<?php echo esc_attr( $focus_keyword ); ?>" 
+										class="large-text seo-field" 
+										placeholder="<?php esc_attr_e( 'es. marketing digitale', 'fp-digital-marketing' ); ?>"
+									/>
+									<p class="description">
+										<?php esc_html_e( 'La parola chiave principale su cui vuoi ottimizzare questo contenuto', 'fp-digital-marketing' ); ?>
+									</p>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<?php if ( ! empty( $focus_keyword ) && ! empty( $current_analysis['overall_score'] ) ): ?>
+					<div class="seo-analysis-results">
+						<h4><?php esc_html_e( 'Risultati Analisi SEO', 'fp-digital-marketing' ); ?></h4>
+						
+						<!-- Overall Score -->
+						<div class="seo-score-overview">
+							<div class="score-circle score-<?php echo esc_attr( strtolower( $current_analysis['grade'] ) ); ?>">
+								<span class="score-number"><?php echo esc_html( $current_analysis['overall_score'] ); ?></span>
+								<span class="score-grade"><?php echo esc_html( $current_analysis['grade'] ); ?></span>
+							</div>
+							<div class="score-breakdown">
+								<div class="score-item">
+									<span class="score-label"><?php esc_html_e( 'SEO Keywords:', 'fp-digital-marketing' ); ?></span>
+									<span class="score-value"><?php echo esc_html( $current_analysis['keyword_score'] ); ?>/100</span>
+								</div>
+								<div class="score-item">
+									<span class="score-label"><?php esc_html_e( 'Leggibilità:', 'fp-digital-marketing' ); ?></span>
+									<span class="score-value"><?php echo esc_html( $current_analysis['readability_score'] ); ?>/100</span>
+								</div>
+							</div>
+						</div>
+
+						<!-- Keyword Analysis Details -->
+						<div class="seo-analysis-section">
+							<h5><?php esc_html_e( 'Analisi Parole Chiave', 'fp-digital-marketing' ); ?></h5>
+							<div class="seo-checks">
+								<?php if ( isset( $current_analysis['keyword_analysis']['title'] ) ): ?>
+								<div class="seo-check <?php echo $current_analysis['keyword_analysis']['title']['present'] ? 'check-pass' : 'check-fail'; ?>">
+									<span class="dashicons <?php echo $current_analysis['keyword_analysis']['title']['present'] ? 'dashicons-yes' : 'dashicons-no'; ?>"></span>
+									<span class="check-label"><?php esc_html_e( 'Titolo', 'fp-digital-marketing' ); ?></span>
+									<span class="check-status">
+										<?php echo $current_analysis['keyword_analysis']['title']['present'] ? 
+											esc_html__( 'Keyword presente', 'fp-digital-marketing' ) : 
+											esc_html__( 'Keyword mancante', 'fp-digital-marketing' ); ?>
+									</span>
+								</div>
+								<?php endif; ?>
+
+								<?php if ( isset( $current_analysis['keyword_analysis']['h1'] ) ): ?>
+								<div class="seo-check <?php echo $current_analysis['keyword_analysis']['h1']['present'] ? 'check-pass' : 'check-fail'; ?>">
+									<span class="dashicons <?php echo $current_analysis['keyword_analysis']['h1']['present'] ? 'dashicons-yes' : 'dashicons-no'; ?>"></span>
+									<span class="check-label"><?php esc_html_e( 'H1', 'fp-digital-marketing' ); ?></span>
+									<span class="check-status">
+										<?php echo $current_analysis['keyword_analysis']['h1']['present'] ? 
+											esc_html__( 'Keyword presente', 'fp-digital-marketing' ) : 
+											esc_html__( 'Keyword mancante', 'fp-digital-marketing' ); ?>
+									</span>
+								</div>
+								<?php endif; ?>
+
+								<?php if ( isset( $current_analysis['keyword_analysis']['meta_description'] ) ): ?>
+								<div class="seo-check <?php echo $current_analysis['keyword_analysis']['meta_description']['present'] ? 'check-pass' : 'check-fail'; ?>">
+									<span class="dashicons <?php echo $current_analysis['keyword_analysis']['meta_description']['present'] ? 'dashicons-yes' : 'dashicons-no'; ?>"></span>
+									<span class="check-label"><?php esc_html_e( 'Meta Description', 'fp-digital-marketing' ); ?></span>
+									<span class="check-status">
+										<?php echo $current_analysis['keyword_analysis']['meta_description']['present'] ? 
+											esc_html__( 'Keyword presente', 'fp-digital-marketing' ) : 
+											esc_html__( 'Keyword mancante', 'fp-digital-marketing' ); ?>
+									</span>
+								</div>
+								<?php endif; ?>
+
+								<?php if ( isset( $current_analysis['keyword_analysis']['content_density'] ) ): ?>
+								<div class="seo-check">
+									<span class="dashicons dashicons-chart-pie"></span>
+									<span class="check-label"><?php esc_html_e( 'Densità Keyword', 'fp-digital-marketing' ); ?></span>
+									<span class="check-status">
+										<?php printf( 
+											esc_html__( '%s%% (%d occorrenze)', 'fp-digital-marketing' ),
+											esc_html( $current_analysis['keyword_analysis']['content_density']['density'] ),
+											esc_html( $current_analysis['keyword_analysis']['content_density']['keyword_count'] )
+										); ?>
+									</span>
+								</div>
+								<?php endif; ?>
+							</div>
+						</div>
+
+						<!-- Readability Analysis -->
+						<div class="seo-analysis-section">
+							<h5><?php esc_html_e( 'Analisi Leggibilità', 'fp-digital-marketing' ); ?></h5>
+							<div class="readability-info">
+								<?php if ( isset( $current_analysis['readability_analysis']['flesch_score'] ) ): ?>
+								<div class="readability-item">
+									<span class="readability-label"><?php esc_html_e( 'Punteggio Flesch:', 'fp-digital-marketing' ); ?></span>
+									<span class="readability-value">
+										<?php echo esc_html( round( $current_analysis['readability_analysis']['flesch_score'] ) ); ?>
+										(<?php echo esc_html( $current_analysis['readability_analysis']['flesch_grade'] ?? '' ); ?>)
+									</span>
+								</div>
+								<?php endif; ?>
+
+								<?php if ( isset( $current_analysis['readability_analysis']['paragraph_analysis'] ) ): ?>
+								<div class="readability-item">
+									<span class="readability-label"><?php esc_html_e( 'Lunghezza Paragrafi:', 'fp-digital-marketing' ); ?></span>
+									<span class="readability-value">
+										<?php printf(
+											esc_html__( 'Media %d parole/paragrafo', 'fp-digital-marketing' ),
+											esc_html( $current_analysis['readability_analysis']['paragraph_analysis']['average_length'] ?? 0 )
+										); ?>
+									</span>
+								</div>
+								<?php endif; ?>
+							</div>
+						</div>
+
+						<!-- Suggestions -->
+						<?php if ( ! empty( $current_analysis['suggestions'] ) ): ?>
+						<div class="seo-analysis-section">
+							<h5><?php esc_html_e( 'Suggerimenti di Miglioramento', 'fp-digital-marketing' ); ?></h5>
+							<div class="seo-suggestions">
+								<?php foreach ( $current_analysis['suggestions'] as $suggestion ): ?>
+								<div class="seo-suggestion priority-<?php echo esc_attr( $suggestion['priority'] ); ?>">
+									<span class="suggestion-priority"><?php echo esc_html( ucfirst( $suggestion['priority'] ) ); ?></span>
+									<span class="suggestion-message"><?php echo esc_html( $suggestion['message'] ); ?></span>
+								</div>
+								<?php endforeach; ?>
+							</div>
+						</div>
+						<?php endif; ?>
+					</div>
+					<?php else: ?>
+					<div class="seo-analysis-placeholder">
+						<p><?php esc_html_e( 'Inserisci una parola chiave focus per iniziare l\'analisi del contenuto.', 'fp-digital-marketing' ); ?></p>
+					</div>
+					<?php endif; ?>
 				</div>
 
 				<!-- Social Media Tab -->
@@ -430,6 +600,19 @@ class SeoMeta {
 		$this->save_field( $post_id, SeoMetadata::META_TWITTER_TITLE, 'twitter_title' );
 		$this->save_field( $post_id, SeoMetadata::META_TWITTER_DESCRIPTION, 'twitter_description' );
 		$this->save_field( $post_id, SeoMetadata::META_TWITTER_IMAGE, 'twitter_image', 'url' );
+
+		// Save focus keyword and perform content analysis.
+		$this->save_field( $post_id, SeoMetadata::META_FOCUS_KEYWORD, 'focus_keyword' );
+		
+		// Perform and save content analysis if focus keyword is provided.
+		$focus_keyword = isset( $_POST['focus_keyword'] ) ? sanitize_text_field( $_POST['focus_keyword'] ) : '';
+		if ( ! empty( $focus_keyword ) ) {
+			$post = get_post( $post_id );
+			if ( $post ) {
+				$analysis = ContentSeoAnalyzer::analyze_content( $post, $focus_keyword );
+				ContentSeoAnalyzer::save_analysis( $post_id, $analysis );
+			}
+		}
 	}
 
 	/**
@@ -444,6 +627,14 @@ class SeoMeta {
 		}
 
 		wp_add_inline_style( 'wp-admin', $this->get_admin_styles() );
+		
+		// Add AJAX data for live analysis
+		wp_localize_script( 'jquery', 'fpSeoAnalysis', [
+			'ajax_url' => admin_url( 'admin-ajax.php' ),
+			'nonce' => wp_create_nonce( 'fp_seo_analysis' ),
+			'post_id' => get_the_ID() ?: 0,
+		] );
+		
 		wp_add_inline_script( 'jquery', $this->get_admin_scripts() );
 	}
 
@@ -625,6 +816,216 @@ class SeoMeta {
 				font-size: 12px;
 				text-transform: uppercase;
 			}
+			
+			/* Content Analysis Styles */
+			.seo-analysis-results {
+				margin-top: 20px;
+			}
+			
+			.seo-score-overview {
+				display: flex;
+				align-items: center;
+				gap: 20px;
+				margin-bottom: 20px;
+				padding: 15px;
+				background: #f8f9fa;
+				border-left: 4px solid #0073aa;
+			}
+			
+			.score-circle {
+				width: 80px;
+				height: 80px;
+				border-radius: 50%;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				color: white;
+				font-weight: bold;
+			}
+			
+			.score-circle.score-a { background: #46b450; }
+			.score-circle.score-b { background: #00a32a; }
+			.score-circle.score-c { background: #dba617; }
+			.score-circle.score-d { background: #d54e21; }
+			.score-circle.score-f { background: #dc3232; }
+			
+			.score-number {
+				font-size: 24px;
+				line-height: 1;
+			}
+			
+			.score-grade {
+				font-size: 16px;
+				line-height: 1;
+			}
+			
+			.score-breakdown {
+				flex: 1;
+			}
+			
+			.score-item {
+				display: flex;
+				justify-content: space-between;
+				margin-bottom: 8px;
+				font-size: 14px;
+			}
+			
+			.score-label {
+				font-weight: 600;
+			}
+			
+			.score-value {
+				color: #666;
+			}
+			
+			.seo-analysis-section {
+				margin-bottom: 25px;
+				padding: 15px;
+				background: #fff;
+				border: 1px solid #e1e1e1;
+			}
+			
+			.seo-analysis-section h5 {
+				margin-top: 0;
+				margin-bottom: 15px;
+				color: #23282d;
+				font-size: 14px;
+				font-weight: 600;
+			}
+			
+			.seo-checks {
+				display: grid;
+				gap: 10px;
+			}
+			
+			.seo-check {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 8px 12px;
+				border-radius: 4px;
+				background: #f9f9f9;
+			}
+			
+			.seo-check.check-pass {
+				background: #d4edda;
+				border-left: 3px solid #28a745;
+			}
+			
+			.seo-check.check-fail {
+				background: #f8d7da;
+				border-left: 3px solid #dc3545;
+			}
+			
+			.seo-check .dashicons {
+				width: 16px;
+				height: 16px;
+				font-size: 16px;
+			}
+			
+			.check-pass .dashicons-yes {
+				color: #28a745;
+			}
+			
+			.check-fail .dashicons-no {
+				color: #dc3545;
+			}
+			
+			.check-label {
+				font-weight: 600;
+				min-width: 120px;
+			}
+			
+			.check-status {
+				color: #666;
+				font-size: 13px;
+			}
+			
+			.readability-info {
+				display: grid;
+				gap: 10px;
+			}
+			
+			.readability-item {
+				display: flex;
+				justify-content: space-between;
+				padding: 8px 12px;
+				background: #f9f9f9;
+				border-radius: 4px;
+			}
+			
+			.readability-label {
+				font-weight: 600;
+			}
+			
+			.readability-value {
+				color: #666;
+			}
+			
+			.seo-suggestions {
+				display: grid;
+				gap: 8px;
+			}
+			
+			.seo-suggestion {
+				padding: 10px 12px;
+				border-radius: 4px;
+				border-left: 3px solid #ccc;
+			}
+			
+			.seo-suggestion.priority-high {
+				background: #f8d7da;
+				border-left-color: #dc3545;
+			}
+			
+			.seo-suggestion.priority-medium {
+				background: #fff3cd;
+				border-left-color: #ffc107;
+			}
+			
+			.seo-suggestion.priority-low {
+				background: #d1ecf1;
+				border-left-color: #17a2b8;
+			}
+			
+			.suggestion-priority {
+				display: inline-block;
+				font-size: 10px;
+				font-weight: bold;
+				text-transform: uppercase;
+				background: #666;
+				color: white;
+				padding: 2px 6px;
+				border-radius: 3px;
+				margin-right: 8px;
+			}
+			
+			.priority-high .suggestion-priority {
+				background: #dc3545;
+			}
+			
+			.priority-medium .suggestion-priority {
+				background: #ffc107;
+				color: #000;
+			}
+			
+			.priority-low .suggestion-priority {
+				background: #17a2b8;
+			}
+			
+			.suggestion-message {
+				font-size: 13px;
+			}
+			
+			.seo-analysis-placeholder {
+				text-align: center;
+				padding: 40px 20px;
+				color: #666;
+				background: #f9f9f9;
+				border: 2px dashed #ddd;
+				border-radius: 8px;
+			}
 		';
 	}
 
@@ -694,7 +1095,281 @@ class SeoMeta {
 					$("#twitter-preview-title").text(twitterTitle);
 					$("#twitter-preview-description").text(twitterDescription);
 				}
+				
+				// Content Analysis Live Updates (with debouncing)
+				var analysisTimeout;
+				var isAnalyzing = false;
+				
+				function debouncedAnalysis() {
+					clearTimeout(analysisTimeout);
+					analysisTimeout = setTimeout(function() {
+						performLiveAnalysis();
+					}, 1000); // 1 second debounce
+				}
+				
+				function performLiveAnalysis() {
+					var focusKeyword = $("#focus_keyword").val().trim();
+					
+					if (!focusKeyword) {
+						showAnalysisPlaceholder();
+						return;
+					}
+					
+					if (isAnalyzing) {
+						return; // Prevent multiple simultaneous requests
+					}
+					
+					isAnalyzing = true;
+					showAnalysisLoading();
+					
+					// Get current post content
+					var title = $("#title").val() || $("#seo_title").val() || "";
+					var content = "";
+					var metaDescription = $("#seo_description").val() || "";
+					
+					// Get content from editor
+					if (typeof tinymce !== "undefined" && tinymce.activeEditor) {
+						content = tinymce.activeEditor.getContent();
+					} else if ($("#content").length) {
+						content = $("#content").val();
+					}
+					
+					// Send AJAX request for server-side analysis
+					$.ajax({
+						url: fpSeoAnalysis.ajax_url,
+						type: "POST",
+						data: {
+							action: "fp_analyze_content_seo",
+							nonce: fpSeoAnalysis.nonce,
+							post_id: fpSeoAnalysis.post_id,
+							focus_keyword: focusKeyword,
+							title: title,
+							content: content,
+							meta_description: metaDescription
+						},
+						success: function(response) {
+							isAnalyzing = false;
+							if (response.success) {
+								displayAnalysisResults(response.data);
+							} else {
+								console.error("Analysis error:", response.data.message);
+								// Fallback to client-side analysis
+								var quickAnalysis = performQuickAnalysis(focusKeyword, content);
+								displayAnalysisResults(quickAnalysis);
+							}
+						},
+						error: function() {
+							isAnalyzing = false;
+							// Fallback to client-side analysis
+							var quickAnalysis = performQuickAnalysis(focusKeyword, content);
+							displayAnalysisResults(quickAnalysis);
+						}
+					});
+				}
+				
+				function performQuickAnalysis(keyword, content) {
+					var lowerKeyword = keyword.toLowerCase();
+					var lowerContent = content.toLowerCase();
+					var title = $("#seo_title").val() || $("#title").val() || "";
+					var description = $("#seo_description").val() || "";
+					
+					// Basic keyword presence checks
+					var analysis = {
+						focus_keyword: keyword,
+						checks: {
+							title: title.toLowerCase().includes(lowerKeyword),
+							meta_description: description.toLowerCase().includes(lowerKeyword),
+							content: lowerContent.includes(lowerKeyword),
+							density: calculateKeywordDensity(lowerKeyword, lowerContent)
+						}
+					};
+					
+					// Calculate basic score
+					var score = 0;
+					if (analysis.checks.title) score += 25;
+					if (analysis.checks.meta_description) score += 20;
+					if (analysis.checks.content) score += 25;
+					if (analysis.checks.density >= 0.5 && analysis.checks.density <= 2.5) score += 30;
+					else if (analysis.checks.density > 0) score += 15;
+					
+					analysis.overall_score = Math.min(100, score);
+					analysis.grade = getScoreGrade(analysis.overall_score);
+					
+					return analysis;
+				}
+				
+				function calculateKeywordDensity(keyword, content) {
+					if (!content) return 0;
+					var words = content.split(/\s+/).filter(word => word.length > 0);
+					var keywordCount = (content.match(new RegExp(keyword, "gi")) || []).length;
+					return words.length > 0 ? (keywordCount / words.length * 100) : 0;
+				}
+				
+				function getScoreGrade(score) {
+					if (score >= 90) return "A";
+					if (score >= 80) return "B";
+					if (score >= 70) return "C";
+					if (score >= 60) return "D";
+					return "F";
+				}
+				
+				function showAnalysisPlaceholder() {
+					$("#content-analysis .seo-analysis-results").hide();
+					$("#content-analysis .seo-analysis-placeholder").show();
+				}
+				
+				function showAnalysisLoading() {
+					// Add loading state if needed
+				}
+				
+				function displayAnalysisResults(analysis) {
+					// Update score circle
+					var $scoreCircle = $(".score-circle");
+					$scoreCircle.removeClass("score-a score-b score-c score-d score-f");
+					$scoreCircle.addClass("score-" + analysis.grade.toLowerCase());
+					$scoreCircle.find(".score-number").text(analysis.overall_score);
+					$scoreCircle.find(".score-grade").text(analysis.grade);
+					
+					// Update keyword and readability scores
+					$(".score-item").each(function() {
+						var $item = $(this);
+						var label = $item.find(".score-label").text();
+						if (label.includes("Keywords")) {
+							$item.find(".score-value").text(analysis.keyword_score + "/100");
+						} else if (label.includes("Leggibilità")) {
+							$item.find(".score-value").text(analysis.readability_score + "/100");
+						}
+					});
+					
+					// Update individual checks (server response format)
+					if (analysis.keyword_analysis) {
+						updateCheck("title", analysis.keyword_analysis.title?.present || false);
+						updateCheck("meta_description", analysis.keyword_analysis.meta_description?.present || false);
+						updateCheck("h1", analysis.keyword_analysis.h1?.present || false);
+						
+						// Update density info
+						if (analysis.keyword_analysis.content_density) {
+							var density = analysis.keyword_analysis.content_density.density || 0;
+							var count = analysis.keyword_analysis.content_density.keyword_count || 0;
+							$(".check-label").filter(function() {
+								return $(this).text().includes("Densità");
+							}).siblings(".check-status").text(density.toFixed(2) + "% (" + count + " occorrenze)");
+						}
+					}
+					
+					// Update readability info
+					if (analysis.readability_analysis) {
+						$(".readability-item").each(function() {
+							var $item = $(this);
+							var label = $item.find(".readability-label").text();
+							if (label.includes("Flesch") && analysis.readability_analysis.flesch_score) {
+								var score = Math.round(analysis.readability_analysis.flesch_score);
+								var grade = analysis.readability_analysis.flesch_grade || "";
+								$item.find(".readability-value").text(score + " (" + grade + ")");
+							} else if (label.includes("Paragrafi") && analysis.readability_analysis.paragraph_analysis) {
+								var avgLength = analysis.readability_analysis.paragraph_analysis.average_length || 0;
+								$item.find(".readability-value").text("Media " + avgLength + " parole/paragrafo");
+							}
+						});
+					}
+					
+					// Update suggestions
+					if (analysis.suggestions && analysis.suggestions.length > 0) {
+						var $suggestions = $(".seo-suggestions");
+						$suggestions.empty();
+						
+						analysis.suggestions.forEach(function(suggestion) {
+							var priorityClass = "priority-" + suggestion.priority;
+							var $suggestion = $("<div class=\"seo-suggestion " + priorityClass + "\"><span class=\"suggestion-priority\">" + suggestion.priority + "</span><span class=\"suggestion-message\">" + suggestion.message + "</span></div>");
+							$suggestions.append($suggestion);
+						});
+						
+						$(".seo-analysis-section").last().show();
+					}
+					
+					$("#content-analysis .seo-analysis-results").show();
+					$("#content-analysis .seo-analysis-placeholder").hide();
+				}
+				
+				function updateCheck(checkName, passed) {
+					var $check = $(".check-label:contains(\\"" + getCheckLabel(checkName) + "\\")").closest(".seo-check");
+					$check.removeClass("check-pass check-fail");
+					$check.addClass(passed ? "check-pass" : "check-fail");
+					
+					var $icon = $check.find(".dashicons");
+					$icon.removeClass("dashicons-yes dashicons-no");
+					$icon.addClass(passed ? "dashicons-yes" : "dashicons-no");
+					
+					var status = passed ? "Keyword presente" : "Keyword mancante";
+					$check.find(".check-status").text(status);
+				}
+				
+				function getCheckLabel(checkName) {
+					var labels = {
+						title: "Titolo",
+						meta_description: "Meta Description",
+						h1: "H1"
+					};
+					return labels[checkName] || checkName;
+				}
+				
+				// Bind events for live analysis
+				$("#focus_keyword").on("input", debouncedAnalysis);
+				$("#seo_title, #seo_description").on("input", debouncedAnalysis);
+				
+				// Listen for editor content changes
+				if (typeof tinymce !== "undefined") {
+					$(document).on("tinymce-editor-init", function() {
+						tinymce.activeEditor.on("input keyup", debouncedAnalysis);
+					});
+				}
+				$("#content").on("input", debouncedAnalysis);
+				
+				// Initial analysis on page load
+				if ($("#focus_keyword").val()) {
+					setTimeout(performLiveAnalysis, 500);
+				}
 			});
 		';
+	}
+
+	/**
+	 * AJAX handler for live content SEO analysis
+	 *
+	 * @return void
+	 */
+	public function ajax_analyze_content_seo(): void {
+		// Security check
+		check_ajax_referer( 'fp_seo_analysis', 'nonce' );
+		
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_die( __( 'Insufficient permissions', 'fp-digital-marketing' ) );
+		}
+		
+		$post_id = intval( $_POST['post_id'] ?? 0 );
+		$focus_keyword = sanitize_text_field( $_POST['focus_keyword'] ?? '' );
+		$title = sanitize_text_field( $_POST['title'] ?? '' );
+		$content = wp_kses_post( $_POST['content'] ?? '' );
+		$meta_description = sanitize_text_field( $_POST['meta_description'] ?? '' );
+		
+		if ( empty( $focus_keyword ) ) {
+			wp_send_json_error( [ 'message' => __( 'Focus keyword is required', 'fp-digital-marketing' ) ] );
+		}
+		
+		// Create a temporary post object for analysis
+		$temp_post = (object) [
+			'ID' => $post_id,
+			'post_title' => $title,
+			'post_content' => $content,
+			'post_name' => sanitize_title( $title ),
+			'post_excerpt' => $meta_description,
+		];
+		
+		try {
+			$analysis = ContentSeoAnalyzer::analyze_content( $temp_post, $focus_keyword );
+			wp_send_json_success( $analysis );
+		} catch ( Exception $e ) {
+			wp_send_json_error( [ 'message' => $e->getMessage() ] );
+		}
 	}
 }
