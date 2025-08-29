@@ -12,6 +12,8 @@ namespace FP\DigitalMarketing\Admin;
 use FP\DigitalMarketing\Helpers\DataSources;
 use FP\DigitalMarketing\Helpers\ReportGenerator;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
+use FP\DigitalMarketing\Helpers\MetricsAggregator;
+use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\Models\MetricsCache;
@@ -190,6 +192,9 @@ class Reports {
 
 			<!-- GA4 Metrics Section -->
 			<?php $this->render_ga4_metrics_section(); ?>
+
+			<!-- Metrics Aggregator Section -->
+			<?php $this->render_aggregator_section(); ?>
 
 			<!-- Report Preview Section -->
 			<div class="fp-dms-preview-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -487,6 +492,191 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 				echo esc_html( number_format( $total_cached ) );
 				?>
 			</p>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render metrics aggregator section
+	 *
+	 * @return void
+	 */
+	private function render_aggregator_section(): void {
+		?>
+		<div class="fp-dms-aggregator-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Sistema di Aggregazione Metriche', 'fp-digital-marketing' ); ?></h2>
+			<p><?php esc_html_e( 'Dimostrazione del layer di aggregazione e normalizzazione per unificare metriche da diverse sorgenti dati.', 'fp-digital-marketing' ); ?></p>
+
+			<!-- Common Schema Documentation -->
+			<div class="schema-documentation" style="margin: 20px 0;">
+				<h3><?php esc_html_e( 'Schema Comune delle Metriche', 'fp-digital-marketing' ); ?></h3>
+				<p><?php esc_html_e( 'Il sistema normalizza metriche da diverse sorgenti in KPI standardizzati:', 'fp-digital-marketing' ); ?></p>
+				
+				<?php $categories = MetricsSchema::get_categories(); ?>
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 15px 0;">
+					<?php foreach ( $categories as $category_id => $category_info ) : ?>
+						<?php $category_kpis = MetricsSchema::get_kpis_by_category( $category_id ); ?>
+						<div style="border: 1px solid #ddd; padding: 15px; border-radius: 4px;">
+							<h4 style="margin-top: 0; color: #0073aa;"><?php echo esc_html( $category_info['name'] ); ?></h4>
+							<p style="font-size: 12px; color: #666; margin: 5px 0;"><?php echo esc_html( $category_info['description'] ); ?></p>
+							<ul style="margin: 10px 0; padding-left: 20px; font-size: 13px;">
+								<?php foreach ( $category_kpis as $kpi ) : ?>
+									<?php $kpi_def = MetricsSchema::get_kpi_definitions()[ $kpi ] ?? []; ?>
+									<li style="margin: 3px 0;">
+										<strong><?php echo esc_html( $kpi ); ?></strong>
+										<?php if ( ! empty( $kpi_def['name'] ) ) : ?>
+											<br><span style="color: #666; font-size: 11px;"><?php echo esc_html( $kpi_def['name'] ); ?></span>
+										<?php endif; ?>
+									</li>
+								<?php endforeach; ?>
+							</ul>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			</div>
+
+			<!-- Mock Aggregated Data Demo -->
+			<div class="aggregated-demo" style="margin: 20px 0;">
+				<h3><?php esc_html_e( 'Demo API Interna - Dati Aggregati', 'fp-digital-marketing' ); ?></h3>
+				<p><?php esc_html_e( 'Esempio di interrogazione del sistema di aggregazione con dati mock:', 'fp-digital-marketing' ); ?></p>
+
+				<?php
+				// Generate mock aggregated data for demo
+				$demo_client_id = 999;
+				$period_start = '2024-01-01 00:00:00';
+				$period_end = '2024-01-31 23:59:59';
+				$mock_aggregated = MetricsAggregator::generate_mock_data( $demo_client_id, $period_start, $period_end );
+				?>
+
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+					<?php foreach ( $mock_aggregated as $kpi => $data ) : ?>
+						<?php $kpi_def = MetricsSchema::get_kpi_definitions()[ $kpi ] ?? []; ?>
+						<div class="kpi-card" style="background: #f9f9f9; border: 1px solid #ddd; padding: 15px; border-radius: 4px; text-align: center;">
+							<h4 style="margin-top: 0; color: #0073aa; font-size: 14px;">
+								<?php echo esc_html( $kpi_def['name'] ?? $kpi ); ?>
+							</h4>
+							<div style="font-size: 24px; font-weight: bold; color: #333; margin: 10px 0;">
+								<?php
+								$format = $kpi_def['format'] ?? 'number';
+								$value = $data['total_value'];
+								switch ( $format ) {
+									case 'percentage':
+										echo esc_html( number_format( $value * 100, 2 ) . '%' );
+										break;
+									case 'currency':
+										echo esc_html( '€' . number_format( $value, 2 ) );
+										break;
+									default:
+										echo esc_html( number_format( $value ) );
+								}
+								?>
+							</div>
+							<div style="font-size: 11px; color: #666;">
+								<?php printf( esc_html__( 'Aggregazione: %s', 'fp-digital-marketing' ), esc_html( $kpi_def['aggregation'] ?? 'sum' ) ); ?>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			</div>
+
+			<!-- Source Mappings -->
+			<div class="source-mappings" style="margin: 20px 0;">
+				<h3><?php esc_html_e( 'Mappature Sorgenti Dati', 'fp-digital-marketing' ); ?></h3>
+				<p><?php esc_html_e( 'Come le metriche specifiche di ogni sorgente vengono mappate ai KPI standardizzati:', 'fp-digital-marketing' ); ?></p>
+
+				<?php $source_mappings = MetricsSchema::get_source_mappings(); ?>
+				<div style="overflow-x: auto;">
+					<table class="wp-list-table widefat fixed striped" style="margin: 15px 0;">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Sorgente', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Metrica Originale', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'KPI Standardizzato', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Formato', 'fp-digital-marketing' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $source_mappings as $source_id => $mappings ) : ?>
+								<?php foreach ( $mappings as $original_metric => $standard_kpi ) : ?>
+									<?php $kpi_def = MetricsSchema::get_kpi_definitions()[ $standard_kpi ] ?? []; ?>
+									<tr>
+										<td><strong><?php echo esc_html( $source_id ); ?></strong></td>
+										<td><code><?php echo esc_html( $original_metric ); ?></code></td>
+										<td>
+											<code><?php echo esc_html( $standard_kpi ); ?></code>
+											<?php if ( ! empty( $kpi_def['name'] ) ) : ?>
+												<br><small style="color: #666;"><?php echo esc_html( $kpi_def['name'] ); ?></small>
+											<?php endif; ?>
+										</td>
+										<td><?php echo esc_html( $kpi_def['format'] ?? 'number' ); ?></td>
+									</tr>
+								<?php endforeach; ?>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<!-- API Usage Examples -->
+			<div class="api-examples" style="margin: 20px 0;">
+				<h3><?php esc_html_e( 'Esempi di Utilizzo API Interna', 'fp-digital-marketing' ); ?></h3>
+				<p><?php esc_html_e( 'Come utilizzare il sistema di aggregazione nel codice:', 'fp-digital-marketing' ); ?></p>
+
+				<pre style="background: #f9f9f9; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px;"><?php
+echo esc_html( '
+// Ottenere metriche aggregate per un cliente
+$aggregated = MetricsAggregator::get_aggregated_metrics(
+    $client_id, 
+    \'2024-01-01 00:00:00\', 
+    \'2024-01-31 23:59:59\'
+);
+
+// Ottenere sommario KPI per categoria
+$traffic_summary = MetricsAggregator::get_kpi_summary(
+    $client_id, 
+    \'2024-01-01 00:00:00\', 
+    \'2024-01-31 23:59:59\',
+    MetricsSchema::CATEGORY_TRAFFIC
+);
+
+// Confronto tra periodi
+$comparison = MetricsAggregator::get_period_comparison(
+    $client_id,
+    \'2024-02-01 00:00:00\', \'2024-02-29 23:59:59\', // Periodo corrente
+    \'2024-01-01 00:00:00\', \'2024-01-31 23:59:59\'  // Periodo precedente
+);
+
+// Controllo qualità dati
+$quality_report = MetricsAggregator::get_data_quality_report(
+    $client_id, 
+    \'2024-01-01 00:00:00\', 
+    \'2024-01-31 23:59:59\'
+);
+' ); ?></pre>
+			</div>
+
+			<!-- Fallback System Demo -->
+			<div class="fallback-demo" style="margin: 20px 0; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+				<h3 style="margin-top: 0;"><?php esc_html_e( 'Sistema di Fallback', 'fp-digital-marketing' ); ?></h3>
+				<p><?php esc_html_e( 'Il sistema gestisce automaticamente i dati mancanti:', 'fp-digital-marketing' ); ?></p>
+				<ul style="margin: 10px 0; padding-left: 20px;">
+					<li><?php esc_html_e( '🔄 Valori di fallback per metriche non disponibili', 'fp-digital-marketing' ); ?></li>
+					<li><?php esc_html_e( '📊 Aggregazione intelligente da sorgenti multiple', 'fp-digital-marketing' ); ?></li>
+					<li><?php esc_html_e( '⚠️ Segnalazione lacune nei dati', 'fp-digital-marketing' ); ?></li>
+					<li><?php esc_html_e( '🎯 Raccomandazioni per migliorare la copertura', 'fp-digital-marketing' ); ?></li>
+				</ul>
+			</div>
+
+			<div style="margin-top: 20px; padding: 15px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 4px;">
+				<strong><?php esc_html_e( 'Stato Implementazione:', 'fp-digital-marketing' ); ?></strong>
+				<ul style="margin: 10px 0; padding-left: 20px;">
+					<li>✅ <?php esc_html_e( 'Schema comune per normalizzazione metriche', 'fp-digital-marketing' ); ?></li>
+					<li>✅ <?php esc_html_e( 'API interna per interrogazioni aggregate', 'fp-digital-marketing' ); ?></li>
+					<li>✅ <?php esc_html_e( 'Sistema di fallback per dati incompleti', 'fp-digital-marketing' ); ?></li>
+					<li>✅ <?php esc_html_e( 'Test unitari per aggregazione e fallback', 'fp-digital-marketing' ); ?></li>
+					<li>🔧 <?php esc_html_e( 'Pronto per estensione con nuove sorgenti dati', 'fp-digital-marketing' ); ?></li>
+				</ul>
+			</div>
 		</div>
 		<?php
 	}

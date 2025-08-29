@@ -72,6 +72,48 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
+	if ( ! function_exists( '__' ) ) {
+		function __( $text, $domain = 'default' ) {
+			return $text;
+		}
+	}
+
+	if ( ! function_exists( 'plugin_dir_path' ) ) {
+		function plugin_dir_path( $file ) {
+			return dirname( $file ) . '/';
+		}
+	}
+
+	if ( ! function_exists( 'plugin_dir_url' ) ) {
+		function plugin_dir_url( $file ) {
+			return 'https://example.com/wp-content/plugins/' . basename( dirname( $file ) ) . '/';
+		}
+	}
+
+	if ( ! function_exists( 'add_action' ) ) {
+		function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
+			// Mock implementation - do nothing
+		}
+	}
+
+	if ( ! function_exists( 'register_activation_hook' ) ) {
+		function register_activation_hook( $file, $callback ) {
+			// Mock implementation - do nothing
+		}
+	}
+
+	if ( ! function_exists( 'add_filter' ) ) {
+		function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
+			// Mock implementation - do nothing
+		}
+	}
+
+	if ( ! function_exists( 'register_deactivation_hook' ) ) {
+		function register_deactivation_hook( $file, $callback ) {
+			// Mock implementation - do nothing
+		}
+	}
+
 	// Mock global $wpdb for testing
 	global $wpdb;
 	$wpdb = new stdClass();
