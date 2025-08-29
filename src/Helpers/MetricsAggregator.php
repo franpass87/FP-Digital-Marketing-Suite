@@ -1009,4 +1009,170 @@ class MetricsAggregator {
 
 		return $recommendations;
 	}
+
+	/**
+	 * Get conversion events aggregated metrics
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @param array $event_types Optional. Specific event types to include
+	 * @return array Aggregated conversion metrics
+	 */
+	public static function get_conversion_events_metrics( int $client_id, string $period_start, string $period_end, array $event_types = [] ): array {
+		$criteria = [
+			'client_id' => $client_id,
+			'period_start' => $period_start,
+			'period_end' => $period_end,
+			'exclude_duplicates' => true,
+		];
+
+		if ( ! empty( $event_types ) ) {
+			$criteria['event_type'] = $event_types;
+		}
+
+		// Get conversion events summary
+		$summary = \FP\DigitalMarketing\Helpers\ConversionEventManager::get_events_summary( $criteria );
+
+		// Build normalized metrics for aggregation
+		$conversion_metrics = [
+			MetricsSchema::KPI_CONVERSIONS => [
+				'value' => $summary['total_events'],
+				'source' => 'conversion_events',
+				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
+				'format' => 'number',
+			],
+			MetricsSchema::KPI_REVENUE => [
+				'value' => $summary['total_value'],
+				'source' => 'conversion_events',
+				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
+				'format' => 'currency',
+			],
+		];
+
+		// Add per-event-type metrics
+		foreach ( $summary['breakdown_by_type'] as $breakdown ) {
+			$event_type = $breakdown['event_type'];
+			$conversion_metrics[ "conversions_{$event_type}" ] = [
+				'value' => $breakdown['count'],
+				'source' => 'conversion_events',
+				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
+				'format' => 'number',
+				'event_type' => $event_type,
+			];
+			$conversion_metrics[ "revenue_{$event_type}" ] = [
+				'value' => $breakdown['total_value'],
+				'source' => 'conversion_events',
+				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
+				'format' => 'currency',
+				'event_type' => $event_type,
+			];
+		}
+
+		return $conversion_metrics;
+	}
+
+	/**
+	 * Get enhanced aggregated metrics including conversion events
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @param array $kpis Optional. Specific KPIs to retrieve
+	 * @param array $sources Optional. Specific sources to include
+	 * @param bool $include_conversion_events Whether to include conversion events data
+	 * @return array Enhanced aggregated metrics
+	 */
+	public static function get_enhanced_aggregated_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [], bool $include_conversion_events = true ): array {
+		// Get base metrics
+		$metrics = self::get_aggregated_metrics( $client_id, $period_start, $period_end, $kpis, $sources );
+
+		// Add conversion events metrics if requested
+		if ( $include_conversion_events ) {
+			$conversion_metrics = self::get_conversion_events_metrics( $client_id, $period_start, $period_end );
+			
+			// Merge conversion metrics into base metrics
+			foreach ( $conversion_metrics as $metric_key => $metric_data ) {
+				if ( empty( $kpis ) || in_array( $metric_key, $kpis, true ) ) {
+					$metrics[ $metric_key ] = $metric_data;
+				}
+			}
+		}
+
+		return $metrics;
+	}
+
+	/**
+	 * Get conversion funnel metrics
+	 *
+	 * @param int $client_id Client ID
+	 * @param array $funnel_steps Array of event types in funnel order
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @return array Funnel metrics with conversion rates
+	 */
+	public static function get_conversion_funnel_metrics( int $client_id, array $funnel_steps, string $period_start, string $period_end ): array {
+		$criteria = [
+			'period_start' => $period_start,
+			'period_end' => $period_end,
+		];
+
+		$funnel_data = \FP\DigitalMarketing\Helpers\ConversionEventManager::get_conversion_funnel( $client_id, $funnel_steps, $criteria );
+
+		// Convert to metrics format
+		$funnel_metrics = [];
+		foreach ( $funnel_data as $step_data ) {
+			$step_key = "funnel_step_{$step_data['step']}";
+			$funnel_metrics[ $step_key ] = [
+				'value' => $step_data['count'],
+				'conversion_rate' => $step_data['conversion_rate'],
+				'drop_off_rate' => $step_data['drop_off_rate'],
+				'event_type' => $step_data['event_type'],
+				'event_name' => $step_data['event_name'],
+				'total_value' => $step_data['total_value'],
+				'source' => 'conversion_funnel',
+				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
+				'format' => 'number',
+			];
+		}
+
+		return $funnel_metrics;
+	}
+
+	/**
+	 * Get campaign conversion metrics
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @param int $limit Number of campaigns to return
+	 * @return array Top converting campaigns with metrics
+	 */
+	public static function get_campaign_conversion_metrics( int $client_id, string $period_start, string $period_end, int $limit = 10 ): array {
+		$criteria = [
+			'period_start' => $period_start,
+			'period_end' => $period_end,
+		];
+
+		$campaigns = \FP\DigitalMarketing\Helpers\ConversionEventManager::get_top_converting_campaigns( $client_id, $criteria, $limit );
+
+		// Convert to metrics format
+		$campaign_metrics = [];
+		foreach ( $campaigns as $i => $campaign ) {
+			$campaign_key = "campaign_" . sanitize_key( $campaign['utm_campaign'] );
+			$campaign_metrics[ $campaign_key ] = [
+				'campaign_name' => $campaign['utm_campaign'],
+				'utm_source' => $campaign['utm_source'],
+				'utm_medium' => $campaign['utm_medium'],
+				'conversion_count' => $campaign['conversion_count'],
+				'total_value' => $campaign['total_value'],
+				'avg_value' => $campaign['avg_value'],
+				'source' => 'campaign_conversions',
+				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
+				'rank' => $i + 1,
+			];
+		}
+
+		return $campaign_metrics;
+	}
 }

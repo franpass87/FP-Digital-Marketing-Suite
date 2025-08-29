@@ -23,6 +23,7 @@ class Capabilities {
 	public const MANAGE_ALERTS = 'fp_dms_manage_alerts';
 	public const MANAGE_SETTINGS = 'fp_dms_manage_settings';
 	public const MANAGE_CAMPAIGNS = 'fp_dms_manage_campaigns';
+	public const MANAGE_CONVERSIONS = 'fp_dms_manage_conversions';
 
 	/**
 	 * All custom capabilities
@@ -36,6 +37,7 @@ class Capabilities {
 		self::MANAGE_ALERTS,
 		self::MANAGE_SETTINGS,
 		self::MANAGE_CAMPAIGNS,
+		self::MANAGE_CONVERSIONS,
 	];
 
 	/**
@@ -51,11 +53,13 @@ class Capabilities {
 			self::MANAGE_ALERTS,
 			self::MANAGE_SETTINGS,
 			self::MANAGE_CAMPAIGNS,
+			self::MANAGE_CONVERSIONS,
 		],
 		'editor' => [
 			self::VIEW_DASHBOARD,
 			self::EXPORT_REPORTS,
 			self::MANAGE_CAMPAIGNS,
+			self::MANAGE_CONVERSIONS,
 		],
 	];
 

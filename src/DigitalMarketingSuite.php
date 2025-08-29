@@ -20,9 +20,11 @@ use FP\DigitalMarketing\Admin\CachePerformance;
 use FP\DigitalMarketing\Admin\OnboardingWizard;
 use FP\DigitalMarketing\Admin\AlertingAdmin;
 use FP\DigitalMarketing\Admin\UTMCampaignManager;
+use FP\DigitalMarketing\Admin\ConversionEventsAdmin;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Database\AlertRulesTable;
 use FP\DigitalMarketing\Database\UTMCampaignsTable;
+use FP\DigitalMarketing\Database\ConversionEventsTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\SeoFrontendOutput;
@@ -121,6 +123,13 @@ class DigitalMarketingSuite {
 	private UTMCampaignManager $utm_campaign_manager;
 
 	/**
+	 * Conversion Events Admin instance
+	 *
+	 * @var ConversionEventsAdmin
+	 */
+	private ConversionEventsAdmin $conversion_events_admin;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -135,6 +144,7 @@ class DigitalMarketingSuite {
 		$this->onboarding_wizard = new OnboardingWizard();
 		$this->alerting_admin = new AlertingAdmin();
 		$this->utm_campaign_manager = new UTMCampaignManager();
+		$this->conversion_events_admin = new ConversionEventsAdmin();
 	}
 
 	/**
@@ -166,6 +176,7 @@ class DigitalMarketingSuite {
 		$this->cache_performance->init();
 		$this->onboarding_wizard->init();
 		$this->utm_campaign_manager->init();
+		$this->conversion_events_admin->init();
 
 		// Initialize capabilities system.
 		Capabilities::init();
@@ -193,6 +204,7 @@ class DigitalMarketingSuite {
 		$this->ensure_metrics_cache_table();
 		$this->ensure_alert_rules_table();
 		$this->ensure_utm_campaigns_table();
+		$this->ensure_conversion_events_table();
 
 		// Hook for extensibility.
 		do_action( 'fp_digital_marketing_suite_init' );
@@ -241,6 +253,17 @@ class DigitalMarketingSuite {
 	private function ensure_utm_campaigns_table(): void {
 		if ( ! UTMCampaignsTable::table_exists() ) {
 			UTMCampaignsTable::create_table();
+		}
+	}
+
+	/**
+	 * Ensure conversion events table exists
+	 *
+	 * @return void
+	 */
+	private function ensure_conversion_events_table(): void {
+		if ( ! ConversionEventsTable::table_exists() ) {
+			ConversionEventsTable::create_table();
 		}
 	}
 }
