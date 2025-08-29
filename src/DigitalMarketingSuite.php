@@ -11,6 +11,7 @@ namespace FP\DigitalMarketing;
 
 use FP\DigitalMarketing\PostTypes\ClientePostType;
 use FP\DigitalMarketing\Admin\ClienteMeta;
+use FP\DigitalMarketing\Admin\SeoMeta;
 use FP\DigitalMarketing\Admin\Settings;
 use FP\DigitalMarketing\Admin\Reports;
 use FP\DigitalMarketing\Admin\Dashboard;
@@ -22,6 +23,7 @@ use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Database\AlertRulesTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
+use FP\DigitalMarketing\Helpers\SeoFrontendOutput;
 use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
@@ -49,6 +51,13 @@ class DigitalMarketingSuite {
 	 * @var ClienteMeta
 	 */
 	private ClienteMeta $cliente_meta;
+
+	/**
+	 * SEO Meta instance
+	 *
+	 * @var SeoMeta
+	 */
+	private SeoMeta $seo_meta;
 
 	/**
 	 * Settings instance
@@ -105,6 +114,7 @@ class DigitalMarketingSuite {
 	public function __construct() {
 		$this->cliente_post_type = new ClientePostType();
 		$this->cliente_meta = new ClienteMeta();
+		$this->seo_meta = new SeoMeta();
 		$this->settings = new Settings();
 		$this->reports = new Reports();
 		$this->dashboard = new Dashboard();
@@ -135,6 +145,7 @@ class DigitalMarketingSuite {
 		// Initialize components.
 		$this->cliente_post_type->init();
 		$this->cliente_meta->init();
+		$this->seo_meta->init();
 		$this->settings->init();
 		$this->reports->init();
 		$this->dashboard->init();
@@ -150,6 +161,9 @@ class DigitalMarketingSuite {
 
 		// Initialize sync engine.
 		SyncEngine::init();
+
+		// Initialize SEO frontend output.
+		SeoFrontendOutput::init();
 
 		// Ensure database tables exist (in case of manual activation issues).
 		$this->ensure_metrics_cache_table();

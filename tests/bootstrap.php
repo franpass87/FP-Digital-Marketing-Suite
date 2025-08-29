@@ -114,6 +114,169 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
+	// Mock additional WordPress functions needed for SEO tests
+	if ( ! function_exists( 'get_post' ) ) {
+		function get_post( $post_id = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_post'] ) ) {
+				return $wp_mock_functions['get_post']( $post_id );
+			}
+			// If it's already a post object, return it
+			if ( is_object( $post_id ) && isset( $post_id->ID ) ) {
+				return $post_id;
+			}
+			return null;
+		}
+	}
+
+	if ( ! function_exists( 'get_post_meta' ) ) {
+		function get_post_meta( $post_id, $key = '', $single = false ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_post_meta'] ) ) {
+				return $wp_mock_functions['get_post_meta']( $post_id, $key, $single );
+			}
+			return $single ? '' : [];
+		}
+	}
+
+	if ( ! function_exists( 'get_the_title' ) ) {
+		function get_the_title( $post = 0 ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_the_title'] ) ) {
+				return $wp_mock_functions['get_the_title']( $post );
+			}
+			return '';
+		}
+	}
+
+	if ( ! function_exists( 'get_the_excerpt' ) ) {
+		function get_the_excerpt( $post = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_the_excerpt'] ) ) {
+				return $wp_mock_functions['get_the_excerpt']( $post );
+			}
+			return '';
+		}
+	}
+
+	if ( ! function_exists( 'get_bloginfo' ) ) {
+		function get_bloginfo( $show = '' ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_bloginfo'] ) ) {
+				return $wp_mock_functions['get_bloginfo']( $show );
+			}
+			return '';
+		}
+	}
+
+	if ( ! function_exists( 'is_front_page' ) ) {
+		function is_front_page() {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['is_front_page'] ) ) {
+				return $wp_mock_functions['is_front_page']();
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'wp_strip_all_tags' ) ) {
+		function wp_strip_all_tags( $string, $remove_breaks = false ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['wp_strip_all_tags'] ) ) {
+				return $wp_mock_functions['wp_strip_all_tags']( $string );
+			}
+			return strip_tags( $string );
+		}
+	}
+
+	if ( ! function_exists( 'get_post_type' ) ) {
+		function get_post_type( $post = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_post_type'] ) ) {
+				return $wp_mock_functions['get_post_type']( $post );
+			}
+			return 'post';
+		}
+	}
+
+	if ( ! function_exists( 'get_option' ) ) {
+		function get_option( $option, $default = false ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_option'] ) ) {
+				return $wp_mock_functions['get_option']( $option, $default );
+			}
+			return $default;
+		}
+	}
+
+	if ( ! function_exists( 'get_permalink' ) ) {
+		function get_permalink( $post = 0 ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_permalink'] ) ) {
+				return $wp_mock_functions['get_permalink']( $post );
+			}
+			return '';
+		}
+	}
+
+	if ( ! function_exists( 'esc_url' ) ) {
+		function esc_url( $url ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['esc_url'] ) ) {
+				return $wp_mock_functions['esc_url']( $url );
+			}
+			return $url;
+		}
+	}
+
+	if ( ! function_exists( 'wp_parse_url' ) ) {
+		function wp_parse_url( $url, $component = -1 ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['wp_parse_url'] ) ) {
+				return $wp_mock_functions['wp_parse_url']( $url, $component );
+			}
+			return parse_url( $url, $component );
+		}
+	}
+
+	if ( ! function_exists( '__' ) ) {
+		function __( $text, $domain = 'default' ) {
+			return $text;
+		}
+	}
+
+	if ( ! function_exists( 'esc_html__' ) ) {
+		function esc_html__( $text, $domain = 'default' ) {
+			return htmlspecialchars( $text );
+		}
+	}
+
+	if ( ! function_exists( 'strip_shortcodes' ) ) {
+		function strip_shortcodes( $content ) {
+			return $content;
+		}
+	}
+
+	if ( ! function_exists( 'get_post_thumbnail_id' ) ) {
+		function get_post_thumbnail_id( $post = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_post_thumbnail_id'] ) ) {
+				return $wp_mock_functions['get_post_thumbnail_id']( $post );
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'wp_get_attachment_image_url' ) ) {
+		function wp_get_attachment_image_url( $attachment_id, $size = 'thumbnail' ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['wp_get_attachment_image_url'] ) ) {
+				return $wp_mock_functions['wp_get_attachment_image_url']( $attachment_id, $size );
+			}
+			return false;
+		}
+	}
+
 	// Mock global $wpdb for testing
 	global $wpdb;
 	$wpdb = new stdClass();
