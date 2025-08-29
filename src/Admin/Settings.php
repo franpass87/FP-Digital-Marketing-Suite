@@ -1378,7 +1378,7 @@ class Settings {
 		echo '<p>' . esc_html__( 'Configura la generazione di sitemap XML modulari per migliorare l\'indicizzazione del sito.', 'fp-digital-marketing' ) . '</p>';
 		
 		// Show current sitemap URLs
-		$sitemap_url = home_url( 'sitemap.xml' );
+		$sitemap_url = home_url( '/sitemap.xml' );
 		echo '<p><strong>' . esc_html__( 'URL Sitemap:', 'fp-digital-marketing' ) . '</strong> ';
 		echo '<a href="' . esc_url( $sitemap_url ) . '" target="_blank">' . esc_html( $sitemap_url ) . '</a></p>';
 	}

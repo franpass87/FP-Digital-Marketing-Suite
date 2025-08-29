@@ -178,8 +178,8 @@ class XmlSitemap {
 
 			for ( $page = 1; $page <= $pages_needed; $page++ ) {
 				$sitemap_url = $pages_needed > 1 
-					? home_url( "sitemap-{$post_type}-{$page}.xml" )
-					: home_url( "sitemap-{$post_type}.xml" );
+					? home_url( "/sitemap-{$post_type}-{$page}.xml" )
+					: home_url( "/sitemap-{$post_type}.xml" );
 
 				$sitemaps[] = [
 					'loc' => $sitemap_url,
@@ -392,11 +392,11 @@ class XmlSitemap {
 	/**
 	 * Get priority for URL
 	 *
-	 * @param string   $post_type Post type name
-	 * @param \WP_Post $post Post object
+	 * @param string                $post_type Post type name
+	 * @param \WP_Post|object|array $post Post object
 	 * @return string Priority value
 	 */
-	private static function get_priority( string $post_type, \WP_Post $post ): string {
+	private static function get_priority( string $post_type, $post ): string {
 		// Homepage gets highest priority
 		if ( (int) $post->ID === (int) get_option( 'page_on_front' ) ) {
 			return '1.0';
@@ -520,7 +520,7 @@ class XmlSitemap {
 			return $output;
 		}
 
-		$sitemap_url = home_url( 'sitemap.xml' );
+		$sitemap_url = home_url( '/sitemap.xml' );
 		$output .= "\nSitemap: {$sitemap_url}\n";
 		
 		return $output;
