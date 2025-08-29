@@ -1280,10 +1280,7 @@ class SeoMeta {
 						
 						analysis.suggestions.forEach(function(suggestion) {
 							var priorityClass = "priority-" + suggestion.priority;
-							var $suggestion = $('<div class="seo-suggestion ' + priorityClass + '">' +
-								'<span class="suggestion-priority">' + suggestion.priority + '</span>' +
-								'<span class="suggestion-message">' + suggestion.message + '</span>' +
-								'</div>');
+							var $suggestion = $("<div class=\"seo-suggestion " + priorityClass + "\"><span class=\"suggestion-priority\">" + suggestion.priority + "</span><span class=\"suggestion-message\">" + suggestion.message + "</span></div>");
 							$suggestions.append($suggestion);
 						});
 						
