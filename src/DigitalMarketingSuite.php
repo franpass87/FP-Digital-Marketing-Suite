@@ -22,6 +22,7 @@ use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Database\AlertRulesTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
+use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
  * Main application class
@@ -140,6 +141,9 @@ class DigitalMarketingSuite {
 		$this->security_admin->init();
 		$this->cache_performance->init();
 		$this->onboarding_wizard->init();
+
+		// Initialize capabilities system.
+		Capabilities::init();
 
 		// Initialize report scheduler.
 		ReportScheduler::init();

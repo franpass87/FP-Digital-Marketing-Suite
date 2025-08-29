@@ -16,6 +16,7 @@ use FP\DigitalMarketing\Helpers\MetricsAggregator;
 use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
+use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\DataSources\GoogleSearchConsole;
@@ -55,7 +56,7 @@ class Reports {
 		add_menu_page(
 			__( 'FP Digital Marketing Reports', 'fp-digital-marketing' ),
 			__( 'DM Reports', 'fp-digital-marketing' ),
-			'manage_options',
+			Capabilities::EXPORT_REPORTS,
 			self::PAGE_SLUG,
 			[ $this, 'render_reports_page' ],
 			'dashicons-chart-line',
@@ -73,14 +74,14 @@ class Reports {
 			return;
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
 			return;
 		}
 
 		// Handle PDF download
 		// Handle PDF download with security verification
 		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_pdf' && isset( $_GET['client_id'] ) ) {
-			if ( Security::verify_capability_with_logging( 'manage_options' ) ) {
+			if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
 				$this->download_pdf_report( intval( $_GET['client_id'] ) );
 			} else {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
@@ -89,7 +90,7 @@ class Reports {
 
 		// Handle CSV download
 		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_csv' && isset( $_GET['client_id'] ) ) {
-			if ( Security::verify_capability_with_logging( 'manage_options' ) ) {
+			if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
 				$separator = sanitize_text_field( $_GET['separator'] ?? ',' );
 				$this->download_csv_report( intval( $_GET['client_id'] ), $separator );
 			} else {
@@ -99,14 +100,14 @@ class Reports {
 
 		// Handle custom report generation
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_custom_report' && 
-			 Security::verify_capability_with_logging( 'manage_options' ) &&
+			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
 			 Security::verify_nonce_with_logging( 'generate_custom_report' ) ) {
 			$this->handle_custom_report_generation();
 		}
 
 		// Handle manual report generation
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_reports' && 
-			 Security::verify_capability_with_logging( 'manage_options' ) &&
+			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
 			 Security::verify_nonce_with_logging( 'generate_reports' ) ) {
 			$count = ReportScheduler::trigger_manual_generation();
 			add_action( 'admin_notices', function() use ( $count ) {
@@ -305,7 +306,7 @@ class Reports {
 	 */
 	public function render_reports_page(): void {
 		// Check user capabilities.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
 			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
 		}
 

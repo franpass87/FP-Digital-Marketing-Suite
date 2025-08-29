@@ -59,12 +59,18 @@ register_activation_hook( __FILE__, function () {
 	// Create custom database tables.
 	\FP\DigitalMarketing\Database\MetricsCacheTable::create_table();
 	
+	// Register custom capabilities.
+	\FP\DigitalMarketing\Helpers\Capabilities::register_capabilities();
+	
 	// Flush rewrite rules to ensure custom post types work correctly.
 	flush_rewrite_rules();
 } );
 
 // Deactivation hook.
 register_deactivation_hook( __FILE__, function () {
+	// Remove custom capabilities.
+	\FP\DigitalMarketing\Helpers\Capabilities::remove_capabilities();
+	
 	// Flush rewrite rules on deactivation.
 	flush_rewrite_rules();
 } );

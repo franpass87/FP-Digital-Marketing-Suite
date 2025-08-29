@@ -256,7 +256,7 @@ class Security {
 	 * @param string $event_type Type of security event.
 	 * @param array  $context Additional context data.
 	 */
-	private static function log_security_event( string $event_type, array $context = [] ): void {
+	public static function log_security_event( string $event_type, array $context = [] ): void {
 		$log_entry = [
 			'timestamp' => current_time( 'c' ),
 			'event_type' => $event_type,
@@ -282,7 +282,7 @@ class Security {
 	 *
 	 * @return string Client IP address.
 	 */
-	private static function get_client_ip(): string {
+	public static function get_client_ip(): string {
 		// Check for various headers that might contain the real IP
 		$headers = [
 			'HTTP_CF_CONNECTING_IP',     // Cloudflare
