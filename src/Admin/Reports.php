@@ -87,6 +87,23 @@ class Reports {
 			}
 		}
 
+		// Handle CSV download
+		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_csv' && isset( $_GET['client_id'] ) ) {
+			if ( Security::verify_capability_with_logging( 'manage_options' ) ) {
+				$separator = sanitize_text_field( $_GET['separator'] ?? ',' );
+				$this->download_csv_report( intval( $_GET['client_id'] ), $separator );
+			} else {
+				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+			}
+		}
+
+		// Handle custom report generation
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_custom_report' && 
+			 Security::verify_capability_with_logging( 'manage_options' ) &&
+			 Security::verify_nonce_with_logging( 'generate_custom_report' ) ) {
+			$this->handle_custom_report_generation();
+		}
+
 		// Handle manual report generation
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_reports' && 
 			 Security::verify_capability_with_logging( 'manage_options' ) &&
@@ -108,15 +125,176 @@ class Reports {
 	 */
 	private function download_pdf_report( int $client_id ): void {
 		$report_data = ReportGenerator::generate_demo_report_data( $client_id );
-		$pdf_content = ReportGenerator::generate_pdf_report( $report_data );
+		
+		// Validate report data
+		$validation = ReportGenerator::validate_report_data( $report_data );
+		if ( ! $validation['valid'] ) {
+			wp_die( esc_html( implode( ', ', $validation['errors'] ) ) );
+		}
 
-		$filename = sprintf( 'digital-marketing-report-%d-%s.pdf', $client_id, date( 'Y-m-d' ) );
+		try {
+			$pdf_content = ReportGenerator::generate_pdf_report( $report_data );
+			$filename = sprintf( 'digital-marketing-report-%d-%s.pdf', $client_id, date( 'Y-m-d' ) );
+
+			// Log the report generation
+			ReportGenerator::log_report_generation( $client_id, 'pdf', strlen( $pdf_content ), true );
+
+			header( 'Content-Type: application/pdf' );
+			header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+			header( 'Content-Length: ' . strlen( $pdf_content ) );
+
+			echo $pdf_content;
+			exit;
+		} catch ( Exception $e ) {
+			// Log the error
+			ReportGenerator::log_report_generation( $client_id, 'pdf', 0, false, $e->getMessage() );
+			wp_die( esc_html__( 'Errore nella generazione del report PDF', 'fp-digital-marketing' ) );
+		}
+	}
+
+	/**
+	 * Download CSV report for a client
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $separator CSV separator
+	 * @return void
+	 */
+	private function download_csv_report( int $client_id, string $separator = ',' ): void {
+		$report_data = ReportGenerator::generate_demo_report_data( $client_id );
+		
+		// Validate report data
+		$validation = ReportGenerator::validate_report_data( $report_data );
+		if ( ! $validation['valid'] ) {
+			wp_die( esc_html( implode( ', ', $validation['errors'] ) ) );
+		}
+
+		try {
+			$csv_content = ReportGenerator::generate_csv_report( $report_data, $separator );
+			$filename = sprintf( 'digital-marketing-report-%d-%s.csv', $client_id, date( 'Y-m-d' ) );
+
+			// Log the report generation
+			ReportGenerator::log_report_generation( $client_id, 'csv', strlen( $csv_content ), true );
+
+			header( 'Content-Type: text/csv; charset=utf-8' );
+			header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+			header( 'Content-Length: ' . strlen( $csv_content ) );
+
+			echo $csv_content;
+			exit;
+		} catch ( Exception $e ) {
+			// Log the error
+			ReportGenerator::log_report_generation( $client_id, 'csv', 0, false, $e->getMessage() );
+			wp_die( esc_html__( 'Errore nella generazione del report CSV', 'fp-digital-marketing' ) );
+		}
+	}
+
+	/**
+	 * Handle custom report generation form submission
+	 *
+	 * @return void
+	 */
+	private function handle_custom_report_generation(): void {
+		$client_id = intval( $_POST['client_id'] ?? 0 );
+		$format = sanitize_text_field( $_POST['format'] ?? 'pdf' );
+		$period_start = sanitize_text_field( $_POST['period_start'] ?? '' );
+		$period_end = sanitize_text_field( $_POST['period_end'] ?? '' );
+		$selected_kpis = isset( $_POST['selected_kpis'] ) ? array_map( 'sanitize_text_field', $_POST['selected_kpis'] ) : [];
+		$csv_separator = sanitize_text_field( $_POST['csv_separator'] ?? ',' );
+
+		if ( ! $client_id ) {
+			add_action( 'admin_notices', function() {
+				echo '<div class="notice notice-error is-dismissible"><p>';
+				echo esc_html__( 'Cliente non selezionato', 'fp-digital-marketing' );
+				echo '</p></div>';
+			} );
+			return;
+		}
+
+		try {
+			// Get actual data using MetricsAggregator if real data is needed
+			// For now, using demo data but filtering KPIs if specified
+			$report_data = ReportGenerator::generate_demo_report_data( $client_id );
+			
+			// Override period if specified
+			if ( $period_start && $period_end ) {
+				$report_data['period_start'] = $period_start;
+				$report_data['period_end'] = $period_end;
+			}
+
+			// Filter KPIs if specific ones were selected
+			if ( ! empty( $selected_kpis ) ) {
+				$filtered_kpis = [];
+				foreach ( $selected_kpis as $kpi ) {
+					if ( isset( $report_data['kpis'][ $kpi ] ) ) {
+						$filtered_kpis[ $kpi ] = $report_data['kpis'][ $kpi ];
+					}
+				}
+				$report_data['kpis'] = $filtered_kpis;
+			}
+
+			// Generate and download based on format
+			if ( $format === 'csv' ) {
+				$this->download_csv_report_with_data( $report_data, $csv_separator );
+			} else {
+				$this->download_pdf_report_with_data( $report_data );
+			}
+		} catch ( Exception $e ) {
+			add_action( 'admin_notices', function() use ( $e ) {
+				echo '<div class="notice notice-error is-dismissible"><p>';
+				echo esc_html__( 'Errore nella generazione del report: ', 'fp-digital-marketing' ) . esc_html( $e->getMessage() );
+				echo '</p></div>';
+			} );
+		}
+	}
+
+	/**
+	 * Download PDF report with custom data
+	 *
+	 * @param array $report_data Report data
+	 * @return void
+	 */
+	private function download_pdf_report_with_data( array $report_data ): void {
+		$validation = ReportGenerator::validate_report_data( $report_data );
+		if ( ! $validation['valid'] ) {
+			wp_die( esc_html( implode( ', ', $validation['errors'] ) ) );
+		}
+
+		$pdf_content = ReportGenerator::generate_pdf_report( $report_data );
+		$filename = sprintf( 'custom-report-%d-%s.pdf', $report_data['client_id'], date( 'Y-m-d-H-i' ) );
+
+		ReportGenerator::log_report_generation( $report_data['client_id'], 'pdf', strlen( $pdf_content ), true );
 
 		header( 'Content-Type: application/pdf' );
 		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
 		header( 'Content-Length: ' . strlen( $pdf_content ) );
 
 		echo $pdf_content;
+		exit;
+	}
+
+	/**
+	 * Download CSV report with custom data
+	 *
+	 * @param array $report_data Report data
+	 * @param string $separator CSV separator
+	 * @return void
+	 */
+	private function download_csv_report_with_data( array $report_data, string $separator = ',' ): void {
+		$validation = ReportGenerator::validate_report_data( $report_data );
+		if ( ! $validation['valid'] ) {
+			wp_die( esc_html( implode( ', ', $validation['errors'] ) ) );
+		}
+
+		$csv_content = ReportGenerator::generate_csv_report( $report_data, $separator );
+		$filename = sprintf( 'custom-report-%d-%s.csv', $report_data['client_id'], date( 'Y-m-d-H-i' ) );
+
+		ReportGenerator::log_report_generation( $report_data['client_id'], 'csv', strlen( $csv_content ), true );
+
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+		header( 'Content-Length: ' . strlen( $csv_content ) );
+
+		echo $csv_content;
 		exit;
 	}
 
@@ -191,15 +369,164 @@ class Reports {
 						<?php foreach ( $clientes as $cliente ) : ?>
 							<div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 4px;">
 								<h4 style="margin: 0 0 10px 0;"><?php echo esc_html( $cliente->post_title ); ?></h4>
-								<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-								   class="button button-secondary">
-									<?php esc_html_e( 'Scarica PDF', 'fp-digital-marketing' ); ?>
-								</a>
+								<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+									<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+									   class="button button-secondary">
+										<?php esc_html_e( 'PDF', 'fp-digital-marketing' ); ?>
+									</a>
+									<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_csv', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+									   class="button button-secondary">
+										<?php esc_html_e( 'CSV', 'fp-digital-marketing' ); ?>
+									</a>
+								</div>
 							</div>
 						<?php endforeach; ?>
 					</div>
 				<?php endif; ?>
 			</div>
+
+			<!-- Custom Report Generation Section -->
+			<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+				<h2><?php esc_html_e( 'Generazione Report Personalizzati', 'fp-digital-marketing' ); ?></h2>
+				<p><?php esc_html_e( 'Crea report personalizzati selezionando i KPI, il periodo e il formato desiderati.', 'fp-digital-marketing' ); ?></p>
+				
+				<form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+					<?php wp_nonce_field( 'generate_custom_report' ); ?>
+					<input type="hidden" name="action" value="generate_custom_report">
+					
+					<div class="form-group">
+						<label for="client_id"><strong><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></strong></label>
+						<select name="client_id" id="client_id" required style="width: 100%; padding: 8px; margin-top: 5px;">
+							<option value=""><?php esc_html_e( 'Seleziona cliente...', 'fp-digital-marketing' ); ?></option>
+							<?php foreach ( $clientes as $cliente ) : ?>
+								<option value="<?php echo esc_attr( $cliente->ID ); ?>">
+									<?php echo esc_html( $cliente->post_title ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+					</div>
+
+					<div class="form-group">
+						<label for="period_start"><strong><?php esc_html_e( 'Periodo', 'fp-digital-marketing' ); ?></strong></label>
+						<div style="display: flex; gap: 10px; margin-top: 5px;">
+							<input type="date" name="period_start" id="period_start" style="flex: 1; padding: 8px;">
+							<input type="date" name="period_end" id="period_end" style="flex: 1; padding: 8px;">
+						</div>
+						<small style="color: #666;"><?php esc_html_e( 'Lascia vuoto per utilizzare il periodo predefinito', 'fp-digital-marketing' ); ?></small>
+					</div>
+
+					<div class="form-group">
+						<label for="format"><strong><?php esc_html_e( 'Formato', 'fp-digital-marketing' ); ?></strong></label>
+						<div style="margin-top: 5px;">
+							<label style="display: block; margin: 5px 0;">
+								<input type="radio" name="format" value="pdf" checked> PDF
+							</label>
+							<label style="display: block; margin: 5px 0;">
+								<input type="radio" name="format" value="csv"> CSV
+							</label>
+						</div>
+						
+						<div id="csv_options" style="margin-top: 10px; display: none;">
+							<label for="csv_separator" style="font-size: 12px;"><?php esc_html_e( 'Separatore CSV:', 'fp-digital-marketing' ); ?></label>
+							<select name="csv_separator" id="csv_separator" style="width: 100%; margin-top: 3px;">
+								<option value=","><?php esc_html_e( 'Virgola (,)', 'fp-digital-marketing' ); ?></option>
+								<option value=";"><?php esc_html_e( 'Punto e virgola (;)', 'fp-digital-marketing' ); ?></option>
+								<option value="\t"><?php esc_html_e( 'Tab', 'fp-digital-marketing' ); ?></option>
+							</select>
+						</div>
+					</div>
+
+					<div class="form-group" style="grid-column: 1 / -1;">
+						<label><strong><?php esc_html_e( 'KPI da includere', 'fp-digital-marketing' ); ?></strong></label>
+						<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+							<?php
+							$available_kpis = [
+								'sessions' => __( 'Sessioni', 'fp-digital-marketing' ),
+								'users' => __( 'Utenti', 'fp-digital-marketing' ),
+								'conversion_rate' => __( 'Tasso di Conversione', 'fp-digital-marketing' ),
+								'revenue' => __( 'Fatturato', 'fp-digital-marketing' ),
+							];
+							foreach ( $available_kpis as $kpi_key => $kpi_label ) :
+							?>
+								<label style="display: flex; align-items: center; padding: 8px; background: #f8f9fa; border-radius: 4px;">
+									<input type="checkbox" name="selected_kpis[]" value="<?php echo esc_attr( $kpi_key ); ?>" checked style="margin-right: 8px;">
+									<?php echo esc_html( $kpi_label ); ?>
+								</label>
+							<?php endforeach; ?>
+						</div>
+						<small style="color: #666; display: block; margin-top: 5px;">
+							<?php esc_html_e( 'Lascia tutto selezionato per includere tutti i KPI disponibili', 'fp-digital-marketing' ); ?>
+						</small>
+					</div>
+
+					<div class="form-group" style="grid-column: 1 / -1;">
+						<button type="submit" class="button button-primary" style="padding: 10px 20px;">
+							<?php esc_html_e( 'Genera Report Personalizzato', 'fp-digital-marketing' ); ?>
+						</button>
+					</div>
+				</form>
+			</div>
+
+			<!-- Report Logs Section -->
+			<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+				<h2><?php esc_html_e( 'Log Report Generati', 'fp-digital-marketing' ); ?></h2>
+				<?php
+				$logs = ReportGenerator::get_report_logs( 20 );
+				if ( ! empty( $logs ) ) :
+				?>
+					<table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Data/Ora', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Formato', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Dimensione', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Stato', 'fp-digital-marketing' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $logs as $log ) : ?>
+								<tr>
+									<td><?php echo esc_html( $log['timestamp'] ); ?></td>
+									<td><?php echo esc_html( $log['client_id'] ); ?></td>
+									<td><?php echo esc_html( strtoupper( $log['format'] ) ); ?></td>
+									<td><?php echo $log['file_size'] > 0 ? esc_html( size_format( $log['file_size'] ) ) : '-'; ?></td>
+									<td>
+										<?php if ( $log['success'] ) : ?>
+											<span style="color: #00a32a;">✓ <?php esc_html_e( 'Successo', 'fp-digital-marketing' ); ?></span>
+										<?php else : ?>
+											<span style="color: #d63638;">✗ <?php esc_html_e( 'Errore', 'fp-digital-marketing' ); ?></span>
+											<?php if ( ! empty( $log['error_message'] ) ) : ?>
+												<br><small style="color: #666;"><?php echo esc_html( $log['error_message'] ); ?></small>
+											<?php endif; ?>
+										<?php endif; ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php else : ?>
+					<p><?php esc_html_e( 'Nessun report generato ancora.', 'fp-digital-marketing' ); ?></p>
+				<?php endif; ?>
+			</div>
+
+			<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const formatRadios = document.querySelectorAll('input[name="format"]');
+				const csvOptions = document.getElementById('csv_options');
+				
+				function toggleCSVOptions() {
+					const selectedFormat = document.querySelector('input[name="format"]:checked').value;
+					csvOptions.style.display = selectedFormat === 'csv' ? 'block' : 'none';
+				}
+				
+				formatRadios.forEach(radio => {
+					radio.addEventListener('change', toggleCSVOptions);
+				});
+				
+				toggleCSVOptions(); // Initial setup
+			});
+			</script>
 
 			<!-- Sync Engine Status Section -->
 			<?php $this->render_sync_status_section(); ?>
@@ -678,7 +1005,7 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 									<?php esc_html_e( 'Nessuna metrica Search Console in cache. Le metriche appariranno qui dopo la prima sincronizzazione.', 'fp-digital-marketing' ); ?>
 								</td>
 							</tr>
-						<?php endforeach; ?>
+						<?php endif; ?>
 					</tbody>
 				</table>
 			</div>
