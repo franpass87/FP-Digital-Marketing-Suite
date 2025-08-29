@@ -14,6 +14,7 @@ use FP\DigitalMarketing\Admin\ClienteMeta;
 use FP\DigitalMarketing\Admin\Settings;
 use FP\DigitalMarketing\Admin\Reports;
 use FP\DigitalMarketing\Admin\SecurityAdmin;
+use FP\DigitalMarketing\Admin\CachePerformance;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
@@ -66,6 +67,13 @@ class DigitalMarketingSuite {
 	private SecurityAdmin $security_admin;
 
 	/**
+	 * Cache Performance instance
+	 *
+	 * @var CachePerformance
+	 */
+	private CachePerformance $cache_performance;
+
+	/**
 	 * Constructor
 	 */
 	public function __construct() {
@@ -74,6 +82,7 @@ class DigitalMarketingSuite {
 		$this->settings = new Settings();
 		$this->reports = new Reports();
 		$this->security_admin = new SecurityAdmin();
+		$this->cache_performance = new CachePerformance();
 	}
 
 	/**
@@ -100,6 +109,7 @@ class DigitalMarketingSuite {
 		$this->settings->init();
 		$this->reports->init();
 		$this->security_admin->init();
+		$this->cache_performance->init();
 
 		// Initialize report scheduler.
 		ReportScheduler::init();

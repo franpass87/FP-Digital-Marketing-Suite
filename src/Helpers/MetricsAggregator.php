@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace FP\DigitalMarketing\Helpers;
 
 use FP\DigitalMarketing\Models\MetricsCache;
+use FP\DigitalMarketing\Helpers\PerformanceCache;
 
 /**
  * Metrics Aggregator class
@@ -51,6 +52,38 @@ class MetricsAggregator {
 	 * @return array Aggregated metrics grouped by KPI
 	 */
 	public static function get_aggregated_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
+		// Generate cache key for performance caching
+		$cache_params = [
+			'client_id' => $client_id,
+			'period_start' => $period_start,
+			'period_end' => $period_end,
+			'kpis' => $kpis,
+			'sources' => $sources,
+		];
+		$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
+
+		// Use performance cache with fallback to database query
+		return PerformanceCache::get_cached(
+			$cache_key,
+			PerformanceCache::CACHE_GROUP_AGGREGATED,
+			function() use ( $client_id, $period_start, $period_end, $kpis, $sources ) {
+				return self::get_aggregated_metrics_uncached( $client_id, $period_start, $period_end, $kpis, $sources );
+			},
+			PerformanceCache::get_cache_settings()['aggregated_ttl']
+		);
+	}
+
+	/**
+	 * Get aggregated metrics without caching (internal method)
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @param array $kpis Optional. Specific KPIs to retrieve
+	 * @param array $sources Optional. Specific sources to include
+	 * @return array Aggregated metrics grouped by KPI
+	 */
+	private static function get_aggregated_metrics_uncached( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
 		// Get raw metrics from cache
 		$criteria = [
 			'client_id' => $client_id,
@@ -116,6 +149,37 @@ class MetricsAggregator {
 	 * @return array KPI summary with normalized values
 	 */
 	public static function get_kpi_summary( int $client_id, string $period_start, string $period_end, string $category = '' ): array {
+		// Generate cache key for KPI summary
+		$cache_params = [
+			'method' => 'kpi_summary',
+			'client_id' => $client_id,
+			'period_start' => $period_start,
+			'period_end' => $period_end,
+			'category' => $category,
+		];
+		$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
+
+		// Use performance cache with fallback to computation
+		return PerformanceCache::get_cached(
+			$cache_key,
+			PerformanceCache::CACHE_GROUP_REPORTS,
+			function() use ( $client_id, $period_start, $period_end, $category ) {
+				return self::get_kpi_summary_uncached( $client_id, $period_start, $period_end, $category );
+			},
+			PerformanceCache::get_cache_settings()['reports_ttl']
+		);
+	}
+
+	/**
+	 * Get KPI summary without caching (internal method)
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $period_start Start date (Y-m-d H:i:s)
+	 * @param string $period_end End date (Y-m-d H:i:s)
+	 * @param string $category Optional. Filter by KPI category
+	 * @return array KPI summary with normalized values
+	 */
+	private static function get_kpi_summary_uncached( int $client_id, string $period_start, string $period_end, string $category = '' ): array {
 		$kpis = [];
 		
 		if ( $category ) {
@@ -157,6 +221,41 @@ class MetricsAggregator {
 	 * @return array Comparison data with change percentages
 	 */
 	public static function get_period_comparison( int $client_id, string $current_start, string $current_end, string $previous_start, string $previous_end, array $kpis = [] ): array {
+		// Generate cache key for period comparison
+		$cache_params = [
+			'method' => 'period_comparison',
+			'client_id' => $client_id,
+			'current_start' => $current_start,
+			'current_end' => $current_end,
+			'previous_start' => $previous_start,
+			'previous_end' => $previous_end,
+			'kpis' => $kpis,
+		];
+		$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
+
+		// Use performance cache with fallback to computation
+		return PerformanceCache::get_cached(
+			$cache_key,
+			PerformanceCache::CACHE_GROUP_REPORTS,
+			function() use ( $client_id, $current_start, $current_end, $previous_start, $previous_end, $kpis ) {
+				return self::get_period_comparison_uncached( $client_id, $current_start, $current_end, $previous_start, $previous_end, $kpis );
+			},
+			PerformanceCache::get_cache_settings()['reports_ttl']
+		);
+	}
+
+	/**
+	 * Get metrics comparison without caching (internal method)
+	 *
+	 * @param int $client_id Client ID
+	 * @param string $current_start Current period start
+	 * @param string $current_end Current period end
+	 * @param string $previous_start Previous period start
+	 * @param string $previous_end Previous period end
+	 * @param array $kpis Optional. Specific KPIs to compare
+	 * @return array Comparison data with change percentages
+	 */
+	private static function get_period_comparison_uncached( int $client_id, string $current_start, string $current_end, string $previous_start, string $previous_end, array $kpis = [] ): array {
 		$current_metrics = self::get_aggregated_metrics( $client_id, $current_start, $current_end, $kpis );
 		$previous_metrics = self::get_aggregated_metrics( $client_id, $previous_start, $previous_end, $kpis );
 
