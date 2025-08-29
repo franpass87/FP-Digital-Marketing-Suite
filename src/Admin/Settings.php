@@ -12,6 +12,7 @@ namespace FP\DigitalMarketing\Admin;
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\Helpers\SyncEngine;
+use FP\DigitalMarketing\Helpers\Security;
 
 /**
  * Settings class for plugin administration
@@ -358,27 +359,62 @@ class Settings {
 	}
 
 	/**
-	 * Sanitize API keys data
+	 * Sanitize API keys data with encryption
 	 *
-	 * Security Note: This method sanitizes API keys for storage. In production environments,
-	 * consider implementing additional security measures such as:
-	 * - Encrypting sensitive API keys before database storage
-	 * - Using WordPress constants for production API keys
-	 * - Implementing key rotation procedures
-	 * - Audit logging for API key access
+	 * Security Enhancement: This method now encrypts sensitive API keys before storage.
+	 * Implemented security measures:
+	 * - Encryption of sensitive API keys using AES-256-CBC
+	 * - Enhanced input sanitization
+	 * - Security audit logging for API key changes
+	 * - Nonce verification for all API key operations
 	 *
 	 * @param mixed $input The input data.
-	 * @return array Sanitized API keys array.
+	 * @return array Sanitized and encrypted API keys array.
 	 */
 	public function sanitize_api_keys( $input ): array {
 		if ( ! is_array( $input ) ) {
 			return [];
 		}
 
+		// Verify nonce for API key changes
+		if ( ! Security::verify_nonce_with_logging( self::NONCE_ACTION, '_wpnonce_settings' ) ) {
+			wp_die( esc_html__( 'Errore di sicurezza: token non valido', 'fp-digital-marketing' ) );
+		}
+
+		// Verify user capability
+		if ( ! Security::verify_capability_with_logging( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+		}
+
+		$current_keys = get_option( self::OPTION_API_KEYS, [] );
 		$sanitized = [];
+		$sensitive_keys = [ 'google_client_secret', 'api_token', 'secret_key' ];
+
 		foreach ( $input as $key => $value ) {
-			// Sanitize the key name and value
-			$sanitized[ sanitize_key( $key ) ] = sanitize_text_field( $value );
+			$sanitized_key = sanitize_key( $key );
+			$sanitized_value = sanitize_text_field( $value );
+
+			// Encrypt sensitive API keys
+			if ( in_array( $sanitized_key, $sensitive_keys, true ) && ! empty( $sanitized_value ) ) {
+				// Only encrypt if value has changed to avoid double encryption
+				if ( ! isset( $current_keys[ $sanitized_key ] ) || 
+					 Security::decrypt_sensitive_data( $current_keys[ $sanitized_key ] ) !== $sanitized_value ) {
+					$sanitized[ $sanitized_key ] = Security::encrypt_sensitive_data( $sanitized_value );
+					
+					// Log API key change
+					error_log( sprintf( 
+						'FP Digital Marketing: API key %s updated by user %d', 
+						$sanitized_key, 
+						get_current_user_id() 
+					) );
+				} else {
+					// Keep existing encrypted value
+					$sanitized[ $sanitized_key ] = $current_keys[ $sanitized_key ];
+				}
+			} else {
+				// Non-sensitive keys stored as-is (already sanitized)
+				$sanitized[ $sanitized_key ] = $sanitized_value;
+			}
 		}
 
 		return $sanitized;
@@ -394,31 +430,58 @@ class Settings {
 	}
 
 	/**
-	 * Get API keys
+	 * Get API keys with decryption for sensitive values
 	 *
-	 * @return array The API keys array.
+	 * @param bool $decrypt_sensitive Whether to decrypt sensitive keys for display.
+	 * @return array The API keys array with sensitive values decrypted if requested.
 	 */
-	public function get_api_keys(): array {
-		return get_option( self::OPTION_API_KEYS, [] );
+	public function get_api_keys( bool $decrypt_sensitive = true ): array {
+		$api_keys = get_option( self::OPTION_API_KEYS, [] );
+		
+		if ( ! $decrypt_sensitive ) {
+			return $api_keys;
+		}
+
+		$sensitive_keys = [ 'google_client_secret', 'api_token', 'secret_key' ];
+		$decrypted_keys = [];
+
+		foreach ( $api_keys as $key => $value ) {
+			if ( in_array( $key, $sensitive_keys, true ) && ! empty( $value ) ) {
+				$decrypted_keys[ $key ] = Security::decrypt_sensitive_data( $value );
+			} else {
+				$decrypted_keys[ $key ] = $value;
+			}
+		}
+
+		return $decrypted_keys;
 	}
 
 	/**
-	 * Handle GA4 OAuth callback
+	 * Handle GA4 OAuth callback with enhanced security
 	 *
 	 * @return void
 	 */
 	public function handle_ga4_oauth_callback(): void {
 		// Handle OAuth callback
 		if ( isset( $_GET['ga4_callback'] ) && $_GET['ga4_callback'] === '1' ) {
-			if ( ! current_user_can( 'manage_options' ) ) {
+			// Enhanced capability verification with logging
+			if ( ! Security::verify_capability_with_logging( 'manage_options' ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}
 
-			// Verify state parameter
-			$state = $_GET['state'] ?? '';
+			// Verify state parameter with enhanced security
+			$state = sanitize_text_field( wp_unslash( $_GET['state'] ?? '' ) );
 			$stored_state = get_option( 'fp_dms_oauth_state', '' );
 			
+			// Enhanced nonce verification
 			if ( ! wp_verify_nonce( $state, 'ga4_oauth_state' ) || $state !== $stored_state ) {
+				// Log security event
+				error_log( sprintf(
+					'FP Digital Marketing Security: Invalid OAuth state from IP %s, User ID: %d',
+					$_SERVER['REMOTE_ADDR'] ?? 'unknown',
+					get_current_user_id()
+				) );
+				
 				add_settings_error( 
 					'ga4_oauth', 
 					'invalid_state', 
@@ -465,9 +528,10 @@ class Settings {
 			exit;
 		}
 
-		// Handle disconnect
+		// Handle disconnect with enhanced security
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'ga4_disconnect' ) {
-			if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $_POST['ga4_disconnect_nonce'], 'ga4_disconnect' ) ) {
+			if ( ! Security::verify_capability_with_logging( 'manage_options' ) || 
+				 ! Security::verify_nonce_with_logging( 'ga4_disconnect', 'ga4_disconnect_nonce' ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}
 
@@ -485,9 +549,10 @@ class Settings {
 			exit;
 		}
 
-		// Handle manual sync trigger
+		// Handle manual sync trigger with enhanced security
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'trigger_manual_sync' ) {
-			if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $_POST['sync_nonce'], 'trigger_manual_sync' ) ) {
+			if ( ! Security::verify_capability_with_logging( 'manage_options' ) || 
+				 ! Security::verify_nonce_with_logging( 'trigger_manual_sync', 'sync_nonce' ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}
 
