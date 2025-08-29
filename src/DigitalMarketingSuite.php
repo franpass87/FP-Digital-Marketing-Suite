@@ -24,6 +24,7 @@ use FP\DigitalMarketing\Database\AlertRulesTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\SeoFrontendOutput;
+use FP\DigitalMarketing\Helpers\XmlSitemap;
 use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
@@ -164,6 +165,10 @@ class DigitalMarketingSuite {
 
 		// Initialize SEO frontend output.
 		SeoFrontendOutput::init();
+
+		// Initialize XML sitemap.
+		XmlSitemap::init();
+		XmlSitemap::init_robots_txt();
 
 		// Ensure database tables exist (in case of manual activation issues).
 		$this->ensure_metrics_cache_table();
