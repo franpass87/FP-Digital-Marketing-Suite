@@ -11,6 +11,7 @@ namespace FP\DigitalMarketing\Admin;
 
 use FP\DigitalMarketing\Helpers\PerformanceCache;
 use FP\DigitalMarketing\Helpers\CacheBenchmark;
+use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
  * Cache Performance admin page class
@@ -43,7 +44,7 @@ class CachePerformance {
 			'fp-digital-marketing-reports',
 			__( 'Cache Performance', 'fp-digital-marketing' ),
 			__( 'Cache Performance', 'fp-digital-marketing' ),
-			'manage_options',
+			Capabilities::MANAGE_SETTINGS,
 			self::PAGE_SLUG,
 			[ $this, 'render_page' ]
 		);
@@ -59,7 +60,7 @@ class CachePerformance {
 			return;
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
 			return;
 		}
 
@@ -178,7 +179,7 @@ class CachePerformance {
 	 * @return void
 	 */
 	public function render_page(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
 			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
 		}
 

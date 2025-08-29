@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace FP\DigitalMarketing\Admin;
 
 use FP\DigitalMarketing\Helpers\Security;
+use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
  * Security admin page for monitoring and auditing
@@ -42,7 +43,7 @@ class SecurityAdmin {
 			'options-general.php',
 			__( 'FP DMS Security', 'fp-digital-marketing' ),
 			__( 'FP DMS Security', 'fp-digital-marketing' ),
-			'manage_options',
+			Capabilities::MANAGE_SETTINGS,
 			self::PAGE_SLUG,
 			[ $this, 'render_security_page' ]
 		);
@@ -62,14 +63,14 @@ class SecurityAdmin {
 
 		switch ( $action ) {
 			case 'run_security_audit':
-				if ( Security::verify_capability_with_logging( 'manage_options' ) && 
+				if ( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) && 
 					 Security::verify_nonce_with_logging( 'run_security_audit' ) ) {
 					$this->run_security_audit();
 				}
 				break;
 
 			case 'clear_security_logs':
-				if ( Security::verify_capability_with_logging( 'manage_options' ) && 
+				if ( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) && 
 					 Security::verify_nonce_with_logging( 'clear_security_logs' ) ) {
 					$this->clear_security_logs();
 				}
@@ -111,6 +112,10 @@ class SecurityAdmin {
 	 * @return void
 	 */
 	public function render_security_page(): void {
+		// Check user capabilities
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
+		}
 		$audit_results = get_transient( 'fp_dms_security_audit' );
 		$security_logs = Security::get_security_logs( 20 );
 

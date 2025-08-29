@@ -12,6 +12,7 @@ namespace FP\DigitalMarketing\Admin;
 use FP\DigitalMarketing\Models\AlertRule;
 use FP\DigitalMarketing\Helpers\AlertEngine;
 use FP\DigitalMarketing\Helpers\MetricsSchema;
+use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
  * AlertingAdmin class for managing alert rules interface
@@ -41,7 +42,7 @@ class AlertingAdmin {
 			'edit.php?post_type=cliente',
 			__( 'Alert e Notifiche', 'fp-digital-marketing' ),
 			__( 'Alert e Notifiche', 'fp-digital-marketing' ),
-			'manage_options',
+			Capabilities::MANAGE_ALERTS,
 			'fp-digital-marketing-alerts',
 			[ $this, 'display_admin_page' ]
 		);
@@ -57,7 +58,7 @@ class AlertingAdmin {
 			return;
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_ALERTS ) ) {
 			return;
 		}
 
@@ -214,6 +215,11 @@ class AlertingAdmin {
 	 * @return void
 	 */
 	public function display_admin_page(): void {
+		// Check user capabilities
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_ALERTS ) ) {
+			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
+		}
+
 		$tab = $_GET['tab'] ?? 'rules';
 		?>
 		<div class="wrap">
@@ -583,7 +589,7 @@ class AlertingAdmin {
 	public function dismiss_alert_notice(): void {
 		check_ajax_referer( 'fp_dms_dismiss_alert', 'nonce' );
 
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_ALERTS ) ) {
 			wp_die( __( 'Permessi insufficienti.', 'fp-digital-marketing' ) );
 		}
 
