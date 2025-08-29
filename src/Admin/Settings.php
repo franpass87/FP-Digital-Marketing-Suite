@@ -13,6 +13,7 @@ use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
+use FP\DigitalMarketing\Helpers\PerformanceCache;
 
 /**
  * Settings class for plugin administration
@@ -45,6 +46,11 @@ class Settings {
 	private const SECTION_SYNC = 'fp_digital_marketing_sync';
 
 	/**
+	 * Cache settings section
+	 */
+	private const SECTION_CACHE = 'fp_digital_marketing_cache';
+
+	/**
 	 * Demo option name
 	 */
 	private const OPTION_DEMO = 'fp_digital_marketing_demo_option';
@@ -58,6 +64,11 @@ class Settings {
 	 * Sync settings option name
 	 */
 	private const OPTION_SYNC = 'fp_digital_marketing_sync_settings';
+
+	/**
+	 * Cache settings option name
+	 */
+	private const OPTION_CACHE = 'fp_digital_marketing_cache_settings';
 
 	/**
 	 * Nonce action for settings
@@ -127,6 +138,16 @@ class Settings {
 			]
 		);
 
+		register_setting(
+			self::OPTION_GROUP,
+			self::OPTION_CACHE,
+			[
+				'type'              => 'array',
+				'sanitize_callback' => [ $this, 'sanitize_cache_settings' ],
+				'default'           => [],
+			]
+		);
+
 		// Add General section.
 		add_settings_section(
 			self::SECTION_GENERAL,
@@ -176,6 +197,23 @@ class Settings {
 			[ $this, 'render_sync_settings_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_SYNC
+		);
+
+		// Add Cache section.
+		add_settings_section(
+			self::SECTION_CACHE,
+			__( 'Configurazione Cache Performance', 'fp-digital-marketing' ),
+			[ $this, 'render_cache_section' ],
+			self::PAGE_SLUG
+		);
+
+		// Add cache settings field.
+		add_settings_field(
+			'cache_settings',
+			__( 'Impostazioni Cache', 'fp-digital-marketing' ),
+			[ $this, 'render_cache_settings_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_CACHE
 		);
 	}
 
@@ -717,5 +755,252 @@ class Settings {
 	 */
 	public function get_sync_settings(): array {
 		return get_option( self::OPTION_SYNC, [] );
+	}
+
+	/**
+	 * Render cache section description
+	 *
+	 * @return void
+	 */
+	public function render_cache_section(): void {
+		echo '<p>' . esc_html__( 'Configurazione del sistema di caching per migliorare le performance delle query sui report.', 'fp-digital-marketing' ) . '</p>';
+	}
+
+	/**
+	 * Render cache settings field
+	 *
+	 * @return void
+	 */
+	public function render_cache_settings_field(): void {
+		$settings = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_settings();
+		?>
+		<table class="form-table">
+			<tr>
+				<th scope="row">
+					<label for="cache_enabled"><?php esc_html_e( 'Abilita Cache', 'fp-digital-marketing' ); ?></label>
+				</th>
+				<td>
+					<input 
+						type="checkbox" 
+						id="cache_enabled" 
+						name="<?php echo esc_attr( self::OPTION_CACHE ); ?>[enabled]" 
+						value="1" 
+						<?php checked( $settings['enabled'] ); ?>
+					/>
+					<label for="cache_enabled"><?php esc_html_e( 'Attiva il sistema di caching', 'fp-digital-marketing' ); ?></label>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="use_object_cache"><?php esc_html_e( 'Object Cache', 'fp-digital-marketing' ); ?></label>
+				</th>
+				<td>
+					<input 
+						type="checkbox" 
+						id="use_object_cache" 
+						name="<?php echo esc_attr( self::OPTION_CACHE ); ?>[use_object_cache]" 
+						value="1" 
+						<?php checked( $settings['use_object_cache'] ); ?>
+					/>
+					<label for="use_object_cache"><?php esc_html_e( 'Usa WordPress Object Cache', 'fp-digital-marketing' ); ?></label>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="use_transients"><?php esc_html_e( 'Transients', 'fp-digital-marketing' ); ?></label>
+				</th>
+				<td>
+					<input 
+						type="checkbox" 
+						id="use_transients" 
+						name="<?php echo esc_attr( self::OPTION_CACHE ); ?>[use_transients]" 
+						value="1" 
+						<?php checked( $settings['use_transients'] ); ?>
+					/>
+					<label for="use_transients"><?php esc_html_e( 'Usa WordPress Transients come fallback', 'fp-digital-marketing' ); ?></label>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="default_ttl"><?php esc_html_e( 'TTL Predefinito (secondi)', 'fp-digital-marketing' ); ?></label>
+				</th>
+				<td>
+					<input 
+						type="number" 
+						id="default_ttl" 
+						name="<?php echo esc_attr( self::OPTION_CACHE ); ?>[default_ttl]" 
+						value="<?php echo esc_attr( $settings['default_ttl'] ); ?>"
+						min="60"
+						max="86400"
+						step="60"
+					/>
+					<p class="description"><?php esc_html_e( 'Tempo di vita predefinito per i dati in cache (60-86400 secondi)', 'fp-digital-marketing' ); ?></p>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="metrics_ttl"><?php esc_html_e( 'TTL Metriche (secondi)', 'fp-digital-marketing' ); ?></label>
+				</th>
+				<td>
+					<input 
+						type="number" 
+						id="metrics_ttl" 
+						name="<?php echo esc_attr( self::OPTION_CACHE ); ?>[metrics_ttl]" 
+						value="<?php echo esc_attr( $settings['metrics_ttl'] ); ?>"
+						min="60"
+						max="86400"
+						step="60"
+					/>
+					<p class="description"><?php esc_html_e( 'Tempo di vita per le query di metriche', 'fp-digital-marketing' ); ?></p>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="reports_ttl"><?php esc_html_e( 'TTL Report (secondi)', 'fp-digital-marketing' ); ?></label>
+				</th>
+				<td>
+					<input 
+						type="number" 
+						id="reports_ttl" 
+						name="<?php echo esc_attr( self::OPTION_CACHE ); ?>[reports_ttl]" 
+						value="<?php echo esc_attr( $settings['reports_ttl'] ); ?>"
+						min="60"
+						max="86400"
+						step="60"
+					/>
+					<p class="description"><?php esc_html_e( 'Tempo di vita per i report generati', 'fp-digital-marketing' ); ?></p>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="auto_invalidate"><?php esc_html_e( 'Invalidazione Automatica', 'fp-digital-marketing' ); ?></label>
+				</th>
+				<td>
+					<input 
+						type="checkbox" 
+						id="auto_invalidate" 
+						name="<?php echo esc_attr( self::OPTION_CACHE ); ?>[auto_invalidate]" 
+						value="1" 
+						<?php checked( $settings['auto_invalidate'] ); ?>
+					/>
+					<label for="auto_invalidate"><?php esc_html_e( 'Invalida automaticamente la cache quando i dati vengono aggiornati', 'fp-digital-marketing' ); ?></label>
+				</td>
+			</tr>
+			
+			<tr>
+				<th scope="row">
+					<label for="benchmark_enabled"><?php esc_html_e( 'Benchmark Performance', 'fp-digital-marketing' ); ?></label>
+				</th>
+				<td>
+					<input 
+						type="checkbox" 
+						id="benchmark_enabled" 
+						name="<?php echo esc_attr( self::OPTION_CACHE ); ?>[benchmark_enabled]" 
+						value="1" 
+						<?php checked( $settings['benchmark_enabled'] ); ?>
+					/>
+					<label for="benchmark_enabled"><?php esc_html_e( 'Abilita il tracking delle performance per il benchmark', 'fp-digital-marketing' ); ?></label>
+				</td>
+			</tr>
+		</table>
+		
+		<?php if ( $settings['enabled'] ): ?>
+		<h4><?php esc_html_e( 'Statistiche Cache', 'fp-digital-marketing' ); ?></h4>
+		<?php 
+		$cache_stats = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_stats();
+		?>
+		<table class="widefat">
+			<tr>
+				<td><?php esc_html_e( 'Richieste Totali:', 'fp-digital-marketing' ); ?></td>
+				<td><?php echo esc_html( number_format( $cache_stats['total_requests'] ) ); ?></td>
+			</tr>
+			<tr>
+				<td><?php esc_html_e( 'Cache Hit Ratio:', 'fp-digital-marketing' ); ?></td>
+				<td><?php echo esc_html( number_format( $cache_stats['hit_ratio'], 2 ) ); ?>%</td>
+			</tr>
+			<tr>
+				<td><?php esc_html_e( 'Cache Hits:', 'fp-digital-marketing' ); ?></td>
+				<td><?php echo esc_html( number_format( $cache_stats['cache_hits'] ) ); ?></td>
+			</tr>
+			<tr>
+				<td><?php esc_html_e( 'Cache Misses:', 'fp-digital-marketing' ); ?></td>
+				<td><?php echo esc_html( number_format( $cache_stats['cache_misses'] ) ); ?></td>
+			</tr>
+		</table>
+		
+		<p>
+			<a href="<?php echo esc_url( add_query_arg( 'action', 'clear_cache_stats', admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+			   class="button" 
+			   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler cancellare le statistiche?', 'fp-digital-marketing' ); ?>')">
+				<?php esc_html_e( 'Cancella Statistiche', 'fp-digital-marketing' ); ?>
+			</a>
+			
+			<a href="<?php echo esc_url( add_query_arg( 'action', 'invalidate_cache', admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+			   class="button" 
+			   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler invalidare tutta la cache?', 'fp-digital-marketing' ); ?>')">
+				<?php esc_html_e( 'Invalida Cache', 'fp-digital-marketing' ); ?>
+			</a>
+		</p>
+		<?php endif; ?>
+		<?php
+	}
+
+	/**
+	 * Sanitize cache settings
+	 *
+	 * @param array $input Raw input data
+	 * @return array Sanitized data
+	 */
+	public function sanitize_cache_settings( array $input ): array {
+		$sanitized = [];
+
+		// Boolean settings
+		$sanitized['enabled'] = isset( $input['enabled'] ) && $input['enabled'] === '1';
+		$sanitized['use_object_cache'] = isset( $input['use_object_cache'] ) && $input['use_object_cache'] === '1';
+		$sanitized['use_transients'] = isset( $input['use_transients'] ) && $input['use_transients'] === '1';
+		$sanitized['auto_invalidate'] = isset( $input['auto_invalidate'] ) && $input['auto_invalidate'] === '1';
+		$sanitized['benchmark_enabled'] = isset( $input['benchmark_enabled'] ) && $input['benchmark_enabled'] === '1';
+
+		// TTL settings with validation
+		$sanitized['default_ttl'] = $this->sanitize_ttl( $input['default_ttl'] ?? 900 );
+		$sanitized['metrics_ttl'] = $this->sanitize_ttl( $input['metrics_ttl'] ?? 900 );
+		$sanitized['reports_ttl'] = $this->sanitize_ttl( $input['reports_ttl'] ?? 3600 );
+		$sanitized['aggregated_ttl'] = $this->sanitize_ttl( $input['aggregated_ttl'] ?? 300 );
+
+		// Handle cache actions
+		if ( isset( $_GET['action'] ) ) {
+			switch ( $_GET['action'] ) {
+				case 'clear_cache_stats':
+					\FP\DigitalMarketing\Helpers\PerformanceCache::clear_stats();
+					add_settings_error( 'cache_settings', 'stats_cleared', __( 'Statistiche cache cancellate con successo.', 'fp-digital-marketing' ), 'updated' );
+					break;
+					
+				case 'invalidate_cache':
+					\FP\DigitalMarketing\Helpers\PerformanceCache::invalidate_all();
+					add_settings_error( 'cache_settings', 'cache_invalidated', __( 'Cache invalidata con successo.', 'fp-digital-marketing' ), 'updated' );
+					break;
+			}
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Sanitize TTL value
+	 *
+	 * @param mixed $value TTL value to sanitize
+	 * @return int Sanitized TTL value
+	 */
+	private function sanitize_ttl( $value ): int {
+		$ttl = intval( $value );
+		
+		// Ensure TTL is between 60 seconds and 24 hours
+		return max( 60, min( 86400, $ttl ) );
 	}
 }
