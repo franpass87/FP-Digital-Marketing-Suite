@@ -414,6 +414,146 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
+	// Schema generator and hooks functions
+	if ( ! function_exists( 'apply_filters' ) ) {
+		function apply_filters( $hook_name, $value, ...$args ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['apply_filters'] ) ) {
+				return $wp_mock_functions['apply_filters']( $hook_name, $value, ...$args );
+			}
+			return $value;
+		}
+	}
+
+	if ( ! function_exists( 'do_action' ) ) {
+		function do_action( $hook_name, ...$args ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['do_action'] ) ) {
+				return $wp_mock_functions['do_action']( $hook_name, ...$args );
+			}
+		}
+	}
+
+	if ( ! function_exists( 'is_singular' ) ) {
+		function is_singular( $post_types = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['is_singular'] ) ) {
+				return $wp_mock_functions['is_singular']( $post_types );
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'is_home' ) ) {
+		function is_home() {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['is_home'] ) ) {
+				return $wp_mock_functions['is_home']();
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'is_front_page' ) ) {
+		function is_front_page() {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['is_front_page'] ) ) {
+				return $wp_mock_functions['is_front_page']();
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'get_userdata' ) ) {
+		function get_userdata( $user_id ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_userdata'] ) ) {
+				return $wp_mock_functions['get_userdata']( $user_id );
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'get_author_posts_url' ) ) {
+		function get_author_posts_url( $author_id ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_author_posts_url'] ) ) {
+				return $wp_mock_functions['get_author_posts_url']( $author_id );
+			}
+			return '';
+		}
+	}
+
+	if ( ! function_exists( 'get_the_category' ) ) {
+		function get_the_category( $post_id = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_the_category'] ) ) {
+				return $wp_mock_functions['get_the_category']( $post_id );
+			}
+			return [];
+		}
+	}
+
+	if ( ! function_exists( 'get_the_tags' ) ) {
+		function get_the_tags( $post_id = null ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['get_the_tags'] ) ) {
+				return $wp_mock_functions['get_the_tags']( $post_id );
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'wp_get_attachment_image_src' ) ) {
+		function wp_get_attachment_image_src( $attachment_id, $size = 'thumbnail' ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['wp_get_attachment_image_src'] ) ) {
+				return $wp_mock_functions['wp_get_attachment_image_src']( $attachment_id, $size );
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'wp_get_attachment_metadata' ) ) {
+		function wp_get_attachment_metadata( $attachment_id ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['wp_get_attachment_metadata'] ) ) {
+				return $wp_mock_functions['wp_get_attachment_metadata']( $attachment_id );
+			}
+			return [];
+		}
+	}
+
+	if ( ! function_exists( 'has_blocks' ) ) {
+		function has_blocks( $content ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['has_blocks'] ) ) {
+				return $wp_mock_functions['has_blocks']( $content );
+			}
+			return false;
+		}
+	}
+
+	if ( ! function_exists( 'parse_blocks' ) ) {
+		function parse_blocks( $content ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['parse_blocks'] ) ) {
+				return $wp_mock_functions['parse_blocks']( $content );
+			}
+			return [];
+		}
+	}
+
+	if ( ! function_exists( 'has_shortcode' ) ) {
+		function has_shortcode( $content, $tag ) {
+			global $wp_mock_functions;
+			if ( isset( $wp_mock_functions['has_shortcode'] ) ) {
+				return $wp_mock_functions['has_shortcode']( $content, $tag );
+			}
+			return false;
+		}
+	}
+
 	// Mock global $wpdb for testing
 	global $wpdb;
 	$wpdb = new stdClass();
