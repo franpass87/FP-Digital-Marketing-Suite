@@ -221,6 +221,132 @@ For privacy-related questions or to exercise data protection rights:
 
 **Note**: This is a framework for GDPR compliance. Organizations using this plugin should conduct their own privacy impact assessments and may need additional measures based on their specific use cases and jurisdictions.
 
+## Metrics Query API
+
+The plugin provides a comprehensive Metrics Query API for dashboard creation and reporting systems. The API supports advanced filtering, aggregation, and trend analysis across multiple data sources.
+
+### Basic Usage Examples
+
+#### Simple Metrics Query
+```php
+use FP\DigitalMarketing\Helpers\MetricsAggregator;
+use FP\DigitalMarketing\Helpers\MetricsSchema;
+
+// Get basic metrics for a client
+$metrics = MetricsAggregator::get_aggregated_metrics(
+    123,  // client_id
+    '2024-01-01 00:00:00',  // period_start
+    '2024-01-31 23:59:59'   // period_end
+);
+```
+
+#### Advanced Query with Filtering
+```php
+// Advanced query with multiple filters
+$result = MetricsAggregator::query_metrics([
+    'client_id' => 123,
+    'period_start' => '2024-01-01 00:00:00',
+    'period_end' => '2024-01-31 23:59:59',
+    'kpis' => ['sessions', 'users', 'revenue'],
+    'source_types' => ['analytics', 'advertising'],
+    'categories' => ['traffic', 'conversions'],
+    'include_trends' => true,
+    'sort_by' => 'value',
+    'sort_order' => 'desc',
+    'limit' => 10
+]);
+
+// Access results
+foreach ($result['results'] as $kpi => $data) {
+    echo "{$kpi}: {$data['total_value']}\n";
+    if (isset($data['trend_analysis'])) {
+        echo "Trend: {$data['trend_analysis']['trend']}\n";
+    }
+}
+```
+
+#### Dashboard Metrics Widget
+```php
+// Get traffic metrics for dashboard widget
+$traffic_metrics = MetricsAggregator::get_metrics_by_type(
+    123,
+    '2024-01-01 00:00:00',
+    '2024-01-31 23:59:59',
+    ['traffic', 'engagement']
+);
+
+// Get month-over-month comparison
+$comparison = MetricsAggregator::get_period_comparison(
+    123,
+    '2024-02-01 00:00:00', '2024-02-29 23:59:59',  // Current
+    '2024-01-01 00:00:00', '2024-01-31 23:59:59'   // Previous
+);
+```
+
+#### Search and Filter Metrics
+```php
+// Search for conversion-related metrics
+$conversion_metrics = MetricsAggregator::search_metrics(
+    123,
+    '2024-01-01 00:00:00',
+    '2024-01-31 23:59:59',
+    'conversion'
+);
+
+// Get metrics from specific sources
+$ga_metrics = MetricsAggregator::get_metrics_by_source_type(
+    123,
+    '2024-01-01 00:00:00',
+    '2024-01-31 23:59:59',
+    ['analytics']  // Only Google Analytics data
+);
+```
+
+#### Trending Analysis
+```php
+// Get 6-month trend analysis
+$trends = MetricsAggregator::get_trending_metrics(
+    123,
+    '2024-01-01 00:00:00',
+    '2024-06-30 23:59:59',
+    6  // Number of periods to analyze
+);
+
+foreach ($trends as $kpi => $data) {
+    $trend = $data['trend'];
+    echo "{$kpi}: {$trend['direction']} trend, velocity: {$trend['velocity']}\n";
+}
+```
+
+### API Features
+
+- **Advanced Filtering**: Filter by client, period, KPIs, sources, source types, categories
+- **Multiple Aggregation Methods**: Sum, average, max, min
+- **Trend Analysis**: Historical trend calculation with direction and velocity
+- **Search Capabilities**: Text-based search across metric names and descriptions
+- **Pagination Support**: Limit and offset for large result sets
+- **Data Quality Reports**: Coverage analysis and recommendations
+- **Period Comparisons**: Month-over-month, year-over-year analysis
+
+### Available Categories
+
+- **Traffic**: `sessions`, `users`, `pageviews`
+- **Engagement**: `bounce_rate`, user engagement metrics
+- **Conversions**: `conversions`, `revenue`
+- **Advertising**: `impressions`, `clicks`, `ctr`, `cpc`, `cost`
+- **Search/SEO**: `organic_clicks`, `organic_impressions`
+- **Email**: `email_opens`, `email_clicks`
+
+### Source Types
+
+- **Analytics**: Google Analytics 4, web analytics platforms
+- **Advertising**: Google Ads, Facebook Ads, paid advertising
+- **Search**: Google Search Console, SEO tools
+- **Social**: Social media platforms
+- **Email**: Email marketing platforms
+
+For complete API documentation, see [METRICS_QUERY_API.md](METRICS_QUERY_API.md).
+
 ## Contributing
 
 1. Fork the repository

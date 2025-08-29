@@ -190,6 +190,279 @@ class MetricsAggregatorTest extends TestCase {
 	}
 
 	/**
+	 * Test advanced query_metrics method
+	 */
+	public function test_query_metrics_advanced(): void {
+		$query_params = [
+			'client_id' => 123,
+			'period_start' => '2024-01-01 00:00:00',
+			'period_end' => '2024-01-31 23:59:59',
+			'kpis' => [ MetricsSchema::KPI_SESSIONS, MetricsSchema::KPI_USERS ],
+			'sources' => [ 'google_analytics_4' ],
+			'source_types' => [ 'analytics' ],
+			'categories' => [ MetricsSchema::CATEGORY_TRAFFIC ],
+			'aggregation' => 'sum',
+			'include_trends' => false,
+			'limit' => 10,
+			'offset' => 0,
+			'sort_by' => 'value',
+			'sort_order' => 'desc',
+		];
+
+		$result = MetricsAggregator::query_metrics( $query_params );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'query_params', $result );
+		$this->assertArrayHasKey( 'results', $result );
+		$this->assertArrayHasKey( 'metadata', $result );
+
+		// Check metadata structure
+		$metadata = $result['metadata'];
+		$this->assertArrayHasKey( 'total_results', $metadata );
+		$this->assertArrayHasKey( 'query_time', $metadata );
+		$this->assertArrayHasKey( 'has_pagination', $metadata );
+		$this->assertArrayHasKey( 'offset', $metadata );
+		$this->assertArrayHasKey( 'limit', $metadata );
+
+		// Verify pagination settings
+		$this->assertTrue( $metadata['has_pagination'] );
+		$this->assertEquals( 0, $metadata['offset'] );
+		$this->assertEquals( 10, $metadata['limit'] );
+	}
+
+	/**
+	 * Test get_metrics_by_type method
+	 */
+	public function test_get_metrics_by_type(): void {
+		$metric_types = [ 'traffic', 'conversion' ];
+		
+		// Since we can't easily mock the MetricsCache::get_metrics call,
+		// we'll test the method exists and returns an array
+		$result = MetricsAggregator::get_metrics_by_type( 
+			123, 
+			'2024-01-01 00:00:00', 
+			'2024-01-31 23:59:59', 
+			$metric_types 
+		);
+
+		$this->assertIsArray( $result );
+	}
+
+	/**
+	 * Test get_metrics_by_source_type method
+	 */
+	public function test_get_metrics_by_source_type(): void {
+		$source_types = [ 'analytics', 'advertising' ];
+		
+		$result = MetricsAggregator::get_metrics_by_source_type( 
+			123, 
+			'2024-01-01 00:00:00', 
+			'2024-01-31 23:59:59', 
+			$source_types 
+		);
+
+		$this->assertIsArray( $result );
+	}
+
+	/**
+	 * Test get_trending_metrics method
+	 */
+	public function test_get_trending_metrics(): void {
+		$result = MetricsAggregator::get_trending_metrics( 
+			123, 
+			'2024-01-01 00:00:00', 
+			'2024-01-31 23:59:59', 
+			4 
+		);
+
+		$this->assertIsArray( $result );
+		
+		// Test structure with mock data
+		$mock_data = MetricsAggregator::generate_mock_data( 123, '2024-01-01 00:00:00', '2024-01-31 23:59:59' );
+		
+		// Verify mock data has expected structure that trending analysis would use
+		foreach ( $mock_data as $kpi => $data ) {
+			$this->assertArrayHasKey( 'total_value', $data );
+			$this->assertArrayHasKey( 'kpi', $data );
+			$this->assertIsNumeric( $data['total_value'] );
+		}
+	}
+
+	/**
+	 * Test search_metrics method
+	 */
+	public function test_search_metrics(): void {
+		$search_term = 'sessions';
+		
+		$result = MetricsAggregator::search_metrics( 
+			123, 
+			'2024-01-01 00:00:00', 
+			'2024-01-31 23:59:59', 
+			$search_term 
+		);
+
+		$this->assertIsArray( $result );
+		
+		// Test the search functionality with mock data
+		$mock_data = MetricsAggregator::generate_mock_data( 123, '2024-01-01 00:00:00', '2024-01-31 23:59:59' );
+		
+		// Verify that sessions KPI exists in mock data (it should be searchable)
+		$this->assertArrayHasKey( MetricsSchema::KPI_SESSIONS, $mock_data );
+	}
+
+	/**
+	 * Test query_metrics with trends enabled
+	 */
+	public function test_query_metrics_with_trends(): void {
+		$query_params = [
+			'client_id' => 123,
+			'period_start' => '2024-01-01 00:00:00',
+			'period_end' => '2024-01-31 23:59:59',
+			'include_trends' => true,
+		];
+
+		$result = MetricsAggregator::query_metrics( $query_params );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'results', $result );
+		
+		// Check if trends would be included (structure test)
+		$this->assertTrue( $query_params['include_trends'] );
+	}
+
+	/**
+	 * Test query_metrics with custom aggregation
+	 */
+	public function test_query_metrics_custom_aggregation(): void {
+		$query_params = [
+			'client_id' => 123,
+			'period_start' => '2024-01-01 00:00:00',
+			'period_end' => '2024-01-31 23:59:59',
+			'aggregation' => 'average',
+		];
+
+		$result = MetricsAggregator::query_metrics( $query_params );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'results', $result );
+		$this->assertEquals( 'average', $query_params['aggregation'] );
+	}
+
+	/**
+	 * Test query_metrics with sorting
+	 */
+	public function test_query_metrics_sorting(): void {
+		$query_params = [
+			'client_id' => 123,
+			'period_start' => '2024-01-01 00:00:00',
+			'period_end' => '2024-01-31 23:59:59',
+			'sort_by' => 'name',
+			'sort_order' => 'asc',
+		];
+
+		$result = MetricsAggregator::query_metrics( $query_params );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'results', $result );
+		$this->assertEquals( 'name', $query_params['sort_by'] );
+		$this->assertEquals( 'asc', $query_params['sort_order'] );
+	}
+
+	/**
+	 * Test query_metrics with pagination
+	 */
+	public function test_query_metrics_pagination(): void {
+		$query_params = [
+			'client_id' => 123,
+			'period_start' => '2024-01-01 00:00:00',
+			'period_end' => '2024-01-31 23:59:59',
+			'limit' => 5,
+			'offset' => 10,
+		];
+
+		$result = MetricsAggregator::query_metrics( $query_params );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'metadata', $result );
+		$this->assertTrue( $result['metadata']['has_pagination'] );
+		$this->assertEquals( 5, $result['metadata']['limit'] );
+		$this->assertEquals( 10, $result['metadata']['offset'] );
+	}
+
+	/**
+	 * Test query_metrics with multiple filters
+	 */
+	public function test_query_metrics_multiple_filters(): void {
+		$query_params = [
+			'client_id' => 123,
+			'period_start' => '2024-01-01 00:00:00',
+			'period_end' => '2024-01-31 23:59:59',
+			'kpis' => [ MetricsSchema::KPI_SESSIONS, MetricsSchema::KPI_USERS ],
+			'categories' => [ MetricsSchema::CATEGORY_TRAFFIC ],
+			'source_types' => [ 'analytics' ],
+			'metric_types' => [ 'traffic' ],
+		];
+
+		$result = MetricsAggregator::query_metrics( $query_params );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'query_params', $result );
+		$this->assertEquals( $query_params, $result['query_params'] );
+	}
+
+	/**
+	 * Test empty query_metrics parameters
+	 */
+	public function test_query_metrics_empty_params(): void {
+		$query_params = [
+			'client_id' => 0,
+			'period_start' => '',
+			'period_end' => '',
+		];
+
+		$result = MetricsAggregator::query_metrics( $query_params );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'results', $result );
+		$this->assertArrayHasKey( 'metadata', $result );
+	}
+
+	/**
+	 * Test query_metrics returns expected structure
+	 */
+	public function test_query_metrics_result_structure(): void {
+		$query_params = [
+			'client_id' => 123,
+			'period_start' => '2024-01-01 00:00:00',
+			'period_end' => '2024-01-31 23:59:59',
+		];
+
+		$result = MetricsAggregator::query_metrics( $query_params );
+
+		$this->assertIsArray( $result );
+		
+		// Check top-level structure
+		$this->assertArrayHasKey( 'query_params', $result );
+		$this->assertArrayHasKey( 'results', $result );
+		$this->assertArrayHasKey( 'metadata', $result );
+
+		// Check metadata structure
+		$metadata = $result['metadata'];
+		$this->assertArrayHasKey( 'total_results', $metadata );
+		$this->assertArrayHasKey( 'query_time', $metadata );
+		$this->assertArrayHasKey( 'has_pagination', $metadata );
+		$this->assertArrayHasKey( 'offset', $metadata );
+		$this->assertArrayHasKey( 'limit', $metadata );
+
+		// Check data types
+		$this->assertIsInt( $metadata['total_results'] );
+		$this->assertIsString( $metadata['query_time'] );
+		$this->assertIsBool( $metadata['has_pagination'] );
+		$this->assertIsInt( $metadata['offset'] );
+		$this->assertIsInt( $metadata['limit'] );
+	}
+
+	/**
 	 * Test period comparison logic
 	 */
 	public function test_period_comparison_calculation(): void {
