@@ -368,7 +368,8 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	public function enqueue_wizard_scripts( string $hook ): void {
-		if ( strpos( $hook, self::PAGE_SLUG ) === false ) {
+		$expected_hook = 'toplevel_page_' . self::PAGE_SLUG;
+		if ( $hook !== $expected_hook ) {
 			return;
 		}
 
@@ -485,23 +486,47 @@ class OnboardingWizard {
 	private function get_wizard_js(): string {
 		return '
 			jQuery(document).ready(function($) {
+				console.log("FP Digital Marketing Wizard JS loaded");
+				console.log("jQuery version:", $.fn.jquery);
+				console.log("Service cards found:", $(".fp-service-card").length);
+				
 				// Service card selection
 				$(".fp-service-card").click(function() {
+					console.log("Service card clicked");
 					$(this).toggleClass("selected");
 					var checkbox = $(this).find("input[type=checkbox]");
-					checkbox.prop("checked", !checkbox.prop("checked"));
+					var wasChecked = checkbox.prop("checked");
+					checkbox.prop("checked", !wasChecked);
+					console.log("Checkbox toggled from " + wasChecked + " to " + (!wasChecked));
+					
+					// Update debug info
+					var selectedCount = $("input[name=\"selected_services[]\"]:checked").length;
+					console.log("Total selected services:", selectedCount);
 				});
 				
 				// Form validation
 				$(".fp-wizard-form").submit(function(e) {
+					console.log("Form submission started");
 					var currentStep = parseInt($(this).find("input[name=current_step]").val());
+					console.log("Current step:", currentStep);
 					
 					if (currentStep === 2) {
 						// Validate service selection
-						if ($("input[name=\"selected_services[]\"]:checked").length === 0) {
+						var selectedServices = $("input[name=\"selected_services[]\"]:checked");
+						console.log("Selected services count:", selectedServices.length);
+						
+						if (selectedServices.length === 0) {
+							console.log("No services selected, showing alert");
 							alert("' . esc_js( __( 'Please select at least one service to connect.', 'fp-digital-marketing' ) ) . '");
 							e.preventDefault();
 							return false;
+						} else {
+							console.log("Services selected, allowing form submission");
+							var serviceIds = [];
+							selectedServices.each(function() {
+								serviceIds.push($(this).val());
+							});
+							console.log("Selected service IDs:", serviceIds);
 						}
 					}
 					
@@ -513,6 +538,14 @@ class OnboardingWizard {
 							return false;
 						}
 					}
+				});
+				
+				// Add debug button for testing
+				$("body").append("<div style=\"position: fixed; top: 10px; right: 10px; background: #000; color: #fff; padding: 10px; z-index: 9999;\"><button id=\"fp-debug-btn\" style=\"color: #fff; background: #333; border: none; padding: 5px;\">Debug Info</button></div>");
+				$("#fp-debug-btn").click(function() {
+					var selectedCount = $("input[name=\"selected_services[]\"]:checked").length;
+					var totalCards = $(".fp-service-card").length;
+					alert("Debug Info:\\nTotal service cards: " + totalCards + "\\nSelected services: " + selectedCount);
 				});
 			});
 		';
@@ -658,6 +691,25 @@ class OnboardingWizard {
 
 		// Get available data sources
 		$data_sources = DataSources::get_data_sources();
+		
+		// Debug: Check if we have data sources
+		$available_count = 0;
+		foreach ( $data_sources as $source ) {
+			if ( $source['status'] === 'available' ) {
+				$available_count++;
+			}
+		}
+		
+		// Show debug info if no services available
+		if ( $available_count === 0 ) {
+			echo '<div style="background: #f0f0f0; padding: 15px; margin: 10px 0; border-left: 4px solid #dc3232;">';
+			echo '<strong>Debug:</strong> No available services found. Total data sources: ' . count( $data_sources ) . '<br>';
+			echo 'Available sources: ';
+			foreach ( $data_sources as $source ) {
+				echo $source['name'] . ' (status: ' . $source['status'] . '), ';
+			}
+			echo '</div>';
+		}
 		
 		foreach ( $data_sources as $source ) {
 			if ( $source['status'] !== 'available' ) {
