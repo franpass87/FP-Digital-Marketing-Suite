@@ -368,7 +368,8 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	public function enqueue_wizard_scripts( string $hook ): void {
-		if ( strpos( $hook, self::PAGE_SLUG ) === false ) {
+		$expected_hook = 'toplevel_page_' . self::PAGE_SLUG;
+		if ( $hook !== $expected_hook ) {
 			return;
 		}
 
@@ -449,12 +450,26 @@ class OnboardingWizard {
 				margin: 10px 0;
 				cursor: pointer;
 				transition: all 0.3s ease;
+				position: relative;
 			}
 			
 			.fp-service-card:hover,
 			.fp-service-card.selected {
 				border-color: #0073aa;
 				background: #f0f8ff;
+			}
+			
+			.fp-service-card label {
+				display: block;
+				cursor: pointer;
+				margin: 0;
+				padding: 0;
+			}
+			
+			.fp-service-card input[type="checkbox"] {
+				position: absolute;
+				left: -9999px;
+				opacity: 0;
 			}
 			
 			.fp-metric-checkbox {
@@ -485,11 +500,30 @@ class OnboardingWizard {
 	private function get_wizard_js(): string {
 		return '
 			jQuery(document).ready(function($) {
-				// Service card selection
-				$(".fp-service-card").click(function() {
+				// Service card selection with improved click handling
+				$(document).on("click", ".fp-service-card", function(e) {
+					// Prevent double-triggering if clicking on the hidden checkbox
+					if ($(e.target).is("input[type=checkbox]")) {
+						return;
+					}
+					
 					$(this).toggleClass("selected");
 					var checkbox = $(this).find("input[type=checkbox]");
-					checkbox.prop("checked", !checkbox.prop("checked"));
+					var wasChecked = checkbox.prop("checked");
+					checkbox.prop("checked", !wasChecked);
+					
+					// Trigger change event for any other listeners
+					checkbox.trigger("change");
+				});
+				
+				// Alternative: Also handle clicks directly on the checkbox (when visible)
+				$(document).on("change", "input[name=\"selected_services[]\"]", function() {
+					var card = $(this).closest(".fp-service-card");
+					if ($(this).prop("checked")) {
+						card.addClass("selected");
+					} else {
+						card.removeClass("selected");
+					}
 				});
 				
 				// Form validation
@@ -498,7 +532,9 @@ class OnboardingWizard {
 					
 					if (currentStep === 2) {
 						// Validate service selection
-						if ($("input[name=\"selected_services[]\"]:checked").length === 0) {
+						var selectedServices = $("input[name=\"selected_services[]\"]:checked");
+						
+						if (selectedServices.length === 0) {
 							alert("' . esc_js( __( 'Please select at least one service to connect.', 'fp-digital-marketing' ) ) . '");
 							e.preventDefault();
 							return false;
@@ -669,7 +705,7 @@ class OnboardingWizard {
 			
 			echo '<div class="fp-service-card' . ( $checked ? ' selected' : '' ) . '">';
 			echo '<label>';
-			echo '<input type="checkbox" name="selected_services[]" value="' . esc_attr( $source['id'] ) . '" ' . $checked . ' style="display:none;">';
+			echo '<input type="checkbox" name="selected_services[]" value="' . esc_attr( $source['id'] ) . '" ' . $checked . '>';
 			echo '<div style="display: flex; align-items: center;">';
 			echo '<span style="font-size: 24px; margin-right: 15px;">' . $icon . '</span>';
 			echo '<div>';
