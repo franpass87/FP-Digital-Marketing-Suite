@@ -20,11 +20,20 @@ use FP\DigitalMarketing\Helpers\Capabilities;
 class AlertingAdmin {
 
 	/**
-	 * Initialize the admin interface
+	 * Constructor
 	 *
 	 * @return void
 	 */
 	public function __construct() {
+		// Constructor intentionally left empty - initialization happens in init()
+	}
+
+	/**
+	 * Initialize the admin interface
+	 *
+	 * @return void
+	 */
+	public function init(): void {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		add_action( 'admin_init', [ $this, 'handle_form_submission' ] );
 		add_action( 'admin_notices', [ $this, 'display_alert_notices' ] );
