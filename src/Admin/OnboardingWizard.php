@@ -657,7 +657,7 @@ class OnboardingWizard {
 		$selected_services = $progress['services'] ?? [];
 
 		// Get available data sources
-		$data_sources = DataSources::get_registry();
+		$data_sources = DataSources::get_data_sources();
 		
 		foreach ( $data_sources as $source ) {
 			if ( $source['status'] !== 'available' ) {
