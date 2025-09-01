@@ -450,12 +450,26 @@ class OnboardingWizard {
 				margin: 10px 0;
 				cursor: pointer;
 				transition: all 0.3s ease;
+				position: relative;
 			}
 			
 			.fp-service-card:hover,
 			.fp-service-card.selected {
 				border-color: #0073aa;
 				background: #f0f8ff;
+			}
+			
+			.fp-service-card label {
+				display: block;
+				cursor: pointer;
+				margin: 0;
+				padding: 0;
+			}
+			
+			.fp-service-card input[type="checkbox"] {
+				position: absolute;
+				left: -9999px;
+				opacity: 0;
 			}
 			
 			.fp-metric-checkbox {
@@ -486,47 +500,44 @@ class OnboardingWizard {
 	private function get_wizard_js(): string {
 		return '
 			jQuery(document).ready(function($) {
-				console.log("FP Digital Marketing Wizard JS loaded");
-				console.log("jQuery version:", $.fn.jquery);
-				console.log("Service cards found:", $(".fp-service-card").length);
-				
-				// Service card selection
-				$(".fp-service-card").click(function() {
-					console.log("Service card clicked");
+				// Service card selection with improved click handling
+				$(document).on("click", ".fp-service-card", function(e) {
+					// Prevent double-triggering if clicking on the hidden checkbox
+					if ($(e.target).is("input[type=checkbox]")) {
+						return;
+					}
+					
 					$(this).toggleClass("selected");
 					var checkbox = $(this).find("input[type=checkbox]");
 					var wasChecked = checkbox.prop("checked");
 					checkbox.prop("checked", !wasChecked);
-					console.log("Checkbox toggled from " + wasChecked + " to " + (!wasChecked));
 					
-					// Update debug info
-					var selectedCount = $("input[name=\"selected_services[]\"]:checked").length;
-					console.log("Total selected services:", selectedCount);
+					// Trigger change event for any other listeners
+					checkbox.trigger("change");
+				});
+				
+				// Alternative: Also handle clicks directly on the checkbox (when visible)
+				$(document).on("change", "input[name=\"selected_services[]\"]", function() {
+					var card = $(this).closest(".fp-service-card");
+					if ($(this).prop("checked")) {
+						card.addClass("selected");
+					} else {
+						card.removeClass("selected");
+					}
 				});
 				
 				// Form validation
 				$(".fp-wizard-form").submit(function(e) {
-					console.log("Form submission started");
 					var currentStep = parseInt($(this).find("input[name=current_step]").val());
-					console.log("Current step:", currentStep);
 					
 					if (currentStep === 2) {
 						// Validate service selection
 						var selectedServices = $("input[name=\"selected_services[]\"]:checked");
-						console.log("Selected services count:", selectedServices.length);
 						
 						if (selectedServices.length === 0) {
-							console.log("No services selected, showing alert");
 							alert("' . esc_js( __( 'Please select at least one service to connect.', 'fp-digital-marketing' ) ) . '");
 							e.preventDefault();
 							return false;
-						} else {
-							console.log("Services selected, allowing form submission");
-							var serviceIds = [];
-							selectedServices.each(function() {
-								serviceIds.push($(this).val());
-							});
-							console.log("Selected service IDs:", serviceIds);
 						}
 					}
 					
@@ -538,14 +549,6 @@ class OnboardingWizard {
 							return false;
 						}
 					}
-				});
-				
-				// Add debug button for testing
-				$("body").append("<div style=\"position: fixed; top: 10px; right: 10px; background: #000; color: #fff; padding: 10px; z-index: 9999;\"><button id=\"fp-debug-btn\" style=\"color: #fff; background: #333; border: none; padding: 5px;\">Debug Info</button></div>");
-				$("#fp-debug-btn").click(function() {
-					var selectedCount = $("input[name=\"selected_services[]\"]:checked").length;
-					var totalCards = $(".fp-service-card").length;
-					alert("Debug Info:\\nTotal service cards: " + totalCards + "\\nSelected services: " + selectedCount);
 				});
 			});
 		';
@@ -692,25 +695,6 @@ class OnboardingWizard {
 		// Get available data sources
 		$data_sources = DataSources::get_data_sources();
 		
-		// Debug: Check if we have data sources
-		$available_count = 0;
-		foreach ( $data_sources as $source ) {
-			if ( $source['status'] === 'available' ) {
-				$available_count++;
-			}
-		}
-		
-		// Show debug info if no services available
-		if ( $available_count === 0 ) {
-			echo '<div style="background: #f0f0f0; padding: 15px; margin: 10px 0; border-left: 4px solid #dc3232;">';
-			echo '<strong>Debug:</strong> No available services found. Total data sources: ' . count( $data_sources ) . '<br>';
-			echo 'Available sources: ';
-			foreach ( $data_sources as $source ) {
-				echo $source['name'] . ' (status: ' . $source['status'] . '), ';
-			}
-			echo '</div>';
-		}
-		
 		foreach ( $data_sources as $source ) {
 			if ( $source['status'] !== 'available' ) {
 				continue;
@@ -721,7 +705,7 @@ class OnboardingWizard {
 			
 			echo '<div class="fp-service-card' . ( $checked ? ' selected' : '' ) . '">';
 			echo '<label>';
-			echo '<input type="checkbox" name="selected_services[]" value="' . esc_attr( $source['id'] ) . '" ' . $checked . ' style="display:none;">';
+			echo '<input type="checkbox" name="selected_services[]" value="' . esc_attr( $source['id'] ) . '" ' . $checked . '>';
 			echo '<div style="display: flex; align-items: center;">';
 			echo '<span style="font-size: 24px; margin-right: 15px;">' . $icon . '</span>';
 			echo '<div>';
