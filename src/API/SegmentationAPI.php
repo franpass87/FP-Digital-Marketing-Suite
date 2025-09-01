@@ -353,7 +353,7 @@ class SegmentationAPI {
 	 * @return bool True if user has read permission
 	 */
 	public static function check_read_permission(): bool {
-		return current_user_can( Capabilities::get_capability( 'view_segments' ) );
+		return current_user_can( Capabilities::VIEW_SEGMENTS );
 	}
 
 	/**
@@ -362,6 +362,6 @@ class SegmentationAPI {
 	 * @return bool True if user has write permission
 	 */
 	public static function check_write_permission(): bool {
-		return current_user_can( Capabilities::get_capability( 'manage_segments' ) );
+		return current_user_can( Capabilities::MANAGE_SEGMENTS );
 	}
 }

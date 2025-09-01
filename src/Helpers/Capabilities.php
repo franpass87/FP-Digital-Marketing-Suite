@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Helpers;
 
+use FP\DigitalMarketing\Helpers\Security;
+
 /**
  * Capabilities management class for granular permission control
  */

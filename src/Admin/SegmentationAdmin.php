@@ -55,7 +55,7 @@ class SegmentationAdmin {
 			'fp-digital-marketing-dashboard',
 			__( 'Segmentazione Audience', 'fp-digital-marketing' ),
 			__( 'Segmentazione', 'fp-digital-marketing' ),
-			Capabilities::get_capability( 'manage_segments' ),
+			Capabilities::MANAGE_SEGMENTS,
 			self::PAGE_SLUG,
 			[ $this, 'render_admin_page' ]
 		);
@@ -109,7 +109,7 @@ class SegmentationAdmin {
 			return;
 		}
 
-		if ( ! current_user_can( Capabilities::get_capability( 'manage_segments' ) ) ) {
+		if ( ! current_user_can( Capabilities::MANAGE_SEGMENTS ) ) {
 			wp_die( __( 'Non hai i permessi per eseguire questa azione.', 'fp-digital-marketing' ) );
 		}
 
@@ -136,7 +136,7 @@ class SegmentationAdmin {
 	public function handle_ajax_request(): void {
 		check_ajax_referer( self::NONCE_ACTION, 'nonce' );
 
-		if ( ! current_user_can( Capabilities::get_capability( 'manage_segments' ) ) ) {
+		if ( ! current_user_can( Capabilities::MANAGE_SEGMENTS ) ) {
 			wp_send_json_error( __( 'Permessi insufficienti', 'fp-digital-marketing' ) );
 		}
 
