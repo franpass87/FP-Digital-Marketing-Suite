@@ -96,7 +96,7 @@ class CoreWebVitals {
 			'filters' => $filters,
 		]);
 
-		$cached_data = PerformanceCache::get_cached_data( $cache_key );
+		$cached_data = PerformanceCache::get_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS );
 		if ( $cached_data !== false ) {
 			return $cached_data;
 		}
@@ -114,7 +114,7 @@ class CoreWebVitals {
 			
 			if ( $metrics ) {
 				// Store in cache
-				PerformanceCache::set_cached_data( $cache_key, $metrics, 3600 ); // 1 hour cache
+				PerformanceCache::set_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS, $metrics, 3600 ); // 1 hour cache
 				$this->store_metrics( $client_id, $metrics, $start_date, $end_date );
 				return $metrics;
 			}

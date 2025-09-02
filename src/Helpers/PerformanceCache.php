@@ -107,11 +107,11 @@ class PerformanceCache {
 	 *
 	 * @param string $key Cache key
 	 * @param string $group Cache group
-	 * @param callable $callback Callback to generate data if not cached
+	 * @param callable|null $callback Callback to generate data if not cached
 	 * @param int|null $ttl Time to live in seconds
 	 * @return mixed Cached or generated data
 	 */
-	public static function get_cached( string $key, string $group, callable $callback = null, ?int $ttl = null ) {
+	public static function get_cached( string $key, string $group, ?callable $callback = null, ?int $ttl = null ) {
 		if ( ! self::is_cache_enabled() ) {
 			return $callback ? $callback() : null;
 		}
@@ -162,10 +162,10 @@ class PerformanceCache {
 	 * @param string $key Cache key
 	 * @param string $group Cache group
 	 * @param mixed $data Data to cache
-	 * @param int $ttl Time to live in seconds
+	 * @param int|null $ttl Time to live in seconds
 	 * @return bool Success status
 	 */
-	public static function set_cached( string $key, string $group, $data, int $ttl = null ): bool {
+	public static function set_cached( string $key, string $group, $data, ?int $ttl = null ): bool {
 		if ( ! self::is_cache_enabled() ) {
 			return false;
 		}
