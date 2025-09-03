@@ -399,4 +399,234 @@ class PerformanceCache {
 
 		update_option( self::OPTION_BENCHMARK_DATA, $benchmark_data );
 	}
+
+	/**
+	 * Warm up cache with critical data
+	 *
+	 * @param array $warmup_keys List of cache keys to warm up
+	 * @return array Results of warmup operation
+	 */
+	public static function warmup_cache( array $warmup_keys = [] ): array {
+		$settings = self::get_cache_settings();
+		if ( ! $settings['enabled'] ) {
+			return [ 'status' => 'disabled', 'message' => 'Cache is disabled' ];
+		}
+
+		$results = [
+			'status' => 'success',
+			'warmed_keys' => 0,
+			'failed_keys' => 0,
+			'execution_time' => 0,
+			'details' => []
+		];
+
+		$start_time = microtime( true );
+
+		// Default warmup keys if none provided
+		if ( empty( $warmup_keys ) ) {
+			$warmup_keys = self::get_default_warmup_keys();
+		}
+
+		foreach ( $warmup_keys as $key_config ) {
+			try {
+				$key = $key_config['key'] ?? '';
+				$group = $key_config['group'] ?? self::CACHE_GROUP_METRICS;
+				$callback = $key_config['callback'] ?? null;
+				$ttl = $key_config['ttl'] ?? $settings['default_ttl'];
+
+				if ( empty( $key ) || ! $callback ) {
+					$results['failed_keys']++;
+					$results['details'][] = [
+						'key' => $key,
+						'status' => 'failed',
+						'reason' => 'Invalid key or callback'
+					];
+					continue;
+				}
+
+				// Check if already cached
+				$cached_data = wp_cache_get( $key, $group );
+				if ( $cached_data !== false ) {
+					$results['details'][] = [
+						'key' => $key,
+						'status' => 'skipped',
+						'reason' => 'Already cached'
+					];
+					continue;
+				}
+
+				// Execute callback and cache result
+				$data = call_user_func( $callback );
+				if ( $data !== null ) {
+					wp_cache_set( $key, $data, $group, $ttl );
+					
+					// Also set transient as fallback
+					if ( $settings['use_transients'] ) {
+						$transient_key = self::get_transient_key( $key, $group );
+						set_transient( $transient_key, $data, $ttl );
+					}
+
+					$results['warmed_keys']++;
+					$results['details'][] = [
+						'key' => $key,
+						'status' => 'warmed',
+						'data_size' => strlen( serialize( $data ) )
+					];
+				} else {
+					$results['failed_keys']++;
+					$results['details'][] = [
+						'key' => $key,
+						'status' => 'failed',
+						'reason' => 'Callback returned null'
+					];
+				}
+
+			} catch ( \Exception $e ) {
+				$results['failed_keys']++;
+				$results['details'][] = [
+					'key' => $key ?? 'unknown',
+					'status' => 'failed',
+					'reason' => $e->getMessage()
+				];
+			}
+		}
+
+		$results['execution_time'] = microtime( true ) - $start_time;
+
+		// Update cache statistics
+		self::update_cache_statistics( $results );
+
+		return $results;
+	}
+
+	/**
+	 * Get default cache keys for warmup
+	 *
+	 * @return array Default warmup configuration
+	 */
+	private static function get_default_warmup_keys(): array {
+		return [
+			[
+				'key' => 'dashboard_summary',
+				'group' => self::CACHE_GROUP_REPORTS,
+				'callback' => function() {
+					// Simulate dashboard summary data
+					return [
+						'total_clients' => wp_count_posts( 'cliente' )->publish ?? 0,
+						'active_campaigns' => 0,
+						'last_sync' => current_time( 'mysql' ),
+					];
+				},
+				'ttl' => self::LONG_TTL
+			],
+			[
+				'key' => 'analytics_overview',
+				'group' => self::CACHE_GROUP_METRICS,
+				'callback' => function() {
+					// Simulate analytics overview data
+					return [
+						'sessions' => 1000,
+						'users' => 750,
+						'pageviews' => 2500,
+						'bounce_rate' => 45.5,
+					];
+				},
+				'ttl' => self::DEFAULT_TTL
+			],
+			[
+				'key' => 'seo_performance',
+				'group' => self::CACHE_GROUP_METRICS,
+				'callback' => function() {
+					// Simulate SEO performance data
+					return [
+						'avg_position' => 12.3,
+						'total_clicks' => 450,
+						'total_impressions' => 15000,
+						'ctr' => 3.0,
+					];
+				},
+				'ttl' => self::DEFAULT_TTL
+			]
+		];
+	}
+
+	/**
+	 * Update cache statistics
+	 *
+	 * @param array $results Warmup results
+	 * @return void
+	 */
+	private static function update_cache_statistics( array $results ): void {
+		$stats = get_option( 'fp_digital_marketing_cache_stats', [
+			'last_warmup' => 0,
+			'total_warmups' => 0,
+			'total_warmed_keys' => 0,
+			'total_failed_keys' => 0,
+		] );
+
+		$stats['last_warmup'] = time();
+		$stats['total_warmups']++;
+		$stats['total_warmed_keys'] += $results['warmed_keys'];
+		$stats['total_failed_keys'] += $results['failed_keys'];
+
+		update_option( 'fp_digital_marketing_cache_stats', $stats );
+	}
+
+	/**
+	 * Get cache statistics
+	 *
+	 * @return array Cache statistics
+	 */
+	public static function get_cache_statistics(): array {
+		$stats = get_option( 'fp_digital_marketing_cache_stats', [
+			'last_warmup' => 0,
+			'total_warmups' => 0,
+			'total_warmed_keys' => 0,
+			'total_failed_keys' => 0,
+		] );
+
+		// Add current cache info
+		$stats['object_cache_available'] = wp_using_ext_object_cache();
+		$stats['transients_count'] = self::count_plugin_transients();
+		
+		return $stats;
+	}
+
+	/**
+	 * Count plugin-related transients
+	 *
+	 * @return int Number of transients
+	 */
+	private static function count_plugin_transients(): int {
+		global $wpdb;
+		
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s",
+				'_transient_fp_dms_%'
+			)
+		);
+
+		return (int) $count;
+	}
+
+	/**
+	 * Schedule automatic cache warmup
+	 *
+	 * @return void
+	 */
+	public static function schedule_cache_warmup(): void {
+		if ( ! wp_next_scheduled( 'fp_dms_cache_warmup' ) ) {
+			wp_schedule_event( time(), 'hourly', 'fp_dms_cache_warmup' );
+		}
+	}
+
+	/**
+	 * Unschedule automatic cache warmup
+	 *
+	 * @return void
+	 */
+	public static function unschedule_cache_warmup(): void {
+		wp_clear_scheduled_hook( 'fp_dms_cache_warmup' );
+	}
 }

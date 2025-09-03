@@ -39,6 +39,7 @@ use FP\DigitalMarketing\Helpers\XmlSitemap;
 use FP\DigitalMarketing\Helpers\SchemaGenerator;
 use FP\DigitalMarketing\Helpers\FAQBlock;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Helpers\DashboardWidgets;
 
 /**
  * Main application class
@@ -231,6 +232,9 @@ class DigitalMarketingSuite {
 		// Initialize XML sitemap.
 		XmlSitemap::init();
 		XmlSitemap::init_robots_txt();
+
+		// Initialize dashboard widgets.
+		DashboardWidgets::init();
 
 		// Ensure database tables exist (in case of manual activation issues).
 		$this->ensure_metrics_cache_table();
