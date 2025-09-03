@@ -52,9 +52,9 @@ class AnomalyDetectionAdmin {
 	 */
 	public function add_admin_menu(): void {
 		add_submenu_page(
-			'edit.php?post_type=cliente',
+			'fp-digital-marketing-dashboard',
 			__( 'Rilevazione Anomalie', 'fp-digital-marketing' ),
-			__( 'Rilevazione Anomalie', 'fp-digital-marketing' ),
+			__( '🔍 Rilevazione Anomalie', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_ALERTS,
 			'fp-digital-marketing-anomalies',
 			[ $this, 'display_admin_page' ]

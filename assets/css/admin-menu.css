@@ -1,0 +1,369 @@
+/**
+ * FP Digital Marketing Suite - Admin Menu Enhancements
+ */
+
+/* Main Menu Icon Enhancement */
+#adminmenu .wp-menu-image.dashicons-chart-area::before {
+    content: '\f239';
+    font-size: 18px;
+}
+
+/* Admin Menu Improvements */
+#adminmenu .fp-digital-marketing-submenu {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+/* Enhanced submenu styling */
+#adminmenu .wp-submenu a[href*="fp-digital-marketing"] {
+    position: relative;
+    padding-left: 16px;
+}
+
+/* Icons in submenu already included via emoji, but we can enhance hover effects */
+#adminmenu .wp-submenu a[href*="fp-digital-marketing"]:hover {
+    background: linear-gradient(135deg, #0073aa 0%, #005a87 100%);
+    color: #ffffff;
+    border-radius: 4px;
+    margin: 1px 8px 1px 4px;
+    transition: all 0.3s ease;
+}
+
+#adminmenu .wp-submenu a[href*="fp-digital-marketing"]:focus {
+    box-shadow: 0 0 0 2px #0073aa;
+    outline: none;
+}
+
+/* Section Separators for better organization */
+#adminmenu .wp-submenu a[href*="fp-digital-marketing-reports"]::before,
+#adminmenu .wp-submenu a[href*="fp-utm-campaign-manager"]::before,
+#adminmenu .wp-submenu a[href*="fp-digital-marketing-alerts"]::before,
+#adminmenu .wp-submenu a[href*="fp-digital-marketing-settings"]::before {
+    content: '';
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #ddd 20%, #ddd 80%, transparent 100%);
+    margin: 8px 12px 8px 0;
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    right: 12px;
+}
+
+/* Remove separator from first item after dashboard */
+#adminmenu .wp-submenu a[href*="fp-digital-marketing-reports"]::before {
+    display: none;
+}
+
+/* Enhanced main menu item */
+#adminmenu .toplevel_page_fp-digital-marketing-dashboard .wp-menu-name {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+/* Badge for notification count if needed */
+.fp-dms-notification-badge {
+    background: #d63638;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: top;
+}
+
+/* Dashboard page header enhancement */
+.fp-dms-page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 24px;
+    margin: -10px -20px 24px -22px;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.fp-dms-page-header h1 {
+    color: white;
+    margin: 0;
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+.fp-dms-page-header .description {
+    margin: 8px 0 0 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+/* Navigation breadcrumbs */
+.fp-dms-breadcrumbs {
+    background: #f8f9fa;
+    padding: 12px 20px;
+    margin: -10px -20px 20px -22px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 13px;
+    color: #646970;
+}
+
+.fp-dms-breadcrumbs a {
+    color: #0073aa;
+    text-decoration: none;
+}
+
+.fp-dms-breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+.fp-dms-breadcrumb-separator {
+    margin: 0 8px;
+    opacity: 0.5;
+}
+
+/* Page content improvements */
+.fp-dms-content-wrapper {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+/* Form styling improvements */
+.fp-dms-form-section {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.fp-dms-form-section h3 {
+    margin: 0 0 16px 0;
+    padding: 0 0 12px 0;
+    border-bottom: 2px solid #f0f0f0;
+    color: #1d2327;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Tab styling improvements */
+.fp-dms-nav-tabs {
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 24px;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.fp-dms-nav-tabs li {
+    margin: 0;
+}
+
+.fp-dms-nav-tabs a {
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #646970;
+    font-weight: 600;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.3s ease;
+    position: relative;
+    top: 2px;
+}
+
+.fp-dms-nav-tabs a:hover {
+    background: #f8f9fa;
+    color: #1d2327;
+}
+
+.fp-dms-nav-tabs a.active {
+    background: #0073aa;
+    color: white;
+    border-bottom: 2px solid #0073aa;
+}
+
+/* Button enhancements */
+.fp-dms-button {
+    background: linear-gradient(135deg, #0073aa 0%, #005a87 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.fp-dms-button:hover {
+    background: linear-gradient(135deg, #005a87 0%, #004066 100%);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 115, 170, 0.3);
+}
+
+.fp-dms-button.secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+.fp-dms-button.secondary:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.fp-dms-button.success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.fp-dms-button.success:hover {
+    background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* Status indicators */
+.fp-dms-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    gap: 6px;
+}
+
+.fp-dms-status.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.fp-dms-status.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.fp-dms-status.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.fp-dms-status.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .fp-dms-page-header {
+        margin: -10px -10px 20px -12px;
+        padding: 20px 16px;
+    }
+    
+    .fp-dms-breadcrumbs {
+        margin: -10px -10px 20px -12px;
+        padding: 12px 16px;
+    }
+    
+    .fp-dms-content-wrapper {
+        padding: 16px;
+        margin-left: -10px;
+        margin-right: -10px;
+        border-radius: 0;
+    }
+    
+    .fp-dms-nav-tabs {
+        flex-direction: column;
+    }
+    
+    .fp-dms-nav-tabs a {
+        border-radius: 6px;
+        top: 0;
+        margin-bottom: 4px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .fp-dms-page-header,
+    .fp-dms-breadcrumbs {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+    }
+    
+    .fp-dms-button {
+        background: white !important;
+        color: black !important;
+        border: 1px solid black !important;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .fp-dms-page-header {
+        background: #000 !important;
+        color: #fff !important;
+    }
+    
+    .fp-dms-button {
+        background: #000 !important;
+        color: #fff !important;
+        border: 2px solid #fff !important;
+    }
+    
+    .fp-dms-status {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Accessibility improvements */
+.fp-dms-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus indicators */
+.fp-dms-button:focus,
+.fp-dms-nav-tabs a:focus {
+    outline: 2px solid #005cee;
+    outline-offset: 2px;
+}
+
+/* Loading states */
+.fp-dms-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.fp-dms-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0073aa;
+    border-radius: 50%;
+    animation: fp-dms-spin 1s linear infinite;
+}
+
+@keyframes fp-dms-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

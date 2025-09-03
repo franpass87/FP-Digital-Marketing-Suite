@@ -48,9 +48,9 @@ class AlertingAdmin {
 	 */
 	public function add_admin_menu(): void {
 		add_submenu_page(
-			'edit.php?post_type=cliente',
+			'fp-digital-marketing-dashboard',
 			__( 'Alert e Notifiche', 'fp-digital-marketing' ),
-			__( 'Alert e Notifiche', 'fp-digital-marketing' ),
+			__( '🔔 Alert e Notifiche', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_ALERTS,
 			'fp-digital-marketing-alerts',
 			[ $this, 'display_admin_page' ]

@@ -51,14 +51,25 @@ class Dashboard {
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
+		// Main menu
 		add_menu_page(
-			__( 'FP Digital Marketing Dashboard', 'fp-digital-marketing' ),
-			__( 'DM Dashboard', 'fp-digital-marketing' ),
+			__( 'FP Digital Marketing Suite', 'fp-digital-marketing' ),
+			__( 'FP Digital Marketing', 'fp-digital-marketing' ),
 			Capabilities::VIEW_DASHBOARD,
 			self::PAGE_SLUG,
 			[ $this, 'render_dashboard_page' ],
-			'dashicons-dashboard',
+			'dashicons-chart-area',
 			20
+		);
+		
+		// Dashboard submenu (main page)
+		add_submenu_page(
+			self::PAGE_SLUG,
+			__( 'Dashboard', 'fp-digital-marketing' ),
+			__( '🏠 Dashboard', 'fp-digital-marketing' ),
+			Capabilities::VIEW_DASHBOARD,
+			self::PAGE_SLUG,
+			[ $this, 'render_dashboard_page' ]
 		);
 	}
 
@@ -69,10 +80,26 @@ class Dashboard {
 	 * @return void
 	 */
 	public function enqueue_dashboard_assets( string $hook ): void {
+		// Enqueue admin menu styles globally for all admin pages
+		wp_enqueue_style(
+			'fp-dms-admin-menu',
+			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/css/admin-menu.css',
+			[],
+			FP_DIGITAL_MARKETING_VERSION
+		);
+
 		$screen = get_current_screen();
 		if ( ! $screen || $screen->id !== 'toplevel_page_' . self::PAGE_SLUG ) {
 			return;
 		}
+
+		// Enqueue dashboard-specific styles
+		wp_enqueue_style(
+			'fp-dms-dashboard',
+			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/css/dashboard.css',
+			[ 'fp-dms-admin-menu' ],
+			FP_DIGITAL_MARKETING_VERSION
+		);
 
 		// Enqueue Chart.js from CDN
 		wp_enqueue_script(
@@ -325,7 +352,10 @@ class Dashboard {
 
 		?>
 		<div class="wrap fp-dms-dashboard">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+			<div class="fp-dms-page-header">
+				<h1><?php esc_html_e( 'FP Digital Marketing Suite', 'fp-digital-marketing' ); ?></h1>
+				<p class="description"><?php esc_html_e( 'Dashboard principale per il monitoraggio e la gestione delle attività di digital marketing', 'fp-digital-marketing' ); ?></p>
+			</div>
 
 			<!-- Global Filters -->
 			<div class="fp-dms-filters">

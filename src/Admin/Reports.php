@@ -53,14 +53,13 @@ class Reports {
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
-		add_menu_page(
-			__( 'FP Digital Marketing Reports', 'fp-digital-marketing' ),
-			__( 'DM Reports', 'fp-digital-marketing' ),
+		add_submenu_page(
+			'fp-digital-marketing-dashboard',
+			__( 'Reports & Analytics', 'fp-digital-marketing' ),
+			__( '📊 Reports', 'fp-digital-marketing' ),
 			Capabilities::EXPORT_REPORTS,
 			self::PAGE_SLUG,
-			[ $this, 'render_reports_page' ],
-			'dashicons-chart-line',
-			25
+			[ $this, 'render_reports_page' ]
 		);
 	}
 

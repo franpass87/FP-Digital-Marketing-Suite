@@ -41,9 +41,9 @@ class CachePerformance {
 	 */
 	public function add_admin_menu(): void {
 		add_submenu_page(
-			'fp-digital-marketing-reports',
+			'fp-digital-marketing-dashboard',
 			__( 'Cache Performance', 'fp-digital-marketing' ),
-			__( 'Cache Performance', 'fp-digital-marketing' ),
+			__( '⚡ Cache Performance', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_SETTINGS,
 			self::PAGE_SLUG,
 			[ $this, 'render_page' ]
