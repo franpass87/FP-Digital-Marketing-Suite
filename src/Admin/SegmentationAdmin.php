@@ -54,7 +54,7 @@ class SegmentationAdmin {
 		add_submenu_page(
 			'fp-digital-marketing-dashboard',
 			__( 'Segmentazione Audience', 'fp-digital-marketing' ),
-			__( 'Segmentazione', 'fp-digital-marketing' ),
+			__( '👥 Segmentazione', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_SEGMENTS,
 			self::PAGE_SLUG,
 			[ $this, 'render_admin_page' ]

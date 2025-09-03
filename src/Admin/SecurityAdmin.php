@@ -40,9 +40,9 @@ class SecurityAdmin {
 	 */
 	public function add_admin_menu(): void {
 		add_submenu_page(
-			'options-general.php',
-			__( 'FP DMS Security', 'fp-digital-marketing' ),
-			__( 'FP DMS Security', 'fp-digital-marketing' ),
+			'fp-digital-marketing-dashboard',
+			__( 'Security Settings', 'fp-digital-marketing' ),
+			__( '🔒 Security', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_SETTINGS,
 			self::PAGE_SLUG,
 			[ $this, 'render_security_page' ]

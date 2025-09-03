@@ -128,9 +128,10 @@ class Settings {
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
-		add_options_page(
+		add_submenu_page(
+			'fp-digital-marketing-dashboard',
 			__( 'FP Digital Marketing Settings', 'fp-digital-marketing' ),
-			__( 'FP Digital Marketing', 'fp-digital-marketing' ),
+			__( '⚙️ Settings', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_SETTINGS,
 			self::PAGE_SLUG,
 			[ $this, 'render_settings_page' ]

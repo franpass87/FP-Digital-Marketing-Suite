@@ -63,19 +63,14 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
-		// Only show if wizard is not completed
-		if ( get_option( self::WIZARD_COMPLETED_OPTION, false ) ) {
-			return;
-		}
-
-		add_menu_page(
-			__( 'FP Digital Marketing Setup', 'fp-digital-marketing' ),
-			__( 'DM Setup', 'fp-digital-marketing' ),
+		// Always add as submenu under main menu, regardless of completion status
+		add_submenu_page(
+			'fp-digital-marketing-dashboard',
+			__( 'Setup Wizard', 'fp-digital-marketing' ),
+			__( '🚀 Setup Wizard', 'fp-digital-marketing' ),
 			'manage_options',
 			self::PAGE_SLUG,
-			[ $this, 'render_wizard_page' ],
-			'dashicons-admin-tools',
-			2
+			[ $this, 'render_wizard_page' ]
 		);
 	}
 

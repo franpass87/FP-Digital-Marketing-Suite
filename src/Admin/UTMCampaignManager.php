@@ -56,7 +56,7 @@ class UTMCampaignManager {
 		add_submenu_page(
 			'fp-digital-marketing-dashboard',
 			__( 'Gestione Campagne UTM', 'fp-digital-marketing' ),
-			__( 'Campagne UTM', 'fp-digital-marketing' ),
+			__( '🔗 Campagne UTM', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_CAMPAIGNS,
 			self::PAGE_SLUG,
 			[ $this, 'render_page' ]

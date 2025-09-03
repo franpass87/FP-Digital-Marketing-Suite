@@ -51,9 +51,9 @@ class ConversionEventsAdmin {
 	 */
 	public function add_admin_menu(): void {
 		add_submenu_page(
-			'fp-digital-marketing-settings',
+			'fp-digital-marketing-dashboard',
 			__( 'Eventi Conversione', 'fp-digital-marketing' ),
-			__( 'Eventi Conversione', 'fp-digital-marketing' ),
+			__( '🎯 Eventi Conversione', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_CONVERSIONS,
 			self::PAGE_SLUG,
 			[ $this, 'render_admin_page' ]
