@@ -40,6 +40,8 @@ use FP\DigitalMarketing\Helpers\SchemaGenerator;
 use FP\DigitalMarketing\Helpers\FAQBlock;
 use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Helpers\DashboardWidgets;
+use FP\DigitalMarketing\Helpers\DataExporter;
+use FP\DigitalMarketing\Helpers\EmailNotifications;
 
 /**
  * Main application class
@@ -236,6 +238,15 @@ class DigitalMarketingSuite {
 		// Initialize dashboard widgets.
 		DashboardWidgets::init();
 
+		// Initialize data exporter.
+		DataExporter::init();
+
+		// Initialize email notifications.
+		EmailNotifications::init();
+
+		// Schedule cleanup tasks.
+		$this->schedule_cleanup_tasks();
+
 		// Ensure database tables exist (in case of manual activation issues).
 		$this->ensure_metrics_cache_table();
 		$this->ensure_alert_rules_table();
@@ -341,5 +352,20 @@ class DigitalMarketingSuite {
 		if ( ! AudienceSegmentTable::membership_table_exists() ) {
 			AudienceSegmentTable::create_membership_table();
 		}
+	}
+
+	/**
+	 * Schedule cleanup tasks
+	 *
+	 * @return void
+	 */
+	private function schedule_cleanup_tasks(): void {
+		// Schedule daily cleanup of export files
+		if ( ! wp_next_scheduled( 'fp_dms_cleanup_exports' ) ) {
+			wp_schedule_event( time(), 'daily', 'fp_dms_cleanup_exports' );
+		}
+
+		// Hook cleanup actions
+		add_action( 'fp_dms_cleanup_exports', [ DataExporter::class, 'cleanup_old_exports' ] );
 	}
 }

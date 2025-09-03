@@ -128,6 +128,12 @@
                     title: 'Schema Markup',
                     description: 'Configurazione del markup Schema.org per migliorare la struttura dei dati del sito.',
                     icon: 'dashicons-editor-code'
+                },
+                {
+                    id: 'email',
+                    title: 'Notifiche Email',
+                    description: 'Configurazione delle notifiche email per alert, report e aggiornamenti del sistema.',
+                    icon: 'dashicons-email-alt'
                 }
             ];
         }

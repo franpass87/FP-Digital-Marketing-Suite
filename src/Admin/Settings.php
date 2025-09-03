@@ -105,6 +105,16 @@ class Settings {
 	private const OPTION_SCHEMA = 'fp_digital_marketing_schema_settings';
 
 	/**
+	 * Email settings section
+	 */
+	private const SECTION_EMAIL = 'fp_digital_marketing_email';
+
+	/**
+	 * Email settings option name
+	 */
+	private const OPTION_EMAIL = 'fp_digital_marketing_email_settings';
+
+	/**
 	 * Nonce action for settings
 	 */
 	private const NONCE_ACTION = 'fp_digital_marketing_settings_nonce';
@@ -264,6 +274,16 @@ class Settings {
 			]
 		);
 
+		register_setting(
+			self::OPTION_GROUP,
+			self::OPTION_EMAIL,
+			[
+				'type'              => 'array',
+				'sanitize_callback' => [ $this, 'sanitize_email_settings' ],
+				'default'           => [],
+			]
+		);
+
 		// Add General section.
 		add_settings_section(
 			self::SECTION_GENERAL,
@@ -381,6 +401,23 @@ class Settings {
 			[ $this, 'render_schema_settings_field' ],
 			self::PAGE_SLUG,
 			self::SECTION_SCHEMA
+		);
+
+		// Add Email section.
+		add_settings_section(
+			self::SECTION_EMAIL,
+			__( 'Notifiche Email', 'fp-digital-marketing' ),
+			[ $this, 'render_email_section' ],
+			self::PAGE_SLUG
+		);
+
+		// Add email settings field.
+		add_settings_field(
+			'email_settings',
+			__( 'Configurazione Email', 'fp-digital-marketing' ),
+			[ $this, 'render_email_settings_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_EMAIL
 		);
 	}
 
@@ -2067,6 +2104,307 @@ class Settings {
 	 */
 	public function scheduled_cache_warmup(): void {
 		PerformanceCache::warmup_cache();
+	}
+
+	/**
+	 * Render email section description
+	 *
+	 * @return void
+	 */
+	public function render_email_section(): void {
+		echo '<p>' . esc_html__( 'Configura le notifiche email per alert, report e aggiornamenti del sistema.', 'fp-digital-marketing' ) . '</p>';
+	}
+
+	/**
+	 * Render email settings field
+	 *
+	 * @return void
+	 */
+	public function render_email_settings_field(): void {
+		$settings = get_option( self::OPTION_EMAIL, [
+			'alerts_enabled' => true,
+			'reports_enabled' => true,
+			'security_enabled' => true,
+			'system_enabled' => true,
+			'daily_digest_enabled' => false,
+			'alert_recipients' => [],
+			'report_recipients' => [],
+			'security_recipients' => [],
+			'digest_recipients' => [],
+		] );
+
+		// Get admin email as default
+		$admin_email = get_option( 'admin_email' );
+		if ( empty( $settings['alert_recipients'] ) ) {
+			$settings['alert_recipients'] = [ $admin_email ];
+		}
+		if ( empty( $settings['report_recipients'] ) ) {
+			$settings['report_recipients'] = [ $admin_email ];
+		}
+		if ( empty( $settings['security_recipients'] ) ) {
+			$settings['security_recipients'] = [ $admin_email ];
+		}
+		if ( empty( $settings['digest_recipients'] ) ) {
+			$settings['digest_recipients'] = [ $admin_email ];
+		}
+		?>
+		<table class="form-table">
+			<tbody>
+				<tr>
+					<th scope="row">
+						<label for="alerts_enabled"><?php esc_html_e( 'Notifiche Alert', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="alerts_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[alerts_enabled]" 
+							value="1" 
+							<?php checked( $settings['alerts_enabled'] ); ?>
+						/>
+						<label for="alerts_enabled"><?php esc_html_e( 'Abilita notifiche email per alert di sistema', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="alert_recipients"><?php esc_html_e( 'Destinatari Alert', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<textarea 
+							id="alert_recipients" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[alert_recipients]" 
+							rows="3" 
+							class="large-text"
+							placeholder="email1@example.com, email2@example.com"
+						><?php echo esc_textarea( implode( ', ', $settings['alert_recipients'] ) ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere notifiche di alert.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="reports_enabled"><?php esc_html_e( 'Notifiche Report', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="reports_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[reports_enabled]" 
+							value="1" 
+							<?php checked( $settings['reports_enabled'] ); ?>
+						/>
+						<label for="reports_enabled"><?php esc_html_e( 'Abilita notifiche email per report automatici', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="report_recipients"><?php esc_html_e( 'Destinatari Report', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<textarea 
+							id="report_recipients" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[report_recipients]" 
+							rows="3" 
+							class="large-text"
+							placeholder="email1@example.com, email2@example.com"
+						><?php echo esc_textarea( implode( ', ', $settings['report_recipients'] ) ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere report automatici.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="security_enabled"><?php esc_html_e( 'Notifiche Sicurezza', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="security_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[security_enabled]" 
+							value="1" 
+							<?php checked( $settings['security_enabled'] ); ?>
+						/>
+						<label for="security_enabled"><?php esc_html_e( 'Abilita notifiche email per eventi di sicurezza', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="security_recipients"><?php esc_html_e( 'Destinatari Sicurezza', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<textarea 
+							id="security_recipients" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[security_recipients]" 
+							rows="3" 
+							class="large-text"
+							placeholder="email1@example.com, email2@example.com"
+						><?php echo esc_textarea( implode( ', ', $settings['security_recipients'] ) ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere alert di sicurezza.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="daily_digest_enabled"><?php esc_html_e( 'Riepilogo Giornaliero', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="daily_digest_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[daily_digest_enabled]" 
+							value="1" 
+							<?php checked( $settings['daily_digest_enabled'] ); ?>
+						/>
+						<label for="daily_digest_enabled"><?php esc_html_e( 'Abilita riepilogo giornaliero via email', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="digest_recipients"><?php esc_html_e( 'Destinatari Riepilogo', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<textarea 
+							id="digest_recipients" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[digest_recipients]" 
+							rows="3" 
+							class="large-text"
+							placeholder="email1@example.com, email2@example.com"
+						><?php echo esc_textarea( implode( ', ', $settings['digest_recipients'] ) ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere il riepilogo giornaliero.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="system_enabled"><?php esc_html_e( 'Notifiche Sistema', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="system_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[system_enabled]" 
+							value="1" 
+							<?php checked( $settings['system_enabled'] ); ?>
+						/>
+						<label for="system_enabled"><?php esc_html_e( 'Abilita notifiche email per eventi di sistema', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		<h4><?php esc_html_e( 'Test Email', 'fp-digital-marketing' ); ?></h4>
+		<table class="form-table">
+			<tbody>
+				<tr>
+					<th scope="row">
+						<label for="test_email"><?php esc_html_e( 'Indirizzo Test', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="email" 
+							id="test_email" 
+							placeholder="<?php esc_attr_e( 'email@example.com', 'fp-digital-marketing' ); ?>"
+							class="regular-text"
+						/>
+						<button type="button" class="button" id="send-test-email">
+							<?php esc_html_e( 'Invia Email Test', 'fp-digital-marketing' ); ?>
+						</button>
+						<p class="description">
+							<?php esc_html_e( 'Invia un\'email di test per verificare la configurazione.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$('#send-test-email').on('click', function() {
+				const $button = $(this);
+				const $emailInput = $('#test_email');
+				const email = $emailInput.val();
+				
+				if (!email) {
+					alert('<?php esc_html_e( 'Inserisci un indirizzo email valido.', 'fp-digital-marketing' ); ?>');
+					return;
+				}
+				
+				const originalText = $button.text();
+				$button.prop('disabled', true).text('<?php esc_html_e( 'Invio...', 'fp-digital-marketing' ); ?>');
+				
+				$.post(fpDmsSettings.ajaxUrl, {
+					action: 'fp_test_email',
+					nonce: fpDmsSettings.nonce,
+					test_email: email
+				}, function(response) {
+					$button.prop('disabled', false).text(originalText);
+					
+					if (response.success) {
+						fpDmsShowMessage(response.data, 'success');
+					} else {
+						fpDmsShowMessage(response.data, 'error');
+					}
+				}).fail(function() {
+					$button.prop('disabled', false).text(originalText);
+					fpDmsShowMessage('<?php esc_html_e( 'Errore di connessione.', 'fp-digital-marketing' ); ?>', 'error');
+				});
+			});
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Sanitize email settings
+	 *
+	 * @param array $input Raw input data
+	 * @return array Sanitized data
+	 */
+	public function sanitize_email_settings( array $input ): array {
+		$sanitized = [];
+
+		// Boolean settings
+		$sanitized['alerts_enabled'] = isset( $input['alerts_enabled'] ) && $input['alerts_enabled'] === '1';
+		$sanitized['reports_enabled'] = isset( $input['reports_enabled'] ) && $input['reports_enabled'] === '1';
+		$sanitized['security_enabled'] = isset( $input['security_enabled'] ) && $input['security_enabled'] === '1';
+		$sanitized['system_enabled'] = isset( $input['system_enabled'] ) && $input['system_enabled'] === '1';
+		$sanitized['daily_digest_enabled'] = isset( $input['daily_digest_enabled'] ) && $input['daily_digest_enabled'] === '1';
+
+		// Email lists
+		$email_fields = [ 'alert_recipients', 'report_recipients', 'security_recipients', 'digest_recipients' ];
+		foreach ( $email_fields as $field ) {
+			$emails = [];
+			if ( isset( $input[ $field ] ) && ! empty( $input[ $field ] ) ) {
+				$email_list = explode( ',', $input[ $field ] );
+				foreach ( $email_list as $email ) {
+					$email = trim( $email );
+					if ( is_email( $email ) ) {
+						$emails[] = $email;
+					}
+				}
+			}
+			
+			// Ensure at least admin email is included
+			if ( empty( $emails ) ) {
+				$emails[] = get_option( 'admin_email' );
+			}
+			
+			$sanitized[ $field ] = array_unique( $emails );
+		}
+
+		return $sanitized;
 	}
 
 	/**
