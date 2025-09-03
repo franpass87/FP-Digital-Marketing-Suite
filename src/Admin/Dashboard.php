@@ -16,6 +16,7 @@ use FP\DigitalMarketing\Models\SyncLog;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Helpers\CoreWebVitalsHelper;
+use FP\DigitalMarketing\Helpers\AdminOptimizations;
 use FP\DigitalMarketing\DataSources\CoreWebVitals;
 
 /**
@@ -32,11 +33,22 @@ class Dashboard {
 	private const PAGE_SLUG = 'fp-digital-marketing-dashboard';
 
 	/**
+	 * Admin optimizations instance
+	 *
+	 * @var AdminOptimizations
+	 */
+	private AdminOptimizations $optimizations;
+
+	/**
 	 * Initialize the dashboard page
 	 *
 	 * @return void
 	 */
 	public function init(): void {
+		// Initialize optimizations
+		$this->optimizations = new AdminOptimizations();
+		$this->optimizations->init();
+
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_dashboard_assets' ] );
 		add_action( 'wp_ajax_fp_dms_get_dashboard_data', [ $this, 'handle_ajax_dashboard_data' ] );
@@ -46,6 +58,9 @@ class Dashboard {
 		
 		// Add menu verification hook for debugging
 		add_action( 'admin_notices', [ $this, 'verify_menu_structure' ] );
+		
+		// Add performance dashboard widget
+		add_action( 'wp_dashboard_setup', [ $this, 'add_performance_dashboard_widget' ] );
 	}
 
 	/**
@@ -596,5 +611,122 @@ class Dashboard {
 			echo '<p><strong>FP Digital Marketing:</strong> ' . esc_html__( 'Menu structure successfully reorganized! Found', 'fp-digital-marketing' ) . ' ' . count( $menu_items ) . ' ' . esc_html__( 'menu items.', 'fp-digital-marketing' ) . '</p>';
 			echo '</div>';
 		}
+	}
+
+	/**
+	 * Add performance dashboard widget to WordPress dashboard
+	 *
+	 * @return void
+	 */
+	public function add_performance_dashboard_widget(): void {
+		if ( ! current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
+			return;
+		}
+
+		wp_add_dashboard_widget(
+			'fp_dms_performance_widget',
+			__( 'FP Digital Marketing - Performance', 'fp-digital-marketing' ),
+			[ $this, 'render_performance_dashboard_widget' ]
+		);
+	}
+
+	/**
+	 * Render performance dashboard widget
+	 *
+	 * @return void
+	 */
+	public function render_performance_dashboard_widget(): void {
+		$performance_data = $this->optimizations->get_performance_widget_data();
+		$recommendations = $performance_data['recommendations'];
+		
+		?>
+		<div class="fp-dms-performance-widget">
+			<div class="fp-dms-performance-stats">
+				<div class="fp-dms-stat">
+					<span class="fp-dms-stat-value"><?php echo esc_html( $performance_data['avg_load_time'] ); ?>s</span>
+					<span class="fp-dms-stat-label"><?php esc_html_e( 'Avg Load Time', 'fp-digital-marketing' ); ?></span>
+				</div>
+				<div class="fp-dms-stat">
+					<span class="fp-dms-stat-value"><?php echo esc_html( $performance_data['error_count'] ); ?></span>
+					<span class="fp-dms-stat-label"><?php esc_html_e( 'JS Errors (7d)', 'fp-digital-marketing' ); ?></span>
+				</div>
+				<div class="fp-dms-stat">
+					<span class="fp-dms-stat-value"><?php echo esc_html( $performance_data['metrics_count'] ); ?></span>
+					<span class="fp-dms-stat-label"><?php esc_html_e( 'Metrics Collected', 'fp-digital-marketing' ); ?></span>
+				</div>
+			</div>
+
+			<?php if ( ! empty( $recommendations ) ) : ?>
+				<div class="fp-dms-recommendations">
+					<h4><?php esc_html_e( 'Performance Recommendations', 'fp-digital-marketing' ); ?></h4>
+					<?php foreach ( $recommendations as $rec ) : ?>
+						<div class="fp-dms-recommendation fp-dms-<?php echo esc_attr( $rec['type'] ); ?>-message">
+							<strong><?php echo esc_html( $rec['title'] ); ?>:</strong>
+							<?php echo esc_html( $rec['message'] ); ?>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+
+			<div class="fp-dms-widget-actions">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ); ?>" class="button button-primary">
+					<?php esc_html_e( 'View Full Dashboard', 'fp-digital-marketing' ); ?>
+				</a>
+				<button type="button" class="button" onclick="location.reload();">
+					<?php esc_html_e( 'Refresh', 'fp-digital-marketing' ); ?>
+				</button>
+			</div>
+		</div>
+
+		<style>
+		.fp-dms-performance-widget {
+			font-size: 13px;
+		}
+		.fp-dms-performance-stats {
+			display: flex;
+			gap: 20px;
+			margin-bottom: 15px;
+		}
+		.fp-dms-stat {
+			text-align: center;
+			flex: 1;
+		}
+		.fp-dms-stat-value {
+			display: block;
+			font-size: 24px;
+			font-weight: 600;
+			color: #0073aa;
+			line-height: 1;
+		}
+		.fp-dms-stat-label {
+			display: block;
+			font-size: 11px;
+			color: #666;
+			margin-top: 4px;
+		}
+		.fp-dms-recommendations {
+			margin-bottom: 15px;
+		}
+		.fp-dms-recommendations h4 {
+			margin: 0 0 8px 0;
+			font-size: 13px;
+		}
+		.fp-dms-recommendation {
+			padding: 8px 10px;
+			margin-bottom: 6px;
+			border-radius: 3px;
+			font-size: 12px;
+		}
+		.fp-dms-widget-actions {
+			display: flex;
+			gap: 8px;
+		}
+		.fp-dms-widget-actions .button {
+			flex: 1;
+			text-align: center;
+			justify-content: center;
+		}
+		</style>
+		<?php
 	}
 }
