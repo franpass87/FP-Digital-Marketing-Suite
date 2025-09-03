@@ -43,6 +43,9 @@ class Dashboard {
 		add_action( 'wp_ajax_fp_dms_get_chart_data', [ $this, 'handle_ajax_chart_data' ] );
 		add_action( 'wp_ajax_fp_dms_get_core_web_vitals', [ $this, 'handle_ajax_core_web_vitals' ] );
 		add_action( 'wp_ajax_fp_dms_record_client_vital', [ $this, 'handle_ajax_record_client_vital' ] );
+		
+		// Add menu verification hook for debugging
+		add_action( 'admin_notices', [ $this, 'verify_menu_structure' ] );
 	}
 
 	/**
@@ -569,6 +572,29 @@ class Dashboard {
 			wp_send_json_success( [ 'recorded' => true ] );
 		} else {
 			wp_send_json_error( 'Invalid metric data' );
+		}
+	}
+
+	/**
+	 * Verify menu structure is working correctly
+	 * 
+	 * @return void
+	 */
+	public function verify_menu_structure(): void {
+		// Only show on dashboard page to admin users
+		$screen = get_current_screen();
+		if ( ! $screen || $screen->id !== 'toplevel_page_' . self::PAGE_SLUG || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Check if we have the expected submenus
+		global $submenu;
+		$menu_items = $submenu[ self::PAGE_SLUG ] ?? [];
+		
+		if ( count( $menu_items ) >= 8 ) { // Expect at least 8 submenu items
+			echo '<div class="notice notice-success is-dismissible">';
+			echo '<p><strong>FP Digital Marketing:</strong> ' . esc_html__( 'Menu structure successfully reorganized! Found', 'fp-digital-marketing' ) . ' ' . count( $menu_items ) . ' ' . esc_html__( 'menu items.', 'fp-digital-marketing' ) . '</p>';
+			echo '</div>';
 		}
 	}
 }

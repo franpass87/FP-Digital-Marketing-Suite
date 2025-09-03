@@ -17,6 +17,7 @@
 #adminmenu .wp-submenu a[href*="fp-digital-marketing"] {
     position: relative;
     padding-left: 16px;
+    transition: all 0.3s ease;
 }
 
 /* Icons in submenu already included via emoji, but we can enhance hover effects */
@@ -25,7 +26,8 @@
     color: #ffffff;
     border-radius: 4px;
     margin: 1px 8px 1px 4px;
-    transition: all 0.3s ease;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 115, 170, 0.3);
 }
 
 #adminmenu .wp-submenu a[href*="fp-digital-marketing"]:focus {
@@ -33,25 +35,19 @@
     outline: none;
 }
 
-/* Section Separators for better organization */
-#adminmenu .wp-submenu a[href*="fp-digital-marketing-reports"]::before,
-#adminmenu .wp-submenu a[href*="fp-utm-campaign-manager"]::before,
-#adminmenu .wp-submenu a[href*="fp-digital-marketing-alerts"]::before,
-#adminmenu .wp-submenu a[href*="fp-digital-marketing-settings"]::before {
+/* Add subtle separators between menu sections */
+#adminmenu .wp-submenu a[href*="fp-cache-performance"]::after,
+#adminmenu .wp-submenu a[href*="fp-segmentation-admin"]::after,
+#adminmenu .wp-submenu a[href*="fp-digital-marketing-anomalies"]::after {
     content: '';
     display: block;
     height: 1px;
-    background: linear-gradient(90deg, transparent 0%, #ddd 20%, #ddd 80%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, transparent 100%);
     margin: 8px 12px 8px 0;
     position: absolute;
-    top: -8px;
+    bottom: -8px;
     left: 12px;
     right: 12px;
-}
-
-/* Remove separator from first item after dashboard */
-#adminmenu .wp-submenu a[href*="fp-digital-marketing-reports"]::before {
-    display: none;
 }
 
 /* Enhanced main menu item */
