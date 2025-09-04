@@ -14,12 +14,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 	require_once '/tmp/wordpress-tests-lib/includes/bootstrap.php';
 } else {
-	// Create minimal WordPress environment for testing
-	if ( ! defined( 'WPINC' ) ) {
-		define( 'WPINC', 'wp-includes' );
-	}
-	
-	// Mock WordPress functions for testing
+        // Create minimal WordPress environment for testing
+        if ( ! defined( 'WPINC' ) ) {
+                define( 'WPINC', 'wp-includes' );
+        }
+
+        // Simple in-memory options store for option-related functions.
+        global $wp_options;
+        $wp_options = [];
+
+        // Mock WordPress functions for testing
 	if ( ! function_exists( 'wp_parse_args' ) ) {
 		function wp_parse_args( $args, $defaults = '' ) {
 			if ( is_object( $args ) ) {
@@ -199,15 +203,15 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
-	if ( ! function_exists( 'get_option' ) ) {
-		function get_option( $option, $default = false ) {
-			global $wp_mock_functions;
-			if ( isset( $wp_mock_functions['get_option'] ) ) {
-				return $wp_mock_functions['get_option']( $option, $default );
-			}
-			return $default;
-		}
-	}
+        if ( ! function_exists( 'get_option' ) ) {
+                function get_option( $option, $default = false ) {
+                        global $wp_mock_functions, $wp_options;
+                        if ( isset( $wp_mock_functions['get_option'] ) ) {
+                                return $wp_mock_functions['get_option']( $option, $default );
+                        }
+                        return $wp_options[ $option ] ?? $default;
+                }
+        }
 
 	if ( ! function_exists( 'get_permalink' ) ) {
 		function get_permalink( $post = 0 ) {
@@ -404,15 +408,87 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
-	if ( ! function_exists( 'update_option' ) ) {
-		function update_option( $option, $value, $autoload = null ) {
-			global $wp_mock_functions;
-			if ( isset( $wp_mock_functions['update_option'] ) ) {
-				return $wp_mock_functions['update_option']( $option, $value );
-			}
-			return true;
-		}
-	}
+        if ( ! function_exists( 'update_option' ) ) {
+                function update_option( $option, $value, $autoload = null ) {
+                        global $wp_mock_functions, $wp_options;
+                        if ( isset( $wp_mock_functions['update_option'] ) ) {
+                                return $wp_mock_functions['update_option']( $option, $value );
+                        }
+                        $wp_options[ $option ] = $value;
+                        return true;
+                }
+        }
+
+        if ( ! function_exists( 'delete_option' ) ) {
+                function delete_option( $option ) {
+                        global $wp_mock_functions, $wp_options;
+                        if ( isset( $wp_mock_functions['delete_option'] ) ) {
+                                return $wp_mock_functions['delete_option']( $option );
+                        }
+                        unset( $wp_options[ $option ] );
+                        return true;
+                }
+        }
+
+        if ( ! function_exists( 'sanitize_textarea_field' ) ) {
+                function sanitize_textarea_field( $str ) {
+                        return trim( strip_tags( $str ) );
+                }
+        }
+
+        if ( ! function_exists( 'wp_using_ext_object_cache' ) ) {
+                function wp_using_ext_object_cache() {
+                        return false;
+                }
+        }
+
+        if ( ! function_exists( 'is_category' ) ) {
+                function is_category() {
+                        return false;
+                }
+        }
+
+        if ( ! function_exists( 'is_tag' ) ) {
+                function is_tag() {
+                        return false;
+                }
+        }
+
+        if ( ! function_exists( 'is_tax' ) ) {
+                function is_tax() {
+                        return false;
+                }
+        }
+
+        if ( ! function_exists( 'is_single' ) ) {
+                function is_single() {
+                        return false;
+                }
+        }
+
+        if ( ! function_exists( 'is_page' ) ) {
+                function is_page() {
+                        return false;
+                }
+        }
+
+        if ( ! function_exists( 'is_author' ) ) {
+                function is_author() {
+                        return false;
+                }
+        }
+
+        if ( ! function_exists( 'is_archive' ) ) {
+                function is_archive() {
+                        return false;
+                }
+        }
+
+        if ( ! function_exists( 'wp_next_scheduled' ) ) {
+                function wp_next_scheduled( $hook ) {
+                        return false;
+                }
+        }
 
 	// Schema generator and hooks functions
 	if ( ! function_exists( 'apply_filters' ) ) {
@@ -570,11 +646,84 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
-	// Mock global $wpdb for testing
-	global $wpdb;
-	$wpdb = new stdClass();
-	$wpdb->prefix = 'wp_';
+        // Mock global $wpdb for testing with minimal methods used across the test suite.
+        class WPDB_Mock {
+                /**
+                 * Table prefix.
+                 *
+                 * @var string
+                 */
+                public $prefix = 'wp_';
+
+                /**
+                 * ID of the last inserted row.
+                 *
+                 * @var int
+                 */
+                public $insert_id = 0;
+
+                /**
+                 * Simple query preparer that performs basic sprintf replacement.
+                 *
+                 * @param string $query SQL query with placeholders.
+                 * @param mixed  ...$args Values to substitute into the query.
+                 * @return string Prepared query.
+                 */
+                public function prepare( $query, ...$args ) {
+                        if ( empty( $args ) ) {
+                                return $query;
+                        }
+                        $args = array_map(
+                                function ( $arg ) {
+                                        return is_numeric( $arg ) ? $arg : "'" . $arg . "'";
+                                },
+                                $args
+                        );
+                        // Replace WordPress style placeholders (%s, %d) using vsprintf.
+                        return vsprintf( $query, $args );
+                }
+
+                public function get_results( $query ) { // phpcs:ignore WordPress.DB
+                        return [];
+                }
+
+                public function get_var( $query ) { // phpcs:ignore WordPress.DB
+                        return null;
+                }
+
+                public function get_row( $query ) { // phpcs:ignore WordPress.DB
+                        return null;
+                }
+
+                public function get_col( $query ) { // phpcs:ignore WordPress.DB
+                        return [];
+                }
+
+                public function get_charset_collate() { // phpcs:ignore WordPress.DB
+                        return '';
+                }
+
+                public function query( $query ) { // phpcs:ignore WordPress.DB
+                        return 0;
+                }
+
+                public function insert( $table, $data ) { // phpcs:ignore WordPress.DB
+                        $this->insert_id++;
+                        return $this->insert_id;
+                }
+
+                public function update( $table, $data, $where ) { // phpcs:ignore WordPress.DB
+                        return 1;
+                }
+
+                public function delete( $table, $where ) { // phpcs:ignore WordPress.DB
+                        return 1;
+                }
+        }
+
+        global $wpdb;
+        $wpdb = new WPDB_Mock();
 }
 
-// Load the plugin's autoloader.
+// Load the plugin's autoloader and initialization.
 require_once dirname( __DIR__ ) . '/fp-digital-marketing-suite.php';

@@ -22,9 +22,10 @@ class UTMCampaignsTableTest extends TestCase {
 		parent::setUp();
 		
 		// Mock WordPress globals and functions
-		global $wpdb;
-		$wpdb = $this->createMock( stdClass::class );
-		$wpdb->prefix = 'wp_';
+                global $wpdb;
+                $wpdb = $this->createMock( stdClass::class );
+                $wpdb->prefix = 'wp_';
+                $wpdb->method( 'prepare' )->willReturnArgument( 0 );
 		
 		// Mock WordPress functions
 		if ( ! function_exists( 'dbDelta' ) ) {

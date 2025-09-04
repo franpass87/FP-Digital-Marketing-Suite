@@ -146,12 +146,12 @@ class DataExporterTest extends TestCase {
 		// Should contain BOM for UTF-8
 		$this->assertStringStartsWith( "\xEF\xBB\xBF", $csv_content );
 		
-		// Should contain headers
-		$this->assertStringContains( 'name,age,city', $csv_content );
-		
-		// Should contain data
-		$this->assertStringContains( 'John,30,"New York"', $csv_content );
-		$this->assertStringContains( 'Jane,25,London', $csv_content );
+                // Should contain headers
+                $this->assertStringContainsString( 'name,age,city', $csv_content );
+
+                // Should contain data
+                $this->assertStringContainsString( 'John,30,"New York"', $csv_content );
+                $this->assertStringContainsString( 'Jane,25,London', $csv_content );
 	}
 
 	/**
@@ -204,12 +204,12 @@ class DataExporterTest extends TestCase {
 		// Should be valid XML
 		$this->assertStringStartsWith( '<?xml version="1.0" encoding="UTF-8"?>', $xml_content );
 		
-		// Should contain our data
-		$this->assertStringContains( '<export', $xml_content );
-		$this->assertStringContains( '<records>', $xml_content );
-		$this->assertStringContains( '<record', $xml_content );
-		$this->assertStringContains( 'John', $xml_content );
-		$this->assertStringContains( '30', $xml_content );
+                // Should contain our data
+                $this->assertStringContainsString( '<export', $xml_content );
+                $this->assertStringContainsString( '<records>', $xml_content );
+                $this->assertStringContainsString( '<record', $xml_content );
+                $this->assertStringContainsString( 'John', $xml_content );
+                $this->assertStringContainsString( '30', $xml_content );
 	}
 
 	/**
@@ -311,9 +311,9 @@ class DataExporterTest extends TestCase {
 		$token = 'test_token_123';
 		$url = $method->invoke( null, $token );
 
-		$this->assertStringContains( 'admin-ajax.php', $url );
-		$this->assertStringContains( 'action=fp_download_export', $url );
-		$this->assertStringContains( 'token=' . $token, $url );
+                $this->assertStringContainsString( 'admin-ajax.php', $url );
+                $this->assertStringContainsString( 'action=fp_download_export', $url );
+                $this->assertStringContainsString( 'token=' . $token, $url );
 	}
 
 	/**
