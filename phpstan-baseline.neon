@@ -1,0 +1,1811 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Call to method get_param\\(\\) on an unknown class WP_REST_Request\\.$#"
+			count: 19
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 2
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Function register_rest_route not found\\.$#"
+			count: 6
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Instantiated class WP_Error not found\\.$#"
+			count: 7
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Instantiated class WP_REST_Response not found\\.$#"
+			count: 6
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:create_segment\\(\\) has invalid return type WP_Error\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:create_segment\\(\\) has invalid return type WP_REST_Response\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:delete_segment\\(\\) has invalid return type WP_Error\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:delete_segment\\(\\) has invalid return type WP_REST_Response\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:get_segment\\(\\) has invalid return type WP_Error\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:get_segment\\(\\) has invalid return type WP_REST_Response\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:get_segment_members\\(\\) has invalid return type WP_Error\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:get_segment_members\\(\\) has invalid return type WP_REST_Response\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:get_segments\\(\\) has invalid return type WP_Error\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:get_segments\\(\\) has invalid return type WP_REST_Response\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:update_segment\\(\\) has invalid return type WP_Error\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:update_segment\\(\\) has invalid return type WP_REST_Response\\.$#"
+			count: 1
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Parameter \\$request of method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:create_segment\\(\\) has invalid type WP_REST_Request\\.$#"
+			count: 2
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Parameter \\$request of method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:delete_segment\\(\\) has invalid type WP_REST_Request\\.$#"
+			count: 2
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Parameter \\$request of method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:get_segment\\(\\) has invalid type WP_REST_Request\\.$#"
+			count: 2
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Parameter \\$request of method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:get_segment_members\\(\\) has invalid type WP_REST_Request\\.$#"
+			count: 2
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Parameter \\$request of method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:get_segments\\(\\) has invalid type WP_REST_Request\\.$#"
+			count: 2
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Parameter \\$request of method FP\\\\DigitalMarketing\\\\API\\\\SegmentationAPI\\:\\:update_segment\\(\\) has invalid type WP_REST_Request\\.$#"
+			count: 2
+			path: src/API/SegmentationAPI.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_PLUGIN_URL not found\\.$#"
+			count: 1
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_VERSION not found\\.$#"
+			count: 1
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 1
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function check_ajax_referer not found\\.$#"
+			count: 1
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function checked not found\\.$#"
+			count: 2
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 13
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function esc_attr_e not found\\.$#"
+			count: 1
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 23
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 37
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function esc_textarea not found\\.$#"
+			count: 1
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function sanitize_email not found\\.$#"
+			count: 2
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function selected not found\\.$#"
+			count: 3
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Function submit_button not found\\.$#"
+			count: 1
+			path: src/Admin/AlertingAdmin.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_PLUGIN_URL not found\\.$#"
+			count: 1
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_VERSION not found\\.$#"
+			count: 1
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 13
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function check_ajax_referer not found\\.$#"
+			count: 3
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function checked not found\\.$#"
+			count: 2
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function date_i18n not found\\.$#"
+			count: 3
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 15
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function esc_attr__ not found\\.$#"
+			count: 2
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function esc_attr_e not found\\.$#"
+			count: 2
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 36
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 92
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function esc_textarea not found\\.$#"
+			count: 1
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function sanitize_email not found\\.$#"
+			count: 2
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function selected not found\\.$#"
+			count: 15
+			path: src/Admin/AnomalyDetectionAdmin.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 2
+			path: src/Admin/CachePerformance.php
+
+		-
+			message: "#^Function esc_attr_e not found\\.$#"
+			count: 2
+			path: src/Admin/CachePerformance.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 13
+			path: src/Admin/CachePerformance.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 34
+			path: src/Admin/CachePerformance.php
+
+		-
+			message: "#^Function size_format not found\\.$#"
+			count: 1
+			path: src/Admin/CachePerformance.php
+
+		-
+			message: "#^Access to property \\$ID on an unknown class WP_Post\\.$#"
+			count: 4
+			path: src/Admin/ClienteMeta.php
+
+		-
+			message: "#^Function checked not found\\.$#"
+			count: 1
+			path: src/Admin/ClienteMeta.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 1
+			path: src/Admin/ClienteMeta.php
+
+		-
+			message: "#^Function delete_post_meta not found\\.$#"
+			count: 2
+			path: src/Admin/ClienteMeta.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 3
+			path: src/Admin/ClienteMeta.php
+
+		-
+			message: "#^Function esc_attr_e not found\\.$#"
+			count: 3
+			path: src/Admin/ClienteMeta.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 9
+			path: src/Admin/ClienteMeta.php
+
+		-
+			message: "#^Function sanitize_email not found\\.$#"
+			count: 1
+			path: src/Admin/ClienteMeta.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Admin\\\\ClienteMeta\\:\\:render_meta_box\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Admin/ClienteMeta.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 5
+			path: src/Admin/ConversionEventsAdmin.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 2
+			path: src/Admin/ConversionEventsAdmin.php
+
+		-
+			message: "#^Function date_i18n not found\\.$#"
+			count: 1
+			path: src/Admin/ConversionEventsAdmin.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 7
+			path: src/Admin/ConversionEventsAdmin.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 13
+			path: src/Admin/ConversionEventsAdmin.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 29
+			path: src/Admin/ConversionEventsAdmin.php
+
+		-
+			message: "#^Function number_format_i18n not found\\.$#"
+			count: 5
+			path: src/Admin/ConversionEventsAdmin.php
+
+		-
+			message: "#^Function paginate_links not found\\.$#"
+			count: 1
+			path: src/Admin/ConversionEventsAdmin.php
+
+		-
+			message: "#^Function selected not found\\.$#"
+			count: 2
+			path: src/Admin/ConversionEventsAdmin.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_PLUGIN_URL not found\\.$#"
+			count: 2
+			path: src/Admin/Dashboard.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_VERSION not found\\.$#"
+			count: 2
+			path: src/Admin/Dashboard.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 2
+			path: src/Admin/Dashboard.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 2
+			path: src/Admin/Dashboard.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 5
+			path: src/Admin/Dashboard.php
+
+		-
+			message: "#^Function esc_attr_e not found\\.$#"
+			count: 1
+			path: src/Admin/Dashboard.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 7
+			path: src/Admin/Dashboard.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 31
+			path: src/Admin/Dashboard.php
+
+		-
+			message: "#^Function sanitize_url not found\\.$#"
+			count: 2
+			path: src/Admin/Dashboard.php
+
+		-
+			message: "#^Call to an undefined method FP\\\\DigitalMarketing\\\\DataSources\\\\GoogleOAuth\\:\\:handle_callback\\(\\)\\.$#"
+			count: 1
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 8
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Function checked not found\\.$#"
+			count: 1
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 1
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 5
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 6
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Function esc_js not found\\.$#"
+			count: 2
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Function esc_textarea not found\\.$#"
+			count: 1
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Function sanitize_email not found\\.$#"
+			count: 1
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Function selected not found\\.$#"
+			count: 1
+			path: src/Admin/OnboardingWizard.php
+
+		-
+			message: "#^Call to method getMessage\\(\\) on an unknown class FP\\\\DigitalMarketing\\\\Admin\\\\Exception\\.$#"
+			count: 3
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^Caught class FP\\\\DigitalMarketing\\\\Admin\\\\Exception not found\\.$#"
+			count: 3
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 5
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 4
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 83
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 159
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^Function fp_dms_get_data_sources not found\\.$#"
+			count: 3
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^Function size_format not found\\.$#"
+			count: 1
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^If condition is always true\\.$#"
+			count: 2
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^Right side of && is always true\\.$#"
+			count: 2
+			path: src/Admin/Reports.php
+
+		-
+			message: "#^Constant HOUR_IN_SECONDS not found\\.$#"
+			count: 1
+			path: src/Admin/SecurityAdmin.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 2
+			path: src/Admin/SecurityAdmin.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 13
+			path: src/Admin/SecurityAdmin.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 21
+			path: src/Admin/SecurityAdmin.php
+
+		-
+			message: "#^Function esc_js not found\\.$#"
+			count: 1
+			path: src/Admin/SecurityAdmin.php
+
+		-
+			message: "#^Call to an undefined method FP\\\\DigitalMarketing\\\\Admin\\\\SegmentationAdmin\\:\\:render_view_segment\\(\\)\\.$#"
+			count: 1
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Call to private static method get_unique_users_for_client\\(\\) of class FP\\\\DigitalMarketing\\\\Helpers\\\\SegmentationEngine\\.$#"
+			count: 2
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 1
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function check_ajax_referer not found\\.$#"
+			count: 1
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function checked not found\\.$#"
+			count: 1
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 2
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function date_i18n not found\\.$#"
+			count: 1
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 10
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function esc_attr__ not found\\.$#"
+			count: 1
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 8
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function esc_js not found\\.$#"
+			count: 1
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function esc_textarea not found\\.$#"
+			count: 1
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Function selected not found\\.$#"
+			count: 5
+			path: src/Admin/SegmentationAdmin.php
+
+		-
+			message: "#^Access to property \\$ID on an unknown class WP_Post\\.$#"
+			count: 12
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Call to method getMessage\\(\\) on an unknown class FP\\\\DigitalMarketing\\\\Admin\\\\Exception\\.$#"
+			count: 1
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Caught class FP\\\\DigitalMarketing\\\\Admin\\\\Exception not found\\.$#"
+			count: 1
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 1
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function check_ajax_referer not found\\.$#"
+			count: 1
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 2
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function delete_post_meta not found\\.$#"
+			count: 1
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 21
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function esc_attr_e not found\\.$#"
+			count: 1
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 20
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 46
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function esc_textarea not found\\.$#"
+			count: 3
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function esc_url_raw not found\\.$#"
+			count: 1
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function sanitize_title not found\\.$#"
+			count: 1
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Function selected not found\\.$#"
+			count: 4
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Parameter \\#1 \\$post of static method FP\\\\DigitalMarketing\\\\Helpers\\\\ContentSeoAnalyzer\\:\\:analyze_content\\(\\) expects int\\|WP_Post, object\\{ID\\: int, post_title\\: mixed, post_content\\: mixed, post_name\\: mixed, post_excerpt\\: mixed\\}&stdClass given\\.$#"
+			count: 1
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Admin\\\\SeoMeta\\:\\:render_meta_box\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Admin/SeoMeta.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_PLUGIN_URL not found\\.$#"
+			count: 2
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_VERSION not found\\.$#"
+			count: 2
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 7
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function checked not found\\.$#"
+			count: 20
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function date_i18n not found\\.$#"
+			count: 1
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function do_settings_sections not found\\.$#"
+			count: 1
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 68
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function esc_attr_e not found\\.$#"
+			count: 8
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 21
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 161
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function esc_js not found\\.$#"
+			count: 1
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function esc_textarea not found\\.$#"
+			count: 5
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function esc_url_raw not found\\.$#"
+			count: 3
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function register_setting not found\\.$#"
+			count: 8
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function sanitize_key not found\\.$#"
+			count: 1
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function selected not found\\.$#"
+			count: 5
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function settings_errors not found\\.$#"
+			count: 1
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function settings_fields not found\\.$#"
+			count: 1
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Function submit_button not found\\.$#"
+			count: 1
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Parameter \\#1 \\$callback of function array_map expects \\(callable\\(mixed\\)\\: mixed\\)\\|null, 'sanitize_key' given\\.$#"
+			count: 3
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Undefined variable\\: \\$sitemap_url$#"
+			count: 1
+			path: src/Admin/Settings.php
+
+		-
+			message: "#^Constant FP\\\\DigitalMarketing\\\\Admin\\\\UTMCampaignManager\\:\\:OPTION_GROUP is unused\\.$#"
+			count: 1
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 9
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 17
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function esc_attr__ not found\\.$#"
+			count: 2
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function esc_attr_e not found\\.$#"
+			count: 2
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 23
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 62
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function esc_textarea not found\\.$#"
+			count: 1
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function esc_url_raw not found\\.$#"
+			count: 2
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function mysql2date not found\\.$#"
+			count: 2
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function paginate_links not found\\.$#"
+			count: 1
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Function selected not found\\.$#"
+			count: 7
+			path: src/Admin/UTMCampaignManager.php
+
+		-
+			message: "#^Call to an undefined static method FP\\\\DigitalMarketing\\\\Models\\\\MetricsCache\\:\\:create_metric\\(\\)\\.$#"
+			count: 1
+			path: src/DataSources/CoreWebVitals.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\DataSources\\\\GoogleAds\\:\\:map_campaigns_to_utm\\(\\) is unused\\.$#"
+			count: 1
+			path: src/DataSources/GoogleAds.php
+
+		-
+			message: "#^Property FP\\\\DigitalMarketing\\\\DataSources\\\\GoogleAnalytics4\\:\\:\\$oauth_client \\(FP\\\\DigitalMarketing\\\\DataSources\\\\GoogleOAuth\\) does not accept null\\.$#"
+			count: 1
+			path: src/DataSources/GoogleAnalytics4.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between int\\<1, max\\> and \\(array\\|float\\|int\\) results in an error\\.$#"
+			count: 1
+			path: src/DataSources/GoogleOAuth.php
+
+		-
+			message: "#^Constant FP\\\\DigitalMarketing\\\\DataSources\\\\GoogleOAuth\\:\\:OAUTH_SETTINGS_OPTION is unused\\.$#"
+			count: 1
+			path: src/DataSources/GoogleOAuth.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 1
+			path: src/DataSources/GoogleOAuth.php
+
+		-
+			message: "#^Function dbDelta not found\\.$#"
+			count: 1
+			path: src/Database/AlertRulesTable.php
+
+		-
+			message: "#^Function dbDelta not found\\.$#"
+			count: 1
+			path: src/Database/AnomalyRulesTable.php
+
+		-
+			message: "#^Constant ARRAY_A not found\\.$#"
+			count: 2
+			path: src/Database/AudienceSegmentTable.php
+
+		-
+			message: "#^Function dbDelta not found\\.$#"
+			count: 2
+			path: src/Database/AudienceSegmentTable.php
+
+		-
+			message: "#^Variable \\$where_values in empty\\(\\) always exists and is not falsy\\.$#"
+			count: 1
+			path: src/Database/AudienceSegmentTable.php
+
+		-
+			message: "#^Constant ARRAY_A not found\\.$#"
+			count: 1
+			path: src/Database/ConversionEventsTable.php
+
+		-
+			message: "#^Function dbDelta not found\\.$#"
+			count: 1
+			path: src/Database/ConversionEventsTable.php
+
+		-
+			message: "#^Variable \\$where_values in empty\\(\\) always exists and is not falsy\\.$#"
+			count: 1
+			path: src/Database/ConversionEventsTable.php
+
+		-
+			message: "#^Function dbDelta not found\\.$#"
+			count: 1
+			path: src/Database/DetectedAnomaliesTable.php
+
+		-
+			message: "#^Function dbDelta not found\\.$#"
+			count: 1
+			path: src/Database/MetricsCacheTable.php
+
+		-
+			message: "#^Function dbDelta not found\\.$#"
+			count: 1
+			path: src/Database/UTMCampaignsTable.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_PLUGIN_FILE not found\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Dead catch \\- Throwable is never thrown in the try block\\.$#"
+			count: 12
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Function load_plugin_textdomain not found\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Function plugin_basename not found\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\DigitalMarketingSuite\\:\\:ensure_alert_rules_table\\(\\) is unused\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\DigitalMarketingSuite\\:\\:ensure_anomaly_rules_table\\(\\) is unused\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\DigitalMarketingSuite\\:\\:ensure_audience_segment_tables\\(\\) is unused\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\DigitalMarketingSuite\\:\\:ensure_conversion_events_table\\(\\) is unused\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\DigitalMarketingSuite\\:\\:ensure_detected_anomalies_table\\(\\) is unused\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\DigitalMarketingSuite\\:\\:ensure_metrics_cache_table\\(\\) is unused\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\DigitalMarketingSuite\\:\\:ensure_utm_campaigns_table\\(\\) is unused\\.$#"
+			count: 1
+			path: src/DigitalMarketingSuite.php
+
+		-
+			message: "#^Constant DAY_IN_SECONDS not found\\.$#"
+			count: 1
+			path: src/Helpers/AdminOptimizations.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_PLUGIN_URL not found\\.$#"
+			count: 4
+			path: src/Helpers/AdminOptimizations.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_VERSION not found\\.$#"
+			count: 3
+			path: src/Helpers/AdminOptimizations.php
+
+		-
+			message: "#^Constant HOUR_IN_SECONDS not found\\.$#"
+			count: 1
+			path: src/Helpers/AdminOptimizations.php
+
+		-
+			message: "#^Constant WEEK_IN_SECONDS not found\\.$#"
+			count: 1
+			path: src/Helpers/AdminOptimizations.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 1
+			path: src/Helpers/AdminOptimizations.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 1
+			path: src/Helpers/AdminOptimizations.php
+
+		-
+			message: "#^Function esc_url_raw not found\\.$#"
+			count: 1
+			path: src/Helpers/AdminOptimizations.php
+
+		-
+			message: "#^Right side of && is always true\\.$#"
+			count: 3
+			path: src/Helpers/AdminOptimizations.php
+
+		-
+			message: "#^Call to an undefined static method FP\\\\DigitalMarketing\\\\Helpers\\\\MetricsAggregator\\:\\:get_metrics\\(\\)\\.$#"
+			count: 2
+			path: src/Helpers/AlertEngine.php
+
+		-
+			message: "#^Call to method getMessage\\(\\) on an unknown class FP\\\\DigitalMarketing\\\\Helpers\\\\Exception\\.$#"
+			count: 2
+			path: src/Helpers/AlertEngine.php
+
+		-
+			message: "#^Caught class FP\\\\DigitalMarketing\\\\Helpers\\\\Exception not found\\.$#"
+			count: 2
+			path: src/Helpers/AlertEngine.php
+
+		-
+			message: "#^Constant HOUR_IN_SECONDS not found\\.$#"
+			count: 2
+			path: src/Helpers/AlertEngine.php
+
+		-
+			message: "#^Function maybe_unserialize not found\\.$#"
+			count: 1
+			path: src/Helpers/AlertEngine.php
+
+		-
+			message: "#^Call to an undefined static method FP\\\\DigitalMarketing\\\\Helpers\\\\MetricsAggregator\\:\\:get_metrics\\(\\)\\.$#"
+			count: 1
+			path: src/Helpers/AnomalyDetector.php
+
+		-
+			message: "#^Call to method getMessage\\(\\) on an unknown class FP\\\\DigitalMarketing\\\\Helpers\\\\Exception\\.$#"
+			count: 1
+			path: src/Helpers/AnomalyDetector.php
+
+		-
+			message: "#^Caught class FP\\\\DigitalMarketing\\\\Helpers\\\\Exception not found\\.$#"
+			count: 1
+			path: src/Helpers/AnomalyDetector.php
+
+		-
+			message: "#^Anonymous function has an unused use \\$scenario\\.$#"
+			count: 1
+			path: src/Helpers/CacheBenchmark.php
+
+		-
+			message: "#^Function user_can not found\\.$#"
+			count: 1
+			path: src/Helpers/Capabilities.php
+
+		-
+			message: "#^Access to property \\$post_content on an unknown class WP_Post\\.$#"
+			count: 5
+			path: src/Helpers/ContentSeoAnalyzer.php
+
+		-
+			message: "#^Access to property \\$post_name on an unknown class WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/ContentSeoAnalyzer.php
+
+		-
+			message: "#^Else branch is unreachable because ternary operator condition is always true\\.$#"
+			count: 1
+			path: src/Helpers/ContentSeoAnalyzer.php
+
+		-
+			message: "#^PHPDoc tag @param for parameter \\$score with type int is incompatible with native type float\\.$#"
+			count: 1
+			path: src/Helpers/ContentSeoAnalyzer.php
+
+		-
+			message: "#^PHPDoc tag @return with type int is incompatible with native type float\\.$#"
+			count: 2
+			path: src/Helpers/ContentSeoAnalyzer.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\ContentSeoAnalyzer\\:\\:analyze_content\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/ContentSeoAnalyzer.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\ContentSeoAnalyzer\\:\\:analyze_keyword_presence\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/ContentSeoAnalyzer.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\ContentSeoAnalyzer\\:\\:analyze_readability\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/ContentSeoAnalyzer.php
+
+		-
+			message: "#^Call to an undefined static method FP\\\\DigitalMarketing\\\\Helpers\\\\PerformanceCache\\:\\:clear_cache_by_pattern\\(\\)\\.$#"
+			count: 1
+			path: src/Helpers/ConversionEventManager.php
+
+		-
+			message: "#^Constant ARRAY_A not found\\.$#"
+			count: 3
+			path: src/Helpers/ConversionEventManager.php
+
+		-
+			message: "#^Call to an undefined static method FP\\\\DigitalMarketing\\\\Helpers\\\\PerformanceCache\\:\\:get\\(\\)\\.$#"
+			count: 1
+			path: src/Helpers/DashboardWidgets.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 5
+			path: src/Helpers/DashboardWidgets.php
+
+		-
+			message: "#^Function date_i18n not found\\.$#"
+			count: 1
+			path: src/Helpers/DashboardWidgets.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 7
+			path: src/Helpers/DashboardWidgets.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 20
+			path: src/Helpers/DashboardWidgets.php
+
+		-
+			message: "#^Function esc_js not found\\.$#"
+			count: 1
+			path: src/Helpers/DashboardWidgets.php
+
+		-
+			message: "#^Function human_time_diff not found\\.$#"
+			count: 1
+			path: src/Helpers/DashboardWidgets.php
+
+		-
+			message: "#^Constant ARRAY_A not found\\.$#"
+			count: 1
+			path: src/Helpers/DataExporter.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_VERSION not found\\.$#"
+			count: 2
+			path: src/Helpers/DataExporter.php
+
+		-
+			message: "#^Constant HOUR_IN_SECONDS not found\\.$#"
+			count: 3
+			path: src/Helpers/DataExporter.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 2
+			path: src/Helpers/DataExporter.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 2
+			path: src/Helpers/DataExporter.php
+
+		-
+			message: "#^Function sanitize_file_name not found\\.$#"
+			count: 2
+			path: src/Helpers/DataExporter.php
+
+		-
+			message: "#^Negated boolean expression is always true\\.$#"
+			count: 1
+			path: src/Helpers/DataExporter.php
+
+		-
+			message: "#^Call to an undefined static method FP\\\\DigitalMarketing\\\\Helpers\\\\PerformanceCache\\:\\:get\\(\\)\\.$#"
+			count: 2
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Call to an undefined static method FP\\\\DigitalMarketing\\\\Helpers\\\\PerformanceCache\\:\\:set\\(\\)\\.$#"
+			count: 1
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_VERSION not found\\.$#"
+			count: 1
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Constant HOUR_IN_SECONDS not found\\.$#"
+			count: 1
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Function admin_url not found\\.$#"
+			count: 3
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 1
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 1
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 21
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Function esc_html_e not found\\.$#"
+			count: 22
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Function sanitize_email not found\\.$#"
+			count: 1
+			path: src/Helpers/EmailNotifications.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_PLUGIN_FILE not found\\.$#"
+			count: 2
+			path: src/Helpers/FAQBlock.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 1
+			path: src/Helpers/FAQBlock.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 1
+			path: src/Helpers/FAQBlock.php
+
+		-
+			message: "#^Function sanitize_key not found\\.$#"
+			count: 1
+			path: src/Helpers/MetricsAggregator.php
+
+		-
+			message: "#^Parameter \\#2 \\$offset of function array_slice expects int, float given\\.$#"
+			count: 1
+			path: src/Helpers/MetricsAggregator.php
+
+		-
+			message: "#^Parameter \\#3 \\$length of function array_slice expects int\\|null, float given\\.$#"
+			count: 1
+			path: src/Helpers/MetricsAggregator.php
+
+		-
+			message: "#^Right side of && is always true\\.$#"
+			count: 2
+			path: src/Helpers/PerformanceCache.php
+
+		-
+			message: "#^Variable \\$key on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: src/Helpers/PerformanceCache.php
+
+		-
+			message: "#^Negated boolean expression is always true\\.$#"
+			count: 1
+			path: src/Helpers/ReportGenerator.php
+
+		-
+			message: "#^Right side of && is always true\\.$#"
+			count: 1
+			path: src/Helpers/ReportGenerator.php
+
+		-
+			message: "#^Access to property \\$ID on an unknown class WP_Post\\.$#"
+			count: 5
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Access to property \\$post_content on an unknown class WP_Post\\.$#"
+			count: 3
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Access to property \\$post_date on an unknown class WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Access to property \\$post_excerpt on an unknown class WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Access to property \\$post_modified on an unknown class WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Access to property \\$post_type on an unknown class WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\ArticleSchema\\:\\:get_article_body\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\ArticleSchema\\:\\:get_featured_image\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\ArticleSchema\\:\\:get_post_description\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\ArticleSchema\\:\\:get_post_keywords\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\ArticleSchema\\:\\:get_schema_type\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\ArticleSchema\\:\\:get_word_count\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/ArticleSchema.php
+
+		-
+			message: "#^Access to property \\$post_author on an unknown class WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BaseSchema.php
+
+		-
+			message: "#^Class WP_Post not found\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BaseSchema.php
+
+		-
+			message: "#^Method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\BaseSchema\\:\\:get_current_post\\(\\) has invalid return type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/BaseSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\BaseSchema\\:\\:get_author_info\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/BaseSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\BaseSchema\\:\\:get_permalink\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BaseSchema.php
+
+		-
+			message: "#^Access to property \\$ID on an unknown class WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Access to property \\$ID on an unknown class WP_User\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Access to property \\$display_name on an unknown class WP_User\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Access to property \\$name on an unknown class WP_Term\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Access to property \\$parent on an unknown class WP_Term\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Access to property \\$post_parent on an unknown class WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Access to property \\$post_type on an unknown class WP_Post\\.$#"
+			count: 4
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Access to property \\$taxonomy on an unknown class WP_Term\\.$#"
+			count: 2
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Access to property \\$term_id on an unknown class WP_Term\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Class WP_Post not found\\.$#"
+			count: 2
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Class WP_Term not found\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Class WP_User not found\\.$#"
+			count: 1
+			path: src/Helpers/Schema/BreadcrumbListSchema.php
+
+		-
+			message: "#^Access to property \\$ID on an unknown class WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/FAQSchema.php
+
+		-
+			message: "#^Access to property \\$post_content on an unknown class WP_Post\\.$#"
+			count: 8
+			path: src/Helpers/Schema/FAQSchema.php
+
+		-
+			message: "#^Access to property \\$post_type on an unknown class WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/Schema/FAQSchema.php
+
+		-
+			message: "#^Function render_block not found\\.$#"
+			count: 1
+			path: src/Helpers/Schema/FAQSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\FAQSchema\\:\\:get_faq_items\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/FAQSchema.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\Schema\\\\FAQSchema\\:\\:has_faq_content\\(\\) has invalid type WP_Post\\.$#"
+			count: 2
+			path: src/Helpers/Schema/FAQSchema.php
+
+		-
+			message: "#^Regex pattern is invalid\\: Unknown modifier 'f' in pattern\\: /fp\\-dms/faq/i$#"
+			count: 1
+			path: src/Helpers/Schema/FAQSchema.php
+
+		-
+			message: "#^Constant FP\\\\DigitalMarketing\\\\Helpers\\\\Security\\:\\:SALT_LENGTH is unused\\.$#"
+			count: 1
+			path: src/Helpers/Security.php
+
+		-
+			message: "#^Constant FP_DIGITAL_MARKETING_VERSION not found\\.$#"
+			count: 2
+			path: src/Helpers/Security.php
+
+		-
+			message: "#^Function current_user_can not found\\.$#"
+			count: 1
+			path: src/Helpers/Security.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between false and string will always evaluate to false\\.$#"
+			count: 1
+			path: src/Helpers/Security.php
+
+		-
+			message: "#^Function esc_attr not found\\.$#"
+			count: 6
+			path: src/Helpers/SeoFrontendOutput.php
+
+		-
+			message: "#^Function esc_html not found\\.$#"
+			count: 1
+			path: src/Helpers/SeoFrontendOutput.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:generate_meta_tags\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_canonical\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_description\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_og_description\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_og_image\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_og_title\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_robots\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_title\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_twitter_description\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_twitter_image\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Parameter \\$post of method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_twitter_title\\(\\) has invalid type WP_Post\\.$#"
+			count: 1
+			path: src/Helpers/SeoMetadata.php
+
+		-
+			message: "#^Cannot access property \\$ID on array\\|object\\.$#"
+			count: 1
+			path: src/Helpers/XmlSitemap.php
+
+		-
+			message: "#^Constant FP\\\\DigitalMarketing\\\\Helpers\\\\XmlSitemap\\:\\:MAX_FILE_SIZE is unused\\.$#"
+			count: 1
+			path: src/Helpers/XmlSitemap.php
+
+		-
+			message: "#^Function sanitize_email not found\\.$#"
+			count: 2
+			path: src/Models/AlertRule.php
+
+		-
+			message: "#^Function sanitize_email not found\\.$#"
+			count: 2
+			path: src/Models/AnomalyRule.php
+
+		-
+			message: "#^Constant ARRAY_A not found\\.$#"
+			count: 1
+			path: src/Models/ConversionEvent.php
+
+		-
+			message: "#^Function esc_url_raw not found\\.$#"
+			count: 2
+			path: src/Models/ConversionEvent.php
+
+		-
+			message: "#^Variable \\$where_clauses in empty\\(\\) always exists and is not falsy\\.$#"
+			count: 2
+			path: src/Models/DetectedAnomaly.php
+
+		-
+			message: "#^Variable \\$where_values in empty\\(\\) always exists and is not falsy\\.$#"
+			count: 2
+			path: src/Models/DetectedAnomaly.php
+
+		-
+			message: "#^Variable \\$where_values in empty\\(\\) always exists and is not falsy\\.$#"
+			count: 1
+			path: src/Models/MetricsCache.php
+
+		-
+			message: "#^Constant ARRAY_A not found\\.$#"
+			count: 2
+			path: src/Models/UTMCampaign.php
+
+		-
+			message: "#^Function esc_url_raw not found\\.$#"
+			count: 4
+			path: src/Models/UTMCampaign.php
+
+		-
+			message: "#^Function _x not found\\.$#"
+			count: 14
+			path: src/PostTypes/ClientePostType.php
+
+		-
+			message: "#^Function register_post_type not found\\.$#"
+			count: 1
+			path: src/PostTypes/ClientePostType.php
+
+		-
+			message: "#^Inner named functions are not supported by PHPStan\\. Consider refactoring to an anonymous function, class method, or a top\\-level\\-defined function\\. See issue \\#165 \\(https\\://github\\.com/phpstan/phpstan/issues/165\\) for more details\\.$#"
+			count: 7
+			path: tests/AlertEngineTest.php
+
+		-
+			message: "#^Access to an undefined static property FP\\\\DigitalMarketing\\\\Helpers\\\\AnomalyDetector\\:\\:\\$_test_override\\.$#"
+			count: 1
+			path: tests/AnomalyDetectorTest.php
+
+		-
+			message: "#^Access to static property \\$test_data on an unknown class MockMetricsAggregator\\.$#"
+			count: 3
+			path: tests/AnomalyDetectorTest.php
+
+		-
+			message: "#^Inner named functions are not supported by PHPStan\\. Consider refactoring to an anonymous function, class method, or a top\\-level\\-defined function\\. See issue \\#165 \\(https\\://github\\.com/phpstan/phpstan/issues/165\\) for more details\\.$#"
+			count: 3
+			path: tests/AnomalyDetectorTest.php
+
+		-
+			message: "#^Inner named functions are not supported by PHPStan\\. Consider refactoring to an anonymous function, class method, or a top\\-level\\-defined function\\. See issue \\#165 \\(https\\://github\\.com/phpstan/phpstan/issues/165\\) for more details\\.$#"
+			count: 8
+			path: tests/CapabilitiesTest.php
+
+		-
+			message: "#^Parameter \\#2 \\$haystack of method PHPUnit\\\\Framework\\\\Assert\\:\\:assertContains\\(\\) expects iterable, string given\\.$#"
+			count: 5
+			path: tests/CapabilitiesTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$post of static method FP\\\\DigitalMarketing\\\\Helpers\\\\ContentSeoAnalyzer\\:\\:analyze_content\\(\\) expects int\\|WP_Post, object\\{ID\\: int, post_title\\: string, post_content\\: string, post_name\\: string, post_excerpt\\: string\\}&stdClass given\\.$#"
+			count: 1
+			path: tests/ContentSeoAnalyzerTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$post of static method FP\\\\DigitalMarketing\\\\Helpers\\\\ContentSeoAnalyzer\\:\\:analyze_content\\(\\) expects int\\|WP_Post, object\\{ID\\: int, post_title\\: string, post_content\\: string, post_name\\: string\\}&stdClass given\\.$#"
+			count: 8
+			path: tests/ContentSeoAnalyzerTest.php
+
+		-
+			message: "#^Right side of \\|\\| is always false\\.$#"
+			count: 1
+			path: tests/ConversionEventsTest.php
+
+		-
+			message: "#^Inner named functions are not supported by PHPStan\\. Consider refactoring to an anonymous function, class method, or a top\\-level\\-defined function\\. See issue \\#165 \\(https\\://github\\.com/phpstan/phpstan/issues/165\\) for more details\\.$#"
+			count: 7
+			path: tests/DashboardWidgetsTest.php
+
+		-
+			message: "#^Negated boolean expression is always true\\.$#"
+			count: 1
+			path: tests/DashboardWidgetsTest.php
+
+		-
+			message: "#^Inner named functions are not supported by PHPStan\\. Consider refactoring to an anonymous function, class method, or a top\\-level\\-defined function\\. See issue \\#165 \\(https\\://github\\.com/phpstan/phpstan/issues/165\\) for more details\\.$#"
+			count: 14
+			path: tests/DataExporterTest.php
+
+		-
+			message: "#^Variable \\$data in empty\\(\\) always exists and is not falsy\\.$#"
+			count: 1
+			path: tests/DataExporterTest.php
+
+		-
+			message: "#^Function fp_dms_get_data_sources not found\\.$#"
+			count: 1
+			path: tests/GoogleAdsIntegrationTest.php
+
+		-
+			message: "#^Function fp_dms_get_data_sources not found\\.$#"
+			count: 1
+			path: tests/GoogleAnalytics4IntegrationTest.php
+
+		-
+			message: "#^Binary operation \"/\" between 0 and 0 results in an error\\.$#"
+			count: 1
+			path: tests/MetricsAggregatorTest.php
+
+		-
+			message: "#^Comparison operation \"\\<\" between \\-100 and 0 is always true\\.$#"
+			count: 1
+			path: tests/MetricsAggregatorTest.php
+
+		-
+			message: "#^Comparison operation \"\\<\" between 0 and 0 is always false\\.$#"
+			count: 1
+			path: tests/MetricsAggregatorTest.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between \\-100 and 0 is always false\\.$#"
+			count: 1
+			path: tests/MetricsAggregatorTest.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between 0 and 0 is always false\\.$#"
+			count: 3
+			path: tests/MetricsAggregatorTest.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between 1200 and 0 is always true\\.$#"
+			count: 1
+			path: tests/MetricsAggregatorTest.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between 300 and 0 is always true\\.$#"
+			count: 1
+			path: tests/MetricsAggregatorTest.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between 5 and 0 is always true\\.$#"
+			count: 1
+			path: tests/MetricsAggregatorTest.php
+
+		-
+			message: "#^Else branch is unreachable because ternary operator condition is always true\\.$#"
+			count: 5
+			path: tests/MetricsAggregatorTest.php
+
+		-
+			message: "#^Inner named functions are not supported by PHPStan\\. Consider refactoring to an anonymous function, class method, or a top\\-level\\-defined function\\. See issue \\#165 \\(https\\://github\\.com/phpstan/phpstan/issues/165\\) for more details\\.$#"
+			count: 5
+			path: tests/OnboardingWizardTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$post of static method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_canonical\\(\\) expects int\\|WP_Post, object\\{ID\\: int\\}&stdClass given\\.$#"
+			count: 1
+			path: tests/SeoMetadataTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$post of static method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_description\\(\\) expects int\\|WP_Post, object\\{ID\\: int, post_title\\: string, post_content\\: string, post_excerpt\\: string\\}&stdClass given\\.$#"
+			count: 3
+			path: tests/SeoMetadataTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$post of static method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_description\\(\\) expects int\\|WP_Post, object\\{ID\\: int, post_title\\: string, post_content\\: string\\}&stdClass given\\.$#"
+			count: 1
+			path: tests/SeoMetadataTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$post of static method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_og_title\\(\\) expects int\\|WP_Post, object\\{ID\\: int, post_title\\: string\\}&stdClass given\\.$#"
+			count: 1
+			path: tests/SeoMetadataTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$post of static method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_robots\\(\\) expects int\\|WP_Post, object\\{ID\\: int, post_type\\: string\\}&stdClass given\\.$#"
+			count: 1
+			path: tests/SeoMetadataTest.php
+
+		-
+			message: "#^Parameter \\#1 \\$post of static method FP\\\\DigitalMarketing\\\\Helpers\\\\SeoMetadata\\:\\:get_title\\(\\) expects int\\|WP_Post, object\\{ID\\: int, post_title\\: string, post_content\\: string\\}&stdClass given\\.$#"
+			count: 2
+			path: tests/SeoMetadataTest.php
+
+		-
+			message: "#^Result of \\|\\| is always true\\.$#"
+			count: 1
+			path: tests/SyncEngineTest.php
+
+		-
+			message: "#^Inner named functions are not supported by PHPStan\\. Consider refactoring to an anonymous function, class method, or a top\\-level\\-defined function\\. See issue \\#165 \\(https\\://github\\.com/phpstan/phpstan/issues/165\\) for more details\\.$#"
+			count: 3
+			path: tests/UTMCampaignTest.php
+
+		-
+			message: "#^Inner named functions are not supported by PHPStan\\. Consider refactoring to an anonymous function, class method, or a top\\-level\\-defined function\\. See issue \\#165 \\(https\\://github\\.com/phpstan/phpstan/issues/165\\) for more details\\.$#"
+			count: 2
+			path: tests/UTMCampaignsTableTest.php
+
+		-
+			message: "#^Offset mixed on array\\{\\} on left side of \\?\\? does not exist\\.$#"
+			count: 1
+			path: tests/XmlSitemapTest.php
