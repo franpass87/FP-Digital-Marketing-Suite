@@ -5,7 +5,8 @@
  * @package FP_Digital_Marketing_Suite
  */
 
-require_once dirname( __DIR__ ) . '/bootstrap.php';
+// Load the test environment bootstrap.
+require_once __DIR__ . '/bootstrap.php';
 
 use FP\DigitalMarketing\Models\AudienceSegment;
 use FP\DigitalMarketing\Database\AudienceSegmentTable;

@@ -28,9 +28,10 @@ class MetricsCacheTest extends TestCase {
 		parent::setUp();
 		
 		// Create mock wpdb object
-		$this->wpdb_mock = $this->createMock( stdClass::class );
-		$this->wpdb_mock->prefix = 'wp_';
-		$this->wpdb_mock->insert_id = 1;
+                $this->wpdb_mock = $this->createMock( stdClass::class );
+                $this->wpdb_mock->prefix = 'wp_';
+                $this->wpdb_mock->insert_id = 1;
+                $this->wpdb_mock->method( 'prepare' )->willReturnArgument( 0 );
 		
 		// Set global $wpdb for tests
 		global $wpdb;
