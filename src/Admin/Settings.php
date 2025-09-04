@@ -105,6 +105,16 @@ class Settings {
 	private const OPTION_SCHEMA = 'fp_digital_marketing_schema_settings';
 
 	/**
+	 * Email settings section
+	 */
+	private const SECTION_EMAIL = 'fp_digital_marketing_email';
+
+	/**
+	 * Email settings option name
+	 */
+	private const OPTION_EMAIL = 'fp_digital_marketing_email_settings';
+
+	/**
 	 * Nonce action for settings
 	 */
 	private const NONCE_ACTION = 'fp_digital_marketing_settings_nonce';
@@ -120,6 +130,9 @@ class Settings {
 		add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );
 		add_action( 'admin_init', [ $this, 'handle_gsc_oauth_callback' ] );
 		add_action( 'wp_ajax_fp_clear_sitemap_cache', [ $this, 'handle_clear_sitemap_cache' ] );
+		add_action( 'wp_ajax_fp_warmup_cache', [ $this, 'handle_cache_warmup' ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+		add_action( 'fp_dms_cache_warmup', [ $this, 'scheduled_cache_warmup' ] );
 	}
 
 	/**
@@ -135,6 +148,52 @@ class Settings {
 			Capabilities::MANAGE_SETTINGS,
 			self::PAGE_SLUG,
 			[ $this, 'render_settings_page' ]
+		);
+	}
+
+	/**
+	 * Enqueue admin assets for settings page
+	 *
+	 * @param string $hook_suffix The current admin page
+	 * @return void
+	 */
+	public function enqueue_admin_assets( string $hook_suffix ): void {
+		// Only load on our settings page
+		if ( 'fp-digital-marketing_page_fp-digital-marketing-settings' !== $hook_suffix ) {
+			return;
+		}
+
+		// Enqueue settings tabs CSS
+		wp_enqueue_style(
+			'fp-dms-settings-tabs',
+			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/css/settings-tabs.css',
+			[],
+			FP_DIGITAL_MARKETING_VERSION
+		);
+
+		// Enqueue settings tabs JavaScript
+		wp_enqueue_script(
+			'fp-dms-settings-tabs',
+			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/settings-tabs.js',
+			[ 'jquery' ],
+			FP_DIGITAL_MARKETING_VERSION,
+			true
+		);
+
+		// Localize script for AJAX and translations
+		wp_localize_script(
+			'fp-dms-settings-tabs',
+			'fpDmsSettings',
+			[
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'fp_dms_settings_nonce' ),
+				'strings' => [
+					'loading' => __( 'Caricamento...', 'fp-digital-marketing' ),
+					'saved' => __( 'Impostazioni salvate con successo!', 'fp-digital-marketing' ),
+					'error' => __( 'Errore durante il salvataggio delle impostazioni.', 'fp-digital-marketing' ),
+					'confirmReset' => __( 'Sei sicuro di voler ripristinare le impostazioni predefinite?', 'fp-digital-marketing' ),
+				]
+			]
 		);
 	}
 
@@ -211,6 +270,16 @@ class Settings {
 			[
 				'type'              => 'array',
 				'sanitize_callback' => [ $this, 'sanitize_schema_settings' ],
+				'default'           => [],
+			]
+		);
+
+		register_setting(
+			self::OPTION_GROUP,
+			self::OPTION_EMAIL,
+			[
+				'type'              => 'array',
+				'sanitize_callback' => [ $this, 'sanitize_email_settings' ],
 				'default'           => [],
 			]
 		);
@@ -333,6 +402,23 @@ class Settings {
 			self::PAGE_SLUG,
 			self::SECTION_SCHEMA
 		);
+
+		// Add Email section.
+		add_settings_section(
+			self::SECTION_EMAIL,
+			__( 'Notifiche Email', 'fp-digital-marketing' ),
+			[ $this, 'render_email_section' ],
+			self::PAGE_SLUG
+		);
+
+		// Add email settings field.
+		add_settings_field(
+			'email_settings',
+			__( 'Configurazione Email', 'fp-digital-marketing' ),
+			[ $this, 'render_email_settings_field' ],
+			self::PAGE_SLUG,
+			self::SECTION_EMAIL
+		);
 	}
 
 	/**
@@ -348,19 +434,71 @@ class Settings {
 
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+			<h1>
+				<?php echo esc_html( get_admin_page_title() ); ?>
+				<span class="fp-dms-status-indicator connected">
+					<?php esc_html_e( 'Plugin Attivo', 'fp-digital-marketing' ); ?>
+				</span>
+			</h1>
 			
 			<?php settings_errors(); ?>
 			
-			<form method="post" action="options.php">
+			<!-- Settings Form -->
+			<form method="post" action="options.php" id="fp-dms-settings-form">
 				<?php
 				settings_fields( self::OPTION_GROUP );
-				do_settings_sections( self::PAGE_SLUG );
 				wp_nonce_field( self::NONCE_ACTION, '_wpnonce_settings' );
-				submit_button( __( 'Salva Impostazioni', 'fp-digital-marketing' ) );
 				?>
+				
+				<!-- Tab Interface will be injected here by JavaScript -->
+				<div class="wp-settings-sections">
+					<?php do_settings_sections( self::PAGE_SLUG ); ?>
+				</div>
+				
+				<!-- Submit Button -->
+				<div class="fp-dms-action-buttons">
+					<?php submit_button( __( 'Salva Impostazioni', 'fp-digital-marketing' ), 'primary', 'submit', false ); ?>
+					<button type="button" class="button button-secondary" id="fp-dms-reset-tab">
+						<?php esc_html_e( 'Ripristina Tab Corrente', 'fp-digital-marketing' ); ?>
+					</button>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ); ?>" class="button button-secondary">
+						<?php esc_html_e( 'Torna alla Dashboard', 'fp-digital-marketing' ); ?>
+					</a>
+				</div>
 			</form>
+			
+			<!-- Quick Stats -->
+			<div class="fp-dms-quick-stats" style="margin-top: 30px;">
+				<h3><?php esc_html_e( 'Stato Configurazione', 'fp-digital-marketing' ); ?></h3>
+				<div style="display: flex; gap: 20px; flex-wrap: wrap;">
+					<?php $this->render_configuration_status(); ?>
+				</div>
+			</div>
 		</div>
+
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			// Add body class for styling
+			$('body').addClass('settings_page_fp-digital-marketing-settings');
+			
+			// Reset tab button
+			$('#fp-dms-reset-tab').on('click', function() {
+				if (confirm(fpDmsSettings.strings.confirmReset)) {
+					// Reset form fields in active tab
+					$('.fp-dms-tab-panel.active').find('input, select, textarea').each(function() {
+						const $field = $(this);
+						if ($field.attr('type') === 'checkbox') {
+							$field.prop('checked', $field.data('default') || false);
+						} else {
+							$field.val($field.data('default') || '');
+						}
+					});
+					
+					fpDmsShowMessage('<?php esc_html_e( 'Campi del tab corrente ripristinati.', 'fp-digital-marketing' ); ?>', 'warning');
+				}
+			});
+		});
+		</script>
 		<?php
 	}
 
@@ -1091,41 +1229,129 @@ class Settings {
 		</table>
 		
 		<?php if ( $settings['enabled'] ): ?>
+		<h4><?php esc_html_e( 'Azioni Cache', 'fp-digital-marketing' ); ?></h4>
+		<table class="form-table">
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Pre-caricamento Cache', 'fp-digital-marketing' ); ?></th>
+				<td>
+					<button type="button" class="button" id="warmup-cache">
+						<?php esc_html_e( 'Pre-carica Cache', 'fp-digital-marketing' ); ?>
+					</button>
+					<p class="description">
+						<?php esc_html_e( 'Pre-carica la cache con i dati più utilizzati per migliorare le performance.', 'fp-digital-marketing' ); ?>
+					</p>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Gestione Cache', 'fp-digital-marketing' ); ?></th>
+				<td>
+					<a href="<?php echo esc_url( add_query_arg( 'action', 'invalidate_cache', admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+					   class="button" 
+					   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler invalidare tutta la cache?', 'fp-digital-marketing' ); ?>')">
+						<?php esc_html_e( 'Invalida Cache', 'fp-digital-marketing' ); ?>
+					</a>
+					<a href="<?php echo esc_url( add_query_arg( 'action', 'clear_cache_stats', admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+					   class="button" 
+					   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler cancellare le statistiche?', 'fp-digital-marketing' ); ?>')">
+						<?php esc_html_e( 'Cancella Statistiche', 'fp-digital-marketing' ); ?>
+					</a>
+				</td>
+			</tr>
+		</table>
+
 		<h4><?php esc_html_e( 'Statistiche Cache', 'fp-digital-marketing' ); ?></h4>
 		<?php 
-		$cache_stats = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_stats();
+		$cache_stats = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_statistics();
 		?>
 		<table class="widefat">
 			<tr>
+				<td><?php esc_html_e( 'Object Cache Disponibile:', 'fp-digital-marketing' ); ?></td>
+				<td><?php echo $cache_stats['object_cache_available'] ? '✅ ' . esc_html__( 'Sì', 'fp-digital-marketing' ) : '❌ ' . esc_html__( 'No', 'fp-digital-marketing' ); ?></td>
+			</tr>
+			<tr>
+				<td><?php esc_html_e( 'Transients Attivi:', 'fp-digital-marketing' ); ?></td>
+				<td><?php echo esc_html( number_format( $cache_stats['transients_count'] ) ); ?></td>
+			</tr>
+			<tr>
+				<td><?php esc_html_e( 'Ultimo Pre-caricamento:', 'fp-digital-marketing' ); ?></td>
+				<td>
+					<?php 
+					if ( $cache_stats['last_warmup'] > 0 ) {
+						echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $cache_stats['last_warmup'] ) );
+					} else {
+						esc_html_e( 'Mai', 'fp-digital-marketing' );
+					}
+					?>
+				</td>
+			</tr>
+			<tr>
+				<td><?php esc_html_e( 'Totale Warmup:', 'fp-digital-marketing' ); ?></td>
+				<td><?php echo esc_html( number_format( $cache_stats['total_warmups'] ) ); ?></td>
+			</tr>
+			<tr>
+				<td><?php esc_html_e( 'Chiavi Caricate:', 'fp-digital-marketing' ); ?></td>
+				<td><?php echo esc_html( number_format( $cache_stats['total_warmed_keys'] ) ); ?></td>
+			</tr>
+		</table>
+
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$('#warmup-cache').on('click', function() {
+				const $button = $(this);
+				const originalText = $button.text();
+				
+				$button.prop('disabled', true).text('<?php esc_html_e( 'Pre-caricando...', 'fp-digital-marketing' ); ?>');
+				
+				$.post(fpDmsSettings.ajaxUrl, {
+					action: 'fp_warmup_cache',
+					nonce: fpDmsSettings.nonce
+				}, function(response) {
+					$button.prop('disabled', false).text(originalText);
+					
+					if (response.success) {
+						fpDmsShowMessage(response.data.message, 'success');
+						// Refresh page after 2 seconds to show updated stats
+						setTimeout(function() {
+							window.location.reload();
+						}, 2000);
+					} else {
+						fpDmsShowMessage(response.data.message || '<?php esc_html_e( 'Errore durante il pre-caricamento.', 'fp-digital-marketing' ); ?>', 'error');
+					}
+				}).fail(function() {
+					$button.prop('disabled', false).text(originalText);
+					fpDmsShowMessage('<?php esc_html_e( 'Errore di connessione.', 'fp-digital-marketing' ); ?>', 'error');
+				});
+			});
+		});
+		</script>
+		
+		<?php 
+		$legacy_cache_stats = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_stats();
+		if ( ! empty( $legacy_cache_stats ) ):
+		?>
+		<h4><?php esc_html_e( 'Performance Cache (Legacy)', 'fp-digital-marketing' ); ?></h4>
+		<table class="widefat">
+			<tr>
 				<td><?php esc_html_e( 'Richieste Totali:', 'fp-digital-marketing' ); ?></td>
-				<td><?php echo esc_html( number_format( $cache_stats['total_requests'] ) ); ?></td>
+				<td><?php echo esc_html( number_format( $legacy_cache_stats['total_requests'] ?? 0 ) ); ?></td>
 			</tr>
 			<tr>
 				<td><?php esc_html_e( 'Cache Hit Ratio:', 'fp-digital-marketing' ); ?></td>
-				<td><?php echo esc_html( number_format( $cache_stats['hit_ratio'], 2 ) ); ?>%</td>
+				<td><?php echo esc_html( number_format( $legacy_cache_stats['hit_ratio'] ?? 0, 2 ) ); ?>%</td>
 			</tr>
 			<tr>
 				<td><?php esc_html_e( 'Cache Hits:', 'fp-digital-marketing' ); ?></td>
-				<td><?php echo esc_html( number_format( $cache_stats['cache_hits'] ) ); ?></td>
+				<td><?php echo esc_html( number_format( $legacy_cache_stats['cache_hits'] ?? 0 ) ); ?></td>
 			</tr>
 			<tr>
 				<td><?php esc_html_e( 'Cache Misses:', 'fp-digital-marketing' ); ?></td>
-				<td><?php echo esc_html( number_format( $cache_stats['cache_misses'] ) ); ?></td>
+				<td><?php echo esc_html( number_format( $legacy_cache_stats['cache_misses'] ?? 0 ) ); ?></td>
 			</tr>
 		</table>
+		<?php endif; ?>
 		
 		<p>
-			<a href="<?php echo esc_url( add_query_arg( 'action', 'clear_cache_stats', admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-			   class="button" 
-			   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler cancellare le statistiche?', 'fp-digital-marketing' ); ?>')">
-				<?php esc_html_e( 'Cancella Statistiche', 'fp-digital-marketing' ); ?>
-			</a>
 			
-			<a href="<?php echo esc_url( add_query_arg( 'action', 'invalidate_cache', admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-			   class="button" 
-			   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler invalidare tutta la cache?', 'fp-digital-marketing' ); ?>')">
-				<?php esc_html_e( 'Invalida Cache', 'fp-digital-marketing' ); ?>
-			</a>
 		</p>
 		<?php endif; ?>
 		<?php
@@ -1833,5 +2059,416 @@ class Settings {
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Handle cache warmup AJAX request
+	 *
+	 * @return void
+	 */
+	public function handle_cache_warmup(): void {
+		// Verify nonce
+		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_dms_settings_nonce' ) ) {
+			wp_die( esc_html__( 'Richiesta di sicurezza non valida.', 'fp-digital-marketing' ) );
+		}
+
+		// Check capabilities
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+			wp_send_json_error( __( 'Permessi insufficienti.', 'fp-digital-marketing' ) );
+		}
+
+		$warmup_results = PerformanceCache::warmup_cache();
+		
+		if ( $warmup_results['status'] === 'success' ) {
+			wp_send_json_success( [
+				'message' => sprintf(
+					__( 'Cache pre-caricata con successo! %d chiavi caricate, %d fallite in %.2f secondi.', 'fp-digital-marketing' ),
+					$warmup_results['warmed_keys'],
+					$warmup_results['failed_keys'],
+					$warmup_results['execution_time']
+				),
+				'results' => $warmup_results
+			] );
+		} else {
+			wp_send_json_error( [
+				'message' => __( 'Errore durante il pre-caricamento della cache.', 'fp-digital-marketing' ),
+				'results' => $warmup_results
+			] );
+		}
+	}
+
+	/**
+	 * Scheduled cache warmup callback
+	 *
+	 * @return void
+	 */
+	public function scheduled_cache_warmup(): void {
+		PerformanceCache::warmup_cache();
+	}
+
+	/**
+	 * Render email section description
+	 *
+	 * @return void
+	 */
+	public function render_email_section(): void {
+		echo '<p>' . esc_html__( 'Configura le notifiche email per alert, report e aggiornamenti del sistema.', 'fp-digital-marketing' ) . '</p>';
+	}
+
+	/**
+	 * Render email settings field
+	 *
+	 * @return void
+	 */
+	public function render_email_settings_field(): void {
+		$settings = get_option( self::OPTION_EMAIL, [
+			'alerts_enabled' => true,
+			'reports_enabled' => true,
+			'security_enabled' => true,
+			'system_enabled' => true,
+			'daily_digest_enabled' => false,
+			'alert_recipients' => [],
+			'report_recipients' => [],
+			'security_recipients' => [],
+			'digest_recipients' => [],
+		] );
+
+		// Get admin email as default
+		$admin_email = get_option( 'admin_email' );
+		if ( empty( $settings['alert_recipients'] ) ) {
+			$settings['alert_recipients'] = [ $admin_email ];
+		}
+		if ( empty( $settings['report_recipients'] ) ) {
+			$settings['report_recipients'] = [ $admin_email ];
+		}
+		if ( empty( $settings['security_recipients'] ) ) {
+			$settings['security_recipients'] = [ $admin_email ];
+		}
+		if ( empty( $settings['digest_recipients'] ) ) {
+			$settings['digest_recipients'] = [ $admin_email ];
+		}
+		?>
+		<table class="form-table">
+			<tbody>
+				<tr>
+					<th scope="row">
+						<label for="alerts_enabled"><?php esc_html_e( 'Notifiche Alert', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="alerts_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[alerts_enabled]" 
+							value="1" 
+							<?php checked( $settings['alerts_enabled'] ); ?>
+						/>
+						<label for="alerts_enabled"><?php esc_html_e( 'Abilita notifiche email per alert di sistema', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="alert_recipients"><?php esc_html_e( 'Destinatari Alert', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<textarea 
+							id="alert_recipients" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[alert_recipients]" 
+							rows="3" 
+							class="large-text"
+							placeholder="email1@example.com, email2@example.com"
+						><?php echo esc_textarea( implode( ', ', $settings['alert_recipients'] ) ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere notifiche di alert.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="reports_enabled"><?php esc_html_e( 'Notifiche Report', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="reports_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[reports_enabled]" 
+							value="1" 
+							<?php checked( $settings['reports_enabled'] ); ?>
+						/>
+						<label for="reports_enabled"><?php esc_html_e( 'Abilita notifiche email per report automatici', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="report_recipients"><?php esc_html_e( 'Destinatari Report', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<textarea 
+							id="report_recipients" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[report_recipients]" 
+							rows="3" 
+							class="large-text"
+							placeholder="email1@example.com, email2@example.com"
+						><?php echo esc_textarea( implode( ', ', $settings['report_recipients'] ) ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere report automatici.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="security_enabled"><?php esc_html_e( 'Notifiche Sicurezza', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="security_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[security_enabled]" 
+							value="1" 
+							<?php checked( $settings['security_enabled'] ); ?>
+						/>
+						<label for="security_enabled"><?php esc_html_e( 'Abilita notifiche email per eventi di sicurezza', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="security_recipients"><?php esc_html_e( 'Destinatari Sicurezza', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<textarea 
+							id="security_recipients" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[security_recipients]" 
+							rows="3" 
+							class="large-text"
+							placeholder="email1@example.com, email2@example.com"
+						><?php echo esc_textarea( implode( ', ', $settings['security_recipients'] ) ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere alert di sicurezza.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="daily_digest_enabled"><?php esc_html_e( 'Riepilogo Giornaliero', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="daily_digest_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[daily_digest_enabled]" 
+							value="1" 
+							<?php checked( $settings['daily_digest_enabled'] ); ?>
+						/>
+						<label for="daily_digest_enabled"><?php esc_html_e( 'Abilita riepilogo giornaliero via email', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="digest_recipients"><?php esc_html_e( 'Destinatari Riepilogo', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<textarea 
+							id="digest_recipients" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[digest_recipients]" 
+							rows="3" 
+							class="large-text"
+							placeholder="email1@example.com, email2@example.com"
+						><?php echo esc_textarea( implode( ', ', $settings['digest_recipients'] ) ); ?></textarea>
+						<p class="description">
+							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere il riepilogo giornaliero.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+
+				<tr>
+					<th scope="row">
+						<label for="system_enabled"><?php esc_html_e( 'Notifiche Sistema', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="checkbox" 
+							id="system_enabled" 
+							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[system_enabled]" 
+							value="1" 
+							<?php checked( $settings['system_enabled'] ); ?>
+						/>
+						<label for="system_enabled"><?php esc_html_e( 'Abilita notifiche email per eventi di sistema', 'fp-digital-marketing' ); ?></label>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		<h4><?php esc_html_e( 'Test Email', 'fp-digital-marketing' ); ?></h4>
+		<table class="form-table">
+			<tbody>
+				<tr>
+					<th scope="row">
+						<label for="test_email"><?php esc_html_e( 'Indirizzo Test', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="email" 
+							id="test_email" 
+							placeholder="<?php esc_attr_e( 'email@example.com', 'fp-digital-marketing' ); ?>"
+							class="regular-text"
+						/>
+						<button type="button" class="button" id="send-test-email">
+							<?php esc_html_e( 'Invia Email Test', 'fp-digital-marketing' ); ?>
+						</button>
+						<p class="description">
+							<?php esc_html_e( 'Invia un\'email di test per verificare la configurazione.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$('#send-test-email').on('click', function() {
+				const $button = $(this);
+				const $emailInput = $('#test_email');
+				const email = $emailInput.val();
+				
+				if (!email) {
+					alert('<?php esc_html_e( 'Inserisci un indirizzo email valido.', 'fp-digital-marketing' ); ?>');
+					return;
+				}
+				
+				const originalText = $button.text();
+				$button.prop('disabled', true).text('<?php esc_html_e( 'Invio...', 'fp-digital-marketing' ); ?>');
+				
+				$.post(fpDmsSettings.ajaxUrl, {
+					action: 'fp_test_email',
+					nonce: fpDmsSettings.nonce,
+					test_email: email
+				}, function(response) {
+					$button.prop('disabled', false).text(originalText);
+					
+					if (response.success) {
+						fpDmsShowMessage(response.data, 'success');
+					} else {
+						fpDmsShowMessage(response.data, 'error');
+					}
+				}).fail(function() {
+					$button.prop('disabled', false).text(originalText);
+					fpDmsShowMessage('<?php esc_html_e( 'Errore di connessione.', 'fp-digital-marketing' ); ?>', 'error');
+				});
+			});
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Sanitize email settings
+	 *
+	 * @param array $input Raw input data
+	 * @return array Sanitized data
+	 */
+	public function sanitize_email_settings( array $input ): array {
+		$sanitized = [];
+
+		// Boolean settings
+		$sanitized['alerts_enabled'] = isset( $input['alerts_enabled'] ) && $input['alerts_enabled'] === '1';
+		$sanitized['reports_enabled'] = isset( $input['reports_enabled'] ) && $input['reports_enabled'] === '1';
+		$sanitized['security_enabled'] = isset( $input['security_enabled'] ) && $input['security_enabled'] === '1';
+		$sanitized['system_enabled'] = isset( $input['system_enabled'] ) && $input['system_enabled'] === '1';
+		$sanitized['daily_digest_enabled'] = isset( $input['daily_digest_enabled'] ) && $input['daily_digest_enabled'] === '1';
+
+		// Email lists
+		$email_fields = [ 'alert_recipients', 'report_recipients', 'security_recipients', 'digest_recipients' ];
+		foreach ( $email_fields as $field ) {
+			$emails = [];
+			if ( isset( $input[ $field ] ) && ! empty( $input[ $field ] ) ) {
+				$email_list = explode( ',', $input[ $field ] );
+				foreach ( $email_list as $email ) {
+					$email = trim( $email );
+					if ( is_email( $email ) ) {
+						$emails[] = $email;
+					}
+				}
+			}
+			
+			// Ensure at least admin email is included
+			if ( empty( $emails ) ) {
+				$emails[] = get_option( 'admin_email' );
+			}
+			
+			$sanitized[ $field ] = array_unique( $emails );
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Render configuration status overview
+	 *
+	 * @return void
+	 */
+	private function render_configuration_status(): void {
+		$oauth = new GoogleOAuth();
+		$ga4_status = $oauth->get_connection_status();
+		$cache_settings = PerformanceCache::get_cache_settings();
+		$sitemap_settings = get_option( self::OPTION_SITEMAP, [] );
+		
+		// Google Analytics Status
+		$ga4_connected = isset( $ga4_status['status'] ) && $ga4_status['status'] === 'connected';
+		?>
+		<div class="fp-dms-status-card">
+			<strong><?php esc_html_e( 'Google Analytics 4', 'fp-digital-marketing' ); ?></strong>
+			<span class="fp-dms-status-indicator <?php echo $ga4_connected ? 'connected' : 'disconnected'; ?>">
+				<?php echo $ga4_connected ? esc_html__( 'Connesso', 'fp-digital-marketing' ) : esc_html__( 'Non Connesso', 'fp-digital-marketing' ); ?>
+			</span>
+		</div>
+
+		<!-- Cache Status -->
+		<div class="fp-dms-status-card">
+			<strong><?php esc_html_e( 'Sistema Cache', 'fp-digital-marketing' ); ?></strong>
+			<span class="fp-dms-status-indicator <?php echo $cache_settings['enabled'] ? 'connected' : 'warning'; ?>">
+				<?php echo $cache_settings['enabled'] ? esc_html__( 'Abilitato', 'fp-digital-marketing' ) : esc_html__( 'Disabilitato', 'fp-digital-marketing' ); ?>
+			</span>
+		</div>
+
+		<!-- Sitemap Status -->
+		<div class="fp-dms-status-card">
+			<strong><?php esc_html_e( 'XML Sitemap', 'fp-digital-marketing' ); ?></strong>
+			<span class="fp-dms-status-indicator <?php echo ! empty( $sitemap_settings['enabled_post_types'] ) ? 'connected' : 'warning'; ?>">
+				<?php echo ! empty( $sitemap_settings['enabled_post_types'] ) ? esc_html__( 'Configurato', 'fp-digital-marketing' ) : esc_html__( 'Non Configurato', 'fp-digital-marketing' ); ?>
+			</span>
+		</div>
+
+		<!-- SEO Status -->
+		<?php
+		$seo_settings = get_option( self::OPTION_SEO, [] );
+		$seo_configured = ! empty( $seo_settings['site_title_template'] ) && ! empty( $seo_settings['home_title_template'] );
+		?>
+		<div class="fp-dms-status-card">
+			<strong><?php esc_html_e( 'Configurazione SEO', 'fp-digital-marketing' ); ?></strong>
+			<span class="fp-dms-status-indicator <?php echo $seo_configured ? 'connected' : 'warning'; ?>">
+				<?php echo $seo_configured ? esc_html__( 'Configurato', 'fp-digital-marketing' ) : esc_html__( 'Parziale', 'fp-digital-marketing' ); ?>
+			</span>
+		</div>
+
+		<style>
+		.fp-dms-status-card {
+			background: #fff;
+			border: 1px solid #ddd;
+			border-radius: 6px;
+			padding: 15px;
+			min-width: 180px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 10px;
+		}
+		</style>
+		<?php
 	}
 }

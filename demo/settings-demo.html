@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FP Digital Marketing Suite - Settings Demo</title>
+    <link rel="stylesheet" href="../assets/css/settings-tabs.css">
+    <style>
+        /* WordPress Admin Styling */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f1f1f1;
+            color: #1d2327;
+        }
+        
+        .wrap {
+            background: #fff;
+            margin: 0 auto;
+            max-width: 1200px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .wrap h1 {
+            background: #0073aa;
+            color: white;
+            margin: 0;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 24px;
+        }
+        
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .form-table th {
+            width: 200px;
+            padding: 15px 10px 15px 0;
+            font-weight: 600;
+            vertical-align: top;
+        }
+        
+        .form-table td {
+            padding: 15px 10px;
+        }
+        
+        .button {
+            background: #0073aa;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+        
+        .button:hover {
+            background: #005a87;
+        }
+        
+        .button-primary {
+            background: #00a32a;
+            font-size: 16px;
+            padding: 12px 24px;
+        }
+        
+        .button-primary:hover {
+            background: #008a20;
+        }
+        
+        input[type="text"], input[type="email"], input[type="number"], input[type="url"], input[type="password"], textarea, select {
+            border: 1px solid #8c8f94;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .description {
+            color: #646970;
+            font-size: 13px;
+            margin: 5px 0 0 0;
+            line-height: 1.4;
+        }
+        
+        .demo-note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0073aa;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #646970;
+            margin-top: 5px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>
+            FP Digital Marketing Settings
+            <span class="fp-dms-status-indicator connected">Plugin Attivo</span>
+        </h1>
+        
+        <div class="demo-note">
+            <strong>🎉 Demo delle Migliorie Implementate</strong><br>
+            Questa è una dimostrazione dell'interfaccia migliorata del plugin FP Digital Marketing Suite con navigazione a tab, cache warmup, export dati e notifiche email.
+        </div>
+        
+        <form id="fp-dms-settings-form">
+            <!-- Tab Navigation -->
+            <div class="fp-dms-settings-tabs">
+                <div class="fp-dms-tab-nav">
+                    <button type="button" class="fp-dms-tab-button active" data-tab="general">
+                        <span class="dashicons dashicons-admin-generic"></span>
+                        Configurazione Generale
+                    </button>
+                    <button type="button" class="fp-dms-tab-button" data-tab="api-keys">
+                        <span class="dashicons dashicons-admin-network"></span>
+                        Chiavi API
+                    </button>
+                    <button type="button" class="fp-dms-tab-button" data-tab="cache">
+                        <span class="dashicons dashicons-performance"></span>
+                        Performance & Cache
+                    </button>
+                    <button type="button" class="fp-dms-tab-button" data-tab="email">
+                        <span class="dashicons dashicons-email-alt"></span>
+                        Notifiche Email
+                    </button>
+                    <button type="button" class="fp-dms-tab-button" data-tab="export">
+                        <span class="dashicons dashicons-download"></span>
+                        Export Dati
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Tab Content -->
+            <div class="fp-dms-tab-content">
+                <!-- General Tab -->
+                <div class="fp-dms-tab-panel active" data-tab="general">
+                    <div class="fp-dms-section-header">
+                        <h3>Configurazione Generale</h3>
+                        <p>Impostazioni di base e configurazioni generali del plugin.</p>
+                    </div>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="demo_field">Campo Demo</label>
+                            </th>
+                            <td>
+                                <input type="text" id="demo_field" value="Valore di esempio" placeholder="Inserisci valore demo...">
+                                <p class="description">Questo è un campo di esempio per testare il salvataggio delle opzioni.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- API Keys Tab -->
+                <div class="fp-dms-tab-panel" data-tab="api-keys">
+                    <div class="fp-dms-section-header">
+                        <h3>Chiavi API</h3>
+                        <p>Configurazione delle chiavi API per servizi esterni come Google Analytics, Search Console e altri.</p>
+                    </div>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="google_client_id">Google Client ID</label>
+                                <span class="fp-dms-help-tooltip">
+                                    <span style="color: #72777c; font-size: 16px; cursor: help;">?</span>
+                                    <div class="tooltip-content">Ottieni questo ID dalla Google Cloud Console creando un progetto OAuth 2.0.</div>
+                                </span>
+                            </th>
+                            <td>
+                                <input type="text" id="google_client_id" placeholder="Google OAuth Client ID">
+                                <p class="description">ID client OAuth per Google Analytics 4 API</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="google_client_secret">Google Client Secret</label>
+                            </th>
+                            <td>
+                                <input type="password" id="google_client_secret" placeholder="••••••••••••">
+                                <p class="description">Secret client OAuth per Google Analytics 4 API</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Cache Tab -->
+                <div class="fp-dms-tab-panel" data-tab="cache">
+                    <div class="fp-dms-section-header">
+                        <h3>Performance & Cache</h3>
+                        <p>Configurazione del sistema di caching per migliorare le performance delle query sui report.</p>
+                    </div>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="cache_enabled">Abilita Cache</label>
+                            </th>
+                            <td>
+                                <input type="checkbox" id="cache_enabled" checked>
+                                <label for="cache_enabled">Attiva il sistema di caching</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Pre-caricamento Cache</th>
+                            <td>
+                                <button type="button" class="button" id="warmup-cache">
+                                    Pre-carica Cache
+                                </button>
+                                <p class="description">Pre-carica la cache con i dati più utilizzati per migliorare le performance.</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <h4>Statistiche Cache</h4>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <span class="stat-value">✅</span>
+                            <span class="stat-label">Object Cache</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value">15</span>
+                            <span class="stat-label">Transients Attivi</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value">2 ore fa</span>
+                            <span class="stat-label">Ultimo Warmup</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value">42</span>
+                            <span class="stat-label">Totale Warmup</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Email Tab -->
+                <div class="fp-dms-tab-panel" data-tab="email">
+                    <div class="fp-dms-section-header">
+                        <h3>Notifiche Email</h3>
+                        <p>Configurazione delle notifiche email per alert, report e aggiornamenti del sistema.</p>
+                    </div>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="alerts_enabled">Notifiche Alert</label>
+                            </th>
+                            <td>
+                                <input type="checkbox" id="alerts_enabled" checked>
+                                <label for="alerts_enabled">Abilita notifiche email per alert di sistema</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="alert_recipients">Destinatari Alert</label>
+                            </th>
+                            <td>
+                                <textarea id="alert_recipients" rows="3" placeholder="email1@example.com, email2@example.com">admin@example.com, manager@example.com</textarea>
+                                <p class="description">Indirizzi email separati da virgola per ricevere notifiche di alert.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="daily_digest_enabled">Riepilogo Giornaliero</label>
+                            </th>
+                            <td>
+                                <input type="checkbox" id="daily_digest_enabled">
+                                <label for="daily_digest_enabled">Abilita riepilogo giornaliero via email</label>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <h4>Test Email</h4>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="test_email">Indirizzo Test</label>
+                            </th>
+                            <td>
+                                <input type="email" id="test_email" placeholder="email@example.com" style="max-width: 300px; display: inline-block; margin-right: 10px;">
+                                <button type="button" class="button">Invia Email Test</button>
+                                <p class="description">Invia un'email di test per verificare la configurazione.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- Export Tab (Demo) -->
+                <div class="fp-dms-tab-panel" data-tab="export">
+                    <div class="fp-dms-section-header">
+                        <h3>Export Dati</h3>
+                        <p>Esporta i tuoi dati di marketing in diversi formati per analisi esterne.</p>
+                    </div>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="export_type">Tipo Dati</label>
+                            </th>
+                            <td>
+                                <select id="export_type">
+                                    <option value="analytics">Dati Analytics</option>
+                                    <option value="clients">Clienti</option>
+                                    <option value="campaigns">Campagne</option>
+                                    <option value="reports">Report</option>
+                                    <option value="settings">Impostazioni</option>
+                                </select>
+                                <p class="description">Seleziona il tipo di dati da esportare.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                <label for="export_format">Formato</label>
+                            </th>
+                            <td>
+                                <select id="export_format">
+                                    <option value="csv">CSV</option>
+                                    <option value="json">JSON</option>
+                                    <option value="xml">XML</option>
+                                    <option value="pdf">PDF</option>
+                                </select>
+                                <p class="description">Formato di esportazione desiderato.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Export</th>
+                            <td>
+                                <button type="button" class="button">
+                                    Esporta Dati
+                                </button>
+                                <p class="description">Genera ed esporta i dati selezionati. Il download inizierà automaticamente.</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="fp-dms-action-buttons">
+                <button type="submit" class="button button-primary">Salva Impostazioni</button>
+                <button type="button" class="button">Ripristina Tab Corrente</button>
+                <a href="#" class="button">Torna alla Dashboard</a>
+            </div>
+        </form>
+        
+        <!-- Quick Stats -->
+        <div class="fp-dms-quick-stats" style="margin-top: 30px; padding: 0 30px 30px;">
+            <h3>Stato Configurazione</h3>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div class="fp-dms-status-card">
+                    <strong>Google Analytics 4</strong>
+                    <span class="fp-dms-status-indicator connected">Connesso</span>
+                </div>
+                <div class="fp-dms-status-card">
+                    <strong>Sistema Cache</strong>
+                    <span class="fp-dms-status-indicator connected">Abilitato</span>
+                </div>
+                <div class="fp-dms-status-card">
+                    <strong>XML Sitemap</strong>
+                    <span class="fp-dms-status-indicator connected">Configurato</span>
+                </div>
+                <div class="fp-dms-status-card">
+                    <strong>Notifiche Email</strong>
+                    <span class="fp-dms-status-indicator connected">Attive</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching functionality
+            const tabButtons = document.querySelectorAll('.fp-dms-tab-button');
+            const tabPanels = document.querySelectorAll('.fp-dms-tab-panel');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // Update buttons
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update panels
+                    tabPanels.forEach(panel => {
+                        panel.classList.remove('active');
+                        if (panel.getAttribute('data-tab') === targetTab) {
+                            panel.classList.add('active');
+                        }
+                    });
+                });
+            });
+            
+            // Demo interactions
+            document.getElementById('warmup-cache').addEventListener('click', function() {
+                this.textContent = 'Pre-caricando...';
+                this.disabled = true;
+                
+                setTimeout(() => {
+                    this.textContent = 'Cache pre-caricata!';
+                    setTimeout(() => {
+                        this.textContent = 'Pre-carica Cache';
+                        this.disabled = false;
+                    }, 2000);
+                }, 1500);
+            });
+            
+            // Tooltip functionality
+            const tooltips = document.querySelectorAll('.fp-dms-help-tooltip');
+            tooltips.forEach(tooltip => {
+                tooltip.addEventListener('mouseenter', function() {
+                    const content = this.querySelector('.tooltip-content');
+                    if (content) {
+                        content.style.visibility = 'visible';
+                        content.style.opacity = '1';
+                    }
+                });
+                
+                tooltip.addEventListener('mouseleave', function() {
+                    const content = this.querySelector('.tooltip-content');
+                    if (content) {
+                        content.style.visibility = 'hidden';
+                        content.style.opacity = '0';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

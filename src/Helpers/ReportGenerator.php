@@ -156,20 +156,46 @@ class ReportGenerator {
 	 *
 	 * @param array $report_data Report data array
 	 * @return string PDF binary content
+	 * @throws \Exception If PDF generation fails
 	 */
 	public static function generate_pdf_report( array $report_data ): string {
-		$html = self::generate_html_report( $report_data );
+		// Check if dompdf is available
+		if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
+			// Try to load via composer autoload
+			$plugin_dir = dirname( dirname( dirname( __FILE__ ) ) );
+			$autoload_path = $plugin_dir . '/vendor/autoload.php';
+			if ( file_exists( $autoload_path ) ) {
+				require_once $autoload_path;
+			}
+			
+			// If still not available, throw exception
+			if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
+				throw new \Exception( self::__( 'PDF generation non disponibile. Utilizzare formato HTML o installare le dipendenze.', 'fp-digital-marketing' ) );
+			}
+		}
 
-		$options = new Options();
-		$options->set( 'defaultFont', 'Arial' );
-		$options->set( 'isRemoteEnabled', true );
+		try {
+			$html = self::generate_html_report( $report_data );
 
-		$dompdf = new Dompdf( $options );
-		$dompdf->loadHtml( $html );
-		$dompdf->setPaper( 'A4', 'portrait' );
-		$dompdf->render();
+			$options = new Options();
+			$options->set( 'defaultFont', 'Arial' );
+			$options->set( 'isRemoteEnabled', true );
 
-		return $dompdf->output();
+			$dompdf = new Dompdf( $options );
+			$dompdf->loadHtml( $html );
+			$dompdf->setPaper( 'A4', 'portrait' );
+			$dompdf->render();
+
+			return $dompdf->output();
+		} catch ( \Exception $e ) {
+			// If PDF generation fails, throw exception to be handled by caller
+			throw new \Exception( 
+				sprintf( 
+					self::__( 'Errore nella generazione PDF: %s', 'fp-digital-marketing' ), 
+					$e->getMessage() 
+				) 
+			);
+		}
 	}
 
 	/**

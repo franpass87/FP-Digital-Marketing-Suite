@@ -22,6 +22,7 @@ class Capabilities {
 	public const VIEW_DASHBOARD = 'fp_dms_view_dashboard';
 	public const MANAGE_DATA_SOURCES = 'fp_dms_manage_data_sources';
 	public const EXPORT_REPORTS = 'fp_dms_export_reports';
+	public const EXPORT_DATA = 'fp_dms_export_data';
 	public const MANAGE_ALERTS = 'fp_dms_manage_alerts';
 	public const MANAGE_SETTINGS = 'fp_dms_manage_settings';
 	public const MANAGE_CAMPAIGNS = 'fp_dms_manage_campaigns';
@@ -38,6 +39,7 @@ class Capabilities {
 		self::VIEW_DASHBOARD,
 		self::MANAGE_DATA_SOURCES,
 		self::EXPORT_REPORTS,
+		self::EXPORT_DATA,
 		self::MANAGE_ALERTS,
 		self::MANAGE_SETTINGS,
 		self::MANAGE_CAMPAIGNS,

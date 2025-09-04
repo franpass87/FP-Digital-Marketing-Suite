@@ -45,22 +45,37 @@ class Dashboard {
 	 * @return void
 	 */
 	public function init(): void {
-		// Initialize optimizations
-		$this->optimizations = new AdminOptimizations();
-		$this->optimizations->init();
+		try {
+			// Initialize optimizations with error handling to prevent WSOD
+			$this->optimizations = new AdminOptimizations();
+			$this->optimizations->init();
+		} catch ( \Throwable $e ) {
+			// Log error but continue initialization
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing Dashboard: Failed to initialize optimizations - ' . $e->getMessage() );
+			}
+		}
 
-		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_dashboard_assets' ] );
-		add_action( 'wp_ajax_fp_dms_get_dashboard_data', [ $this, 'handle_ajax_dashboard_data' ] );
-		add_action( 'wp_ajax_fp_dms_get_chart_data', [ $this, 'handle_ajax_chart_data' ] );
-		add_action( 'wp_ajax_fp_dms_get_core_web_vitals', [ $this, 'handle_ajax_core_web_vitals' ] );
-		add_action( 'wp_ajax_fp_dms_record_client_vital', [ $this, 'handle_ajax_record_client_vital' ] );
-		
-		// Add menu verification hook for debugging
-		add_action( 'admin_notices', [ $this, 'verify_menu_structure' ] );
-		
-		// Add performance dashboard widget
-		add_action( 'wp_dashboard_setup', [ $this, 'add_performance_dashboard_widget' ] );
+		// Add admin hooks with error handling to prevent WSOD
+		try {
+			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_dashboard_assets' ] );
+			add_action( 'wp_ajax_fp_dms_get_dashboard_data', [ $this, 'handle_ajax_dashboard_data' ] );
+			add_action( 'wp_ajax_fp_dms_get_chart_data', [ $this, 'handle_ajax_chart_data' ] );
+			add_action( 'wp_ajax_fp_dms_get_core_web_vitals', [ $this, 'handle_ajax_core_web_vitals' ] );
+			add_action( 'wp_ajax_fp_dms_record_client_vital', [ $this, 'handle_ajax_record_client_vital' ] );
+			
+			// Add menu verification hook for debugging
+			add_action( 'admin_notices', [ $this, 'verify_menu_structure' ] );
+			
+			// Add performance dashboard widget
+			add_action( 'wp_dashboard_setup', [ $this, 'add_performance_dashboard_widget' ] );
+		} catch ( \Throwable $e ) {
+			// Log hook registration errors
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing Dashboard: Failed to register hooks - ' . $e->getMessage() );
+			}
+		}
 	}
 
 	/**
@@ -182,29 +197,39 @@ class Dashboard {
 	 * @return void
 	 */
 	public function handle_ajax_dashboard_data(): void {
-		// Verify nonce and capabilities
-		if ( ! Security::verify_nonce_with_logging( 'fp_dms_dashboard' ) ) {
-			wp_die( 'Invalid nonce' );
+		try {
+			// Verify nonce and capabilities
+			if ( ! Security::verify_nonce_with_logging( 'fp_dms_dashboard' ) ) {
+				wp_send_json_error( 'Invalid nonce', 403 );
+				return;
+			}
+
+			if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
+				wp_send_json_error( 'Insufficient permissions', 403 );
+				return;
+			}
+
+			$client_id = intval( $_GET['client_id'] ?? 0 );
+			$period_start = sanitize_text_field( $_GET['period_start'] ?? '' );
+			$period_end = sanitize_text_field( $_GET['period_end'] ?? '' );
+			$sources = isset( $_GET['sources'] ) ? array_map( 'sanitize_text_field', $_GET['sources'] ) : [];
+
+			// Default to last 30 days if no period specified
+			if ( empty( $period_start ) || empty( $period_end ) ) {
+				$period_end = date( 'Y-m-d H:i:s' );
+				$period_start = date( 'Y-m-d H:i:s', strtotime( '-30 days' ) );
+			}
+
+			$dashboard_data = $this->get_dashboard_data( $client_id, $period_start, $period_end, $sources );
+
+			wp_send_json_success( $dashboard_data );
+		} catch ( \Throwable $e ) {
+			// Log error and send JSON error response to prevent WSOD
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing Dashboard AJAX Error: ' . $e->getMessage() );
+			}
+			wp_send_json_error( __( 'Si è verificato un errore durante il caricamento dei dati.', 'fp-digital-marketing' ), 500 );
 		}
-
-		if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
-			wp_die( 'Insufficient permissions' );
-		}
-
-		$client_id = intval( $_GET['client_id'] ?? 0 );
-		$period_start = sanitize_text_field( $_GET['period_start'] ?? '' );
-		$period_end = sanitize_text_field( $_GET['period_end'] ?? '' );
-		$sources = isset( $_GET['sources'] ) ? array_map( 'sanitize_text_field', $_GET['sources'] ) : [];
-
-		// Default to last 30 days if no period specified
-		if ( empty( $period_start ) || empty( $period_end ) ) {
-			$period_end = date( 'Y-m-d H:i:s' );
-			$period_start = date( 'Y-m-d H:i:s', strtotime( '-30 days' ) );
-		}
-
-		$dashboard_data = $this->get_dashboard_data( $client_id, $period_start, $period_end, $sources );
-
-		wp_send_json_success( $dashboard_data );
 	}
 
 	/**
@@ -213,30 +238,40 @@ class Dashboard {
 	 * @return void
 	 */
 	public function handle_ajax_chart_data(): void {
-		// Verify nonce and capabilities
-		if ( ! Security::verify_nonce_with_logging( 'fp_dms_dashboard' ) ) {
-			wp_die( 'Invalid nonce' );
+		try {
+			// Verify nonce and capabilities
+			if ( ! Security::verify_nonce_with_logging( 'fp_dms_dashboard' ) ) {
+				wp_send_json_error( 'Invalid nonce', 403 );
+				return;
+			}
+
+			if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
+				wp_send_json_error( 'Insufficient permissions', 403 );
+				return;
+			}
+
+			$metric = sanitize_text_field( $_GET['metric'] ?? 'sessions' );
+			$client_id = intval( $_GET['client_id'] ?? 0 );
+			$period_start = sanitize_text_field( $_GET['period_start'] ?? '' );
+			$period_end = sanitize_text_field( $_GET['period_end'] ?? '' );
+			$sources = isset( $_GET['sources'] ) ? array_map( 'sanitize_text_field', $_GET['sources'] ) : [];
+
+			// Default to last 30 days if no period specified
+			if ( empty( $period_start ) || empty( $period_end ) ) {
+				$period_end = date( 'Y-m-d H:i:s' );
+				$period_start = date( 'Y-m-d H:i:s', strtotime( '-30 days' ) );
+			}
+
+			$chart_data = $this->get_chart_data( $metric, $client_id, $period_start, $period_end, $sources );
+
+			wp_send_json_success( $chart_data );
+		} catch ( \Throwable $e ) {
+			// Log error and send JSON error response to prevent WSOD
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing Chart AJAX Error: ' . $e->getMessage() );
+			}
+			wp_send_json_error( __( 'Si è verificato un errore durante il caricamento del grafico.', 'fp-digital-marketing' ), 500 );
 		}
-
-		if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
-			wp_die( 'Insufficient permissions' );
-		}
-
-		$metric = sanitize_text_field( $_GET['metric'] ?? 'sessions' );
-		$client_id = intval( $_GET['client_id'] ?? 0 );
-		$period_start = sanitize_text_field( $_GET['period_start'] ?? '' );
-		$period_end = sanitize_text_field( $_GET['period_end'] ?? '' );
-		$sources = isset( $_GET['sources'] ) ? array_map( 'sanitize_text_field', $_GET['sources'] ) : [];
-
-		// Default to last 30 days if no period specified
-		if ( empty( $period_start ) || empty( $period_end ) ) {
-			$period_end = date( 'Y-m-d H:i:s' );
-			$period_start = date( 'Y-m-d H:i:s', strtotime( '-30 days' ) );
-		}
-
-		$chart_data = $this->get_chart_data( $metric, $client_id, $period_start, $period_end, $sources );
-
-		wp_send_json_success( $chart_data );
 	}
 
 	/**
@@ -507,54 +542,64 @@ class Dashboard {
 	 * @return void
 	 */
 	public function handle_ajax_core_web_vitals(): void {
-		// Verify nonce and capabilities
-		if ( ! Security::verify_nonce_with_logging( 'fp_dms_dashboard' ) ) {
-			wp_die( 'Invalid nonce' );
-		}
-
-		if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
-			wp_die( 'Insufficient permissions' );
-		}
-
-		$client_id = intval( $_GET['client_id'] ?? 0 );
-		$origin_url = sanitize_url( $_GET['origin_url'] ?? get_site_url() );
-
-		// Get Core Web Vitals data
-		$cwv = new CoreWebVitals( $origin_url );
-		$period_end = date( 'Y-m-d H:i:s' );
-		$period_start = date( 'Y-m-d H:i:s', strtotime( '-28 days' ) );
-
-		$metrics = $cwv->fetch_metrics( $client_id, $period_start, $period_end );
-
-		if ( $metrics ) {
-			// Get performance recommendations
-			$recommendations = CoreWebVitalsHelper::get_performance_recommendations( $metrics );
-			
-			// Calculate performance score
-			$score = CoreWebVitalsHelper::calculate_performance_score( $metrics );
-
-			// Get status for each metric
-			$statuses = [];
-			foreach ( $metrics as $metric => $value ) {
-				$kpi = MetricsSchema::normalize_metric_name( 'core_web_vitals', $metric );
-				$statuses[ $metric ] = [
-					'status' => MetricsSchema::get_performance_status( $kpi, (float) $value ),
-					'color' => MetricsSchema::get_performance_color( 
-						MetricsSchema::get_performance_status( $kpi, (float) $value )
-					),
-					'formatted_value' => CoreWebVitalsHelper::format_metric_value( $metric, $value ),
-				];
+		try {
+			// Verify nonce and capabilities
+			if ( ! Security::verify_nonce_with_logging( 'fp_dms_dashboard' ) ) {
+				wp_send_json_error( 'Invalid nonce', 403 );
+				return;
 			}
 
-			wp_send_json_success([
-				'metrics' => $metrics,
-				'statuses' => $statuses,
-				'recommendations' => $recommendations,
-				'score' => $score,
-				'origin_url' => $origin_url,
-			]);
-		} else {
-			wp_send_json_error( __( 'Unable to fetch Core Web Vitals data', 'fp-digital-marketing' ) );
+			if ( ! Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
+				wp_send_json_error( 'Insufficient permissions', 403 );
+				return;
+			}
+
+			$client_id = intval( $_GET['client_id'] ?? 0 );
+			$origin_url = sanitize_url( $_GET['origin_url'] ?? get_site_url() );
+
+			// Get Core Web Vitals data with error handling
+			$cwv = new CoreWebVitals( $origin_url );
+			$period_end = date( 'Y-m-d H:i:s' );
+			$period_start = date( 'Y-m-d H:i:s', strtotime( '-28 days' ) );
+
+			$metrics = $cwv->fetch_metrics( $client_id, $period_start, $period_end );
+
+			if ( $metrics ) {
+				// Get performance recommendations
+				$recommendations = CoreWebVitalsHelper::get_performance_recommendations( $metrics );
+				
+				// Calculate performance score
+				$score = CoreWebVitalsHelper::calculate_performance_score( $metrics );
+
+				// Get status for each metric
+				$statuses = [];
+				foreach ( $metrics as $metric => $value ) {
+					$kpi = MetricsSchema::normalize_metric_name( 'core_web_vitals', $metric );
+					$statuses[ $metric ] = [
+						'status' => MetricsSchema::get_performance_status( $kpi, (float) $value ),
+						'color' => MetricsSchema::get_performance_color( 
+							MetricsSchema::get_performance_status( $kpi, (float) $value )
+						),
+						'formatted_value' => CoreWebVitalsHelper::format_metric_value( $metric, $value ),
+					];
+				}
+
+				wp_send_json_success([
+					'metrics' => $metrics,
+					'statuses' => $statuses,
+					'recommendations' => $recommendations,
+					'score' => $score,
+					'origin_url' => $origin_url,
+				]);
+			} else {
+				wp_send_json_error( __( 'Unable to fetch Core Web Vitals data', 'fp-digital-marketing' ) );
+			}
+		} catch ( \Throwable $e ) {
+			// Log error and send JSON error response to prevent WSOD
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing Core Web Vitals AJAX Error: ' . $e->getMessage() );
+			}
+			wp_send_json_error( __( 'Si è verificato un errore durante il caricamento dei Core Web Vitals.', 'fp-digital-marketing' ), 500 );
 		}
 	}
 
@@ -564,29 +609,38 @@ class Dashboard {
 	 * @return void
 	 */
 	public function handle_ajax_record_client_vital(): void {
-		// Verify nonce
-		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_dms_client_vitals' ) ) {
-			wp_die( 'Invalid nonce' );
-		}
+		try {
+			// Verify nonce
+			if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_dms_client_vitals' ) ) {
+				wp_send_json_error( 'Invalid nonce', 403 );
+				return;
+			}
 
-		$metric = sanitize_text_field( $_POST['metric'] ?? '' );
-		$value = (float) ( $_POST['value'] ?? 0 );
-		$url = sanitize_url( $_POST['url'] ?? '' );
+			$metric = sanitize_text_field( $_POST['metric'] ?? '' );
+			$value = (float) ( $_POST['value'] ?? 0 );
+			$url = sanitize_url( $_POST['url'] ?? '' );
 
-		// Store client-side vital in database
-		if ( in_array( $metric, [ 'lcp', 'inp', 'cls', 'fid' ], true ) && $value > 0 ) {
-			// You could store this in a separate table for real-time monitoring
-			// For now, we'll just log it
-			error_log( sprintf( 
-				'Client-side vital: %s = %s on %s', 
-				$metric, 
-				$value, 
-				$url 
-			) );
+			// Store client-side vital in database
+			if ( in_array( $metric, [ 'lcp', 'inp', 'cls', 'fid' ], true ) && $value > 0 ) {
+				// You could store this in a separate table for real-time monitoring
+				// For now, we'll just log it
+				error_log( sprintf( 
+					'Client-side vital: %s = %s on %s', 
+					$metric, 
+					$value, 
+					$url 
+				) );
 
-			wp_send_json_success( [ 'recorded' => true ] );
-		} else {
-			wp_send_json_error( 'Invalid metric data' );
+				wp_send_json_success( [ 'recorded' => true ] );
+			} else {
+				wp_send_json_error( 'Invalid metric data' );
+			}
+		} catch ( \Throwable $e ) {
+			// Log error and send JSON error response to prevent WSOD
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing Record Vitals AJAX Error: ' . $e->getMessage() );
+			}
+			wp_send_json_error( __( 'Si è verificato un errore durante la registrazione del vital.', 'fp-digital-marketing' ), 500 );
 		}
 	}
 

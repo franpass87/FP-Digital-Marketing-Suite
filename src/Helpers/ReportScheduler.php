@@ -103,10 +103,18 @@ class ReportScheduler {
 
 			// Save report to uploads directory
 			$upload_dir = wp_upload_dir();
+			
+			// Ensure we have a valid upload directory
+			if ( empty( $upload_dir['basedir'] ) || ! is_writable( $upload_dir['basedir'] ) ) {
+				throw new \Exception( 'Directory di upload non accessibile per la generazione report.' );
+			}
+			
 			$reports_dir = $upload_dir['basedir'] . '/fp-dms-reports';
 			
 			if ( ! file_exists( $reports_dir ) ) {
-				wp_mkdir_p( $reports_dir );
+				if ( ! wp_mkdir_p( $reports_dir ) ) {
+					throw new \Exception( 'Impossibile creare la directory dei report.' );
+				}
 			}
 
 			$filename = sprintf( 
@@ -118,17 +126,17 @@ class ReportScheduler {
 
 			$result = file_put_contents( $filepath, $pdf_content );
 
-			if ( $result !== false ) {
-				// Save report metadata
-				update_post_meta( $client_id, '_fp_last_report_generated', current_time( 'mysql' ) );
-				update_post_meta( $client_id, '_fp_last_report_file', $filename );
-				
-				return true;
+			if ( $result === false ) {
+				throw new \Exception( 'Impossibile salvare il file del report.' );
 			}
 
-			return false;
+			// Save report metadata
+			update_post_meta( $client_id, '_fp_last_report_generated', current_time( 'mysql' ) );
+			update_post_meta( $client_id, '_fp_last_report_file', $filename );
+			
+			return true;
 
-		} catch ( Exception $e ) {
+		} catch ( \Exception $e ) {
 			error_log( 'FP DMS Report Generation Error: ' . $e->getMessage() );
 			return false;
 		}

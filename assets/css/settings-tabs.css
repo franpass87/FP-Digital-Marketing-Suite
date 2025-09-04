@@ -1,0 +1,337 @@
+/**
+ * FP Digital Marketing Suite - Settings Page Tabs
+ */
+
+/* Tab Navigation */
+.fp-dms-settings-tabs {
+    margin: 20px 0;
+}
+
+.fp-dms-tab-nav {
+    display: flex;
+    border-bottom: 2px solid #ccd0d4;
+    margin-bottom: 20px;
+    background: #fff;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.fp-dms-tab-nav button {
+    background: #f6f7f7;
+    border: none;
+    padding: 15px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #50575e;
+    transition: all 0.3s ease;
+    border-right: 1px solid #ddd;
+    position: relative;
+    min-width: 140px;
+}
+
+.fp-dms-tab-nav button:last-child {
+    border-right: none;
+}
+
+.fp-dms-tab-nav button:hover {
+    background: #fff;
+    color: #0073aa;
+}
+
+.fp-dms-tab-nav button.active {
+    background: #fff;
+    color: #0073aa;
+    border-bottom: 2px solid #0073aa;
+    margin-bottom: -2px;
+}
+
+.fp-dms-tab-nav button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #0073aa;
+}
+
+/* Tab Icons */
+.fp-dms-tab-nav button .dashicons {
+    margin-right: 8px;
+    font-size: 16px;
+    vertical-align: middle;
+}
+
+/* Tab Content */
+.fp-dms-tab-content {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-top: none;
+    padding: 30px;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.fp-dms-tab-panel {
+    display: none;
+}
+
+.fp-dms-tab-panel.active {
+    display: block;
+}
+
+/* Section Headers */
+.fp-dms-section-header {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f1f1f1;
+}
+
+.fp-dms-section-header h3 {
+    margin: 0 0 8px 0;
+    color: #1d2327;
+    font-size: 18px;
+}
+
+.fp-dms-section-header p {
+    margin: 0;
+    color: #646970;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Form Improvements */
+.fp-dms-tab-content .form-table {
+    margin-top: 0;
+}
+
+.fp-dms-tab-content .form-table th {
+    width: 200px;
+    padding: 15px 10px 15px 0;
+}
+
+.fp-dms-tab-content .form-table td {
+    padding: 15px 10px;
+}
+
+/* Status Indicators */
+.fp-dms-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 10px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.fp-dms-status-indicator.connected {
+    background: #d4edda;
+    color: #155724;
+}
+
+.fp-dms-status-indicator.disconnected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.fp-dms-status-indicator.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* Action Buttons */
+.fp-dms-action-buttons {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #f1f1f1;
+}
+
+.fp-dms-action-buttons .button {
+    margin-right: 10px;
+}
+
+/* Loading States */
+.fp-dms-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.fp-dms-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #ccc;
+    border-top: 2px solid #0073aa;
+    border-radius: 50%;
+    animation: fp-dms-spin 1s linear infinite;
+}
+
+@keyframes fp-dms-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Success/Error Messages */
+.fp-dms-message {
+    padding: 12px 16px;
+    margin: 15px 0;
+    border-radius: 4px;
+    border-left: 4px solid;
+    font-weight: 600;
+}
+
+.fp-dms-message.success {
+    background: #d4edda;
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+.fp-dms-message.error {
+    background: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+.fp-dms-message.warning {
+    background: #fff3cd;
+    border-left-color: #ffc107;
+    color: #856404;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .fp-dms-tab-nav {
+        flex-direction: column;
+    }
+    
+    .fp-dms-tab-nav button {
+        border-right: none;
+        border-bottom: 1px solid #ddd;
+        min-width: auto;
+    }
+    
+    .fp-dms-tab-nav button:last-child {
+        border-bottom: none;
+    }
+    
+    .fp-dms-tab-content {
+        padding: 20px;
+    }
+    
+    .fp-dms-tab-content .form-table th {
+        width: auto;
+        display: block;
+        padding-bottom: 5px;
+    }
+    
+    .fp-dms-tab-content .form-table td {
+        display: block;
+        padding-top: 5px;
+    }
+}
+
+/* Help Tooltips */
+.fp-dms-help-tooltip {
+    position: relative;
+    display: inline-block;
+    margin-left: 5px;
+}
+
+.fp-dms-help-tooltip .dashicons {
+    color: #72777c;
+    font-size: 16px;
+    cursor: help;
+}
+
+.fp-dms-help-tooltip:hover .dashicons {
+    color: #0073aa;
+}
+
+.fp-dms-help-tooltip .tooltip-content {
+    visibility: hidden;
+    width: 250px;
+    background: #2c3338;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 10px;
+    position: absolute;
+    z-index: 1001;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -125px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 13px;
+    line-height: 1.4;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.fp-dms-help-tooltip .tooltip-content::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #2c3338 transparent transparent transparent;
+}
+
+.fp-dms-help-tooltip:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Collapsible Sections */
+.fp-dms-collapsible {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.fp-dms-collapsible-header {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.fp-dms-collapsible-header:hover {
+    background: #e9ecef;
+}
+
+.fp-dms-collapsible-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.fp-dms-collapsible-header .dashicons {
+    transition: transform 0.3s ease;
+}
+
+.fp-dms-collapsible.expanded .fp-dms-collapsible-header .dashicons {
+    transform: rotate(180deg);
+}
+
+.fp-dms-collapsible-content {
+    padding: 15px;
+    display: none;
+}
+
+.fp-dms-collapsible.expanded .fp-dms-collapsible-content {
+    display: block;
+}
