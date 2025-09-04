@@ -675,7 +675,7 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
                         }
                         $args = array_map(
                                 function ( $arg ) {
-                                        return is_numeric( $arg ) ? $arg : "'" . $arg . "'";
+                                        return is_numeric( $arg ) ? $arg : "'" . addslashes( $arg ) . "'";
                                 },
                                 $args
                         );
