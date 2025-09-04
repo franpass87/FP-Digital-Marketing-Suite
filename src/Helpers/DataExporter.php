@@ -64,7 +64,7 @@ class DataExporter {
 
 		$export_type = sanitize_text_field( $_POST['export_type'] ?? '' );
 		$format = sanitize_text_field( $_POST['format'] ?? self::FORMAT_CSV );
-		$filters = $_POST['filters'] ?? [];
+		$filters = array_map( 'sanitize_text_field', $_POST['filters'] ?? [] );
 
 		// Validate export type
 		$valid_types = [ 'analytics', 'clients', 'campaigns', 'reports', 'settings' ];
@@ -366,20 +366,38 @@ class DataExporter {
 	 * @throws \Exception If file creation fails
 	 */
 	private static function create_export_file( array $data, string $export_type, string $format ): array {
+		// Sanitize export type to prevent directory traversal
+		$export_type = sanitize_file_name( $export_type );
+		$format = sanitize_file_name( $format );
+		
 		$timestamp = date( 'Y-m-d_H-i-s' );
 		$file_name = "fp_dms_{$export_type}_{$timestamp}.{$format}";
 		$upload_dir = wp_upload_dir();
+		
+		// Ensure we have a valid upload directory
+		if ( empty( $upload_dir['basedir'] ) || ! is_writable( $upload_dir['basedir'] ) ) {
+			throw new \Exception( __( 'Directory di upload non accessibile.', 'fp-digital-marketing' ) );
+		}
+		
 		$export_dir = $upload_dir['basedir'] . '/fp-dms-exports';
 		
 		// Create export directory if it doesn't exist
 		if ( ! file_exists( $export_dir ) ) {
-			wp_mkdir_p( $export_dir );
+			if ( ! wp_mkdir_p( $export_dir ) ) {
+				throw new \Exception( __( 'Impossibile creare la directory di esportazione.', 'fp-digital-marketing' ) );
+			}
 			
 			// Add .htaccess to protect directory
-			file_put_contents( 
+			$htaccess_content = "Order deny,allow\nDeny from all\n";
+			$htaccess_result = file_put_contents( 
 				$export_dir . '/.htaccess', 
-				"Order deny,allow\nDeny from all\n" 
+				$htaccess_content 
 			);
+			
+			if ( false === $htaccess_result ) {
+				// Log warning but don't fail - security protection is preferred but not critical
+				error_log( 'FP DMS: Could not create .htaccess protection for export directory' );
+			}
 		}
 
 		$file_path = $export_dir . '/' . $file_name;
@@ -513,10 +531,24 @@ class DataExporter {
 	 * @param array $data Export data
 	 * @param string $export_type Export type for title
 	 * @return string PDF content
+	 * @throws \Exception If PDF generation fails
 	 */
 	private static function generate_pdf_content( array $data, string $export_type ): string {
-		// This would use the dompdf library that's already included
-		// For now, return a placeholder
+		// Check if dompdf is available
+		if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
+			// Try to load via composer autoload
+			$plugin_dir = dirname( dirname( dirname( __FILE__ ) ) );
+			$autoload_path = $plugin_dir . '/vendor/autoload.php';
+			if ( file_exists( $autoload_path ) ) {
+				require_once $autoload_path;
+			}
+			
+			// If still not available, throw exception
+			if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
+				throw new \Exception( __( 'PDF generation non disponibile. Utilizzare formato HTML o installare le dipendenze.', 'fp-digital-marketing' ) );
+			}
+		}
+
 		$html = '<!DOCTYPE html>
 <html>
 <head>
@@ -558,8 +590,23 @@ class DataExporter {
 
 		$html .= '</body></html>';
 
-		// For now, return HTML (in real implementation, would convert to PDF)
-		return $html;
+		try {
+			// Generate PDF using dompdf
+			$dompdf = new \Dompdf\Dompdf();
+			$dompdf->loadHtml( $html );
+			$dompdf->setPaper( 'A4', 'portrait' );
+			$dompdf->render();
+			
+			return $dompdf->output();
+		} catch ( \Exception $e ) {
+			// If PDF generation fails, throw exception to be handled by caller
+			throw new \Exception( 
+				sprintf( 
+					__( 'Errore nella generazione PDF: %s', 'fp-digital-marketing' ), 
+					$e->getMessage() 
+				) 
+			);
+		}
 	}
 
 	/**
