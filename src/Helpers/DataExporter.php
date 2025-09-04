@@ -534,18 +534,32 @@ class DataExporter {
 	 * @throws \Exception If PDF generation fails
 	 */
 	private static function generate_pdf_content( array $data, string $export_type ): string {
+		// Increase memory limit temporarily for PDF generation
+		$original_memory_limit = ini_get( 'memory_limit' );
+		if ( function_exists( 'ini_set' ) ) {
+			ini_set( 'memory_limit', '256M' );
+		}
+
 		// Check if dompdf is available
 		if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
 			// Try to load via composer autoload
 			$plugin_dir = dirname( dirname( dirname( __FILE__ ) ) );
 			$autoload_path = $plugin_dir . '/vendor/autoload.php';
-			if ( file_exists( $autoload_path ) ) {
-				require_once $autoload_path;
+			if ( file_exists( $autoload_path ) && is_readable( $autoload_path ) ) {
+				try {
+					require_once $autoload_path;
+				} catch ( \Throwable $e ) {
+					// Continue if autoload fails
+				}
 			}
 			
 			// If still not available, throw exception
 			if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
-				throw new \Exception( __( 'PDF generation non disponibile. Utilizzare formato HTML o installare le dipendenze.', 'fp-digital-marketing' ) );
+				// Restore memory limit before throwing
+				if ( function_exists( 'ini_set' ) && $original_memory_limit ) {
+					ini_set( 'memory_limit', $original_memory_limit );
+				}
+				throw new \Exception( __( 'PDF generation non disponibile. Utilizzare formato HTML o installare le dipendenze dompdf.', 'fp-digital-marketing' ) );
 			}
 		}
 
@@ -591,13 +605,34 @@ class DataExporter {
 		$html .= '</body></html>';
 
 		try {
-			// Generate PDF using dompdf
-			$dompdf = new \Dompdf\Dompdf();
+			// Check available memory before PDF generation
+			$memory_usage = memory_get_usage( true );
+			$memory_limit = ini_get( 'memory_limit' );
+			$memory_limit_bytes = self::return_bytes( $memory_limit );
+			
+			if ( $memory_usage > ( $memory_limit_bytes * 0.8 ) ) {
+				throw new \Exception( __( 'Memoria insufficiente per la generazione PDF.', 'fp-digital-marketing' ) );
+			}
+
+			// Generate PDF using dompdf with safer options
+			$dompdf = new \Dompdf\Dompdf([
+				'isPhpEnabled' => false,
+				'isRemoteEnabled' => false,
+				'isJavascriptEnabled' => false
+			]);
 			$dompdf->loadHtml( $html );
 			$dompdf->setPaper( 'A4', 'portrait' );
 			$dompdf->render();
 			
-			return $dompdf->output();
+			$pdf_content = $dompdf->output();
+			
+			// Verify PDF was generated successfully
+			if ( empty( $pdf_content ) || strlen( $pdf_content ) < 100 ) {
+				throw new \Exception( __( 'PDF generato vuoto o corrotto.', 'fp-digital-marketing' ) );
+			}
+			
+			return $pdf_content;
+			
 		} catch ( \Exception $e ) {
 			// If PDF generation fails, throw exception to be handled by caller
 			throw new \Exception( 
@@ -606,7 +641,45 @@ class DataExporter {
 					$e->getMessage() 
 				) 
 			);
+		} catch ( \Error $e ) {
+			// Handle fatal errors during PDF generation
+			throw new \Exception( 
+				sprintf( 
+					__( 'Errore fatale nella generazione PDF: %s', 'fp-digital-marketing' ), 
+					$e->getMessage() 
+				) 
+			);
+		} finally {
+			// Restore original memory limit
+			if ( function_exists( 'ini_set' ) && $original_memory_limit ) {
+				ini_set( 'memory_limit', $original_memory_limit );
+			}
 		}
+	}
+
+	/**
+	 * Convert memory limit string to bytes
+	 *
+	 * @param string $val Memory limit string (e.g., '128M')
+	 * @return int Memory limit in bytes
+	 */
+	private static function return_bytes( string $val ): int {
+		$val = trim( $val );
+		$last = strtolower( $val[ strlen( $val ) - 1 ] );
+		$val = (int) $val;
+		
+		switch( $last ) {
+			case 'g':
+				$val *= 1024;
+				// Fall through
+			case 'm':
+				$val *= 1024;
+				// Fall through
+			case 'k':
+				$val *= 1024;
+		}
+		
+		return $val;
 	}
 
 	/**
