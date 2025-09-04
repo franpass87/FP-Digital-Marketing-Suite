@@ -707,9 +707,7 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
                         return 0;
                 }
 
-                public function insert( $table, $data ) { // phpcs:ignore WordPress.DB
-                        $this->insert_id++;
-                        return $this->insert_id;
+                        return 1;
                 }
 
                 public function update( $table, $data, $where ) { // phpcs:ignore WordPress.DB
