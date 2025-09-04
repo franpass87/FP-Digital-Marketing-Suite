@@ -44,8 +44,16 @@ class GoogleAnalytics4 {
 	 * @param string $property_id GA4 property ID
 	 */
 	public function __construct( string $property_id = '' ) {
-		$this->property_id = $property_id;
-		$this->oauth_client = new GoogleOAuth();
+		try {
+			$this->property_id = $property_id;
+			$this->oauth_client = new GoogleOAuth();
+		} catch ( \Throwable $e ) {
+			// Log error but allow object creation to prevent WSOD
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing GoogleAnalytics4 Constructor Error: ' . $e->getMessage() );
+			}
+			$this->oauth_client = null;
+		}
 	}
 
 	/**
@@ -85,12 +93,20 @@ class GoogleAnalytics4 {
 	 * @return array|false Metrics data on success, false on failure
 	 */
 	public function fetch_metrics( int $client_id, string $start_date, string $end_date ): array|false {
-		if ( ! $this->is_connected() ) {
-			return false;
-		}
-
 		try {
-			// Refresh token if needed
+			// Check if OAuth client is available (could be null from constructor error)
+			if ( $this->oauth_client === null ) {
+				if ( function_exists( 'error_log' ) ) {
+					error_log( 'FP Digital Marketing GoogleAnalytics4: OAuth client not available' );
+				}
+				return false;
+			}
+
+			if ( ! $this->is_connected() ) {
+				return false;
+			}
+
+			// Refresh token if needed with error handling
 			$this->oauth_client->refresh_token_if_needed();
 
 			$metrics = [
@@ -100,13 +116,16 @@ class GoogleAnalytics4 {
 				'revenue' => $this->fetch_revenue( $start_date, $end_date ),
 			];
 
-			// Store metrics in cache
+			// Store metrics in cache with error handling
 			$this->store_metrics_in_cache( $client_id, $metrics, $start_date, $end_date );
 
 			return $metrics;
 
-		} catch ( \Exception $e ) {
-			error_log( 'GA4 metrics fetch error: ' . $e->getMessage() );
+		} catch ( \Throwable $e ) {
+			// Enhanced error logging for all types of errors
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing GA4 metrics fetch error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
+			}
 			return false;
 		}
 	}

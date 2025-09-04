@@ -52,25 +52,35 @@ class MetricsAggregator {
 	 * @return array Aggregated metrics grouped by KPI
 	 */
 	public static function get_aggregated_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
-		// Generate cache key for performance caching
-		$cache_params = [
-			'client_id' => $client_id,
-			'period_start' => $period_start,
-			'period_end' => $period_end,
-			'kpis' => $kpis,
-			'sources' => $sources,
-		];
-		$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
+		try {
+			// Generate cache key for performance caching
+			$cache_params = [
+				'client_id' => $client_id,
+				'period_start' => $period_start,
+				'period_end' => $period_end,
+				'kpis' => $kpis,
+				'sources' => $sources,
+			];
+			$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
 
-		// Use performance cache with fallback to database query
-		return PerformanceCache::get_cached(
-			$cache_key,
-			PerformanceCache::CACHE_GROUP_AGGREGATED,
-			function() use ( $client_id, $period_start, $period_end, $kpis, $sources ) {
-				return self::get_aggregated_metrics_uncached( $client_id, $period_start, $period_end, $kpis, $sources );
-			},
-			PerformanceCache::get_cache_settings()['aggregated_ttl']
-		);
+			// Use performance cache with fallback to database query
+			return PerformanceCache::get_cached(
+				$cache_key,
+				PerformanceCache::CACHE_GROUP_AGGREGATED,
+				function() use ( $client_id, $period_start, $period_end, $kpis, $sources ) {
+					return self::get_aggregated_metrics_uncached( $client_id, $period_start, $period_end, $kpis, $sources );
+				},
+				PerformanceCache::get_cache_settings()['aggregated_ttl']
+			);
+		} catch ( \Throwable $e ) {
+			// Log error and return fallback data to prevent WSOD
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing MetricsAggregator Error: ' . $e->getMessage() );
+			}
+			
+			// Return fallback empty array with basic structure
+			return [];
+		}
 	}
 
 	/**
@@ -84,39 +94,40 @@ class MetricsAggregator {
 	 * @return array Aggregated metrics grouped by KPI
 	 */
 	private static function get_aggregated_metrics_uncached( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
-		// Get raw metrics from cache
-		$criteria = [
-			'client_id' => $client_id,
-			'period_start' => $period_start,
-			'period_end' => $period_end,
-		];
+		try {
+			// Get raw metrics from cache
+			$criteria = [
+				'client_id' => $client_id,
+				'period_start' => $period_start,
+				'period_end' => $period_end,
+			];
 
-		if ( ! empty( $sources ) ) {
-			$criteria['source'] = $sources;
-		}
+			if ( ! empty( $sources ) ) {
+				$criteria['source'] = $sources;
+			}
 
-		$raw_metrics = MetricsCache::get_metrics( $criteria );
+			$raw_metrics = MetricsCache::get_metrics( $criteria );
 
-		// Normalize and aggregate
-		$aggregated = [];
-		
-		foreach ( $raw_metrics as $metric ) {
-			$normalized_kpi = MetricsSchema::normalize_metric_name( $metric->source, $metric->metric );
+			// Normalize and aggregate
+			$aggregated = [];
 			
-			// Filter by requested KPIs if specified
-			if ( ! empty( $kpis ) && ! in_array( $normalized_kpi, $kpis, true ) ) {
-				continue;
-			}
+			foreach ( $raw_metrics as $metric ) {
+				$normalized_kpi = MetricsSchema::normalize_metric_name( $metric->source, $metric->metric );
+				
+				// Filter by requested KPIs if specified
+				if ( ! empty( $kpis ) && ! in_array( $normalized_kpi, $kpis, true ) ) {
+					continue;
+				}
 
-			if ( ! isset( $aggregated[ $normalized_kpi ] ) ) {
-				$aggregated[ $normalized_kpi ] = [
-					'kpi' => $normalized_kpi,
-					'values' => [],
-					'sources' => [],
-					'total_value' => 0,
-					'count' => 0,
-				];
-			}
+				if ( ! isset( $aggregated[ $normalized_kpi ] ) ) {
+					$aggregated[ $normalized_kpi ] = [
+						'kpi' => $normalized_kpi,
+						'values' => [],
+						'sources' => [],
+						'total_value' => 0,
+						'count' => 0,
+					];
+				}
 
 			$value = is_numeric( $metric->value ) ? (float) $metric->value : 0;
 			$aggregated[ $normalized_kpi ]['values'][] = $value;
@@ -137,7 +148,16 @@ class MetricsAggregator {
 		$aggregated = self::apply_fallbacks( $aggregated, $kpis );
 
 		return $aggregated;
+	} catch ( \Throwable $e ) {
+		// Log error and return fallback data to prevent WSOD
+		if ( function_exists( 'error_log' ) ) {
+			error_log( 'FP Digital Marketing MetricsAggregator Uncached Error: ' . $e->getMessage() );
+		}
+		
+		// Return fallback data with default values
+		return self::apply_fallbacks( [], $kpis );
 	}
+}
 
 	/**
 	 * Get KPI summary for a client
@@ -149,25 +169,43 @@ class MetricsAggregator {
 	 * @return array KPI summary with normalized values
 	 */
 	public static function get_kpi_summary( int $client_id, string $period_start, string $period_end, string $category = '' ): array {
-		// Generate cache key for KPI summary
-		$cache_params = [
-			'method' => 'kpi_summary',
-			'client_id' => $client_id,
-			'period_start' => $period_start,
-			'period_end' => $period_end,
-			'category' => $category,
-		];
-		$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
+		try {
+			// Generate cache key for KPI summary
+			$cache_params = [
+				'method' => 'kpi_summary',
+				'client_id' => $client_id,
+				'period_start' => $period_start,
+				'period_end' => $period_end,
+				'category' => $category,
+			];
+			$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
 
-		// Use performance cache with fallback to computation
-		return PerformanceCache::get_cached(
-			$cache_key,
-			PerformanceCache::CACHE_GROUP_REPORTS,
-			function() use ( $client_id, $period_start, $period_end, $category ) {
-				return self::get_kpi_summary_uncached( $client_id, $period_start, $period_end, $category );
-			},
-			PerformanceCache::get_cache_settings()['reports_ttl']
-		);
+			// Use performance cache with fallback to computation
+			return PerformanceCache::get_cached(
+				$cache_key,
+				PerformanceCache::CACHE_GROUP_REPORTS,
+				function() use ( $client_id, $period_start, $period_end, $category ) {
+					return self::get_kpi_summary_uncached( $client_id, $period_start, $period_end, $category );
+				},
+				PerformanceCache::get_cache_settings()['reports_ttl']
+			);
+		} catch ( \Throwable $e ) {
+			// Log error and return fallback data to prevent WSOD
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing KPI Summary Error: ' . $e->getMessage() );
+			}
+			
+			// Return basic fallback structure
+			return [
+				'kpis' => [],
+				'summary' => [
+					'total_sessions' => 0,
+					'total_users' => 0,
+					'total_conversions' => 0,
+					'total_revenue' => 0.0,
+				],
+			];
+		}
 	}
 
 	/**
