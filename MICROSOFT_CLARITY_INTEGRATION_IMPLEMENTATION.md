@@ -2,14 +2,16 @@
 
 ## Overview
 
-This implementation provides a complete Microsoft Clarity integration for the FP Digital Marketing Suite, enabling user behavior analytics including heatmaps, session recordings, and interaction tracking.
+This implementation provides a complete Microsoft Clarity integration for the FP Digital Marketing Suite, enabling user behavior analytics including heatmaps, session recordings, and interaction tracking **for client websites**.
 
-✅ **Project ID configuration in Settings**  
-✅ **Automatic tracking script injection**  
+**⚠️ IMPORTANT CHANGE**: This integration now monitors **client websites** rather than the agency website where the plugin is installed.
+
+✅ **Per-client Project ID configuration**  
+✅ **Client-focused metrics and reporting**  
 ✅ **Demo metrics with normalized data**  
-✅ **Frontend tracking integration**  
-✅ **Reports page visualization**  
-✅ **Unit and integration tests**
+✅ **No automatic tracking on agency website**  
+✅ **Updated Reports page visualization**  
+✅ **Enhanced unit and integration tests**
 
 ## Implementation
 
@@ -18,69 +20,93 @@ This implementation provides a complete Microsoft Clarity integration for the FP
 **File:** `src/DataSources/MicrosoftClarity.php`
 
 The main integration class handles:
-- Project ID validation and configuration
+- Project ID validation and configuration per client
 - Demo metrics generation (realistic session data)
-- Tracking script generation and injection
+- Client-focused data fetching and normalization
 - Data normalization to common schema
 
 **Key Features:**
 - Simple Project ID-based authentication (no OAuth required)
+- Per-client Project ID management with `get_client_project_id()` and `for_client()` methods
 - Generates demo data for sessions, recordings, heatmaps, rage clicks, dead clicks
 - Validates Project ID format (alphanumeric only)
-- Automatic metrics caching integration
+- Automatic metrics caching integration per client
 
 ### 2. Frontend Tracking Handler (`FrontendTracking`)
 
 **File:** `src/Helpers/FrontendTracking.php`
 
-Handles automatic injection of tracking scripts:
-- Checks for configured Project ID
-- Outputs Microsoft Clarity tracking script in `wp_head`
-- Only runs on frontend (not admin pages)
+**⚠️ MAJOR CHANGE**: The frontend tracking handler no longer automatically injects Microsoft Clarity tracking scripts on the agency website.
 
-### 3. Settings Page Integration
+**Rationale**: This plugin is designed to monitor client websites, not the agency website where the plugin is installed. Each client should have their own Clarity Project ID configured to track their own website.
+
+- **Disabled automatic script injection** for Clarity
+- Added explanatory comments about the client-focused approach
+- Removed tracking of the agency website
+
+### 3. Client Meta Fields (`ClienteMeta`)
+
+**File:** `src/Admin/ClienteMeta.php`
+
+**NEW**: Added per-client Microsoft Clarity Project ID configuration:
+
+- **New Meta Field**: `META_CLARITY_PROJECT_ID` for storing client-specific Project IDs
+- **Form Integration**: Added Project ID field to client editing interface
+- **Validation**: Uses MicrosoftClarity validation for Project ID format
+- **Save Functionality**: Proper sanitization and validation on save
+
+**Usage**: Each client can now have their own Clarity Project ID to monitor their website.
+
+### 4. Settings Page Integration
 
 **Modified File:** `src/Admin/Settings.php`
 
-Added Microsoft Clarity configuration section:
-- Project ID input field with validation
-- Visual connection status indicator
-- Configuration instructions for users
-- Integration with existing API keys structure
+**⚠️ MAJOR CHANGE**: Removed global Clarity Project ID configuration and updated to client-focused approach:
 
-### 4. Reports Page Integration
+- **Removed global Project ID input field**
+- **Added informational notice** explaining the new client-focused approach
+- **Dynamic status display** showing count of clients with Clarity configured
+- **Instructions for users** on how to configure Clarity per client
+- **Links to client management** for easy configuration access
+
+### 5. Reports Page Integration
 
 **Modified File:** `src/Admin/Reports.php`
 
-Added comprehensive metrics display:
-- Connection status and configuration info
-- Demo metrics visualization with color-coded cards
-- Cached metrics table with metadata
-- Clarity-specific metrics (recordings, heatmaps, rage clicks, etc.)
+**⚠️ MAJOR CHANGE**: Updated from global metrics display to per-client metrics:
 
-### 5. Data Sources Registry Integration
+- **Per-client metrics visualization** with separate cards for each client
+- **Client identification** with client name and Project ID display
+- **Improved layout** with organized sections per client
+- **Updated messaging** to reflect client-focused approach
+- **Enhanced status reporting** showing configuration per client
+
+**New Method**: `render_per_client_clarity_metrics()` replaces global metrics display
+
+### 6. Data Sources Registry Integration
 
 **Modified File:** `src/Helpers/DataSources.php`
 
-Added Microsoft Clarity to the data sources registry:
+Microsoft Clarity remains registered in the data sources registry:
 - Configured as 'analytics' type with 'available' status
 - Defined API endpoints and capabilities
-- Listed required credentials (project_id only)
+- **Updated approach**: Now works with per-client credentials instead of global
 
 ## Files Created/Modified
 
-### New Files
-- `src/DataSources/MicrosoftClarity.php` - Main Clarity integration class
-- `src/Helpers/FrontendTracking.php` - Frontend tracking script handler
-- `tests/MicrosoftClarityTest.php` - Unit tests for Clarity class
-- `tests/MicrosoftClarityIntegrationTest.php` - Integration tests
-- `MICROSOFT_CLARITY_INTEGRATION_IMPLEMENTATION.md` - This documentation
-
 ### Modified Files
-- `src/Helpers/DataSources.php` - Added Clarity to data sources registry
-- `src/Admin/Settings.php` - Added Clarity configuration section
-- `src/Admin/Reports.php` - Added Clarity metrics display
-- `src/DigitalMarketingSuite.php` - Added FrontendTracking initialization
+- `src/DataSources/MicrosoftClarity.php` - Added client-focused helper methods
+- `src/Helpers/FrontendTracking.php` - Disabled automatic tracking injection
+- `src/Admin/ClienteMeta.php` - Added per-client Project ID field
+- `src/Admin/Settings.php` - Updated to client-focused configuration approach
+- `src/Admin/Reports.php` - Updated to show per-client metrics
+- `tests/MicrosoftClarityTest.php` - Added tests for new client-focused methods
+- `MICROSOFT_CLARITY_INTEGRATION_IMPLEMENTATION.md` - Updated documentation
+
+### New Functionality
+- **Per-client Project ID storage** in client meta fields
+- **Client-focused helper methods** (`get_client_project_id`, `for_client`)
+- **Updated UI and UX** to reflect monitoring client websites vs agency website
 
 ## Technical Features
 
