@@ -472,14 +472,74 @@ class SegmentationEngine {
 	 * @return string Country code or 'unknown'
 	 */
 	private static function get_country_from_ip( string $ip_address ): string {
-		// This is a simplified implementation
-		// In production, you would use a proper IP geolocation service
-		if ( empty( $ip_address ) || $ip_address === '127.0.0.1' ) {
+		// Handle local/private IPs
+		if ( empty( $ip_address ) || $ip_address === '127.0.0.1' || ! filter_var( $ip_address, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
 			return 'unknown';
 		}
 
-		// For demo purposes, return a placeholder
-		return 'IT'; // Default to Italy
+		// Check cache first
+		$cache_key = 'fp_ip_country_' . md5( $ip_address );
+		$cached_result = get_transient( $cache_key );
+		if ( false !== $cached_result ) {
+			return $cached_result;
+		}
+
+		// Try to use a free IP geolocation service
+		$country = self::fetch_country_from_external_service( $ip_address );
+		
+		// Cache result for 24 hours
+		if ( $country !== 'unknown' ) {
+			set_transient( $cache_key, $country, 24 * HOUR_IN_SECONDS );
+		}
+
+		return $country;
+	}
+
+	/**
+	 * Fetch country from external IP geolocation service
+	 *
+	 * @param string $ip_address IP address
+	 * @return string Country code or 'unknown'
+	 */
+	private static function fetch_country_from_external_service( string $ip_address ): string {
+		// Try multiple free services as fallbacks
+		$services = [
+			'http://ip-api.com/json/' . $ip_address . '?fields=countryCode',
+			'https://ipapi.co/' . $ip_address . '/country_code/',
+		];
+
+		foreach ( $services as $url ) {
+			$response = wp_remote_get( $url, [
+				'timeout' => 5,
+				'user-agent' => 'FP Digital Marketing Suite/1.0',
+			] );
+
+			if ( ! is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) === 200 ) {
+				$body = wp_remote_retrieve_body( $response );
+				
+				if ( strpos( $url, 'ip-api.com' ) !== false ) {
+					$data = json_decode( $body, true );
+					if ( isset( $data['countryCode'] ) && ! empty( $data['countryCode'] ) ) {
+						return strtoupper( $data['countryCode'] );
+					}
+				} else {
+					$country_code = trim( $body );
+					if ( strlen( $country_code ) === 2 && ctype_alpha( $country_code ) ) {
+						return strtoupper( $country_code );
+					}
+				}
+			}
+		}
+
+		// Fallback based on site locale if available
+		$locale = get_locale();
+		if ( $locale === 'it_IT' ) {
+			return 'IT';
+		} elseif ( strpos( $locale, 'en_' ) === 0 ) {
+			return 'US';
+		}
+
+		return 'unknown';
 	}
 
 	/**

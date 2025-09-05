@@ -143,8 +143,6 @@ class AdminOptimizations {
                             const lastEntry = entries[entries.length - 1];
                             
                             if (lastEntry && lastEntry.startTime > 0) {
-                                console.log('LCP:', lastEntry.startTime + 'ms');
-                                
                                 // Send to server if enabled
                                 if (window.fpDmsOptimizations && window.fpDmsOptimizations.settings.collectMetrics) {
                                     wp.ajax.post('fp_dms_performance_metrics', {

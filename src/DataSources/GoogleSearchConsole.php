@@ -302,9 +302,12 @@ class GoogleSearchConsole {
 		}
 
 		// Mock implementation - in production would fetch from API
+		$site_url = get_site_url();
+		$domain = parse_url( $site_url, PHP_URL_HOST );
+		
 		return [
-			'https://example.com/' => 'URL Prefix - example.com',
-			'sc-domain:example.com' => 'Domain Property - example.com',
+			$site_url . '/' => sprintf( 'URL Prefix - %s', $domain ),
+			'sc-domain:' . $domain => sprintf( 'Domain Property - %s', $domain ),
 		];
 	}
 

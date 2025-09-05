@@ -667,7 +667,7 @@ class Settings {
 							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[gsc_site_url]"
 							value="<?php echo esc_attr( $api_keys['gsc_site_url'] ?? '' ); ?>"
 							class="regular-text"
-							placeholder="<?php esc_attr_e( 'https://example.com/ o sc-domain:example.com', 'fp-digital-marketing' ); ?>"
+							placeholder="<?php printf( esc_attr__( '%s o sc-domain:%s', 'fp-digital-marketing' ), get_site_url() . '/', parse_url( get_site_url(), PHP_URL_HOST ) ); ?>"
 						/>
 						<p class="description">
 							<?php esc_html_e( 'URL del sito o dominio configurato in Search Console', 'fp-digital-marketing' ); ?>
@@ -2176,7 +2176,7 @@ class Settings {
 							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[alert_recipients]" 
 							rows="3" 
 							class="large-text"
-							placeholder="email1@example.com, email2@example.com"
+							placeholder="admin@tuodominio.com, marketing@tuodominio.com"
 						><?php echo esc_textarea( implode( ', ', $settings['alert_recipients'] ) ); ?></textarea>
 						<p class="description">
 							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere notifiche di alert.', 'fp-digital-marketing' ); ?>
@@ -2315,7 +2315,7 @@ class Settings {
 						<input 
 							type="email" 
 							id="test_email" 
-							placeholder="<?php esc_attr_e( 'email@example.com', 'fp-digital-marketing' ); ?>"
+							placeholder="<?php esc_attr_e( 'test@tuodominio.com', 'fp-digital-marketing' ); ?>"
 							class="regular-text"
 						/>
 						<button type="button" class="button" id="send-test-email">
@@ -2337,9 +2337,17 @@ class Settings {
 				const email = $emailInput.val();
 				
 				if (!email) {
-					alert('<?php esc_html_e( 'Inserisci un indirizzo email valido.', 'fp-digital-marketing' ); ?>');
+					// Show WordPress-style error notice
+					if ($('.email-validation-error').length === 0) {
+						$('<div class="notice notice-error email-validation-error"><p><?php esc_html_e( 'Inserisci un indirizzo email valido.', 'fp-digital-marketing' ); ?></p></div>')
+							.insertAfter($emailInput.closest('tr')).hide().fadeIn();
+					}
+					$emailInput.focus();
 					return;
 				}
+				
+				// Remove any existing error notices
+				$('.email-validation-error').fadeOut(function() { $(this).remove(); });
 				
 				const originalText = $button.text();
 				$button.prop('disabled', true).text('<?php esc_html_e( 'Invio...', 'fp-digital-marketing' ); ?>');

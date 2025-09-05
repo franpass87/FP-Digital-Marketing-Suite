@@ -263,10 +263,18 @@ class DashboardWidgets {
 				}, function(response) {
 					$button.prop('disabled', false).text(originalText);
 					if (response.success) {
-						alert('<?php esc_html_e( 'Cache pre-caricata con successo!', 'fp-digital-marketing' ); ?>');
+						// Create WordPress-style admin notice
+						$('<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Cache pre-caricata con successo!', 'fp-digital-marketing' ); ?></p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>')
+							.insertAfter('.wrap h1').hide().fadeIn();
 					} else {
-						alert('<?php esc_html_e( 'Errore durante il pre-caricamento.', 'fp-digital-marketing' ); ?>');
+						$('<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Errore durante il pre-caricamento.', 'fp-digital-marketing' ); ?></p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>')
+							.insertAfter('.wrap h1').hide().fadeIn();
 					}
+					
+					// Auto-dismiss after 5 seconds
+					setTimeout(function() {
+						$('.notice.is-dismissible').fadeOut();
+					}, 5000);
 				});
 			});
 		});
