@@ -128,7 +128,7 @@ class ClienteMeta {
 							name="cliente_email" 
 							value="<?php echo esc_attr( $email ); ?>" 
 							class="regular-text" 
-							placeholder="<?php esc_attr_e( 'contatto@cliente.com', 'fp-digital-marketing' ); ?>"
+							placeholder="contatto@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>"
 						/>
 						<p class="description">
 							<?php esc_html_e( 'Indirizzo email del contatto principale per questo cliente.', 'fp-digital-marketing' ); ?>

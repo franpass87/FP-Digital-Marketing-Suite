@@ -341,7 +341,10 @@
                 try {
                     localStorage.setItem('fp_dms_' + key, JSON.stringify(cacheData));
                 } catch (e) {
-                    console.warn('Failed to save to localStorage:', e);
+                    // Silently handle localStorage errors in production
+                    if (window.WP_DEBUG) {
+                        console.warn('Failed to save to localStorage:', e);
+                    }
                 }
             },
 
@@ -360,7 +363,10 @@
                     
                     return cacheData.data;
                 } catch (e) {
-                    console.warn('Failed to read from localStorage:', e);
+                    // Silently handle localStorage errors in production
+                    if (window.WP_DEBUG) {
+                        console.warn('Failed to read from localStorage:', e);
+                    }
                     return null;
                 }
             },
@@ -378,7 +384,10 @@
                         });
                     }
                 } catch (e) {
-                    console.warn('Failed to clear localStorage:', e);
+                    // Silently handle localStorage errors in production
+                    if (window.WP_DEBUG) {
+                        console.warn('Failed to clear localStorage:', e);
+                    }
                 }
             }
         },
@@ -427,7 +436,10 @@
                         const measure = performance.getEntriesByName(name)[0];
                         return measure ? measure.duration : 0;
                     } catch (e) {
-                        console.warn('Performance measurement failed:', e);
+                        // Silently handle performance measurement errors in production
+                        if (window.WP_DEBUG) {
+                            console.warn('Performance measurement failed:', e);
+                        }
                         return 0;
                     }
                 }
@@ -462,7 +474,10 @@
         
         // Enhanced error boundary for JavaScript errors
         window.addEventListener('error', function(e) {
-            console.error('JavaScript error in FP DMS:', e);
+            // Only log errors in debug mode
+            if (window.WP_DEBUG) {
+                console.error('JavaScript error in FP DMS:', e);
+            }
             FP_DMS_Optimizations.showNotification(
                 'A technical error occurred. Please refresh the page if problems persist.',
                 'error',
@@ -476,7 +491,7 @@
                 const observer = new PerformanceObserver((list) => {
                     const entries = list.getEntries();
                     entries.forEach(entry => {
-                        if (entry.duration > 1000) {
+                        if (entry.duration > 1000 && window.WP_DEBUG) {
                             console.warn('Slow operation detected:', entry.name, entry.duration + 'ms');
                         }
                     });

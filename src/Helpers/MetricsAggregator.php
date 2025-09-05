@@ -74,7 +74,7 @@ class MetricsAggregator {
 			);
 		} catch ( \Throwable $e ) {
 			// Log error and return fallback data to prevent WSOD
-			if ( function_exists( 'error_log' ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 				error_log( 'FP Digital Marketing MetricsAggregator Error: ' . $e->getMessage() );
 			}
 			
@@ -150,7 +150,7 @@ class MetricsAggregator {
 		return $aggregated;
 	} catch ( \Throwable $e ) {
 		// Log error and return fallback data to prevent WSOD
-		if ( function_exists( 'error_log' ) ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 			error_log( 'FP Digital Marketing MetricsAggregator Uncached Error: ' . $e->getMessage() );
 		}
 		
@@ -191,7 +191,7 @@ class MetricsAggregator {
 			);
 		} catch ( \Throwable $e ) {
 			// Log error and return fallback data to prevent WSOD
-			if ( function_exists( 'error_log' ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 				error_log( 'FP Digital Marketing KPI Summary Error: ' . $e->getMessage() );
 			}
 			

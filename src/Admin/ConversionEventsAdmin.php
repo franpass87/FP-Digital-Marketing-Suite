@@ -42,6 +42,8 @@ class ConversionEventsAdmin {
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 		add_action( 'admin_init', [ $this, 'handle_form_submission' ] );
 		add_action( 'wp_ajax_fp_conversion_event_action', [ $this, 'handle_ajax_request' ] );
+		add_action( 'wp_ajax_fp_dms_download_export', [ $this, 'handle_download_export' ] );
+		add_action( 'fp_dms_cleanup_export_file', [ $this, 'cleanup_export_file' ] );
 	}
 
 	/**
@@ -469,6 +471,25 @@ class ConversionEventsAdmin {
 		.duplicate-badge { background: #d63638; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin-left: 5px; }
 		.no-events-message { text-align: center; padding: 40px; color: #666; font-style: italic; }
 		.fp-events-table-container { margin-top: 20px; }
+		
+		/* Event Details Modal */
+		.fp-modal { position: fixed; z-index: 999999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+		.fp-modal-content { background-color: #fefefe; margin: 5% auto; padding: 0; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+		.fp-modal-header { padding: 20px; background-color: #f1f1f1; border-bottom: 1px solid #ddd; border-radius: 5px 5px 0 0; display: flex; justify-content: space-between; align-items: center; }
+		.fp-modal-header h3 { margin: 0; color: #23282d; font-size: 18px; }
+		.fp-modal-close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; }
+		.fp-modal-close:hover, .fp-modal-close:focus { color: #000; text-decoration: none; }
+		.fp-modal-body { padding: 20px; max-height: 400px; overflow-y: auto; }
+		.event-details { }
+		.event-detail-row { margin-bottom: 15px; display: flex; align-items: flex-start; }
+		.event-detail-row strong { width: 120px; flex-shrink: 0; color: #23282d; }
+		.event-detail-row span { flex: 1; }
+		.event-detail-row pre { background: #f6f7f7; padding: 10px; border-radius: 3px; border: 1px solid #ddd; font-size: 12px; margin: 0; max-height: 200px; overflow: auto; }
+		.event-status { padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+		.event-status-active { background: #d4edda; color: #155724; }
+		.event-status-inactive { background: #f8d7da; color: #721c24; }
+		.event-status-pending { background: #fff3cd; color: #856404; }
+		.fp-loading { text-align: center; padding: 20px; color: #666; }
 		';
 	}
 
@@ -488,8 +509,7 @@ class ConversionEventsAdmin {
 			// View event details
 			$(".view-event-details").on("click", function() {
 				var eventId = $(this).data("event-id");
-				// TODO: Implement event details modal
-				alert("Event details for ID: " + eventId);
+				showEventDetailsModal(eventId);
 			});
 
 			// Bulk actions confirmation
@@ -507,6 +527,106 @@ class ConversionEventsAdmin {
 				}
 			});
 		});
+
+		// Event details modal functionality
+		function showEventDetailsModal(eventId) {
+			// Create modal if it doesn\'t exist
+			if (!$("#event-details-modal").length) {
+				$("body").append(`
+					<div id="event-details-modal" class="fp-modal" style="display: none;">
+						<div class="fp-modal-content">
+							<div class="fp-modal-header">
+								<h3 id="modal-title">Dettagli Evento</h3>
+								<span class="fp-modal-close">&times;</span>
+							</div>
+							<div class="fp-modal-body" id="modal-body">
+								<div class="fp-loading">Caricamento...</div>
+							</div>
+						</div>
+					</div>
+				`);
+
+				// Close modal events
+				$(document).on("click", ".fp-modal-close, .fp-modal", function(e) {
+					if (e.target === this) {
+						$("#event-details-modal").hide();
+					}
+				});
+
+				// Escape key closes modal
+				$(document).on("keyup", function(e) {
+					if (e.keyCode === 27) { // ESC key
+						$("#event-details-modal").hide();
+					}
+				});
+			}
+
+			// Show modal and load data
+			$("#event-details-modal").show();
+			$("#modal-body").html(`<div class="fp-loading">Caricamento...</div>`);
+
+			// AJAX call to get event details
+			$.post(fpConversionAjax.ajax_url, {
+				action: "fp_conversion_event_action",
+				action_type: "get_event_details",
+				event_id: eventId,
+				nonce: fpConversionAjax.nonce
+			})
+			.done(function(response) {
+				if (response.success) {
+					displayEventDetails(response.data);
+				} else {
+					$("#modal-body").html(`<div class="notice notice-error"><p>${response.data || "Errore nel caricamento dei dati"}</p></div>`);
+				}
+			})
+			.fail(function() {
+				$("#modal-body").html(`<div class="notice notice-error"><p>Errore di connessione</p></div>`);
+			});
+		}
+
+		function displayEventDetails(event) {
+			const html = `
+				<div class="event-details">
+					<div class="event-detail-row">
+						<strong>Nome:</strong>
+						<span>${event.name}</span>
+					</div>
+					<div class="event-detail-row">
+						<strong>Tipo:</strong>
+						<span>${event.event_type}</span>
+					</div>
+					<div class="event-detail-row">
+						<strong>Cliente:</strong>
+						<span>${event.client_id}</span>
+					</div>
+					<div class="event-detail-row">
+						<strong>Valore:</strong>
+						<span>${event.value || "N/A"}</span>
+					</div>
+					<div class="event-detail-row">
+						<strong>Data Creazione:</strong>
+						<span>${new Date(event.created_at).toLocaleString()}</span>
+					</div>
+					<div class="event-detail-row">
+						<strong>Stato:</strong>
+						<span class="event-status event-status-${event.status}">${event.status}</span>
+					</div>
+					${event.description ? `
+						<div class="event-detail-row">
+							<strong>Descrizione:</strong>
+							<span>${event.description}</span>
+						</div>
+					` : ""}
+					${event.metadata ? `
+						<div class="event-detail-row">
+							<strong>Metadati:</strong>
+							<pre>${JSON.stringify(JSON.parse(event.metadata), null, 2)}</pre>
+						</div>
+					` : ""}
+				</div>
+			`;
+			$("#modal-body").html(html);
+		}
 		';
 	}
 
@@ -642,7 +762,202 @@ class ConversionEventsAdmin {
 	private function ajax_export_events(): void {
 		$criteria = isset( $_POST['criteria'] ) ? $_POST['criteria'] : [];
 		
-		// TODO: Implement CSV export functionality
-		wp_send_json_success( [ 'download_url' => '#' ] );
+		try {
+			// Sanitize export criteria
+			$client_id = isset( $criteria['client_id'] ) ? (int) $criteria['client_id'] : 0;
+			$event_type = isset( $criteria['event_type'] ) ? sanitize_text_field( $criteria['event_type'] ) : '';
+			$start_date = isset( $criteria['start_date'] ) ? sanitize_text_field( $criteria['start_date'] ) : '';
+			$end_date = isset( $criteria['end_date'] ) ? sanitize_text_field( $criteria['end_date'] ) : '';
+			$status = isset( $criteria['status'] ) ? sanitize_text_field( $criteria['status'] ) : '';
+			
+			// Generate unique filename
+			$filename = 'conversion_events_' . date( 'Y-m-d_H-i-s' ) . '.csv';
+			$upload_dir = wp_upload_dir();
+			$exports_dir = $upload_dir['basedir'] . '/fp-dms-exports/';
+			
+			// Create exports directory if it doesn't exist
+			if ( ! file_exists( $exports_dir ) ) {
+				wp_mkdir_p( $exports_dir );
+				// Add .htaccess to protect directory
+				file_put_contents( $exports_dir . '.htaccess', "Deny from all\n" );
+			}
+			
+			$file_path = $exports_dir . $filename;
+			
+			// Get events based on criteria
+			$events = $this->get_events_for_export( $client_id, $event_type, $start_date, $end_date, $status );
+			
+			// Generate CSV content
+			$csv_content = $this->generate_csv_content( $events );
+			
+			// Write to file
+			if ( file_put_contents( $file_path, $csv_content ) === false ) {
+				wp_send_json_error( __( 'Errore nella creazione del file CSV.', 'fp-digital-marketing' ) );
+				return;
+			}
+			
+			// Generate download URL with security token
+			$token = wp_create_nonce( 'fp_dms_export_' . $filename );
+			$download_url = add_query_arg( [
+				'action' => 'fp_dms_download_export',
+				'file' => $filename,
+				'token' => $token,
+			], admin_url( 'admin-ajax.php' ) );
+			
+			// Schedule file cleanup (remove after 1 hour)
+			wp_schedule_single_event( time() + 3600, 'fp_dms_cleanup_export_file', [ $file_path ] );
+			
+			wp_send_json_success( [ 
+				'download_url' => $download_url,
+				'filename' => $filename,
+				'count' => count( $events ),
+			] );
+			
+		} catch ( \Throwable $e ) {
+			if ( function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing: Export error - ' . $e->getMessage() );
+			}
+			wp_send_json_error( __( 'Si è verificato un errore durante l\'esportazione.', 'fp-digital-marketing' ) );
+		}
+	}
+	
+	/**
+	 * Get events for export based on criteria
+	 *
+	 * @param int $client_id Client ID filter
+	 * @param string $event_type Event type filter  
+	 * @param string $start_date Start date filter
+	 * @param string $end_date End date filter
+	 * @param string $status Status filter
+	 * @return array Events data
+	 */
+	private function get_events_for_export( int $client_id, string $event_type, string $start_date, string $end_date, string $status ): array {
+		// This would typically query your ConversionEvent model with the criteria
+		// For now, we'll use a mock implementation that shows the structure
+		return ConversionEvent::get_events_for_export( [
+			'client_id' => $client_id,
+			'event_type' => $event_type,
+			'start_date' => $start_date,
+			'end_date' => $end_date,
+			'status' => $status,
+		] );
+	}
+	
+	/**
+	 * Generate CSV content from events data
+	 *
+	 * @param array $events Events data
+	 * @return string CSV content
+	 */
+	private function generate_csv_content( array $events ): string {
+		$csv_lines = [];
+		
+		// CSV headers
+		$headers = [
+			__( 'ID', 'fp-digital-marketing' ),
+			__( 'Nome Evento', 'fp-digital-marketing' ),
+			__( 'Tipo', 'fp-digital-marketing' ),
+			__( 'Cliente ID', 'fp-digital-marketing' ),
+			__( 'Valore', 'fp-digital-marketing' ),
+			__( 'Stato', 'fp-digital-marketing' ),
+			__( 'Data Creazione', 'fp-digital-marketing' ),
+			__( 'Data Aggiornamento', 'fp-digital-marketing' ),
+			__( 'Descrizione', 'fp-digital-marketing' ),
+		];
+		
+		$csv_lines[] = $this->array_to_csv_line( $headers );
+		
+		// Add event data
+		foreach ( $events as $event ) {
+			$row = [
+				$event['id'] ?? '',
+				$event['name'] ?? '',
+				$event['event_type'] ?? '',
+				$event['client_id'] ?? '',
+				$event['value'] ?? '',
+				$event['status'] ?? '',
+				$event['created_at'] ?? '',
+				$event['updated_at'] ?? '',
+				$event['description'] ?? '',
+			];
+			
+			$csv_lines[] = $this->array_to_csv_line( $row );
+		}
+		
+		return implode( "\n", $csv_lines );
+	}
+	
+	/**
+	 * Convert array to CSV line
+	 *
+	 * @param array $data Data array
+	 * @return string CSV line
+	 */
+	private function array_to_csv_line( array $data ): string {
+		$escaped_data = array_map( function( $field ) {
+			// Escape quotes and wrap in quotes if necessary
+			$field = str_replace( '"', '""', $field );
+			if ( strpos( $field, ',' ) !== false || strpos( $field, '"' ) !== false || strpos( $field, "\n" ) !== false ) {
+				$field = '"' . $field . '"';
+			}
+			return $field;
+		}, $data );
+		
+		return implode( ',', $escaped_data );
+	}
+	
+	/**
+	 * Handle export file download
+	 *
+	 * @return void
+	 */
+	public function handle_download_export(): void {
+		// Check user capabilities
+		if ( ! current_user_can( Capabilities::MANAGE_CONVERSIONS ) ) {
+			wp_die( __( 'Non hai i permessi per accedere a questo file.', 'fp-digital-marketing' ) );
+		}
+		
+		$filename = sanitize_file_name( $_GET['file'] ?? '' );
+		$token = sanitize_text_field( $_GET['token'] ?? '' );
+		
+		// Verify security token
+		if ( ! wp_verify_nonce( $token, 'fp_dms_export_' . $filename ) ) {
+			wp_die( __( 'Token di sicurezza non valido.', 'fp-digital-marketing' ) );
+		}
+		
+		$upload_dir = wp_upload_dir();
+		$file_path = $upload_dir['basedir'] . '/fp-dms-exports/' . $filename;
+		
+		// Check if file exists
+		if ( ! file_exists( $file_path ) ) {
+			wp_die( __( 'File non trovato o scaduto.', 'fp-digital-marketing' ) );
+		}
+		
+		// Set headers for download
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+		header( 'Content-Length: ' . filesize( $file_path ) );
+		header( 'Cache-Control: no-cache, must-revalidate' );
+		header( 'Expires: Sat, 26 Jul 1997 05:00:00 GMT' );
+		
+		// Output file content
+		readfile( $file_path );
+		
+		// Clean up file after download
+		unlink( $file_path );
+		
+		exit;
+	}
+	
+	/**
+	 * Cleanup export file (scheduled task)
+	 *
+	 * @param string $file_path File path to cleanup
+	 * @return void
+	 */
+	public function cleanup_export_file( string $file_path ): void {
+		if ( file_exists( $file_path ) ) {
+			unlink( $file_path );
+		}
 	}
 }

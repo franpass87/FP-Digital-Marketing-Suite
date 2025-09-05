@@ -31,8 +31,8 @@ class URLShortener {
 		}
 
 		// In a real implementation, this would call an external service like bit.ly, tinyurl, etc.
-		// For now, we'll create a mock short URL
-		$hash = substr( md5( $long_url ), 0, 8 );
+		// For now, we'll create a mock short URL and store the mapping
+		$hash = substr( md5( $long_url . time() ), 0, 8 );
 		
 		/**
 		 * Filter short URL base
@@ -40,8 +40,13 @@ class URLShortener {
 		 * @param string $base_url Base URL for short links.
 		 */
 		$base_url = apply_filters( 'fp_utm_short_url_base', self::SHORT_BASE_URL );
-
-		return $base_url . $hash;
+		
+		$short_url = $base_url . $hash;
+		
+		// Store the URL mapping for later retrieval
+		update_option( 'fp_utm_short_url_' . $hash, $long_url );
+		
+		return $short_url;
 	}
 
 	/**
@@ -145,8 +150,18 @@ class URLShortener {
 		}
 
 		// In a real implementation, this would make a HEAD request to follow redirects
-		// For now, we'll return a mock expanded URL
-		return 'https://example.com/expanded-url-from-' . basename( $short_url );
+		// For now, we'll return the base URL with path info
+		$site_url = get_site_url();
+		$hash = basename( $short_url );
+		
+		// Try to find stored URL mapping (could be implemented with custom table)
+		$stored_url = get_option( 'fp_utm_short_url_' . $hash, null );
+		if ( $stored_url ) {
+			return $stored_url;
+		}
+		
+		// Fallback to constructed URL
+		return $site_url . '/expanded-url-from-' . $hash;
 	}
 
 	/**

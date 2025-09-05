@@ -1152,7 +1152,9 @@ class SeoMeta {
 							if (response.success) {
 								displayAnalysisResults(response.data);
 							} else {
-								console.error("Analysis error:", response.data.message);
+								if (window.WP_DEBUG) {
+									console.error("Analysis error:", response.data.message);
+								}
 								// Fallback to client-side analysis
 								var quickAnalysis = performQuickAnalysis(focusKeyword, content);
 								displayAnalysisResults(quickAnalysis);

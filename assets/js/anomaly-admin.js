@@ -6,6 +6,31 @@
 
 jQuery(document).ready(function($) {
 
+    // Function to show WordPress-style admin notices
+    function showAdminNotice(message, type = 'info') {
+        var noticeClass = 'notice notice-' + type;
+        var notice = $('<div class="' + noticeClass + ' is-dismissible"><p>' + message + '</p><button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button></div>');
+        
+        // Insert notice after page title
+        $('.wrap h1').first().after(notice);
+        
+        // Handle dismiss
+        notice.find('.notice-dismiss').on('click', function() {
+            notice.fadeOut(300, function() {
+                notice.remove();
+            });
+        });
+        
+        // Auto-dismiss after 5 seconds for non-error messages
+        if (type !== 'error') {
+            setTimeout(function() {
+                notice.fadeOut(300, function() {
+                    notice.remove();
+                });
+            }, 5000);
+        }
+    }
+    
     // Handle anomaly notice dismissal
     $(document).on('click', '.fp-anomaly-notice .notice-dismiss', function() {
         var notice = $(this).closest('.fp-anomaly-notice');
@@ -60,12 +85,13 @@ jQuery(document).ready(function($) {
                     row.addClass('acknowledged');
                     button.replaceWith('<span class="dashicons dashicons-yes" style="color: #007cba;" title="Riconosciuta"></span>');
                 } else {
-                    alert('Errore durante il riconoscimento dell\'anomalia.');
+                    // Show WordPress-style error notice
+                    showAdminNotice('Errore durante il riconoscimento dell\'anomalia.', 'error');
                     button.prop('disabled', false).text('Riconosci');
                 }
             },
             error: function() {
-                alert('Errore durante il riconoscimento dell\'anomalia.');
+                showAdminNotice('Errore durante il riconoscimento dell\'anomalia.', 'error');
                 button.prop('disabled', false).text('Riconosci');
             }
         });
@@ -103,12 +129,12 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     location.reload(); // Refresh to show updated status
                 } else {
-                    alert('Errore durante il silenziamento della regola.');
+                    showAdminNotice('Errore durante il silenziamento della regola.', 'error');
                     button.prop('disabled', false).text('Silenzia');
                 }
             },
             error: function() {
-                alert('Errore durante il silenziamento della regola.');
+                showAdminNotice('Errore durante il silenziamento della regola.', 'error');
                 button.prop('disabled', false).text('Silenzia');
             }
         });
@@ -144,12 +170,12 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     location.reload(); // Refresh to show updated status
                 } else {
-                    alert('Errore durante la riattivazione della regola.');
+                    showAdminNotice('Errore durante la riattivazione della regola.', 'error');
                     button.prop('disabled', false).text('Riattiva');
                 }
             },
             error: function() {
-                alert('Errore durante la riattivazione della regola.');
+                showAdminNotice('Errore durante la riattivazione della regola.', 'error');
                 button.prop('disabled', false).text('Riattiva');
             }
         });
@@ -425,5 +451,5 @@ var loadingCSS = `
 // Inject CSS
 var style = document.createElement('style');
 style.type = 'text/css';
-style.innerHTML = loadingCSS;
+style.textContent = loadingCSS;
 document.getElementsByTagName('head')[0].appendChild(style);

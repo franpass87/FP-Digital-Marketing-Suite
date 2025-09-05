@@ -265,7 +265,7 @@ class DigitalMarketingSuite {
 	 * @return void
 	 */
 	private function log_initialization_error( string $component, \Throwable $error ): void {
-		if ( function_exists( 'error_log' ) ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 			error_log( sprintf(
 				'FP Digital Marketing: Failed to initialize %s - %s in %s:%d',
 				$component,
@@ -529,10 +529,10 @@ class DigitalMarketingSuite {
 	 * @return void
 	 */
 	private function load_textdomain(): void {
-		load_plugin_textdomain(
+		\load_plugin_textdomain(
 			'fp-digital-marketing',
 			false,
-			dirname( plugin_basename( FP_DIGITAL_MARKETING_PLUGIN_FILE ) ) . '/languages'
+			dirname( \plugin_basename( FP_DIGITAL_MARKETING_PLUGIN_FILE ) ) . '/languages'
 		);
 	}
 
@@ -721,7 +721,7 @@ class DigitalMarketingSuite {
 						DataExporter::cleanup_old_exports();
 					}
 				} catch ( \Throwable $e ) {
-					if ( function_exists( 'error_log' ) ) {
+					if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 						error_log( 'FP Digital Marketing: Cleanup error - ' . $e->getMessage() );
 					}
 				}

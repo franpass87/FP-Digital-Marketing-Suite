@@ -109,7 +109,8 @@
                     }
                 })
                 .fail(() => {
-                    console.error('Failed to load chart data');
+                    // Show user-friendly error instead of console logging
+                    this.showError('Failed to load chart data. Please try refreshing the page.');
                 });
         }
 
@@ -324,13 +325,18 @@
                     if (response.success) {
                         this.renderCoreWebVitals(response.data);
                     } else {
-                        console.error('Core Web Vitals error:', response.data);
+                        // Show user-friendly error message
                         $('#cwv-widgets').html('<p>Unable to load Core Web Vitals data</p>');
+                        if (window.WP_DEBUG) {
+                            console.error('Core Web Vitals error:', response.data);
+                        }
                     }
                 })
                 .fail(() => {
-                    console.error('Core Web Vitals network error');
                     $('#cwv-widgets').html('<p>Network error loading Core Web Vitals</p>');
+                    if (window.WP_DEBUG) {
+                        console.error('Core Web Vitals network error');
+                    }
                 });
         }
 
@@ -493,7 +499,9 @@
         }
 
         showError(message) {
-            console.error('Dashboard error:', message);
+            if (window.WP_DEBUG) {
+                console.error('Dashboard error:', message);
+            }
             $('#dashboard-loading').hide();
             $('#dashboard-content').hide();
             $('#dashboard-empty').show();

@@ -461,4 +461,64 @@ class ConversionEvent {
 	public function set_ip_address( ?string $ip_address ): void { $this->ip_address = $ip_address; }
 	public function set_user_agent( ?string $user_agent ): void { $this->user_agent = $user_agent; }
 	public function set_processed_at( ?string $processed_at ): void { $this->processed_at = $processed_at; }
+
+	/**
+	 * Get events for export with filtering criteria
+	 *
+	 * @param array $criteria Export criteria
+	 * @return array Events data
+	 */
+	public static function get_events_for_export( array $criteria = [] ): array {
+		global $wpdb;
+		
+		$table_name = ConversionEventsTable::get_table_name();
+		
+		// Build WHERE clause based on criteria
+		$where_conditions = [ '1=1' ];
+		$where_values = [];
+		
+		if ( ! empty( $criteria['client_id'] ) ) {
+			$where_conditions[] = 'client_id = %d';
+			$where_values[] = (int) $criteria['client_id'];
+		}
+		
+		if ( ! empty( $criteria['event_type'] ) ) {
+			$where_conditions[] = 'event_type = %s';
+			$where_values[] = $criteria['event_type'];
+		}
+		
+		if ( ! empty( $criteria['status'] ) ) {
+			$where_conditions[] = 'status = %s';
+			$where_values[] = $criteria['status'];
+		}
+		
+		if ( ! empty( $criteria['start_date'] ) ) {
+			$where_conditions[] = 'created_at >= %s';
+			$where_values[] = $criteria['start_date'] . ' 00:00:00';
+		}
+		
+		if ( ! empty( $criteria['end_date'] ) ) {
+			$where_conditions[] = 'created_at <= %s';
+			$where_values[] = $criteria['end_date'] . ' 23:59:59';
+		}
+		
+		$where_clause = implode( ' AND ', $where_conditions );
+		
+		// Build and execute query
+		$query = "SELECT 
+			id, event_id as name, event_type, client_id, event_value as value, 
+			status, created_at, updated_at, event_name as description 
+			FROM {$table_name} 
+			WHERE {$where_clause} 
+			ORDER BY created_at DESC 
+			LIMIT 1000";
+		
+		if ( ! empty( $where_values ) ) {
+			$query = $wpdb->prepare( $query, ...$where_values );
+		}
+		
+		$results = $wpdb->get_results( $query, ARRAY_A );
+		
+		return $results ?: [];
+	}
 }
