@@ -174,6 +174,32 @@ class DataSources {
 					'28_day_rolling_data',
 				],
 			],
+			'microsoft_clarity' => [
+				'id'          => 'microsoft_clarity',
+				'name'        => __( 'Microsoft Clarity', 'fp-digital-marketing' ),
+				'description' => __( 'Analisi comportamento utenti con heatmap e registrazioni sessioni', 'fp-digital-marketing' ),
+				'type'        => self::TYPE_ANALYTICS,
+				'status'      => 'available',
+				'version'     => '1.0',
+				'endpoints'   => [
+					'api' => 'https://www.clarity.ms/api/',
+					'metrics' => 'https://www.clarity.ms/api/projects/{project_id}/metrics',
+					'sessions' => 'https://www.clarity.ms/api/projects/{project_id}/sessions',
+				],
+				'required_credentials' => [
+					'project_id',
+				],
+				'capabilities' => [
+					'user_behavior',
+					'session_recordings',
+					'heatmaps',
+					'click_tracking',
+					'scroll_tracking',
+					'rage_clicks',
+					'dead_clicks',
+					'page_analytics',
+				],
+			],
 		];
 
 		// Apply the hook for extensibility.

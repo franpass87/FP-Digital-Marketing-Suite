@@ -12,6 +12,7 @@ namespace FP\DigitalMarketing\Admin;
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\DataSources\GoogleSearchConsole;
+use FP\DigitalMarketing\DataSources\MicrosoftClarity;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
@@ -699,6 +700,62 @@ class Settings {
 					</p>
 				<?php endif; ?>
 			</div>
+		</div>
+
+		<div class="clarity-configuration">
+			<h4><?php esc_html_e( 'Microsoft Clarity', 'fp-digital-marketing' ); ?></h4>
+			
+			<table class="form-table">
+				<tr>
+					<th scope="row"><?php esc_html_e( 'Project ID', 'fp-digital-marketing' ); ?></th>
+					<td>
+						<input 
+							type="text" 
+							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[clarity_project_id]"
+							value="<?php echo esc_attr( $api_keys['clarity_project_id'] ?? '' ); ?>"
+							class="regular-text"
+							placeholder="<?php esc_attr_e( 'Clarity Project ID (es: abc123def456)', 'fp-digital-marketing' ); ?>"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'ID del progetto Microsoft Clarity', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
+			</table>
+
+			<div class="clarity-connection-status">
+				<h4><?php esc_html_e( 'Stato Configurazione Clarity', 'fp-digital-marketing' ); ?></h4>
+				<?php 
+				$clarity_status = 'disconnected';
+				$clarity_status_text = __( 'Non configurato', 'fp-digital-marketing' );
+				
+				if ( ! empty( $api_keys['clarity_project_id'] ) ) {
+					$clarity_status = 'connected';
+					$clarity_status_text = __( 'Configurato', 'fp-digital-marketing' );
+				}
+				?>
+				<p class="clarity-status <?php echo esc_attr( $clarity_status ); ?>">
+					<span class="status-indicator"></span>
+					<?php echo esc_html( $clarity_status_text ); ?>
+				</p>
+
+				<?php if ( ! empty( $api_keys['clarity_project_id'] ) ): ?>
+					<p class="description">
+						<?php esc_html_e( 'Microsoft Clarity è configurato e pronto per raccogliere dati.', 'fp-digital-marketing' ); ?>
+					</p>
+				<?php else: ?>
+					<p class="description">
+						<?php esc_html_e( 'Inserisci il Project ID da Microsoft Clarity per abilitare il tracking.', 'fp-digital-marketing' ); ?>
+					</p>
+				<?php endif; ?>
+			</div>
+
+			<style>
+				.clarity-configuration { margin-bottom: 20px; }
+				.clarity-status.connected .status-indicator { color: #00a32a; }
+				.clarity-status.disconnected .status-indicator { color: #d63638; }
+				.clarity-status .status-indicator:before { content: "●"; margin-right: 5px; }
+			</style>
 		</div>
 		<?php
 	}
