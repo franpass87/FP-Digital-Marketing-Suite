@@ -155,7 +155,9 @@ class AdminOptimizations {
                             }
                         }).observe({ type: 'largest-contentful-paint', buffered: true });
                     } catch (e) {
-                        console.warn('Performance monitoring failed:', e);
+                        if (window.WP_DEBUG) {
+                            console.warn('Performance monitoring failed:', e);
+                        }
                     }
                 }
             }

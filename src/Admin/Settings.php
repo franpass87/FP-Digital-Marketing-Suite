@@ -2176,7 +2176,7 @@ class Settings {
 							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[alert_recipients]" 
 							rows="3" 
 							class="large-text"
-							placeholder="admin@tuodominio.com, marketing@tuodominio.com"
+							placeholder="admin@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>, marketing@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>"
 						><?php echo esc_textarea( implode( ', ', $settings['alert_recipients'] ) ); ?></textarea>
 						<p class="description">
 							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere notifiche di alert.', 'fp-digital-marketing' ); ?>
@@ -2315,7 +2315,7 @@ class Settings {
 						<input 
 							type="email" 
 							id="test_email" 
-							placeholder="<?php esc_attr_e( 'test@tuodominio.com', 'fp-digital-marketing' ); ?>"
+							placeholder="test@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>"
 							class="regular-text"
 						/>
 						<button type="button" class="button" id="send-test-email">

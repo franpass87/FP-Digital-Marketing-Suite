@@ -49,7 +49,7 @@ class GoogleAnalytics4 {
 			$this->oauth_client = new GoogleOAuth();
 		} catch ( \Throwable $e ) {
 			// Log error but allow object creation to prevent WSOD
-			if ( function_exists( 'error_log' ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 				error_log( 'FP Digital Marketing GoogleAnalytics4 Constructor Error: ' . $e->getMessage() );
 			}
 			$this->oauth_client = null;
@@ -96,7 +96,7 @@ class GoogleAnalytics4 {
 		try {
 			// Check if OAuth client is available (could be null from constructor error)
 			if ( $this->oauth_client === null ) {
-				if ( function_exists( 'error_log' ) ) {
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 					error_log( 'FP Digital Marketing GoogleAnalytics4: OAuth client not available' );
 				}
 				return false;
@@ -123,7 +123,7 @@ class GoogleAnalytics4 {
 
 		} catch ( \Throwable $e ) {
 			// Enhanced error logging for all types of errors
-			if ( function_exists( 'error_log' ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 				error_log( 'FP Digital Marketing GA4 metrics fetch error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() );
 			}
 			return false;
