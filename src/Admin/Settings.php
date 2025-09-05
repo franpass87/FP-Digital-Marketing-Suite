@@ -705,19 +705,29 @@ class Settings {
 		<div class="clarity-configuration">
 			<h4><?php esc_html_e( 'Microsoft Clarity', 'fp-digital-marketing' ); ?></h4>
 			
+			<div class="notice notice-info inline">
+				<p>
+					<strong><?php esc_html_e( 'Configurazione cambiata:', 'fp-digital-marketing' ); ?></strong>
+					<?php esc_html_e( 'Microsoft Clarity ora è configurato per cliente anziché globalmente. Ogni cliente può avere il proprio Project ID per monitorare il proprio sito web.', 'fp-digital-marketing' ); ?>
+				</p>
+				<p>
+					<?php esc_html_e( 'Per configurare Clarity per un cliente specifico, vai alla pagina di modifica del cliente e inserisci il Project ID di Microsoft Clarity.', 'fp-digital-marketing' ); ?>
+				</p>
+			</div>
+
 			<table class="form-table">
 				<tr>
-					<th scope="row"><?php esc_html_e( 'Project ID', 'fp-digital-marketing' ); ?></th>
+					<th scope="row"><?php esc_html_e( 'Configurazione', 'fp-digital-marketing' ); ?></th>
 					<td>
-						<input 
-							type="text" 
-							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[clarity_project_id]"
-							value="<?php echo esc_attr( $api_keys['clarity_project_id'] ?? '' ); ?>"
-							class="regular-text"
-							placeholder="<?php esc_attr_e( 'Clarity Project ID (es: abc123def456)', 'fp-digital-marketing' ); ?>"
-						/>
 						<p class="description">
-							<?php esc_html_e( 'ID del progetto Microsoft Clarity', 'fp-digital-marketing' ); ?>
+							<?php esc_html_e( 'Microsoft Clarity è ora configurato per cliente. Non è più necessaria una configurazione globale.', 'fp-digital-marketing' ); ?>
+						</p>
+						<p class="description">
+							<strong><?php esc_html_e( 'Come configurare:', 'fp-digital-marketing' ); ?></strong><br>
+							1. <?php esc_html_e( 'Vai alla sezione "Clienti" nel menu amministrativo', 'fp-digital-marketing' ); ?><br>
+							2. <?php esc_html_e( 'Modifica il cliente desiderato', 'fp-digital-marketing' ); ?><br>
+							3. <?php esc_html_e( 'Inserisci il Project ID di Microsoft Clarity per quel cliente', 'fp-digital-marketing' ); ?><br>
+							4. <?php esc_html_e( 'Salva le modifiche', 'fp-digital-marketing' ); ?>
 						</p>
 					</td>
 				</tr>
@@ -726,26 +736,41 @@ class Settings {
 			<div class="clarity-connection-status">
 				<h4><?php esc_html_e( 'Stato Configurazione Clarity', 'fp-digital-marketing' ); ?></h4>
 				<?php 
-				$clarity_status = 'disconnected';
-				$clarity_status_text = __( 'Non configurato', 'fp-digital-marketing' );
+				// Check how many clients have Clarity configured
+				$clients_with_clarity = get_posts([
+					'post_type' => 'cliente',
+					'meta_query' => [
+						[
+							'key' => \FP\DigitalMarketing\Admin\ClienteMeta::META_CLARITY_PROJECT_ID,
+							'value' => '',
+							'compare' => '!='
+						]
+					],
+					'fields' => 'ids'
+				]);
 				
-				if ( ! empty( $api_keys['clarity_project_id'] ) ) {
-					$clarity_status = 'connected';
-					$clarity_status_text = __( 'Configurato', 'fp-digital-marketing' );
-				}
+				$clarity_status = count( $clients_with_clarity ) > 0 ? 'connected' : 'disconnected';
+				$clarity_count = count( $clients_with_clarity );
 				?>
 				<p class="clarity-status <?php echo esc_attr( $clarity_status ); ?>">
 					<span class="status-indicator"></span>
-					<?php echo esc_html( $clarity_status_text ); ?>
+					<?php 
+					if ( $clarity_count > 0 ) {
+						/* translators: %d: number of clients with Clarity configured */
+						echo esc_html( sprintf( _n( '%d cliente configurato', '%d clienti configurati', $clarity_count, 'fp-digital-marketing' ), $clarity_count ) );
+					} else {
+						esc_html_e( 'Nessun cliente configurato', 'fp-digital-marketing' );
+					}
+					?>
 				</p>
 
-				<?php if ( ! empty( $api_keys['clarity_project_id'] ) ): ?>
+				<?php if ( $clarity_count > 0 ): ?>
 					<p class="description">
-						<?php esc_html_e( 'Microsoft Clarity è configurato e pronto per raccogliere dati.', 'fp-digital-marketing' ); ?>
+						<?php esc_html_e( 'Microsoft Clarity è configurato e pronto per raccogliere dati dai siti web dei clienti.', 'fp-digital-marketing' ); ?>
 					</p>
 				<?php else: ?>
 					<p class="description">
-						<?php esc_html_e( 'Inserisci il Project ID da Microsoft Clarity per abilitare il tracking.', 'fp-digital-marketing' ); ?>
+						<?php esc_html_e( 'Configura Microsoft Clarity per i tuoi clienti per iniziare a monitorare i loro siti web.', 'fp-digital-marketing' ); ?>
 					</p>
 				<?php endif; ?>
 			</div>

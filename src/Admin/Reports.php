@@ -1342,41 +1342,57 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 	 * @return void
 	 */
 	private function render_clarity_metrics_section(): void {
-		$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
-		$project_id = $api_keys['clarity_project_id'] ?? '';
+		// Get all clients with Clarity Project IDs configured
+		$clients_with_clarity = get_posts([
+			'post_type' => 'cliente',
+			'meta_query' => [
+				[
+					'key' => \FP\DigitalMarketing\Admin\ClienteMeta::META_CLARITY_PROJECT_ID,
+					'value' => '',
+					'compare' => '!='
+				]
+			],
+			'post_status' => 'publish',
+			'numberposts' => -1
+		]);
 
 		?>
 		<div class="fp-dms-clarity-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-			<h2><?php esc_html_e( 'Microsoft Clarity - Analisi Comportamento Utenti', 'fp-digital-marketing' ); ?></h2>
+			<h2><?php esc_html_e( 'Microsoft Clarity - Analisi Comportamento Utenti (Per Cliente)', 'fp-digital-marketing' ); ?></h2>
 			
 			<div class="clarity-connection-info" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 4px;">
 				<h3 style="margin-top: 0;"><?php esc_html_e( 'Stato Configurazione', 'fp-digital-marketing' ); ?></h3>
-				<p class="clarity-status" style="<?php echo ! empty( $project_id ) ? 'color: #00a32a;' : 'color: #d63638;'; ?>">
+				<p class="clarity-status" style="<?php echo count( $clients_with_clarity ) > 0 ? 'color: #00a32a;' : 'color: #d63638;'; ?>">
 					<span class="status-indicator">●</span>
 					<?php 
-					if ( ! empty( $project_id ) ) {
-						esc_html_e( 'Configurato', 'fp-digital-marketing' );
+					if ( count( $clients_with_clarity ) > 0 ) {
+						/* translators: %d: number of clients with Clarity configured */
+						echo esc_html( sprintf( _n( '%d cliente configurato', '%d clienti configurati', count( $clients_with_clarity ), 'fp-digital-marketing' ), count( $clients_with_clarity ) ) );
 					} else {
-						esc_html_e( 'Non configurato', 'fp-digital-marketing' );
+						esc_html_e( 'Nessun cliente configurato', 'fp-digital-marketing' );
 					}
 					?>
 				</p>
 				
-				<?php if ( ! empty( $project_id ) ): ?>
-					<p><strong><?php esc_html_e( 'Project ID:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $project_id ); ?></p>
-				<?php endif; ?>
+				<div class="notice notice-info inline" style="margin: 10px 0;">
+					<p>
+						<strong><?php esc_html_e( 'Nuovo approccio:', 'fp-digital-marketing' ); ?></strong>
+						<?php esc_html_e( 'Microsoft Clarity ora monitora i siti web dei clienti individualmente, non il sito dell\'agenzia dove è installato questo plugin.', 'fp-digital-marketing' ); ?>
+					</p>
+				</div>
 			</div>
 
-			<?php if ( ! empty( $project_id ) ): ?>
-				<?php $this->render_clarity_demo_metrics( $project_id ); ?>
+			<?php if ( count( $clients_with_clarity ) > 0 ): ?>
+				<?php $this->render_per_client_clarity_metrics( $clients_with_clarity ); ?>
 				<?php $this->render_cached_clarity_metrics(); ?>
 			<?php else: ?>
 				<div class="notice notice-warning inline">
 					<p>
-						<?php esc_html_e( 'Per visualizzare le metriche Microsoft Clarity, configura prima il Project ID nelle', 'fp-digital-marketing' ); ?>
-						<a href="<?php echo esc_url( admin_url( 'options-general.php?page=fp-digital-marketing-settings' ) ); ?>">
-							<?php esc_html_e( 'Impostazioni', 'fp-digital-marketing' ); ?>
-						</a>.
+						<?php esc_html_e( 'Per visualizzare le metriche Microsoft Clarity, configura il Project ID per i tuoi clienti.', 'fp-digital-marketing' ); ?>
+						<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=cliente' ) ); ?>">
+							<?php esc_html_e( 'Vai ai Clienti', 'fp-digital-marketing' ); ?>
+						</a>
+						<?php esc_html_e( 'e modifica ogni cliente per aggiungere il loro Project ID di Microsoft Clarity.', 'fp-digital-marketing' ); ?>
 					</p>
 				</div>
 			<?php endif; ?>
@@ -1454,6 +1470,87 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 			</div>
 			<?php
 		}
+	}
+
+	/**
+	 * Render per-client Microsoft Clarity metrics
+	 *
+	 * @param array $clients_with_clarity Array of client posts with Clarity configured
+	 * @return void
+	 */
+	private function render_per_client_clarity_metrics( array $clients_with_clarity ): void {
+		?>
+		<div class="clarity-per-client-metrics">
+			<h3><?php esc_html_e( 'Metriche Demo per Cliente (ultimi 30 giorni)', 'fp-digital-marketing' ); ?></h3>
+			
+			<?php foreach ( $clients_with_clarity as $client ): ?>
+				<?php 
+				$clarity = MicrosoftClarity::for_client( $client->ID );
+				if ( ! $clarity ) {
+					continue;
+				}
+				
+				$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
+				$end_date = date( 'Y-m-d' );
+				$metrics = $clarity->fetch_metrics( $client->ID, $start_date, $end_date );
+				$project_id = MicrosoftClarity::get_client_project_id( $client->ID );
+				?>
+				
+				<div style="border: 1px solid #ddd; border-radius: 8px; margin: 20px 0; overflow: hidden;">
+					<div style="background: #f8f9fa; padding: 15px; border-bottom: 1px solid #ddd;">
+						<h4 style="margin: 0; color: #0073aa;">
+							<?php echo esc_html( $client->post_title ); ?>
+							<span style="font-size: 14px; font-weight: normal; color: #666; margin-left: 10px;">
+								Project ID: <?php echo esc_html( $project_id ); ?>
+							</span>
+						</h4>
+					</div>
+					
+					<div style="padding: 15px;">
+						<?php if ( $metrics ): ?>
+							<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 15px 0;">
+								<div class="metric-card" style="background: #f0f6ff; border: 1px solid #b3d7ff; border-radius: 4px; padding: 12px; text-align: center;">
+									<div style="font-size: 20px; font-weight: bold; color: #0073aa;"><?php echo esc_html( number_format( $metrics['sessions'] ) ); ?></div>
+									<div style="font-size: 12px; color: #666;"><?php esc_html_e( 'Sessioni', 'fp-digital-marketing' ); ?></div>
+								</div>
+								<div class="metric-card" style="background: #f0fff0; border: 1px solid #b3ffb3; border-radius: 4px; padding: 12px; text-align: center;">
+									<div style="font-size: 20px; font-weight: bold; color: #00a32a;"><?php echo esc_html( number_format( $metrics['page_views'] ) ); ?></div>
+									<div style="font-size: 12px; color: #666;"><?php esc_html_e( 'Pagine Viste', 'fp-digital-marketing' ); ?></div>
+								</div>
+								<div class="metric-card" style="background: #fff5f0; border: 1px solid #ffccb3; border-radius: 4px; padding: 12px; text-align: center;">
+									<div style="font-size: 20px; font-weight: bold; color: #d63638;"><?php echo esc_html( number_format( $metrics['recordings_available'] ) ); ?></div>
+									<div style="font-size: 12px; color: #666;"><?php esc_html_e( 'Registrazioni', 'fp-digital-marketing' ); ?></div>
+								</div>
+								<div class="metric-card" style="background: #f5f0ff; border: 1px solid #ccb3ff; border-radius: 4px; padding: 12px; text-align: center;">
+									<div style="font-size: 20px; font-weight: bold; color: #7c3aed;"><?php echo esc_html( number_format( $metrics['heatmaps_generated'] ) ); ?></div>
+									<div style="font-size: 12px; color: #666;"><?php esc_html_e( 'Heatmaps', 'fp-digital-marketing' ); ?></div>
+								</div>
+								<div class="metric-card" style="background: #fefff0; border: 1px solid #fff3b3; border-radius: 4px; padding: 12px; text-align: center;">
+									<div style="font-size: 20px; font-weight: bold; color: #b45309;"><?php echo esc_html( number_format( $metrics['rage_clicks'] ) ); ?></div>
+									<div style="font-size: 12px; color: #666;"><?php esc_html_e( 'Rage Clicks', 'fp-digital-marketing' ); ?></div>
+								</div>
+								<div class="metric-card" style="background: #f8f8f8; border: 1px solid #ccc; border-radius: 4px; padding: 12px; text-align: center;">
+									<div style="font-size: 20px; font-weight: bold; color: #666;"><?php echo esc_html( $metrics['scroll_depth_avg'] . '%' ); ?></div>
+									<div style="font-size: 12px; color: #666;"><?php esc_html_e( 'Scroll Depth', 'fp-digital-marketing' ); ?></div>
+								</div>
+							</div>
+						<?php else: ?>
+							<div class="notice notice-error inline" style="margin: 0;">
+								<p><?php esc_html_e( 'Errore nel recupero delle metriche demo per questo cliente.', 'fp-digital-marketing' ); ?></p>
+							</div>
+						<?php endif; ?>
+					</div>
+				</div>
+			<?php endforeach; ?>
+			
+			<div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-left: 4px solid #007cba; border-radius: 4px;">
+				<p style="margin: 0; font-size: 14px;">
+					<strong><?php esc_html_e( 'Nota:', 'fp-digital-marketing' ); ?></strong>
+					<?php esc_html_e( 'Questi sono dati demo generati automaticamente per ogni cliente. Una volta configurata la connessione reale con Microsoft Clarity per ogni cliente, verranno mostrati i dati effettivi dei loro siti web.', 'fp-digital-marketing' ); ?>
+				</p>
+			</div>
+		</div>
+		<?php
 	}
 
 	/**
