@@ -23,6 +23,7 @@ class ClienteMeta {
 	public const META_BUDGET = '_cliente_budget_mensile';
 	public const META_EMAIL = '_cliente_email_riferimento';
 	public const META_ATTIVO = '_cliente_stato_attivo';
+	public const META_CLARITY_PROJECT_ID = '_cliente_clarity_project_id';
 
 	/**
 	 * Nonce name for security
@@ -75,6 +76,7 @@ class ClienteMeta {
 		$budget = get_post_meta( $post->ID, self::META_BUDGET, true );
 		$email = get_post_meta( $post->ID, self::META_EMAIL, true );
 		$attivo = get_post_meta( $post->ID, self::META_ATTIVO, true );
+		$clarity_project_id = get_post_meta( $post->ID, self::META_CLARITY_PROJECT_ID, true );
 
 		?>
 		<table class="form-table">
@@ -155,6 +157,24 @@ class ClienteMeta {
 						</p>
 					</td>
 				</tr>
+				<tr>
+					<th scope="row">
+						<label for="cliente_clarity_project_id"><?php esc_html_e( 'Microsoft Clarity Project ID', 'fp-digital-marketing' ); ?></label>
+					</th>
+					<td>
+						<input 
+							type="text" 
+							id="cliente_clarity_project_id" 
+							name="cliente_clarity_project_id" 
+							value="<?php echo esc_attr( $clarity_project_id ); ?>" 
+							class="regular-text" 
+							placeholder="<?php esc_attr_e( 'es: abc123def456', 'fp-digital-marketing' ); ?>"
+						/>
+						<p class="description">
+							<?php esc_html_e( 'Project ID di Microsoft Clarity per monitorare il sito web di questo cliente. Utilizzato per recuperare dati analitici dal sito del cliente.', 'fp-digital-marketing' ); ?>
+						</p>
+					</td>
+				</tr>
 			</tbody>
 		</table>
 		<?php
@@ -177,6 +197,7 @@ class ClienteMeta {
 		$this->save_budget( $post_id );
 		$this->save_email( $post_id );
 		$this->save_attivo( $post_id );
+		$this->save_clarity_project_id( $post_id );
 	}
 
 	/**
@@ -274,5 +295,24 @@ class ClienteMeta {
 	private function save_attivo( int $post_id ): void {
 		$attivo = isset( $_POST['cliente_attivo'] ) ? '1' : '0';
 		update_post_meta( $post_id, self::META_ATTIVO, $attivo );
+	}
+
+	/**
+	 * Save Clarity Project ID field
+	 *
+	 * @param int $post_id The post ID.
+	 * @return void
+	 */
+	private function save_clarity_project_id( int $post_id ): void {
+		if ( isset( $_POST['cliente_clarity_project_id'] ) ) {
+			$project_id = sanitize_text_field( wp_unslash( $_POST['cliente_clarity_project_id'] ) );
+			
+			// Validate Project ID format using MicrosoftClarity validation
+			if ( ! empty( $project_id ) && \FP\DigitalMarketing\DataSources\MicrosoftClarity::validate_project_id( $project_id ) ) {
+				update_post_meta( $post_id, self::META_CLARITY_PROJECT_ID, $project_id );
+			} else {
+				delete_post_meta( $post_id, self::META_CLARITY_PROJECT_ID );
+			}
+		}
 	}
 }

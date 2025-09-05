@@ -16,6 +16,10 @@ use FP\DigitalMarketing\Models\MetricsCache;
  * 
  * This class handles the integration with Microsoft Clarity API,
  * including project configuration, data fetching, and normalization.
+ * 
+ * NOTE: This class is designed to monitor CLIENT websites, not the agency website
+ * where this plugin is installed. Each client should have their own Clarity Project ID
+ * configured in their client record to fetch analytics data from their website.
  */
 class MicrosoftClarity {
 
@@ -260,5 +264,32 @@ class MicrosoftClarity {
 	public static function validate_project_id( string $project_id ): bool {
 		// Microsoft Clarity project IDs are typically alphanumeric strings
 		return ! empty( $project_id ) && preg_match( '/^[a-zA-Z0-9]+$/', $project_id );
+	}
+
+	/**
+	 * Get Clarity Project ID for a specific client
+	 *
+	 * @param int $client_id Client post ID
+	 * @return string Project ID or empty string if not configured
+	 */
+	public static function get_client_project_id( int $client_id ): string {
+		$project_id = get_post_meta( $client_id, \FP\DigitalMarketing\Admin\ClienteMeta::META_CLARITY_PROJECT_ID, true );
+		return is_string( $project_id ) ? $project_id : '';
+	}
+
+	/**
+	 * Create a Clarity instance for a specific client
+	 *
+	 * @param int $client_id Client post ID
+	 * @return self|null Clarity instance or null if not configured
+	 */
+	public static function for_client( int $client_id ): ?self {
+		$project_id = self::get_client_project_id( $client_id );
+		
+		if ( empty( $project_id ) ) {
+			return null;
+		}
+		
+		return new self( $project_id );
 	}
 }
