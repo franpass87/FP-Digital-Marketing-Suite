@@ -2210,7 +2210,7 @@ class Settings {
 							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[report_recipients]" 
 							rows="3" 
 							class="large-text"
-							placeholder="email1@example.com, email2@example.com"
+							placeholder="admin@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>, report@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>"
 						><?php echo esc_textarea( implode( ', ', $settings['report_recipients'] ) ); ?></textarea>
 						<p class="description">
 							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere report automatici.', 'fp-digital-marketing' ); ?>
@@ -2244,7 +2244,7 @@ class Settings {
 							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[security_recipients]" 
 							rows="3" 
 							class="large-text"
-							placeholder="email1@example.com, email2@example.com"
+							placeholder="admin@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>, security@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>"
 						><?php echo esc_textarea( implode( ', ', $settings['security_recipients'] ) ); ?></textarea>
 						<p class="description">
 							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere alert di sicurezza.', 'fp-digital-marketing' ); ?>
@@ -2278,7 +2278,7 @@ class Settings {
 							name="<?php echo esc_attr( self::OPTION_EMAIL ); ?>[digest_recipients]" 
 							rows="3" 
 							class="large-text"
-							placeholder="email1@example.com, email2@example.com"
+							placeholder="admin@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>, manager@<?php echo esc_attr( parse_url( home_url(), PHP_URL_HOST ) ); ?>"
 						><?php echo esc_textarea( implode( ', ', $settings['digest_recipients'] ) ); ?></textarea>
 						<p class="description">
 							<?php esc_html_e( 'Indirizzi email separati da virgola per ricevere il riepilogo giornaliero.', 'fp-digital-marketing' ); ?>
