@@ -35,6 +35,7 @@ use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\SegmentationEngine;
 use FP\DigitalMarketing\API\SegmentationAPI;
 use FP\DigitalMarketing\Helpers\SeoFrontendOutput;
+use FP\DigitalMarketing\Helpers\FrontendTracking;
 use FP\DigitalMarketing\Helpers\XmlSitemap;
 use FP\DigitalMarketing\Helpers\SchemaGenerator;
 use FP\DigitalMarketing\Helpers\FAQBlock;
@@ -454,6 +455,14 @@ class DigitalMarketingSuite {
 			}
 		} catch ( \Throwable $e ) {
 			$this->log_initialization_error( 'SeoFrontendOutput::init()', $e );
+		}
+
+		try {
+			if ( class_exists( '\FP\DigitalMarketing\Helpers\FrontendTracking' ) ) {
+				FrontendTracking::init();
+			}
+		} catch ( \Throwable $e ) {
+			$this->log_initialization_error( 'FrontendTracking::init()', $e );
 		}
 
 		try {
