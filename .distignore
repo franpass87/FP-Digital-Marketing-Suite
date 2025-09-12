@@ -1,0 +1,14 @@
+assets/
+css/
+js/
+build/
+dist/
+vendor/
+node_modules/
+.git/
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+*.zip
+*.tar.gz

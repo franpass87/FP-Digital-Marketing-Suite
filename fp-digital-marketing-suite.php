@@ -85,6 +85,11 @@ add_action( 'plugins_loaded', function () {
 	try {
 		$fp_digital_marketing = new \FP\DigitalMarketing\DigitalMarketingSuite();
 		$fp_digital_marketing->init();
+		
+		// Initialize setup wizard for admin users
+		if ( is_admin() && class_exists( '\FP\DigitalMarketing\Setup\SetupWizard' ) ) {
+			new \FP\DigitalMarketing\Setup\SetupWizard();
+		}
 	} catch ( \Error $e ) {
 		// Log the error but show user-friendly message
 		if ( function_exists( 'error_log' ) ) {
@@ -142,6 +147,14 @@ register_activation_hook( __FILE__, function () {
 		
 		// Flush rewrite rules to ensure custom post types work correctly.
 		flush_rewrite_rules();
+		
+		// Set activation redirect flag for setup wizard
+		set_transient( 'fp_dms_activation_redirect', true, 30 );
+		
+		// Initialize setup wizard
+		if ( class_exists( '\FP\DigitalMarketing\Setup\SetupWizard' ) ) {
+			new \FP\DigitalMarketing\Setup\SetupWizard();
+		}
 		
 	} catch ( \Error $e ) {
 		// Log activation errors

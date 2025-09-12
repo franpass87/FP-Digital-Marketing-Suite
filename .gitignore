@@ -33,6 +33,13 @@ tmp/
 build/
 dist/
 
+# Release packages
+*.zip
+*.tar.gz
+*.sha256
+release-notes.md
+wordpress-deployment.md
+
 # Environment files
 .env
 .env.local
