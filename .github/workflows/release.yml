@@ -1,0 +1,149 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.1
+        tools: composer:v2
+    
+    - name: Get version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Update version in plugin file
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        sed -i "s/Version: .*/Version: ${VERSION}/" fp-digital-marketing-suite.php
+        sed -i "s/define( 'FP_DIGITAL_MARKETING_VERSION', .*/define( 'FP_DIGITAL_MARKETING_VERSION', '${VERSION}' );/" fp-digital-marketing-suite.php
+        sed -i "s/Stable tag: .*/Stable tag: ${VERSION}/" readme.txt
+    
+    - name: Install dependencies
+      run: composer install --no-dev --optimize-autoloader --no-interaction
+    
+    - name: Run tests
+      run: |
+        composer install --dev --no-interaction
+        composer run-script phpcs
+        composer run-script phpstan
+    
+    - name: Create release package
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        PLUGIN_NAME="fp-digital-marketing-suite"
+        
+        # Create build directory
+        mkdir -p build/${PLUGIN_NAME}
+        
+        # Copy plugin files (exclude development files)
+        rsync -av \
+          --exclude='.git*' \
+          --exclude='node_modules/' \
+          --exclude='vendor/' \
+          --exclude='build/' \
+          --exclude='dist/' \
+          --exclude='tests/' \
+          --exclude='demo/' \
+          --exclude='.php*' \
+          --exclude='composer.lock' \
+          --exclude='phpunit.*' \
+          --exclude='build.sh' \
+          --exclude='verify-deployment.php' \
+          . build/${PLUGIN_NAME}/
+        
+        # Install production dependencies in build
+        cd build/${PLUGIN_NAME}
+        composer install --no-dev --optimize-autoloader --no-interaction
+        cd ../..
+        
+        # Create ZIP package
+        cd build
+        zip -r ../${PLUGIN_NAME}-${VERSION}.zip ${PLUGIN_NAME}/
+        cd ..
+        
+        # Create checksum
+        sha256sum ${PLUGIN_NAME}-${VERSION}.zip > ${PLUGIN_NAME}-${VERSION}.zip.sha256
+    
+    - name: Generate changelog for release
+      id: changelog
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        
+        # Extract changelog for this version
+        awk "/^## \[${VERSION}\]/{flag=1; next} /^## \[/{flag=0} flag" CHANGELOG.md > release-notes.md
+        
+        # If release notes are empty, create a basic one
+        if [ ! -s release-notes.md ]; then
+          echo "Release version ${VERSION}" > release-notes.md
+          echo "" >> release-notes.md
+          echo "See CHANGELOG.md for detailed changes." >> release-notes.md
+        fi
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: FP Digital Marketing Suite v${{ steps.version.outputs.version }}
+        body_path: release-notes.md
+        files: |
+          fp-digital-marketing-suite-${{ steps.version.outputs.version }}.zip
+          fp-digital-marketing-suite-${{ steps.version.outputs.version }}.zip.sha256
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: WordPress.org deployment preparation
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        echo "# WordPress.org Deployment" > wordpress-deployment.md
+        echo "" >> wordpress-deployment.md
+        echo "Ready for WordPress.org plugin directory submission:" >> wordpress-deployment.md
+        echo "" >> wordpress-deployment.md
+        echo "- Package: fp-digital-marketing-suite-${VERSION}.zip" >> wordpress-deployment.md
+        echo "- Tested up to: WordPress 6.4" >> wordpress-deployment.md
+        echo "- Requires PHP: 7.4+" >> wordpress-deployment.md
+        echo "- Stable tag: ${VERSION}" >> wordpress-deployment.md
+        echo "" >> wordpress-deployment.md
+        echo "## Submission Checklist" >> wordpress-deployment.md
+        echo "- [ ] Plugin assets (banner, icon) uploaded" >> wordpress-deployment.md
+        echo "- [ ] Screenshots added" >> wordpress-deployment.md
+        echo "- [ ] readme.txt validated" >> wordpress-deployment.md
+        echo "- [ ] All code reviewed and tested" >> wordpress-deployment.md
+        echo "- [ ] Security review completed" >> wordpress-deployment.md
+        
+        # Save as artifact
+        cat wordpress-deployment.md
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-package-${{ steps.version.outputs.version }}
+        path: |
+          fp-digital-marketing-suite-${{ steps.version.outputs.version }}.zip
+          fp-digital-marketing-suite-${{ steps.version.outputs.version }}.zip.sha256
+          wordpress-deployment.md
+        retention-days: 90
