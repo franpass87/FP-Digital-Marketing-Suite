@@ -139,6 +139,16 @@ register_activation_hook( __FILE__, function () {
 		if ( class_exists( '\FP\DigitalMarketing\Database\DetectedAnomaliesTable' ) ) {
 			\FP\DigitalMarketing\Database\DetectedAnomaliesTable::create_table();
 		}
+
+		if ( class_exists( '\FP\DigitalMarketing\Database\FunnelTable' ) ) {
+			\FP\DigitalMarketing\Database\FunnelTable::create_table();
+			\FP\DigitalMarketing\Database\FunnelTable::create_stages_table();
+		}
+
+		if ( class_exists( '\FP\DigitalMarketing\Database\CustomerJourneyTable' ) ) {
+			\FP\DigitalMarketing\Database\CustomerJourneyTable::create_table();
+			\FP\DigitalMarketing\Database\CustomerJourneyTable::create_sessions_table();
+		}
 		
 		// Register custom capabilities with error handling.
 		if ( class_exists( '\FP\DigitalMarketing\Helpers\Capabilities' ) ) {
