@@ -20,6 +20,7 @@ use FP\DigitalMarketing\Admin\CachePerformance;
 use FP\DigitalMarketing\Admin\OnboardingWizard;
 use FP\DigitalMarketing\Admin\AlertingAdmin;
 use FP\DigitalMarketing\Admin\AnomalyDetectionAdmin;
+use FP\DigitalMarketing\Admin\AnomalyRadar;
 use FP\DigitalMarketing\Admin\UTMCampaignManager;
 use FP\DigitalMarketing\Admin\ConversionEventsAdmin;
 use FP\DigitalMarketing\Admin\SegmentationAdmin;
@@ -134,6 +135,13 @@ class DigitalMarketingSuite {
 	private ?AnomalyDetectionAdmin $anomaly_detection_admin = null;
 
 	/**
+	 * Anomaly Radar instance
+	 *
+	 * @var AnomalyRadar|null
+	 */
+	private ?AnomalyRadar $anomaly_radar = null;
+
+	/**
 	 * UTM Campaign Manager instance
 	 *
 	 * @var UTMCampaignManager|null
@@ -234,6 +242,13 @@ class DigitalMarketingSuite {
 		} catch ( \Throwable $e ) {
 			$this->anomaly_detection_admin = null;
 			$this->log_initialization_error( 'AnomalyDetectionAdmin', $e );
+		}
+
+		try {
+			$this->anomaly_radar = new AnomalyRadar();
+		} catch ( \Throwable $e ) {
+			$this->anomaly_radar = null;
+			$this->log_initialization_error( 'AnomalyRadar', $e );
 		}
 
 		try {
@@ -382,6 +397,14 @@ class DigitalMarketingSuite {
 			}
 		} catch ( \Throwable $e ) {
 			$this->log_initialization_error( 'AnomalyDetectionAdmin->init()', $e );
+		}
+
+		try {
+			if ( $this->anomaly_radar !== null ) {
+				$this->anomaly_radar->init();
+			}
+		} catch ( \Throwable $e ) {
+			$this->log_initialization_error( 'AnomalyRadar->init()', $e );
 		}
 
 		try {
