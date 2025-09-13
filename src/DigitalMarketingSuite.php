@@ -34,6 +34,8 @@ use FP\DigitalMarketing\Database\ConversionEventsTable;
 use FP\DigitalMarketing\Database\AudienceSegmentTable;
 use FP\DigitalMarketing\Database\FunnelTable;
 use FP\DigitalMarketing\Database\CustomerJourneyTable;
+use FP\DigitalMarketing\Database\CustomReportsTable;
+use FP\DigitalMarketing\Database\SocialSentimentTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\SegmentationEngine;
@@ -608,7 +610,9 @@ class DigitalMarketingSuite {
 			'ConversionEventsTable' => '\FP\DigitalMarketing\Database\ConversionEventsTable',
 			'AudienceSegmentTable' => '\FP\DigitalMarketing\Database\AudienceSegmentTable',
 			'FunnelTable' => '\FP\DigitalMarketing\Database\FunnelTable',
-			'CustomerJourneyTable' => '\FP\DigitalMarketing\Database\CustomerJourneyTable'
+			'CustomerJourneyTable' => '\FP\DigitalMarketing\Database\CustomerJourneyTable',
+			'CustomReportsTable' => '\FP\DigitalMarketing\Database\CustomReportsTable',
+			'SocialSentimentTable' => '\FP\DigitalMarketing\Database\SocialSentimentTable'
 		];
 
 		foreach ( $tables as $name => $class ) {
