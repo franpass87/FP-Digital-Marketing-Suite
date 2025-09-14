@@ -285,9 +285,29 @@ class MenuManager {
 	public function render_placeholder_page(): void {
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__( 'FP Digital Marketing Suite', 'fp-digital-marketing' ) . '</h1>';
-		echo '<div class="notice notice-info"><p>';
-		echo esc_html__( 'This page is being configured. Please check back soon.', 'fp-digital-marketing' );
+		echo '<div class="notice notice-warning"><p>';
+		echo '<strong>' . esc_html__( 'Pagina in configurazione', 'fp-digital-marketing' ) . '</strong><br>';
+		echo esc_html__( 'Questa pagina admin non è ancora completamente configurata. Se vedi questo messaggio, potrebbe esserci un problema con il caricamento del modulo amministrativo.', 'fp-digital-marketing' );
 		echo '</p></div>';
+		
+		// Show debugging information for administrators
+		if ( current_user_can( 'manage_options' ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			echo '<div class="notice notice-info"><p>';
+			echo '<strong>' . esc_html__( 'Informazioni di debug (solo per amministratori):', 'fp-digital-marketing' ) . '</strong><br>';
+			echo esc_html__( 'Questa pagina placeholder viene mostrata quando il callback del menu non può essere risolto. Verifica che tutte le classi admin siano caricate correttamente.', 'fp-digital-marketing' );
+			echo '</p></div>';
+		}
+		
+		echo '<div style="margin-top: 20px;">';
+		echo '<a href="' . esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ) . '" class="button button-primary">';
+		echo esc_html__( 'Vai alla Dashboard', 'fp-digital-marketing' );
+		echo '</a>';
+		echo ' ';
+		echo '<a href="' . esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ) . '" class="button">';
+		echo esc_html__( 'Impostazioni Plugin', 'fp-digital-marketing' );
+		echo '</a>';
+		echo '</div>';
+		
 		echo '</div>';
 	}
 
