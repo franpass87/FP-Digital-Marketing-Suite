@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FP Digital Marketing Suite - Custom Reports & Sentiment Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            background: #f1f1f1;
+            color: #23282d;
+            line-height: 1.4;
+        }
+        
+        .admin-header {
+            background: #23282d;
+            color: white;
+            padding: 0 20px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+        }
+        
+        .admin-menu {
+            background: #23282d;
+            width: 160px;
+            height: calc(100vh - 32px);
+            position: fixed;
+            left: 0;
+            top: 32px;
+            overflow-y: auto;
+        }
+        
+        .admin-menu ul {
+            list-style: none;
+        }
+        
+        .admin-menu a {
+            color: #eee;
+            text-decoration: none;
+            padding: 8px 12px;
+            display: block;
+            border-bottom: 1px solid #1d2327;
+        }
+        
+        .admin-menu a:hover,
+        .admin-menu a.current {
+            background: #0073aa;
+            color: white;
+        }
+        
+        .main-content {
+            margin-left: 160px;
+            padding: 20px;
+            min-height: calc(100vh - 32px);
+        }
+        
+        .wrap {
+            max-width: 1200px;
+        }
+        
+        h1 {
+            font-size: 23px;
+            font-weight: 400;
+            margin: 0 0 20px 0;
+            line-height: 1.3;
+        }
+        
+        .nav-tab-wrapper {
+            border-bottom: 1px solid #ccd0d4;
+            margin: 0 0 20px 0;
+            padding: 0;
+        }
+        
+        .nav-tab {
+            background: #f1f1f1;
+            border: 1px solid #ccd0d4;
+            border-bottom: none;
+            color: #555;
+            display: inline-block;
+            padding: 4px 14px;
+            text-decoration: none;
+            margin: 0 2px 0 0;
+            font-size: 12px;
+            line-height: 16px;
+        }
+        
+        .nav-tab:hover {
+            background: #fff;
+            color: #464646;
+        }
+        
+        .nav-tab-active {
+            background: #fff;
+            border-bottom: 1px solid #fff;
+            color: #000;
+            margin-bottom: -1px;
+        }
+        
+        .fp-dms-reports-section {
+            background: #fff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #ccd0d4;
+        }
+        
+        .fp-dms-reports-section h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .kpi-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .kpi-item input {
+            margin-right: 8px;
+            width: auto;
+        }
+        
+        .button {
+            background: #0073aa;
+            border: 1px solid #006ba1;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 13px;
+        }
+        
+        .button:hover {
+            background: #005a87;
+        }
+        
+        .button-primary {
+            background: #007cba;
+            border-color: #0073aa;
+        }
+        
+        .button-primary:hover {
+            background: #0071a1;
+        }
+        
+        .wp-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .wp-list-table th,
+        .wp-list-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .wp-list-table th {
+            background: #f9f9f9;
+            font-weight: 600;
+        }
+        
+        .wp-list-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .sentiment-positive {
+            color: #00a32a;
+            font-weight: bold;
+        }
+        
+        .sentiment-negative {
+            color: #d63638;
+            font-weight: bold;
+        }
+        
+        .sentiment-neutral {
+            color: #dba617;
+            font-weight: bold;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .metric-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .issue-tag {
+            background: #ffe6e6;
+            color: #d63638;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .platform-tag {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        
+        .stars {
+            color: #f4b942;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .notice {
+            background: #fff;
+            border-left: 4px solid #00a32a;
+            padding: 12px;
+            margin: 15px 0;
+        }
+        
+        .notice-info {
+            border-left-color: #72aee6;
+        }
+        
+        .notice-warning {
+            border-left-color: #dba617;
+        }
+        
+        .notice-error {
+            border-left-color: #d63638;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .status-active {
+            background: #00a32a;
+        }
+        
+        .status-draft {
+            background: #dba617;
+        }
+        
+        .action-required {
+            background: #d63638;
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        
+        .responded {
+            color: #00a32a;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <span>🚀 WordPress Admin</span>
+    </div>
+    
+    <div class="admin-menu">
+        <ul>
+            <li><a href="#">🏠 Dashboard</a></li>
+            <li><a href="#" class="current">📊 Reports</a></li>
+            <li><a href="#">📈 Analytics</a></li>
+            <li><a href="#">👥 Clienti</a></li>
+            <li><a href="#">⚙️ Impostazioni</a></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <div class="wrap">
+            <h1>📊 Reports & Analytics - FP Digital Marketing Suite</h1>
+            
+            <!-- Tab Navigation -->
+            <nav class="nav-tab-wrapper">
+                <a href="#" class="nav-tab">Report Standard</a>
+                <a href="#" class="nav-tab nav-tab-active">Report Personalizzati</a>
+                <a href="#" class="nav-tab">Analisi Sentiment</a>
+                <a href="#" class="nav-tab">Debug & Analytics</a>
+            </nav>
+
+            <!-- Custom Reports Tab Content -->
+            <div class="fp-dms-reports-section">
+                <h2>🎯 Crea Nuovo Report Personalizzato</h2>
+                <p>Configura report personalizzati con periodi specifici, KPI selezionati e invio automatico via email.</p>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label><strong>Cliente</strong></label>
+                        <select>
+                            <option>Seleziona cliente...</option>
+                            <option selected>Acme Corporation</option>
+                            <option>TechStart Srl</option>
+                            <option>Fashion Boutique</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><strong>Nome Report</strong></label>
+                        <input type="text" value="Report Mensile Performance" placeholder="es. Report Mensile Performance">
+                    </div>
+
+                    <div class="form-group">
+                        <label><strong>Periodo Temporale</strong></label>
+                        <select>
+                            <option>Ultimi 7 giorni</option>
+                            <option>Ultimi 14 giorni</option>
+                            <option selected>Ultimi 30 giorni</option>
+                            <option>Ultimi 90 giorni</option>
+                            <option>Ultimo anno</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><strong>Frequenza Generazione</strong></label>
+                        <select>
+                            <option>Manuale</option>
+                            <option selected>Settimanale</option>
+                            <option>Mensile</option>
+                            <option>Trimestrale</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label><strong>KPI da Includere</strong></label>
+                    <div style="margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
+                        <h4 style="margin-top: 0;">🚦 Traffico</h4>
+                        <div class="kpi-grid">
+                            <label class="kpi-item">
+                                <input type="checkbox" checked> Sessioni
+                            </label>
+                            <label class="kpi-item">
+                                <input type="checkbox" checked> Utenti
+                            </label>
+                            <label class="kpi-item">
+                                <input type="checkbox"> Visualizzazioni Pagina
+                            </label>
+                            <label class="kpi-item">
+                                <input type="checkbox"> Frequenza di Rimbalzo
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div style="margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
+                        <h4 style="margin-top: 0;">💰 Conversioni</h4>
+                        <div class="kpi-grid">
+                            <label class="kpi-item">
+                                <input type="checkbox" checked> Tasso di Conversione
+                            </label>
+                            <label class="kpi-item">
+                                <input type="checkbox" checked> Fatturato
+                            </label>
+                            <label class="kpi-item">
+                                <input type="checkbox"> Obiettivi Completati
+                            </label>
+                            <label class="kpi-item">
+                                <input type="checkbox"> ROAS
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><strong>Email Recipients (opzionale)</strong></label>
+                    <input type="text" value="manager@acme.com, marketing@acme.com" placeholder="email1@example.com, email2@example.com">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Separa gli indirizzi email con virgole. Lascia vuoto per non inviare automaticamente.
+                    </small>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <label style="display: flex; align-items: center;">
+                        <input type="checkbox" checked style="margin-right: 8px; width: auto;">
+                        Invia automaticamente secondo la frequenza selezionata
+                    </label>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button class="button button-primary">🎯 Crea Report Personalizzato</button>
+                </div>
+            </div>
+
+            <!-- Existing Custom Reports -->
+            <div class="fp-dms-reports-section">
+                <h2>📋 Report Personalizzati Esistenti</h2>
+                
+                <table class="wp-list-table">
+                    <thead>
+                        <tr>
+                            <th>Nome Report</th>
+                            <th>Cliente</th>
+                            <th>Periodo</th>
+                            <th>Frequenza</th>
+                            <th>KPI</th>
+                            <th>Auto-Send</th>
+                            <th>Ultimo Generato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong>Report Mensile Performance</strong>
+                                <br><small style="color: #666;">Analisi completa traffico e conversioni</small>
+                            </td>
+                            <td>Acme Corporation</td>
+                            <td>Ultimi 30 giorni</td>
+                            <td>Settimanale</td>
+                            <td>
+                                <small>6 KPI</small>
+                                <details style="margin-top: 5px;">
+                                    <summary style="cursor: pointer; font-size: 11px;">Dettagli</summary>
+                                    <div style="font-size: 11px; margin-top: 5px;">
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">sessioni</span>
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">utenti</span>
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">conversioni</span>
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">fatturato</span>
+                                    </div>
+                                </details>
+                            </td>
+                            <td>
+                                <span style="color: #00a32a;">✓ Sì</span>
+                                <br><small style="color: #666;">2 destinatari</small>
+                            </td>
+                            <td>13/09/2025 15:30</td>
+                            <td>
+                                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                    <a href="#" class="button">PDF</a>
+                                    <a href="#" class="button">CSV</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Report Settimanale SEO</strong>
+                                <br><small style="color: #666;">Monitoraggio performance organiche</small>
+                            </td>
+                            <td>TechStart Srl</td>
+                            <td>Ultimi 7 giorni</td>
+                            <td>Settimanale</td>
+                            <td>
+                                <small>4 KPI</small>
+                                <details style="margin-top: 5px;">
+                                    <summary style="cursor: pointer; font-size: 11px;">Dettagli</summary>
+                                    <div style="font-size: 11px; margin-top: 5px;">
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">traffico organico</span>
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">impressioni</span>
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">posizioni</span>
+                                    </div>
+                                </details>
+                            </td>
+                            <td>
+                                <span style="color: #00a32a;">✓ Sì</span>
+                                <br><small style="color: #666;">1 destinatario</small>
+                            </td>
+                            <td>09/09/2025 09:00</td>
+                            <td>
+                                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                    <a href="#" class="button">PDF</a>
+                                    <a href="#" class="button">CSV</a>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong>Analisi Trimestrale ROI</strong>
+                                <br><small style="color: #666;">Report esecutivo per management</small>
+                            </td>
+                            <td>Fashion Boutique</td>
+                            <td>Ultimi 90 giorni</td>
+                            <td>Trimestrale</td>
+                            <td>
+                                <small>8 KPI</small>
+                                <details style="margin-top: 5px;">
+                                    <summary style="cursor: pointer; font-size: 11px;">Dettagli</summary>
+                                    <div style="font-size: 11px; margin-top: 5px;">
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">fatturato</span>
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">ROI</span>
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">ROAS</span>
+                                        <span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;">LTV</span>
+                                    </div>
+                                </details>
+                            </td>
+                            <td>
+                                <span style="color: #666;">No</span>
+                            </td>
+                            <td>
+                                <span style="color: #666;">Mai generato</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                    <a href="#" class="button">PDF</a>
+                                    <a href="#" class="button">CSV</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Success Notice -->
+            <div class="notice notice-info">
+                <p><strong>✅ Nuove Funzionalità Implementate!</strong><br>
+                Sistema di report personalizzati e analisi sentiment completamente operativo. I report possono essere configurati per ogni cliente con KPI specifici e invio automatico via email.</p>
+            </div>
+
+            <!-- Feature Highlights -->
+            <div class="fp-dms-reports-section">
+                <h2>🚀 Caratteristiche Implementate</h2>
+                <div class="metrics-grid">
+                    <div class="metric-card" style="border-left: 4px solid #00a32a;">
+                        <div class="metric-value" style="color: #00a32a;">7</div>
+                        <div class="metric-label">Periodi Temporali</div>
+                        <small style="color: #666;">Da 7 giorni a 1 anno + custom</small>
+                    </div>
+                    <div class="metric-card" style="border-left: 4px solid #0073aa;">
+                        <div class="metric-value" style="color: #0073aa;">20+</div>
+                        <div class="metric-label">KPI Disponibili</div>
+                        <small style="color: #666;">Traffico, conversioni, revenue, advertising</small>
+                    </div>
+                    <div class="metric-card" style="border-left: 4px solid #7c3aed;">
+                        <div class="metric-value" style="color: #7c3aed;">AI</div>
+                        <div class="metric-label">Sentiment Analysis</div>
+                        <small style="color: #666;">Analisi automatica recensioni</small>
+                    </div>
+                    <div class="metric-card" style="border-left: 4px solid #d63638;">
+                        <div class="metric-value" style="color: #d63638;">3</div>
+                        <div class="metric-label">Formati Export</div>
+                        <small style="color: #666;">PDF, CSV, HTML</small>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 10px;">📋 Funzionalità Principali</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>✅ Report Personalizzati:</strong> Configurazione completa con KPI selezionabili, periodi flessibili e invio automatico
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>✅ Analisi Sentiment AI:</strong> Monitoraggio automatico recensioni con identificazione problematiche e suggerimenti risposte
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>✅ Multi-formato Export:</strong> Generazione report in PDF, CSV e HTML con template professionali
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>✅ Automazione Email:</strong> Invio programmato report a destinatari configurabili per cliente
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                            <strong>✅ Dashboard Integrata:</strong> Interfaccia admin WordPress con navigazione a tab e filtri avanzati
+                        </li>
+                        <li style="padding: 8px 0;">
+                            <strong>✅ Database Strutturato:</strong> Nuove tabelle per configurazioni report e dati sentiment con ottimizzazioni performance
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

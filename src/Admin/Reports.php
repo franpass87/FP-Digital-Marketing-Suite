@@ -17,6 +17,10 @@ use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Models\CustomReport;
+use FP\DigitalMarketing\Models\SocialSentiment;
+use FP\DigitalMarketing\Database\CustomReportsTable;
+use FP\DigitalMarketing\Database\SocialSentimentTable;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\DataSources\GoogleSearchConsole;
@@ -98,11 +102,41 @@ class Reports {
 			}
 		}
 
+		// Handle custom report download
+		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_custom_report' && isset( $_GET['report_id'] ) ) {
+			if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
+				$this->download_custom_report( intval( $_GET['report_id'] ) );
+			} else {
+				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+			}
+		}
+
 		// Handle custom report generation
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_custom_report' && 
 			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
 			 Security::verify_nonce_with_logging( 'generate_custom_report' ) ) {
 			$this->handle_custom_report_generation();
+		}
+
+		// Handle new custom report creation
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'create_custom_report' && 
+			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+			 Security::verify_nonce_with_logging( 'create_custom_report' ) ) {
+			$this->handle_custom_report_creation();
+		}
+
+		// Handle sentiment response
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'respond_to_sentiment' && 
+			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+			 Security::verify_nonce_with_logging( 'respond_to_sentiment' ) ) {
+			$this->handle_sentiment_response();
+		}
+
+		// Handle generate sample sentiment data
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_sample_sentiment' && 
+			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+			 Security::verify_nonce_with_logging( 'generate_sample_sentiment' ) ) {
+			$this->handle_generate_sample_sentiment();
 		}
 
 		// Handle manual report generation
@@ -190,10 +224,160 @@ class Reports {
 	}
 
 	/**
-	 * Handle custom report generation form submission
+	 * Handle custom report creation form submission
 	 *
 	 * @return void
 	 */
+	private function handle_custom_report_creation(): void {
+		$client_id = intval( $_POST['client_id'] ?? 0 );
+		$report_name = sanitize_text_field( $_POST['report_name'] ?? '' );
+		$report_description = sanitize_textarea_field( $_POST['report_description'] ?? '' );
+		$time_period = sanitize_text_field( $_POST['time_period'] ?? '30_days' );
+		$selected_kpis = isset( $_POST['selected_kpis'] ) ? array_map( 'sanitize_text_field', $_POST['selected_kpis'] ) : [];
+		$report_frequency = sanitize_text_field( $_POST['report_frequency'] ?? 'manual' );
+		$email_recipients = isset( $_POST['email_recipients'] ) ? array_map( 'sanitize_email', explode( ',', $_POST['email_recipients'] ) ) : [];
+		$auto_send = isset( $_POST['auto_send'] ) ? 1 : 0;
+
+		if ( ! $client_id || ! $report_name ) {
+			add_action( 'admin_notices', function() {
+				echo '<div class="notice notice-error is-dismissible"><p>';
+				echo esc_html__( 'Cliente e nome report sono obbligatori', 'fp-digital-marketing' );
+				echo '</p></div>';
+			} );
+			return;
+		}
+
+		$custom_report = new CustomReport([
+			'client_id' => $client_id,
+			'report_name' => $report_name,
+			'report_description' => $report_description,
+			'time_period' => $time_period,
+			'selected_kpis' => $selected_kpis,
+			'report_frequency' => $report_frequency,
+			'email_recipients' => array_filter( $email_recipients ),
+			'auto_send' => $auto_send,
+			'status' => 'active',
+		]);
+
+		if ( $custom_report->save() ) {
+			add_action( 'admin_notices', function() {
+				echo '<div class="notice notice-success is-dismissible"><p>';
+				echo esc_html__( 'Report personalizzato creato con successo!', 'fp-digital-marketing' );
+				echo '</p></div>';
+			} );
+		} else {
+			add_action( 'admin_notices', function() {
+				echo '<div class="notice notice-error is-dismissible"><p>';
+				echo esc_html__( 'Errore nella creazione del report personalizzato', 'fp-digital-marketing' );
+				echo '</p></div>';
+			} );
+		}
+	}
+
+	/**
+	 * Download custom report
+	 *
+	 * @param int $report_id Report ID
+	 * @return void
+	 */
+	private function download_custom_report( int $report_id ): void {
+		$report_data = CustomReportsTable::get_report( $report_id );
+		if ( ! $report_data ) {
+			wp_die( esc_html__( 'Report non trovato', 'fp-digital-marketing' ) );
+		}
+
+		$custom_report = new CustomReport( $report_data );
+		$format = sanitize_text_field( $_GET['format'] ?? 'pdf' );
+		$result = $custom_report->generate( $format );
+
+		if ( ! $result['success'] ) {
+			wp_die( esc_html( implode( ', ', $result['errors'] ) ) );
+		}
+
+		// Set headers and output
+		switch ( $format ) {
+			case 'csv':
+				header( 'Content-Type: text/csv; charset=utf-8' );
+				break;
+			case 'html':
+				header( 'Content-Type: text/html; charset=utf-8' );
+				break;
+			default:
+				header( 'Content-Type: application/pdf' );
+		}
+
+		header( 'Content-Disposition: attachment; filename="' . $result['filename'] . '"' );
+		header( 'Content-Length: ' . strlen( $result['content'] ) );
+
+		echo $result['content'];
+		exit;
+	}
+
+	/**
+	 * Handle sentiment response submission
+	 *
+	 * @return void
+	 */
+	private function handle_sentiment_response(): void {
+		$sentiment_id = intval( $_POST['sentiment_id'] ?? 0 );
+		$response_text = sanitize_textarea_field( $_POST['response_text'] ?? '' );
+
+		if ( ! $sentiment_id || ! $response_text ) {
+			add_action( 'admin_notices', function() {
+				echo '<div class="notice notice-error is-dismissible"><p>';
+				echo esc_html__( 'ID recensione e testo risposta sono obbligatori', 'fp-digital-marketing' );
+				echo '</p></div>';
+			} );
+			return;
+		}
+
+		if ( SocialSentimentTable::mark_as_responded( $sentiment_id, $response_text ) ) {
+			add_action( 'admin_notices', function() {
+				echo '<div class="notice notice-success is-dismissible"><p>';
+				echo esc_html__( 'Risposta salvata con successo!', 'fp-digital-marketing' );
+				echo '</p></div>';
+			} );
+		} else {
+			add_action( 'admin_notices', function() {
+				echo '<div class="notice notice-error is-dismissible"><p>';
+				echo esc_html__( 'Errore nel salvare la risposta', 'fp-digital-marketing' );
+				echo '</p></div>';
+			} );
+		}
+	}
+
+	/**
+	 * Handle generate sample sentiment data
+	 *
+	 * @return void
+	 */
+	private function handle_generate_sample_sentiment(): void {
+		$client_id = intval( $_POST['client_id'] ?? 0 );
+		$count = intval( $_POST['sample_count'] ?? 20 );
+
+		if ( ! $client_id ) {
+			add_action( 'admin_notices', function() {
+				echo '<div class="notice notice-error is-dismissible"><p>';
+				echo esc_html__( 'Seleziona un cliente', 'fp-digital-marketing' );
+				echo '</p></div>';
+			} );
+			return;
+		}
+
+		if ( SocialSentimentTable::generate_sample_data( $client_id, $count ) ) {
+			add_action( 'admin_notices', function() use ( $count ) {
+				echo '<div class="notice notice-success is-dismissible"><p>';
+				printf( __( 'Generati %d dati demo per l\'analisi del sentiment!', 'fp-digital-marketing' ), $count );
+				echo '</p></div>';
+			} );
+		} else {
+			add_action( 'admin_notices', function() {
+				echo '<div class="notice notice-error is-dismissible"><p>';
+				echo esc_html__( 'Errore nella generazione dei dati demo', 'fp-digital-marketing' );
+				echo '</p></div>';
+			} );
+		}
+	}
 	private function handle_custom_report_generation(): void {
 		$client_id = intval( $_POST['client_id'] ?? 0 );
 		$format = sanitize_text_field( $_POST['format'] ?? 'pdf' );
@@ -314,9 +498,793 @@ class Reports {
 		$clientes = get_posts( [
 			'post_type'      => 'cliente',
 			'post_status'    => 'publish',
-			'posts_per_page' => 10,
+			'posts_per_page' => 50,
 		] );
 
+		// Get current tab
+		$current_tab = sanitize_text_field( $_GET['tab'] ?? 'standard_reports' );
+
+		?>
+		<div class="wrap">
+			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+			
+			<!-- Tab Navigation -->
+			<nav class="nav-tab-wrapper" style="margin: 20px 0;">
+				<a href="<?php echo esc_url( add_query_arg( ['tab' => 'standard_reports'], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+				   class="nav-tab <?php echo $current_tab === 'standard_reports' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Report Standard', 'fp-digital-marketing' ); ?>
+				</a>
+				<a href="<?php echo esc_url( add_query_arg( ['tab' => 'custom_reports'], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+				   class="nav-tab <?php echo $current_tab === 'custom_reports' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Report Personalizzati', 'fp-digital-marketing' ); ?>
+				</a>
+				<a href="<?php echo esc_url( add_query_arg( ['tab' => 'sentiment_analysis'], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+				   class="nav-tab <?php echo $current_tab === 'sentiment_analysis' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Analisi Sentiment', 'fp-digital-marketing' ); ?>
+				</a>
+				<a href="<?php echo esc_url( add_query_arg( ['tab' => 'debug'], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+				   class="nav-tab <?php echo $current_tab === 'debug' ? 'nav-tab-active' : ''; ?>">
+					<?php esc_html_e( 'Debug & Analytics', 'fp-digital-marketing' ); ?>
+				</a>
+			</nav>
+
+			<?php
+			// Render the appropriate tab content
+			switch ( $current_tab ) {
+				case 'custom_reports':
+					$this->render_custom_reports_tab( $clientes );
+					break;
+				case 'sentiment_analysis':
+					$this->render_sentiment_analysis_tab( $clientes );
+					break;
+				case 'debug':
+					$this->render_debug_tab( $clientes );
+					break;
+				default:
+					$this->render_standard_reports_tab( $clientes );
+			}
+			?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render standard reports tab
+	 *
+	 * @param array $clientes Array of client posts
+	 * @return void
+	 */
+	private function render_standard_reports_tab( array $clientes ): void {
+		?>
+		<!-- Report Generation Section -->
+		<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Generazione Report Automatici', 'fp-digital-marketing' ); ?></h2>
+			
+			<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
+				<div class="fp-dms-card" style="background: #f8f9fa; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
+					<h3 style="margin-top: 0;"><?php esc_html_e( 'Scheduler Status', 'fp-digital-marketing' ); ?></h3>
+					<?php if ( ReportScheduler::is_scheduled() ) : ?>
+						<p><span style="color: #00a32a;">●</span> <?php esc_html_e( 'Attivo', 'fp-digital-marketing' ); ?></p>
+						<p><strong><?php esc_html_e( 'Prossima esecuzione:', 'fp-digital-marketing' ); ?></strong><br>
+						<?php echo esc_html( ReportScheduler::get_next_scheduled_time() ); ?></p>
+					<?php else : ?>
+						<p><span style="color: #d63638;">●</span> <?php esc_html_e( 'Non programmato', 'fp-digital-marketing' ); ?></p>
+					<?php endif; ?>
+				</div>
+				
+				<div class="fp-dms-card" style="background: #f8f9fa; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
+					<h3 style="margin-top: 0;"><?php esc_html_e( 'Clienti Disponibili', 'fp-digital-marketing' ); ?></h3>
+					<p><strong><?php echo count( $clientes ); ?></strong> <?php esc_html_e( 'clienti trovati', 'fp-digital-marketing' ); ?></p>
+				</div>
+			</div>
+
+			<div style="margin: 20px 0;">
+				<form method="post" style="display: inline-block;">
+					<?php wp_nonce_field( 'generate_reports' ); ?>
+					<input type="hidden" name="action" value="generate_reports">
+					<button type="submit" class="button button-primary">
+						<?php esc_html_e( 'Genera Report Manualmente', 'fp-digital-marketing' ); ?>
+					</button>
+				</form>
+			</div>
+
+			<?php if ( ! empty( $clientes ) ) : ?>
+				<h3><?php esc_html_e( 'Download Report PDF', 'fp-digital-marketing' ); ?></h3>
+				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+					<?php foreach ( $clientes as $cliente ) : ?>
+						<div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 4px;">
+							<h4 style="margin: 0 0 10px 0;"><?php echo esc_html( $cliente->post_title ); ?></h4>
+							<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+								<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+								   class="button button-secondary">
+									<?php esc_html_e( 'PDF', 'fp-digital-marketing' ); ?>
+								</a>
+								<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_csv', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+								   class="button button-secondary">
+									<?php esc_html_e( 'CSV', 'fp-digital-marketing' ); ?>
+								</a>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+		</div>
+
+		<!-- Custom Report Generation Section -->
+		<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Generazione Report Personalizzati', 'fp-digital-marketing' ); ?></h2>
+			<p><?php esc_html_e( 'Crea report personalizzati selezionando i KPI, il periodo e il formato desiderati.', 'fp-digital-marketing' ); ?></p>
+			
+			<form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+				<?php wp_nonce_field( 'generate_custom_report' ); ?>
+				<input type="hidden" name="action" value="generate_custom_report">
+				
+				<div class="form-group">
+					<label for="client_id"><strong><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></strong></label>
+					<select name="client_id" id="client_id" required style="width: 100%; padding: 8px; margin-top: 5px;">
+						<option value=""><?php esc_html_e( 'Seleziona cliente...', 'fp-digital-marketing' ); ?></option>
+						<?php foreach ( $clientes as $cliente ) : ?>
+							<option value="<?php echo esc_attr( $cliente->ID ); ?>">
+								<?php echo esc_html( $cliente->post_title ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="period_start"><strong><?php esc_html_e( 'Periodo', 'fp-digital-marketing' ); ?></strong></label>
+					<div style="display: flex; gap: 10px; margin-top: 5px;">
+						<input type="date" name="period_start" id="period_start" style="flex: 1; padding: 8px;">
+						<input type="date" name="period_end" id="period_end" style="flex: 1; padding: 8px;">
+					</div>
+					<small style="color: #666;"><?php esc_html_e( 'Lascia vuoto per utilizzare il periodo predefinito', 'fp-digital-marketing' ); ?></small>
+				</div>
+
+				<div class="form-group">
+					<label for="format"><strong><?php esc_html_e( 'Formato', 'fp-digital-marketing' ); ?></strong></label>
+					<div style="margin-top: 5px;">
+						<label style="display: block; margin: 5px 0;">
+							<input type="radio" name="format" value="pdf" checked> PDF
+						</label>
+						<label style="display: block; margin: 5px 0;">
+							<input type="radio" name="format" value="csv"> CSV
+						</label>
+					</div>
+					
+					<div id="csv_options" style="margin-top: 10px; display: none;">
+						<label for="csv_separator" style="font-size: 12px;"><?php esc_html_e( 'Separatore CSV:', 'fp-digital-marketing' ); ?></label>
+						<select name="csv_separator" id="csv_separator" style="width: 100%; margin-top: 3px;">
+							<option value=","><?php esc_html_e( 'Virgola (,)', 'fp-digital-marketing' ); ?></option>
+							<option value=";"><?php esc_html_e( 'Punto e virgola (;)', 'fp-digital-marketing' ); ?></option>
+							<option value="\t"><?php esc_html_e( 'Tab', 'fp-digital-marketing' ); ?></option>
+						</select>
+					</div>
+				</div>
+
+				<div class="form-group" style="grid-column: 1 / -1;">
+					<label><strong><?php esc_html_e( 'KPI da includere', 'fp-digital-marketing' ); ?></strong></label>
+					<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+						<?php
+						$available_kpis = [
+							'sessions' => __( 'Sessioni', 'fp-digital-marketing' ),
+							'users' => __( 'Utenti', 'fp-digital-marketing' ),
+							'conversion_rate' => __( 'Tasso di Conversione', 'fp-digital-marketing' ),
+							'revenue' => __( 'Fatturato', 'fp-digital-marketing' ),
+						];
+						foreach ( $available_kpis as $kpi_key => $kpi_label ) :
+						?>
+							<label style="display: flex; align-items: center; padding: 8px; background: #f8f9fa; border-radius: 4px;">
+								<input type="checkbox" name="selected_kpis[]" value="<?php echo esc_attr( $kpi_key ); ?>" checked style="margin-right: 8px;">
+								<?php echo esc_html( $kpi_label ); ?>
+							</label>
+						<?php endforeach; ?>
+					</div>
+					<small style="color: #666; display: block; margin-top: 5px;">
+						<?php esc_html_e( 'Lascia tutto selezionato per includere tutti i KPI disponibili', 'fp-digital-marketing' ); ?>
+					</small>
+				</div>
+
+				<div class="form-group" style="grid-column: 1 / -1;">
+					<button type="submit" class="button button-primary" style="padding: 10px 20px;">
+						<?php esc_html_e( 'Genera Report Personalizzato', 'fp-digital-marketing' ); ?>
+					</button>
+				</div>
+			</form>
+		</div>
+
+		<!-- Report Logs Section -->
+		<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Log Report Generati', 'fp-digital-marketing' ); ?></h2>
+			<?php
+			$logs = ReportGenerator::get_report_logs( 20 );
+			if ( ! empty( $logs ) ) :
+			?>
+				<table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
+					<thead>
+						<tr>
+							<th><?php esc_html_e( 'Data/Ora', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Formato', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Dimensione', 'fp-digital-marketing' ); ?></th>
+							<th><?php esc_html_e( 'Stato', 'fp-digital-marketing' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php foreach ( $logs as $log ) : ?>
+							<tr>
+								<td><?php echo esc_html( $log['timestamp'] ); ?></td>
+								<td><?php echo esc_html( $log['client_id'] ); ?></td>
+								<td><?php echo esc_html( strtoupper( $log['format'] ) ); ?></td>
+								<td><?php echo $log['file_size'] > 0 ? esc_html( size_format( $log['file_size'] ) ) : '-'; ?></td>
+								<td>
+									<?php if ( $log['success'] ) : ?>
+										<span style="color: #00a32a;">✓ <?php esc_html_e( 'Successo', 'fp-digital-marketing' ); ?></span>
+									<?php else : ?>
+										<span style="color: #d63638;">✗ <?php esc_html_e( 'Errore', 'fp-digital-marketing' ); ?></span>
+										<?php if ( ! empty( $log['error_message'] ) ) : ?>
+											<br><small style="color: #666;"><?php echo esc_html( $log['error_message'] ); ?></small>
+										<?php endif; ?>
+									<?php endif; ?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php else : ?>
+				<p><?php esc_html_e( 'Nessun report generato ancora.', 'fp-digital-marketing' ); ?></p>
+			<?php endif; ?>
+		</div>
+
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const formatRadios = document.querySelectorAll('input[name="format"]');
+			const csvOptions = document.getElementById('csv_options');
+			
+			function toggleCSVOptions() {
+				const selectedFormat = document.querySelector('input[name="format"]:checked').value;
+				csvOptions.style.display = selectedFormat === 'csv' ? 'block' : 'none';
+			}
+			
+			formatRadios.forEach(radio => {
+				radio.addEventListener('change', toggleCSVOptions);
+			});
+			
+			toggleCSVOptions(); // Initial setup
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Render custom reports tab
+	 *
+	 * @param array $clientes Array of client posts
+	 * @return void
+	 */
+	private function render_custom_reports_tab( array $clientes ): void {
+		// Get existing custom reports
+		$custom_reports = CustomReportsTable::get_all_reports( ['limit' => 100] );
+		$available_kpis = CustomReport::get_available_kpis();
+		$time_periods = CustomReportsTable::get_available_time_periods();
+		$frequencies = CustomReportsTable::get_available_frequencies();
+
+		?>
+		<!-- Create New Custom Report Section -->
+		<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Crea Nuovo Report Personalizzato', 'fp-digital-marketing' ); ?></h2>
+			<p><?php esc_html_e( 'Configura report personalizzati con periodi specifici, KPI selezionati e invio automatico via email.', 'fp-digital-marketing' ); ?></p>
+			
+			<form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+				<?php wp_nonce_field( 'create_custom_report' ); ?>
+				<input type="hidden" name="action" value="create_custom_report">
+				
+				<div class="form-group">
+					<label for="client_id"><strong><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></strong></label>
+					<select name="client_id" id="client_id" required style="width: 100%; padding: 8px; margin-top: 5px;">
+						<option value=""><?php esc_html_e( 'Seleziona cliente...', 'fp-digital-marketing' ); ?></option>
+						<?php foreach ( $clientes as $cliente ) : ?>
+							<option value="<?php echo esc_attr( $cliente->ID ); ?>">
+								<?php echo esc_html( $cliente->post_title ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="report_name"><strong><?php esc_html_e( 'Nome Report', 'fp-digital-marketing' ); ?></strong></label>
+					<input type="text" name="report_name" id="report_name" required style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="<?php esc_attr_e( 'es. Report Mensile Performance', 'fp-digital-marketing' ); ?>">
+				</div>
+
+				<div class="form-group">
+					<label for="time_period"><strong><?php esc_html_e( 'Periodo Temporale', 'fp-digital-marketing' ); ?></strong></label>
+					<select name="time_period" id="time_period" style="width: 100%; padding: 8px; margin-top: 5px;">
+						<?php foreach ( $time_periods as $period_key => $period_label ) : ?>
+							<option value="<?php echo esc_attr( $period_key ); ?>" <?php selected( $period_key, '30_days' ); ?>>
+								<?php echo esc_html( $period_label ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="report_frequency"><strong><?php esc_html_e( 'Frequenza Generazione', 'fp-digital-marketing' ); ?></strong></label>
+					<select name="report_frequency" id="report_frequency" style="width: 100%; padding: 8px; margin-top: 5px;">
+						<?php foreach ( $frequencies as $freq_key => $freq_label ) : ?>
+							<option value="<?php echo esc_attr( $freq_key ); ?>">
+								<?php echo esc_html( $freq_label ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div class="form-group" style="grid-column: 1 / -1;">
+					<label for="report_description"><strong><?php esc_html_e( 'Descrizione (opzionale)', 'fp-digital-marketing' ); ?></strong></label>
+					<textarea name="report_description" id="report_description" rows="3" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="<?php esc_attr_e( 'Descrizione del report e obiettivi...', 'fp-digital-marketing' ); ?>"></textarea>
+				</div>
+
+				<!-- KPI Selection -->
+				<div class="form-group" style="grid-column: 1 / -1;">
+					<label><strong><?php esc_html_e( 'KPI da Includere', 'fp-digital-marketing' ); ?></strong></label>
+					<?php foreach ( $available_kpis as $category_key => $category ) : ?>
+						<div style="margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px;">
+							<h4 style="margin-top: 0;"><?php echo esc_html( $category['label'] ); ?></h4>
+							<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+								<?php foreach ( $category['kpis'] as $kpi_key => $kpi_label ) : ?>
+									<label style="display: flex; align-items: center; padding: 8px; background: #f8f9fa; border-radius: 4px;">
+										<input type="checkbox" name="selected_kpis[]" value="<?php echo esc_attr( $kpi_key ); ?>" style="margin-right: 8px;">
+										<?php echo esc_html( $kpi_label ); ?>
+									</label>
+								<?php endforeach; ?>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
+
+				<!-- Email Settings -->
+				<div class="form-group" style="grid-column: 1 / -1;">
+					<label for="email_recipients"><strong><?php esc_html_e( 'Email Recipients (opzionale)', 'fp-digital-marketing' ); ?></strong></label>
+					<input type="text" name="email_recipients" id="email_recipients" style="width: 100%; padding: 8px; margin-top: 5px;" placeholder="<?php esc_attr_e( 'email1@example.com, email2@example.com', 'fp-digital-marketing' ); ?>">
+					<small style="color: #666; display: block; margin-top: 5px;">
+						<?php esc_html_e( 'Separa gli indirizzi email con virgole. Lascia vuoto per non inviare automaticamente.', 'fp-digital-marketing' ); ?>
+					</small>
+				</div>
+
+				<div class="form-group" style="grid-column: 1 / -1;">
+					<label style="display: flex; align-items: center;">
+						<input type="checkbox" name="auto_send" value="1" style="margin-right: 8px;">
+						<?php esc_html_e( 'Invia automaticamente secondo la frequenza selezionata', 'fp-digital-marketing' ); ?>
+					</label>
+				</div>
+
+				<div class="form-group" style="grid-column: 1 / -1;">
+					<button type="submit" class="button button-primary" style="padding: 10px 20px;">
+						<?php esc_html_e( 'Crea Report Personalizzato', 'fp-digital-marketing' ); ?>
+					</button>
+				</div>
+			</form>
+		</div>
+
+		<!-- Existing Custom Reports -->
+		<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Report Personalizzati Esistenti', 'fp-digital-marketing' ); ?></h2>
+			
+			<?php if ( ! empty( $custom_reports ) ) : ?>
+				<div style="overflow-x: auto;">
+					<table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Nome Report', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Periodo', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Frequenza', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'KPI', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Auto-Send', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Ultimo Generato', 'fp-digital-marketing' ); ?></th>
+								<th><?php esc_html_e( 'Azioni', 'fp-digital-marketing' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $custom_reports as $report ) : ?>
+								<?php $client_post = get_post( $report['client_id'] ); ?>
+								<tr>
+									<td>
+										<strong><?php echo esc_html( $report['report_name'] ); ?></strong>
+										<?php if ( ! empty( $report['report_description'] ) ) : ?>
+											<br><small style="color: #666;"><?php echo esc_html( wp_trim_words( $report['report_description'], 10 ) ); ?></small>
+										<?php endif; ?>
+									</td>
+									<td><?php echo $client_post ? esc_html( $client_post->post_title ) : 'Cliente #' . $report['client_id']; ?></td>
+									<td><?php echo esc_html( $time_periods[ $report['time_period'] ] ?? $report['time_period'] ); ?></td>
+									<td><?php echo esc_html( $frequencies[ $report['report_frequency'] ] ?? $report['report_frequency'] ); ?></td>
+									<td>
+										<small><?php echo esc_html( count( $report['selected_kpis'] ) ); ?> KPI</small>
+										<details style="margin-top: 5px;">
+											<summary style="cursor: pointer; font-size: 11px;"><?php esc_html_e( 'Dettagli', 'fp-digital-marketing' ); ?></summary>
+											<div style="font-size: 11px; margin-top: 5px;">
+												<?php foreach ( $report['selected_kpis'] as $kpi ) : ?>
+													<span style="background: #f0f0f0; padding: 2px 5px; margin: 2px; border-radius: 3px; display: inline-block;"><?php echo esc_html( $kpi ); ?></span>
+												<?php endforeach; ?>
+											</div>
+										</details>
+									</td>
+									<td>
+										<?php if ( $report['auto_send'] ) : ?>
+											<span style="color: #00a32a;">✓ Sì</span>
+											<?php if ( ! empty( $report['email_recipients'] ) ) : ?>
+												<br><small style="color: #666;"><?php echo esc_html( count( $report['email_recipients'] ) ); ?> destinatari</small>
+											<?php endif; ?>
+										<?php else : ?>
+											<span style="color: #666;">No</span>
+										<?php endif; ?>
+									</td>
+									<td>
+										<?php if ( $report['last_generated'] ) : ?>
+											<?php echo esc_html( date( 'd/m/Y H:i', strtotime( $report['last_generated'] ) ) ); ?>
+										<?php else : ?>
+											<span style="color: #666;"><?php esc_html_e( 'Mai generato', 'fp-digital-marketing' ); ?></span>
+										<?php endif; ?>
+									</td>
+									<td>
+										<div style="display: flex; gap: 5px; flex-wrap: wrap;">
+											<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_custom_report', 'report_id' => $report['id'], 'format' => 'pdf' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+											   class="button button-small">PDF</a>
+											<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_custom_report', 'report_id' => $report['id'], 'format' => 'csv' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+											   class="button button-small">CSV</a>
+										</div>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			<?php else : ?>
+				<div class="notice notice-info inline">
+					<p><?php esc_html_e( 'Nessun report personalizzato creato ancora. Usa il modulo sopra per crearne uno.', 'fp-digital-marketing' ); ?></p>
+				</div>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Render sentiment analysis tab
+	 *
+	 * @param array $clientes Array of client posts
+	 * @return void
+	 */
+	private function render_sentiment_analysis_tab( array $clientes ): void {
+		// Get current filter parameters
+		$selected_client = intval( $_GET['filter_client'] ?? 0 );
+		$sentiment_filter = sanitize_text_field( $_GET['sentiment_filter'] ?? '' );
+		$action_required_filter = isset( $_GET['action_required'] ) ? intval( $_GET['action_required'] ) : null;
+
+		// Get sentiment data
+		$sentiment_data = [];
+		$sentiment_summary = [];
+		$top_issues = [];
+
+		if ( $selected_client ) {
+			$sentiment_data = SocialSentimentTable::get_client_sentiment( $selected_client, [
+				'limit' => 50,
+				'sentiment_label' => $sentiment_filter ?: null,
+				'action_required' => $action_required_filter,
+			] );
+			$sentiment_summary = SocialSentimentTable::get_sentiment_summary( $selected_client );
+			$top_issues = SocialSentimentTable::get_top_issues( $selected_client );
+		}
+
+		$platforms = SocialSentimentTable::get_available_platforms();
+
+		?>
+		<!-- Generate Sample Data Section -->
+		<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Genera Dati Demo per l\'Analisi Sentiment', 'fp-digital-marketing' ); ?></h2>
+			<p><?php esc_html_e( 'Genera dati di esempio per testare il sistema di analisi del sentiment sociale.', 'fp-digital-marketing' ); ?></p>
+			
+			<form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+				<?php wp_nonce_field( 'generate_sample_sentiment' ); ?>
+				<input type="hidden" name="action" value="generate_sample_sentiment">
+				
+				<div class="form-group">
+					<label for="client_id_sample"><strong><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></strong></label>
+					<select name="client_id" id="client_id_sample" required style="width: 100%; padding: 8px; margin-top: 5px;">
+						<option value=""><?php esc_html_e( 'Seleziona cliente...', 'fp-digital-marketing' ); ?></option>
+						<?php foreach ( $clientes as $cliente ) : ?>
+							<option value="<?php echo esc_attr( $cliente->ID ); ?>">
+								<?php echo esc_html( $cliente->post_title ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="sample_count"><strong><?php esc_html_e( 'Numero di Recensioni Demo', 'fp-digital-marketing' ); ?></strong></label>
+					<select name="sample_count" id="sample_count" style="width: 100%; padding: 8px; margin-top: 5px;">
+						<option value="10">10 recensioni</option>
+						<option value="20" selected>20 recensioni</option>
+						<option value="50">50 recensioni</option>
+						<option value="100">100 recensioni</option>
+					</select>
+				</div>
+
+				<div class="form-group">
+					<button type="submit" class="button button-primary" style="padding: 10px 20px;">
+						<?php esc_html_e( 'Genera Dati Demo', 'fp-digital-marketing' ); ?>
+					</button>
+				</div>
+			</form>
+		</div>
+
+		<!-- Sentiment Analysis Filters -->
+		<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Analisi Sentiment Sociale', 'fp-digital-marketing' ); ?></h2>
+			<p><?php esc_html_e( 'Monitora e analizza il sentiment delle recensioni online dei tuoi clienti con intelligenza artificiale.', 'fp-digital-marketing' ); ?></p>
+			
+			<!-- Filters -->
+			<form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+				<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
+				<input type="hidden" name="tab" value="sentiment_analysis">
+				
+				<div>
+					<label for="filter_client"><strong><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></strong></label>
+					<select name="filter_client" id="filter_client" style="width: 100%; padding: 8px; margin-top: 5px;">
+						<option value=""><?php esc_html_e( 'Tutti i clienti', 'fp-digital-marketing' ); ?></option>
+						<?php foreach ( $clientes as $cliente ) : ?>
+							<option value="<?php echo esc_attr( $cliente->ID ); ?>" <?php selected( $selected_client, $cliente->ID ); ?>>
+								<?php echo esc_html( $cliente->post_title ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</div>
+
+				<div>
+					<label for="sentiment_filter"><strong><?php esc_html_e( 'Sentiment', 'fp-digital-marketing' ); ?></strong></label>
+					<select name="sentiment_filter" id="sentiment_filter" style="width: 100%; padding: 8px; margin-top: 5px;">
+						<option value=""><?php esc_html_e( 'Tutti', 'fp-digital-marketing' ); ?></option>
+						<option value="positive" <?php selected( $sentiment_filter, 'positive' ); ?>><?php esc_html_e( 'Positivo', 'fp-digital-marketing' ); ?></option>
+						<option value="negative" <?php selected( $sentiment_filter, 'negative' ); ?>><?php esc_html_e( 'Negativo', 'fp-digital-marketing' ); ?></option>
+						<option value="neutral" <?php selected( $sentiment_filter, 'neutral' ); ?>><?php esc_html_e( 'Neutro', 'fp-digital-marketing' ); ?></option>
+					</select>
+				</div>
+
+				<div>
+					<label for="action_required"><strong><?php esc_html_e( 'Azione Richiesta', 'fp-digital-marketing' ); ?></strong></label>
+					<select name="action_required" id="action_required" style="width: 100%; padding: 8px; margin-top: 5px;">
+						<option value=""><?php esc_html_e( 'Tutti', 'fp-digital-marketing' ); ?></option>
+						<option value="1" <?php selected( $action_required_filter, 1 ); ?>><?php esc_html_e( 'Richiede attenzione', 'fp-digital-marketing' ); ?></option>
+						<option value="0" <?php selected( $action_required_filter, 0 ); ?>><?php esc_html_e( 'Nessuna azione', 'fp-digital-marketing' ); ?></option>
+					</select>
+				</div>
+
+				<div style="display: flex; align-items: end;">
+					<button type="submit" class="button button-secondary" style="padding: 8px 15px;">
+						<?php esc_html_e( 'Filtra', 'fp-digital-marketing' ); ?>
+					</button>
+				</div>
+			</form>
+
+			<?php if ( $selected_client && ! empty( $sentiment_summary ) ) : ?>
+				<!-- Sentiment Summary -->
+				<div style="margin: 20px 0;">
+					<h3><?php esc_html_e( 'Riepilogo Sentiment', 'fp-digital-marketing' ); ?></h3>
+					<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0;">
+						<div style="background: #f0fff0; border: 1px solid #00a32a; padding: 15px; border-radius: 4px; text-align: center;">
+							<div style="font-size: 24px; font-weight: bold; color: #00a32a;"><?php echo esc_html( $sentiment_summary['positive_reviews'] ); ?></div>
+							<div style="font-size: 14px; color: #666;"><?php esc_html_e( 'Positive', 'fp-digital-marketing' ); ?> (<?php echo esc_html( $sentiment_summary['positive_percentage'] ); ?>%)</div>
+						</div>
+						<div style="background: #fff0f0; border: 1px solid #d63638; padding: 15px; border-radius: 4px; text-align: center;">
+							<div style="font-size: 24px; font-weight: bold; color: #d63638;"><?php echo esc_html( $sentiment_summary['negative_reviews'] ); ?></div>
+							<div style="font-size: 14px; color: #666;"><?php esc_html_e( 'Negative', 'fp-digital-marketing' ); ?> (<?php echo esc_html( $sentiment_summary['negative_percentage'] ); ?>%)</div>
+						</div>
+						<div style="background: #fff8e1; border: 1px solid #dba617; padding: 15px; border-radius: 4px; text-align: center;">
+							<div style="font-size: 24px; font-weight: bold; color: #dba617;"><?php echo esc_html( $sentiment_summary['neutral_reviews'] ); ?></div>
+							<div style="font-size: 14px; color: #666;"><?php esc_html_e( 'Neutral', 'fp-digital-marketing' ); ?> (<?php echo esc_html( $sentiment_summary['neutral_percentage'] ); ?>%)</div>
+						</div>
+						<div style="background: #f0f0f0; border: 1px solid #666; padding: 15px; border-radius: 4px; text-align: center;">
+							<div style="font-size: 24px; font-weight: bold; color: #333;"><?php echo esc_html( number_format( $sentiment_summary['avg_sentiment_score'], 2 ) ); ?></div>
+							<div style="font-size: 14px; color: #666;"><?php esc_html_e( 'Score Medio', 'fp-digital-marketing' ); ?></div>
+						</div>
+					</div>
+
+					<?php if ( ! empty( $top_issues ) ) : ?>
+						<div style="margin: 20px 0;">
+							<h4><?php esc_html_e( 'Problematiche Principali', 'fp-digital-marketing' ); ?></h4>
+							<div style="display: flex; flex-wrap: wrap; gap: 10px;">
+								<?php foreach ( $top_issues as $issue => $count ) : ?>
+									<span style="background: #ffe6e6; color: #d63638; padding: 5px 10px; border-radius: 15px; font-size: 12px;">
+										<?php echo esc_html( $issue ); ?> (<?php echo esc_html( $count ); ?>)
+									</span>
+								<?php endforeach; ?>
+							</div>
+						</div>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
+
+			<!-- Sentiment Data Table -->
+			<?php if ( $selected_client ) : ?>
+				<?php if ( ! empty( $sentiment_data ) ) : ?>
+					<div style="overflow-x: auto; margin: 20px 0;">
+						<table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
+							<thead>
+								<tr>
+									<th style="width: 100px;"><?php esc_html_e( 'Data', 'fp-digital-marketing' ); ?></th>
+									<th style="width: 100px;"><?php esc_html_e( 'Piattaforma', 'fp-digital-marketing' ); ?></th>
+									<th style="width: 80px;"><?php esc_html_e( 'Rating', 'fp-digital-marketing' ); ?></th>
+									<th style="width: 100px;"><?php esc_html_e( 'Sentiment', 'fp-digital-marketing' ); ?></th>
+									<th><?php esc_html_e( 'Recensione', 'fp-digital-marketing' ); ?></th>
+									<th style="width: 150px;"><?php esc_html_e( 'AI Summary', 'fp-digital-marketing' ); ?></th>
+									<th style="width: 100px;"><?php esc_html_e( 'Azioni', 'fp-digital-marketing' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php foreach ( $sentiment_data as $item ) : ?>
+									<tr>
+										<td><?php echo esc_html( date( 'd/m/Y', strtotime( $item['review_date'] ) ) ); ?></td>
+										<td>
+											<span style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-size: 11px;">
+												<?php echo esc_html( $platforms[ $item['review_platform'] ] ?? $item['review_platform'] ); ?>
+											</span>
+										</td>
+										<td>
+											<?php if ( $item['review_rating'] ) : ?>
+												<div style="color: #f4b942;">
+													<?php echo str_repeat( '★', intval( $item['review_rating'] ) ); ?>
+													<?php echo str_repeat( '☆', 5 - intval( $item['review_rating'] ) ); ?>
+												</div>
+											<?php else : ?>
+												<span style="color: #666;">-</span>
+											<?php endif; ?>
+										</td>
+										<td>
+											<?php
+											$sentiment_colors = [
+												'positive' => '#00a32a',
+												'negative' => '#d63638',
+												'neutral' => '#dba617',
+											];
+											$color = $sentiment_colors[ $item['sentiment_label'] ] ?? '#666';
+											?>
+											<div style="color: <?php echo esc_attr( $color ); ?>; font-weight: bold;">
+												<?php echo esc_html( ucfirst( $item['sentiment_label'] ) ); ?>
+											</div>
+											<small style="color: #666;">
+												<?php echo esc_html( number_format( $item['sentiment_score'], 2 ) ); ?>
+												(<?php echo esc_html( number_format( $item['sentiment_confidence'] * 100, 0 ) ); ?>%)
+											</small>
+										</td>
+										<td>
+											<div style="max-width: 300px; overflow: hidden;">
+												<div style="font-size: 13px; line-height: 1.4;">
+													<?php echo esc_html( wp_trim_words( $item['review_text'], 20 ) ); ?>
+												</div>
+												<?php if ( ! empty( $item['key_issues'] ) ) : ?>
+													<div style="margin-top: 5px;">
+														<?php foreach ( $item['key_issues'] as $issue ) : ?>
+															<span style="background: #ffe6e6; color: #d63638; padding: 2px 5px; border-radius: 3px; font-size: 10px; margin-right: 3px;">
+																<?php echo esc_html( $issue ); ?>
+															</span>
+														<?php endforeach; ?>
+													</div>
+												<?php endif; ?>
+											</div>
+										</td>
+										<td>
+											<div style="font-size: 12px; line-height: 1.3;">
+												<?php echo esc_html( wp_trim_words( $item['ai_summary'], 15 ) ); ?>
+											</div>
+											<?php if ( $item['action_required'] ) : ?>
+												<div style="margin-top: 5px;">
+													<span style="background: #d63638; color: white; padding: 2px 5px; border-radius: 3px; font-size: 10px;">
+														<?php esc_html_e( 'Attenzione!', 'fp-digital-marketing' ); ?>
+													</span>
+												</div>
+											<?php endif; ?>
+										</td>
+										<td>
+											<div style="display: flex; flex-direction: column; gap: 5px;">
+												<?php if ( ! $item['responded'] ) : ?>
+													<button class="button button-small respond-btn" 
+															data-sentiment-id="<?php echo esc_attr( $item['id'] ); ?>"
+															data-suggested-response="<?php echo esc_attr( ( new SocialSentiment( $item ) )->suggest_response() ); ?>">
+														<?php esc_html_e( 'Rispondi', 'fp-digital-marketing' ); ?>
+													</button>
+												<?php else : ?>
+													<span style="color: #00a32a; font-size: 11px;">✓ Risposto</span>
+												<?php endif; ?>
+												
+												<?php if ( ! empty( $item['review_url'] ) ) : ?>
+													<a href="<?php echo esc_url( $item['review_url'] ); ?>" target="_blank" class="button button-small">
+														<?php esc_html_e( 'Vedi', 'fp-digital-marketing' ); ?>
+													</a>
+												<?php endif; ?>
+											</div>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</tbody>
+						</table>
+					</div>
+				<?php else : ?>
+					<div class="notice notice-info inline">
+						<p><?php esc_html_e( 'Nessun dato sentiment trovato per i filtri selezionati. Prova a generare dati demo per testare il sistema.', 'fp-digital-marketing' ); ?></p>
+					</div>
+				<?php endif; ?>
+			<?php else : ?>
+				<div class="notice notice-info inline">
+					<p><?php esc_html_e( 'Seleziona un cliente per visualizzare l\'analisi sentiment.', 'fp-digital-marketing' ); ?></p>
+				</div>
+			<?php endif; ?>
+		</div>
+
+		<!-- Response Modal -->
+		<div id="response-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+			<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px;">
+				<h3 style="margin-top: 0;"><?php esc_html_e( 'Rispondi alla Recensione', 'fp-digital-marketing' ); ?></h3>
+				<form method="post">
+					<?php wp_nonce_field( 'respond_to_sentiment' ); ?>
+					<input type="hidden" name="action" value="respond_to_sentiment">
+					<input type="hidden" name="sentiment_id" id="modal-sentiment-id">
+					
+					<div style="margin: 15px 0;">
+						<label for="response_text"><strong><?php esc_html_e( 'Testo Risposta', 'fp-digital-marketing' ); ?></strong></label>
+						<textarea name="response_text" id="response_text" rows="5" style="width: 100%; padding: 8px; margin-top: 5px;" required></textarea>
+						<small style="color: #666; display: block; margin-top: 5px;">
+							<?php esc_html_e( 'La risposta suggerita dall\'AI è già stata inserita. Puoi modificarla prima di inviarla.', 'fp-digital-marketing' ); ?>
+						</small>
+					</div>
+					
+					<div style="text-align: right; margin-top: 20px;">
+						<button type="button" class="button" onclick="closeResponseModal()">
+							<?php esc_html_e( 'Annulla', 'fp-digital-marketing' ); ?>
+						</button>
+						<button type="submit" class="button button-primary" style="margin-left: 10px;">
+							<?php esc_html_e( 'Invia Risposta', 'fp-digital-marketing' ); ?>
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<script>
+		function openResponseModal(sentimentId, suggestedResponse) {
+			document.getElementById('modal-sentiment-id').value = sentimentId;
+			document.getElementById('response_text').value = suggestedResponse;
+			document.getElementById('response-modal').style.display = 'block';
+		}
+
+		function closeResponseModal() {
+			document.getElementById('response-modal').style.display = 'none';
+		}
+
+		document.addEventListener('DOMContentLoaded', function() {
+			// Attach click handlers to respond buttons
+			document.querySelectorAll('.respond-btn').forEach(function(button) {
+				button.addEventListener('click', function() {
+					const sentimentId = this.dataset.sentimentId;
+					const suggestedResponse = this.dataset.suggestedResponse;
+					openResponseModal(sentimentId, suggestedResponse);
+				});
+			});
+
+			// Close modal when clicking outside
+			document.getElementById('response-modal').addEventListener('click', function(e) {
+				if (e.target === this) {
+					closeResponseModal();
+				}
+			});
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Render debug tab
+	 *
+	 * @param array $clientes Array of client posts
+	 * @return void
+	 */
+	private function render_debug_tab( array $clientes ): void {
 		// Get data sources for debug output.
 		$all_data_sources = fp_dms_get_data_sources();
 		$analytics_sources = fp_dms_get_data_sources( DataSources::TYPE_ANALYTICS );
@@ -329,339 +1297,139 @@ class Reports {
 		$demo_html = ReportGenerator::generate_html_report( $demo_report_data );
 
 		?>
-		<div class="wrap">
-			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+		<!-- Sync Engine Status Section -->
+		<?php $this->render_sync_status_section(); ?>
+
+		<!-- GA4 Metrics Section -->
+		<?php $this->render_ga4_metrics_section(); ?>
+
+		<!-- GSC Metrics Section -->
+		<?php $this->render_gsc_metrics_section(); ?>
+
+		<!-- Microsoft Clarity Metrics Section -->
+		<?php $this->render_clarity_metrics_section(); ?>
+
+		<!-- Metrics Aggregator Section -->
+		<?php $this->render_aggregator_section(); ?>
+
+		<!-- Report Preview Section -->
+		<div class="fp-dms-preview-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+			<h2><?php esc_html_e( 'Anteprima Report Demo', 'fp-digital-marketing' ); ?></h2>
+			<p><?php esc_html_e( 'Questo è un\'anteprima del template del report con dati mock.', 'fp-digital-marketing' ); ?></p>
 			
-			<!-- Report Generation Section -->
-			<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-				<h2><?php esc_html_e( 'Generazione Report Automatici', 'fp-digital-marketing' ); ?></h2>
-				
-				<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">
-					<div class="fp-dms-card" style="background: #f8f9fa; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
-						<h3 style="margin-top: 0;"><?php esc_html_e( 'Scheduler Status', 'fp-digital-marketing' ); ?></h3>
-						<?php if ( ReportScheduler::is_scheduled() ) : ?>
-							<p><span style="color: #00a32a;">●</span> <?php esc_html_e( 'Attivo', 'fp-digital-marketing' ); ?></p>
-							<p><strong><?php esc_html_e( 'Prossima esecuzione:', 'fp-digital-marketing' ); ?></strong><br>
-							<?php echo esc_html( ReportScheduler::get_next_scheduled_time() ); ?></p>
-						<?php else : ?>
-							<p><span style="color: #d63638;">●</span> <?php esc_html_e( 'Non programmato', 'fp-digital-marketing' ); ?></p>
-						<?php endif; ?>
-					</div>
-					
-					<div class="fp-dms-card" style="background: #f8f9fa; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
-						<h3 style="margin-top: 0;"><?php esc_html_e( 'Clienti Disponibili', 'fp-digital-marketing' ); ?></h3>
-						<p><strong><?php echo count( $clientes ); ?></strong> <?php esc_html_e( 'clienti trovati', 'fp-digital-marketing' ); ?></p>
-					</div>
-				</div>
-
-				<div style="margin: 20px 0;">
-					<form method="post" style="display: inline-block;">
-						<?php wp_nonce_field( 'generate_reports' ); ?>
-						<input type="hidden" name="action" value="generate_reports">
-						<button type="submit" class="button button-primary">
-							<?php esc_html_e( 'Genera Report Manualmente', 'fp-digital-marketing' ); ?>
-						</button>
-					</form>
-				</div>
-
-				<?php if ( ! empty( $clientes ) ) : ?>
-					<h3><?php esc_html_e( 'Download Report PDF', 'fp-digital-marketing' ); ?></h3>
-					<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-						<?php foreach ( $clientes as $cliente ) : ?>
-							<div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 4px;">
-								<h4 style="margin: 0 0 10px 0;"><?php echo esc_html( $cliente->post_title ); ?></h4>
-								<div style="display: flex; gap: 5px; flex-wrap: wrap;">
-									<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-									   class="button button-secondary">
-										<?php esc_html_e( 'PDF', 'fp-digital-marketing' ); ?>
-									</a>
-									<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_csv', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-									   class="button button-secondary">
-										<?php esc_html_e( 'CSV', 'fp-digital-marketing' ); ?>
-									</a>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
-				<?php endif; ?>
+			<div style="border: 1px solid #ddd; margin: 20px 0; max-height: 600px; overflow-y: auto;">
+				<?php echo $demo_html; ?>
 			</div>
+			
+			<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => 1 ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+			   class="button button-primary" target="_blank">
+				<?php esc_html_e( 'Scarica Report Demo PDF', 'fp-digital-marketing' ); ?>
+			</a>
+		</div>
 
-			<!-- Custom Report Generation Section -->
-			<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-				<h2><?php esc_html_e( 'Generazione Report Personalizzati', 'fp-digital-marketing' ); ?></h2>
-				<p><?php esc_html_e( 'Crea report personalizzati selezionando i KPI, il periodo e il formato desiderati.', 'fp-digital-marketing' ); ?></p>
-				
-				<form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
-					<?php wp_nonce_field( 'generate_custom_report' ); ?>
-					<input type="hidden" name="action" value="generate_custom_report">
-					
-					<div class="form-group">
-						<label for="client_id"><strong><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></strong></label>
-						<select name="client_id" id="client_id" required style="width: 100%; padding: 8px; margin-top: 5px;">
-							<option value=""><?php esc_html_e( 'Seleziona cliente...', 'fp-digital-marketing' ); ?></option>
-							<?php foreach ( $clientes as $cliente ) : ?>
-								<option value="<?php echo esc_attr( $cliente->ID ); ?>">
-									<?php echo esc_html( $cliente->post_title ); ?>
-								</option>
+		<!-- Debug Section - Data Sources -->
+		<div class="notice notice-info">
+			<p>
+				<strong><?php esc_html_e( 'Debug Output - Data Sources Registry', 'fp-digital-marketing' ); ?></strong><br>
+				<?php esc_html_e( 'Questa sezione mostra lo stato attuale del registro delle sorgenti dati.', 'fp-digital-marketing' ); ?>
+			</p>
+		</div>
+
+		<!-- Summary Cards -->
+		<div class="fp-dms-summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
+			<div class="fp-dms-card" style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
+				<h3 style="margin-top: 0;"><?php esc_html_e( 'Totali', 'fp-digital-marketing' ); ?></h3>
+				<p><strong><?php echo esc_html( count( $all_data_sources ) ); ?></strong> <?php esc_html_e( 'sorgenti totali', 'fp-digital-marketing' ); ?></p>
+				<p><strong><?php echo esc_html( count( $available_sources ) ); ?></strong> <?php esc_html_e( 'disponibili', 'fp-digital-marketing' ); ?></p>
+				<p><strong><?php echo esc_html( count( $planned_sources ) ); ?></strong> <?php esc_html_e( 'pianificate', 'fp-digital-marketing' ); ?></p>
+			</div>
+			
+			<div class="fp-dms-card" style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
+				<h3 style="margin-top: 0;"><?php esc_html_e( 'Tipi Disponibili', 'fp-digital-marketing' ); ?></h3>
+				<?php foreach ( $data_source_types as $type => $label ) : ?>
+					<?php $count = count( fp_dms_get_data_sources( $type ) ); ?>
+					<p><strong><?php echo esc_html( $count ); ?></strong> <?php echo esc_html( $label ); ?></p>
+				<?php endforeach; ?>
+			</div>
+		</div>
+
+		<!-- Available Data Sources -->
+		<h2><?php esc_html_e( 'Sorgenti Dati Disponibili', 'fp-digital-marketing' ); ?></h2>
+		<?php if ( empty( $available_sources ) ) : ?>
+			<p><?php esc_html_e( 'Nessuna sorgente dati attualmente disponibile.', 'fp-digital-marketing' ); ?></p>
+		<?php else : ?>
+			<div class="fp-dms-sources-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+				<?php foreach ( $available_sources as $source ) : ?>
+					<div class="fp-dms-source-card" style="background: #fff; border: 1px solid #00a32a; border-radius: 4px; padding: 20px;">
+						<h4 style="margin-top: 0; color: #00a32a;">
+							<?php echo esc_html( $source['name'] ); ?>
+							<span style="background: #00a32a; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">
+								<?php echo esc_html( strtoupper( $source['status'] ) ); ?>
+							</span>
+						</h4>
+						<p><strong><?php esc_html_e( 'Tipo:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $data_source_types[ $source['type'] ] ?? $source['type'] ); ?></p>
+						<p><?php echo esc_html( $source['description'] ); ?></p>
+						<p><strong><?php esc_html_e( 'Capacità:', 'fp-digital-marketing' ); ?></strong></p>
+						<ul style="margin-left: 20px;">
+							<?php foreach ( $source['capabilities'] as $capability ) : ?>
+								<li><?php echo esc_html( $capability ); ?></li>
 							<?php endforeach; ?>
-						</select>
+						</ul>
 					</div>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
 
-					<div class="form-group">
-						<label for="period_start"><strong><?php esc_html_e( 'Periodo', 'fp-digital-marketing' ); ?></strong></label>
-						<div style="display: flex; gap: 10px; margin-top: 5px;">
-							<input type="date" name="period_start" id="period_start" style="flex: 1; padding: 8px;">
-							<input type="date" name="period_end" id="period_end" style="flex: 1; padding: 8px;">
-						</div>
-						<small style="color: #666;"><?php esc_html_e( 'Lascia vuoto per utilizzare il periodo predefinito', 'fp-digital-marketing' ); ?></small>
-					</div>
-
-					<div class="form-group">
-						<label for="format"><strong><?php esc_html_e( 'Formato', 'fp-digital-marketing' ); ?></strong></label>
-						<div style="margin-top: 5px;">
-							<label style="display: block; margin: 5px 0;">
-								<input type="radio" name="format" value="pdf" checked> PDF
-							</label>
-							<label style="display: block; margin: 5px 0;">
-								<input type="radio" name="format" value="csv"> CSV
-							</label>
-						</div>
-						
-						<div id="csv_options" style="margin-top: 10px; display: none;">
-							<label for="csv_separator" style="font-size: 12px;"><?php esc_html_e( 'Separatore CSV:', 'fp-digital-marketing' ); ?></label>
-							<select name="csv_separator" id="csv_separator" style="width: 100%; margin-top: 3px;">
-								<option value=","><?php esc_html_e( 'Virgola (,)', 'fp-digital-marketing' ); ?></option>
-								<option value=";"><?php esc_html_e( 'Punto e virgola (;)', 'fp-digital-marketing' ); ?></option>
-								<option value="\t"><?php esc_html_e( 'Tab', 'fp-digital-marketing' ); ?></option>
-							</select>
-						</div>
-					</div>
-
-					<div class="form-group" style="grid-column: 1 / -1;">
-						<label><strong><?php esc_html_e( 'KPI da includere', 'fp-digital-marketing' ); ?></strong></label>
-						<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
-							<?php
-							$available_kpis = [
-								'sessions' => __( 'Sessioni', 'fp-digital-marketing' ),
-								'users' => __( 'Utenti', 'fp-digital-marketing' ),
-								'conversion_rate' => __( 'Tasso di Conversione', 'fp-digital-marketing' ),
-								'revenue' => __( 'Fatturato', 'fp-digital-marketing' ),
-							];
-							foreach ( $available_kpis as $kpi_key => $kpi_label ) :
-							?>
-								<label style="display: flex; align-items: center; padding: 8px; background: #f8f9fa; border-radius: 4px;">
-									<input type="checkbox" name="selected_kpis[]" value="<?php echo esc_attr( $kpi_key ); ?>" checked style="margin-right: 8px;">
-									<?php echo esc_html( $kpi_label ); ?>
-								</label>
+		<!-- Planned Data Sources -->
+		<h2><?php esc_html_e( 'Sorgenti Dati Pianificate', 'fp-digital-marketing' ); ?></h2>
+		<?php if ( empty( $planned_sources ) ) : ?>
+			<p><?php esc_html_e( 'Nessuna sorgente dati pianificata.', 'fp-digital-marketing' ); ?></p>
+		<?php else : ?>
+			<div class="fp-dms-sources-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
+				<?php foreach ( $planned_sources as $source ) : ?>
+					<div class="fp-dms-source-card" style="background: #fff; border: 1px solid #0073aa; border-radius: 4px; padding: 20px;">
+						<h4 style="margin-top: 0; color: #0073aa;">
+							<?php echo esc_html( $source['name'] ); ?>
+							<span style="background: #0073aa; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">
+								<?php echo esc_html( strtoupper( $source['status'] ) ); ?>
+							</span>
+						</h4>
+						<p><strong><?php esc_html_e( 'Tipo:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $data_source_types[ $source['type'] ] ?? $source['type'] ); ?></p>
+						<p><?php echo esc_html( $source['description'] ); ?></p>
+						<p><strong><?php esc_html_e( 'Credenziali Richieste:', 'fp-digital-marketing' ); ?></strong></p>
+						<ul style="margin-left: 20px;">
+							<?php foreach ( $source['required_credentials'] as $credential ) : ?>
+								<li><code><?php echo esc_html( $credential ); ?></code></li>
 							<?php endforeach; ?>
-						</div>
-						<small style="color: #666; display: block; margin-top: 5px;">
-							<?php esc_html_e( 'Lascia tutto selezionato per includere tutti i KPI disponibili', 'fp-digital-marketing' ); ?>
-						</small>
+						</ul>
 					</div>
-
-					<div class="form-group" style="grid-column: 1 / -1;">
-						<button type="submit" class="button button-primary" style="padding: 10px 20px;">
-							<?php esc_html_e( 'Genera Report Personalizzato', 'fp-digital-marketing' ); ?>
-						</button>
-					</div>
-				</form>
+				<?php endforeach; ?>
 			</div>
+		<?php endif; ?>
 
-			<!-- Report Logs Section -->
-			<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-				<h2><?php esc_html_e( 'Log Report Generati', 'fp-digital-marketing' ); ?></h2>
-				<?php
-				$logs = ReportGenerator::get_report_logs( 20 );
-				if ( ! empty( $logs ) ) :
-				?>
-					<table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
-						<thead>
-							<tr>
-								<th><?php esc_html_e( 'Data/Ora', 'fp-digital-marketing' ); ?></th>
-								<th><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></th>
-								<th><?php esc_html_e( 'Formato', 'fp-digital-marketing' ); ?></th>
-								<th><?php esc_html_e( 'Dimensione', 'fp-digital-marketing' ); ?></th>
-								<th><?php esc_html_e( 'Stato', 'fp-digital-marketing' ); ?></th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php foreach ( $logs as $log ) : ?>
-								<tr>
-									<td><?php echo esc_html( $log['timestamp'] ); ?></td>
-									<td><?php echo esc_html( $log['client_id'] ); ?></td>
-									<td><?php echo esc_html( strtoupper( $log['format'] ) ); ?></td>
-									<td><?php echo $log['file_size'] > 0 ? esc_html( size_format( $log['file_size'] ) ) : '-'; ?></td>
-									<td>
-										<?php if ( $log['success'] ) : ?>
-											<span style="color: #00a32a;">✓ <?php esc_html_e( 'Successo', 'fp-digital-marketing' ); ?></span>
-										<?php else : ?>
-											<span style="color: #d63638;">✗ <?php esc_html_e( 'Errore', 'fp-digital-marketing' ); ?></span>
-											<?php if ( ! empty( $log['error_message'] ) ) : ?>
-												<br><small style="color: #666;"><?php echo esc_html( $log['error_message'] ); ?></small>
-											<?php endif; ?>
-										<?php endif; ?>
-									</td>
-								</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
-				<?php else : ?>
-					<p><?php esc_html_e( 'Nessun report generato ancora.', 'fp-digital-marketing' ); ?></p>
-				<?php endif; ?>
+		<!-- Debug Raw Data -->
+		<h2><?php esc_html_e( 'Debug: Dati Grezzi', 'fp-digital-marketing' ); ?></h2>
+		<details style="margin: 20px 0;">
+			<summary style="cursor: pointer; padding: 10px; background: #f1f1f1; border-radius: 4px;">
+				<strong><?php esc_html_e( 'Visualizza dati grezzi JSON', 'fp-digital-marketing' ); ?></strong>
+			</summary>
+			<div style="margin-top: 10px;">
+				<h4><?php esc_html_e( 'Tutte le sorgenti dati:', 'fp-digital-marketing' ); ?></h4>
+				<pre style="background: #f9f9f9; padding: 15px; border-radius: 4px; overflow-x: auto; max-height: 400px;"><?php echo esc_html( wp_json_encode( $all_data_sources, JSON_PRETTY_PRINT ) ); ?></pre>
+				
+				<h4><?php esc_html_e( 'Solo Analytics:', 'fp-digital-marketing' ); ?></h4>
+				<pre style="background: #f9f9f9; padding: 15px; border-radius: 4px; overflow-x: auto; max-height: 400px;"><?php echo esc_html( wp_json_encode( $analytics_sources, JSON_PRETTY_PRINT ) ); ?></pre>
 			</div>
+		</details>
 
-			<script>
-			document.addEventListener('DOMContentLoaded', function() {
-				const formatRadios = document.querySelectorAll('input[name="format"]');
-				const csvOptions = document.getElementById('csv_options');
-				
-				function toggleCSVOptions() {
-					const selectedFormat = document.querySelector('input[name="format"]:checked').value;
-					csvOptions.style.display = selectedFormat === 'csv' ? 'block' : 'none';
-				}
-				
-				formatRadios.forEach(radio => {
-					radio.addEventListener('change', toggleCSVOptions);
-				});
-				
-				toggleCSVOptions(); // Initial setup
-			});
-			</script>
-
-			<!-- Sync Engine Status Section -->
-			<?php $this->render_sync_status_section(); ?>
-
-			<!-- GA4 Metrics Section -->
-			<?php $this->render_ga4_metrics_section(); ?>
-
-			<!-- GSC Metrics Section -->
-			<?php $this->render_gsc_metrics_section(); ?>
-
-			<!-- Microsoft Clarity Metrics Section -->
-			<?php $this->render_clarity_metrics_section(); ?>
-
-			<!-- Metrics Aggregator Section -->
-			<?php $this->render_aggregator_section(); ?>
-
-			<!-- Report Preview Section -->
-			<div class="fp-dms-preview-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-				<h2><?php esc_html_e( 'Anteprima Report Demo', 'fp-digital-marketing' ); ?></h2>
-				<p><?php esc_html_e( 'Questo è un\'anteprima del template del report con dati mock.', 'fp-digital-marketing' ); ?></p>
-				
-				<div style="border: 1px solid #ddd; margin: 20px 0; max-height: 600px; overflow-y: auto;">
-					<?php echo $demo_html; ?>
-				</div>
-				
-				<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => 1 ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-				   class="button button-primary" target="_blank">
-					<?php esc_html_e( 'Scarica Report Demo PDF', 'fp-digital-marketing' ); ?>
-				</a>
-			</div>
-
-			<!-- Debug Section - Data Sources -->
-			<div class="notice notice-info">
-				<p>
-					<strong><?php esc_html_e( 'Debug Output - Data Sources Registry', 'fp-digital-marketing' ); ?></strong><br>
-					<?php esc_html_e( 'Questa sezione mostra lo stato attuale del registro delle sorgenti dati.', 'fp-digital-marketing' ); ?>
-				</p>
-			</div>
-
-			<!-- Summary Cards -->
-			<div class="fp-dms-summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
-				<div class="fp-dms-card" style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
-					<h3 style="margin-top: 0;"><?php esc_html_e( 'Totali', 'fp-digital-marketing' ); ?></h3>
-					<p><strong><?php echo esc_html( count( $all_data_sources ) ); ?></strong> <?php esc_html_e( 'sorgenti totali', 'fp-digital-marketing' ); ?></p>
-					<p><strong><?php echo esc_html( count( $available_sources ) ); ?></strong> <?php esc_html_e( 'disponibili', 'fp-digital-marketing' ); ?></p>
-					<p><strong><?php echo esc_html( count( $planned_sources ) ); ?></strong> <?php esc_html_e( 'pianificate', 'fp-digital-marketing' ); ?></p>
-				</div>
-				
-				<div class="fp-dms-card" style="background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; padding: 20px;">
-					<h3 style="margin-top: 0;"><?php esc_html_e( 'Tipi Disponibili', 'fp-digital-marketing' ); ?></h3>
-					<?php foreach ( $data_source_types as $type => $label ) : ?>
-						<?php $count = count( fp_dms_get_data_sources( $type ) ); ?>
-						<p><strong><?php echo esc_html( $count ); ?></strong> <?php echo esc_html( $label ); ?></p>
-					<?php endforeach; ?>
-				</div>
-			</div>
-
-			<!-- Available Data Sources -->
-			<h2><?php esc_html_e( 'Sorgenti Dati Disponibili', 'fp-digital-marketing' ); ?></h2>
-			<?php if ( empty( $available_sources ) ) : ?>
-				<p><?php esc_html_e( 'Nessuna sorgente dati attualmente disponibile.', 'fp-digital-marketing' ); ?></p>
-			<?php else : ?>
-				<div class="fp-dms-sources-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
-					<?php foreach ( $available_sources as $source ) : ?>
-						<div class="fp-dms-source-card" style="background: #fff; border: 1px solid #00a32a; border-radius: 4px; padding: 20px;">
-							<h4 style="margin-top: 0; color: #00a32a;">
-								<?php echo esc_html( $source['name'] ); ?>
-								<span style="background: #00a32a; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">
-									<?php echo esc_html( strtoupper( $source['status'] ) ); ?>
-								</span>
-							</h4>
-							<p><strong><?php esc_html_e( 'Tipo:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $data_source_types[ $source['type'] ] ?? $source['type'] ); ?></p>
-							<p><?php echo esc_html( $source['description'] ); ?></p>
-							<p><strong><?php esc_html_e( 'Capacità:', 'fp-digital-marketing' ); ?></strong></p>
-							<ul style="margin-left: 20px;">
-								<?php foreach ( $source['capabilities'] as $capability ) : ?>
-									<li><?php echo esc_html( $capability ); ?></li>
-								<?php endforeach; ?>
-							</ul>
-						</div>
-					<?php endforeach; ?>
-				</div>
-			<?php endif; ?>
-
-			<!-- Planned Data Sources -->
-			<h2><?php esc_html_e( 'Sorgenti Dati Pianificate', 'fp-digital-marketing' ); ?></h2>
-			<?php if ( empty( $planned_sources ) ) : ?>
-				<p><?php esc_html_e( 'Nessuna sorgente dati pianificata.', 'fp-digital-marketing' ); ?></p>
-			<?php else : ?>
-				<div class="fp-dms-sources-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">
-					<?php foreach ( $planned_sources as $source ) : ?>
-						<div class="fp-dms-source-card" style="background: #fff; border: 1px solid #0073aa; border-radius: 4px; padding: 20px;">
-							<h4 style="margin-top: 0; color: #0073aa;">
-								<?php echo esc_html( $source['name'] ); ?>
-								<span style="background: #0073aa; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;">
-									<?php echo esc_html( strtoupper( $source['status'] ) ); ?>
-								</span>
-							</h4>
-							<p><strong><?php esc_html_e( 'Tipo:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $data_source_types[ $source['type'] ] ?? $source['type'] ); ?></p>
-							<p><?php echo esc_html( $source['description'] ); ?></p>
-							<p><strong><?php esc_html_e( 'Credenziali Richieste:', 'fp-digital-marketing' ); ?></strong></p>
-							<ul style="margin-left: 20px;">
-								<?php foreach ( $source['required_credentials'] as $credential ) : ?>
-									<li><code><?php echo esc_html( $credential ); ?></code></li>
-								<?php endforeach; ?>
-							</ul>
-						</div>
-					<?php endforeach; ?>
-				</div>
-			<?php endif; ?>
-
-			<!-- Debug Raw Data -->
-			<h2><?php esc_html_e( 'Debug: Dati Grezzi', 'fp-digital-marketing' ); ?></h2>
-			<details style="margin: 20px 0;">
-				<summary style="cursor: pointer; padding: 10px; background: #f1f1f1; border-radius: 4px;">
-					<strong><?php esc_html_e( 'Visualizza dati grezzi JSON', 'fp-digital-marketing' ); ?></strong>
-				</summary>
-				<div style="margin-top: 10px;">
-					<h4><?php esc_html_e( 'Tutte le sorgenti dati:', 'fp-digital-marketing' ); ?></h4>
-					<pre style="background: #f9f9f9; padding: 15px; border-radius: 4px; overflow-x: auto; max-height: 400px;"><?php echo esc_html( wp_json_encode( $all_data_sources, JSON_PRETTY_PRINT ) ); ?></pre>
-					
-					<h4><?php esc_html_e( 'Solo Analytics:', 'fp-digital-marketing' ); ?></h4>
-					<pre style="background: #f9f9f9; padding: 15px; border-radius: 4px; overflow-x: auto; max-height: 400px;"><?php echo esc_html( wp_json_encode( $analytics_sources, JSON_PRETTY_PRINT ) ); ?></pre>
-				</div>
-			</details>
-
-			<!-- Developer Information -->
-			<div class="notice notice-info" style="margin-top: 30px;">
-				<h3><?php esc_html_e( 'Informazioni per Sviluppatori', 'fp-digital-marketing' ); ?></h3>
-				<p><strong><?php esc_html_e( 'Funzione Helper:', 'fp-digital-marketing' ); ?></strong></p>
-				<p><?php esc_html_e( 'Utilizza la funzione', 'fp-digital-marketing' ); ?> <code>fp_dms_get_data_sources()</code> <?php esc_html_e( 'per ottenere l\'elenco delle sorgenti dati registrate.', 'fp-digital-marketing' ); ?></p>
-				
-				<p><strong><?php esc_html_e( 'Esempi di utilizzo:', 'fp-digital-marketing' ); ?></strong></p>
-				<pre style="background: #f9f9f9; padding: 10px; border-radius: 4px;">
+		<!-- Developer Information -->
+		<div class="notice notice-info" style="margin-top: 30px;">
+			<h3><?php esc_html_e( 'Informazioni per Sviluppatori', 'fp-digital-marketing' ); ?></h3>
+			<p><strong><?php esc_html_e( 'Funzione Helper:', 'fp-digital-marketing' ); ?></strong></p>
+			<p><?php esc_html_e( 'Utilizza la funzione', 'fp-digital-marketing' ); ?> <code>fp_dms_get_data_sources()</code> <?php esc_html_e( 'per ottenere l\'elenco delle sorgenti dati registrate.', 'fp-digital-marketing' ); ?></p>
+			
+			<p><strong><?php esc_html_e( 'Esempi di utilizzo:', 'fp-digital-marketing' ); ?></strong></p>
+			<pre style="background: #f9f9f9; padding: 10px; border-radius: 4px;">
 // Ottieni tutte le sorgenti dati
 $all_sources = fp_dms_get_data_sources();
 
@@ -670,20 +1438,13 @@ $analytics_sources = fp_dms_get_data_sources( 'analytics' );
 
 // Verifica se una sorgente è disponibile
 $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_available( 'google_analytics_4' );
-				</pre>
-				
-				<p><strong><?php esc_html_e( 'Hook per estensioni:', 'fp-digital-marketing' ); ?></strong></p>
-				<p><?php esc_html_e( 'Utilizza il filtro', 'fp-digital-marketing' ); ?> <code>fp_dms_data_sources</code> <?php esc_html_e( 'per aggiungere nuove sorgenti dati da plugin o temi.', 'fp-digital-marketing' ); ?></p>
-			</div>
+			</pre>
+			
+			<p><strong><?php esc_html_e( 'Hook per estensioni:', 'fp-digital-marketing' ); ?></strong></p>
+			<p><?php esc_html_e( 'Utilizza il filtro', 'fp-digital-marketing' ); ?> <code>fp_dms_data_sources</code> <?php esc_html_e( 'per aggiungere nuove sorgenti dati da plugin o temi.', 'fp-digital-marketing' ); ?></p>
 		</div>
 		<?php
 	}
-
-	/**
-	 * Render GA4 metrics section
-	 *
-	 * @return void
-	 */
 	private function render_ga4_metrics_section(): void {
 		$oauth = new GoogleOAuth();
 		$connection_status = $oauth->get_connection_status();

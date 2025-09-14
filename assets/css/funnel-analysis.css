@@ -1,0 +1,466 @@
+/**
+ * Funnel Analysis CSS
+ * 
+ * Styles for funnel analysis and customer journey interfaces
+ */
+
+/* Modal Styles */
+.fp-modal {
+    display: none;
+    position: fixed;
+    z-index: 100000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.fp-modal-content {
+    background-color: #fefefe;
+    margin: 2% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.fp-modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    cursor: pointer;
+}
+
+.fp-modal-close:hover,
+.fp-modal-close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Funnel Analysis Styles */
+.funnel-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.funnel-filter-form {
+    background: #f9f9f9;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.funnel-filter-form label {
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+.funnel-filter-form select {
+    margin-right: 15px;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-active {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-draft {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+/* Analysis Charts */
+.funnel-analysis-content {
+    margin-top: 20px;
+}
+
+.date-filters {
+    background: #f1f1f1;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.date-filters label {
+    font-weight: 600;
+}
+
+.date-filters input[type="date"] {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.analysis-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.chart-container {
+    background: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.chart-container canvas {
+    max-height: 400px;
+}
+
+.time-analysis {
+    grid-column: 1 / -1;
+    background: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.time-analysis h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.time-analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.time-metric {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.time-metric h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.time-metric .metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+/* Journey Details Styles */
+.journey-overview {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.journey-overview h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+}
+
+.journey-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.journey-stats .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.journey-stats .stat label {
+    font-size: 12px;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.journey-stats .stat span {
+    font-size: 16px;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+/* Journey Path Timeline */
+.journey-path {
+    margin-bottom: 25px;
+}
+
+.journey-path h3 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+}
+
+.path-timeline {
+    position: relative;
+    padding-left: 40px;
+}
+
+.path-timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.path-event {
+    position: relative;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.event-marker {
+    position: absolute;
+    left: -32px;
+    width: 24px;
+    height: 24px;
+    background: #007cba;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 1;
+}
+
+.event-details {
+    background: white;
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    flex: 1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.event-type {
+    font-weight: 600;
+    color: #007cba;
+    margin-bottom: 5px;
+}
+
+.event-name {
+    font-size: 14px;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.event-url {
+    font-size: 12px;
+    color: #6c757d;
+    word-break: break-all;
+    margin-bottom: 5px;
+}
+
+.event-time {
+    font-size: 11px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Touchpoints */
+.journey-touchpoints h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+}
+
+.touchpoints-list {
+    display: grid;
+    gap: 10px;
+}
+
+.touchpoint {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.touchpoint-source {
+    font-weight: 600;
+    color: #007cba;
+}
+
+.touchpoint-details {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .fp-modal-content {
+        width: 95%;
+        margin: 5% auto;
+        padding: 15px;
+    }
+
+    .analysis-charts {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .date-filters {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .time-analysis-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .journey-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .touchpoint {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .touchpoint-details {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+/* Table Enhancements */
+.wp-list-table .button-small {
+    margin-right: 5px;
+}
+
+.wp-list-table .view-funnel-analysis,
+.wp-list-table .view-journey-details {
+    background: #007cba;
+    color: white;
+    border-color: #005a87;
+}
+
+.wp-list-table .view-funnel-analysis:hover,
+.wp-list-table .view-journey-details:hover {
+    background: #005a87;
+}
+
+/* Loading States */
+.fp-loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007cba;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Form Enhancements */
+.form-table th {
+    font-weight: 600;
+}
+
+.form-table td select,
+.form-table td input[type="text"],
+.form-table td input[type="number"],
+.form-table td textarea {
+    min-width: 300px;
+}
+
+/* Navigation Tabs */
+.nav-tab-wrapper {
+    margin-bottom: 20px;
+}
+
+.tab-content {
+    background: white;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-top: none;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+/* Analytics Widgets */
+.analytics-widgets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.analytics-widget {
+    background: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-widget h3 {
+    margin: 0 0 15px 0;
+    color: #2c3e50;
+    font-size: 18px;
+}

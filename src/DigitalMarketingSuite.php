@@ -24,6 +24,7 @@ use FP\DigitalMarketing\Admin\AnomalyRadar;
 use FP\DigitalMarketing\Admin\UTMCampaignManager;
 use FP\DigitalMarketing\Admin\ConversionEventsAdmin;
 use FP\DigitalMarketing\Admin\SegmentationAdmin;
+use FP\DigitalMarketing\Admin\FunnelAnalysisAdmin;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Database\AlertRulesTable;
 use FP\DigitalMarketing\Database\AnomalyRulesTable;
@@ -31,6 +32,10 @@ use FP\DigitalMarketing\Database\DetectedAnomaliesTable;
 use FP\DigitalMarketing\Database\UTMCampaignsTable;
 use FP\DigitalMarketing\Database\ConversionEventsTable;
 use FP\DigitalMarketing\Database\AudienceSegmentTable;
+use FP\DigitalMarketing\Database\FunnelTable;
+use FP\DigitalMarketing\Database\CustomerJourneyTable;
+use FP\DigitalMarketing\Database\CustomReportsTable;
+use FP\DigitalMarketing\Database\SocialSentimentTable;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\SegmentationEngine;
@@ -163,6 +168,13 @@ class DigitalMarketingSuite {
 	private ?SegmentationAdmin $segmentation_admin = null;
 
 	/**
+	 * Funnel Analysis Admin instance
+	 *
+	 * @var FunnelAnalysisAdmin|null
+	 */
+	private ?FunnelAnalysisAdmin $funnel_analysis_admin = null;
+
+	/**
 	 * Constructor with error handling
 	 */
 	public function __construct() {
@@ -270,6 +282,13 @@ class DigitalMarketingSuite {
 		} catch ( \Throwable $e ) {
 			$this->segmentation_admin = null;
 			$this->log_initialization_error( 'SegmentationAdmin', $e );
+		}
+
+		try {
+			$this->funnel_analysis_admin = new FunnelAnalysisAdmin();
+		} catch ( \Throwable $e ) {
+			$this->funnel_analysis_admin = null;
+			$this->log_initialization_error( 'FunnelAnalysisAdmin', $e );
 		}
 	}
 
@@ -431,6 +450,14 @@ class DigitalMarketingSuite {
 			$this->log_initialization_error( 'SegmentationAdmin->init()', $e );
 		}
 
+		try {
+			if ( $this->funnel_analysis_admin !== null ) {
+				$this->funnel_analysis_admin->init();
+			}
+		} catch ( \Throwable $e ) {
+			$this->log_initialization_error( 'FunnelAnalysisAdmin->init()', $e );
+		}
+
 		// Initialize static helper classes with error handling
 		try {
 			if ( class_exists( '\FP\DigitalMarketing\Helpers\Capabilities' ) ) {
@@ -581,7 +608,11 @@ class DigitalMarketingSuite {
 			'DetectedAnomaliesTable' => '\FP\DigitalMarketing\Database\DetectedAnomaliesTable',
 			'UTMCampaignsTable' => '\FP\DigitalMarketing\Database\UTMCampaignsTable',
 			'ConversionEventsTable' => '\FP\DigitalMarketing\Database\ConversionEventsTable',
-			'AudienceSegmentTable' => '\FP\DigitalMarketing\Database\AudienceSegmentTable'
+			'AudienceSegmentTable' => '\FP\DigitalMarketing\Database\AudienceSegmentTable',
+			'FunnelTable' => '\FP\DigitalMarketing\Database\FunnelTable',
+			'CustomerJourneyTable' => '\FP\DigitalMarketing\Database\CustomerJourneyTable',
+			'CustomReportsTable' => '\FP\DigitalMarketing\Database\CustomReportsTable',
+			'SocialSentimentTable' => '\FP\DigitalMarketing\Database\SocialSentimentTable'
 		];
 
 		foreach ( $tables as $name => $class ) {
@@ -594,6 +625,22 @@ class DigitalMarketingSuite {
 						}
 						if ( method_exists( $class, 'membership_table_exists' ) && ! $class::membership_table_exists() ) {
 							$class::create_membership_table();
+						}
+					} elseif ( $name === 'FunnelTable' ) {
+						// Special handling for FunnelTable which has multiple tables
+						if ( method_exists( $class, 'table_exists' ) && ! $class::table_exists() ) {
+							$class::create_table();
+						}
+						if ( method_exists( $class, 'stages_table_exists' ) && ! $class::stages_table_exists() ) {
+							$class::create_stages_table();
+						}
+					} elseif ( $name === 'CustomerJourneyTable' ) {
+						// Special handling for CustomerJourneyTable which has multiple tables
+						if ( method_exists( $class, 'table_exists' ) && ! $class::table_exists() ) {
+							$class::create_table();
+						}
+						if ( method_exists( $class, 'sessions_table_exists' ) && ! $class::sessions_table_exists() ) {
+							$class::create_sessions_table();
 						}
 					} else {
 						// Standard table creation

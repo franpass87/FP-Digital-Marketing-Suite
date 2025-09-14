@@ -29,6 +29,7 @@ class Capabilities {
 	public const MANAGE_CONVERSIONS = 'fp_dms_manage_conversions';
 	public const VIEW_SEGMENTS = 'fp_dms_view_segments';
 	public const MANAGE_SEGMENTS = 'fp_dms_manage_segments';
+	public const FUNNEL_ANALYSIS = 'fp_dms_funnel_analysis';
 
 	/**
 	 * All custom capabilities
@@ -46,6 +47,7 @@ class Capabilities {
 		self::MANAGE_CONVERSIONS,
 		self::VIEW_SEGMENTS,
 		self::MANAGE_SEGMENTS,
+		self::FUNNEL_ANALYSIS,
 	];
 
 	/**
@@ -64,6 +66,7 @@ class Capabilities {
 			self::MANAGE_CONVERSIONS,
 			self::VIEW_SEGMENTS,
 			self::MANAGE_SEGMENTS,
+			self::FUNNEL_ANALYSIS,
 		],
 		'editor' => [
 			self::VIEW_DASHBOARD,
@@ -71,6 +74,7 @@ class Capabilities {
 			self::MANAGE_CAMPAIGNS,
 			self::MANAGE_CONVERSIONS,
 			self::VIEW_SEGMENTS,
+			self::FUNNEL_ANALYSIS,
 		],
 	];
 
