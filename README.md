@@ -78,14 +78,18 @@ composer run phpstan
 
 ### Continuous Integration
 
-Our CI pipeline runs automatically on:
-- Push to `main` or `develop` branches
-- Pull requests to `main` or `develop` branches
+Our CI/CD pipeline includes:
 
-The pipeline includes:
+**Code Quality Pipeline** (runs automatically on push/PR):
 - **Code Quality Checks**: PHPCS and PHPStan across multiple PHP versions (7.4, 8.0, 8.1, 8.2)
 - **Security Scanning**: Composer audit for dependency vulnerabilities
 - **Validation**: Composer configuration validation
+
+**Build Pipeline** (creates WordPress-ready ZIP artifacts):
+- Automatic builds on push to `main` or `develop` branches
+- Manual builds via GitHub Actions
+- Production-ready WordPress plugin packages
+- See [Builder Workflow Documentation](docs/BUILDER_WORKFLOW.md) for details
 
 ### Available Commands
 
@@ -111,9 +115,13 @@ composer audit
 ```
 ├── .github/
 │   └── workflows/
-│       └── ci.yml          # CI/CD pipeline configuration
-├── src/                    # Source code (to be created)
-├── tests/                  # Unit tests (to be created)
+│       ├── ci.yml          # Code quality pipeline
+│       ├── build.yml       # WordPress plugin builder
+│       └── release.yml     # Release automation
+├── docs/                   # Documentation
+│   └── BUILDER_WORKFLOW.md # Build workflow guide
+├── src/                    # Source code
+├── tests/                  # Unit tests
 ├── .gitignore             # Git ignore rules
 ├── .phpcs.xml             # PHPCS configuration
 ├── phpstan.neon           # PHPStan configuration
