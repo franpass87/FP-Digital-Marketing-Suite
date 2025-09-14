@@ -256,7 +256,10 @@ class MenuManager {
 			
 			// Use pre-instantiated admin instances
 			if ( isset( $this->admin_instances[$class] ) && $this->admin_instances[$class] !== null ) {
-				return [ $this->admin_instances[$class], $method ];
+				// Verify the method exists before returning
+				if ( method_exists( $this->admin_instances[$class], $method ) ) {
+					return [ $this->admin_instances[$class], $method ];
+				}
 			}
 			
 			// Fallback: try to instantiate if not available
@@ -264,17 +267,90 @@ class MenuManager {
 			
 			if ( class_exists( $full_class ) ) {
 				try {
-					$this->admin_instances[$class] = new $full_class();
-					return [ $this->admin_instances[$class], $method ];
+					$instance = new $full_class();
+					if ( method_exists( $instance, $method ) ) {
+						$this->admin_instances[$class] = $instance;
+						return [ $instance, $method ];
+					}
 				} catch ( \Throwable $e ) {
 					if ( function_exists( 'error_log' ) ) {
 						error_log( "FP Digital Marketing MenuManager: Failed to instantiate {$class} - " . $e->getMessage() );
 					}
 				}
 			}
+			
+			// Try to render with a safe fallback method
+			return [ $this, 'render_admin_unavailable_page' ];
 		}
 
 		return [ $this, 'render_placeholder_page' ];
+	}
+
+	/**
+	 * Render page for when admin module is unavailable but can show basic content
+	 *
+	 * @return void
+	 */
+	public function render_admin_unavailable_page(): void {
+		$current_page = $_GET['page'] ?? '';
+		$page_name = $this->get_page_name_from_slug( $current_page );
+		
+		echo '<div class="wrap">';
+		echo '<h1>' . esc_html( $page_name ) . '</h1>';
+		
+		echo '<div class="notice notice-info"><p>';
+		echo '<strong>' . esc_html__( 'Funzionalità in caricamento', 'fp-digital-marketing' ) . '</strong><br>';
+		echo esc_html__( 'Questa funzionalità è attualmente in fase di inizializzazione. Si prega di aggiornare la pagina o tornare più tardi.', 'fp-digital-marketing' );
+		echo '</p></div>';
+		
+		// Show basic navigation and setup steps
+		echo '<div class="fp-admin-basic-content">';
+		echo '<h2>' . esc_html__( 'Azioni disponibili', 'fp-digital-marketing' ) . '</h2>';
+		
+		echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin: 20px 0;">';
+		
+		// Dashboard card
+		echo '<div style="border: 1px solid #ccd0d4; padding: 20px; background: #fff;">';
+		echo '<h3>📊 ' . esc_html__( 'Dashboard Principale', 'fp-digital-marketing' ) . '</h3>';
+		echo '<p>' . esc_html__( 'Visualizza panoramica completa delle metriche e KPI.', 'fp-digital-marketing' ) . '</p>';
+		echo '<a href="' . esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ) . '" class="button button-primary">';
+		echo esc_html__( 'Vai alla Dashboard', 'fp-digital-marketing' );
+		echo '</a>';
+		echo '</div>';
+		
+		// Settings card  
+		echo '<div style="border: 1px solid #ccd0d4; padding: 20px; background: #fff;">';
+		echo '<h3>⚙️ ' . esc_html__( 'Configurazione', 'fp-digital-marketing' ) . '</h3>';
+		echo '<p>' . esc_html__( 'Configura le impostazioni del plugin e le connessioni.', 'fp-digital-marketing' ) . '</p>';
+		echo '<a href="' . esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ) . '" class="button">';
+		echo esc_html__( 'Impostazioni', 'fp-digital-marketing' );
+		echo '</a>';
+		echo '</div>';
+		
+		// Setup wizard card
+		echo '<div style="border: 1px solid #ccd0d4; padding: 20px; background: #fff;">';
+		echo '<h3>🛠️ ' . esc_html__( 'Setup Guidato', 'fp-digital-marketing' ) . '</h3>';
+		echo '<p>' . esc_html__( 'Configura il plugin passo-passo con la procedura guidata.', 'fp-digital-marketing' ) . '</p>';
+		echo '<a href="' . esc_url( admin_url( 'admin.php?page=fp-digital-marketing-onboarding' ) ) . '" class="button">';
+		echo esc_html__( 'Avvia Setup', 'fp-digital-marketing' );
+		echo '</a>';
+		echo '</div>';
+		
+		echo '</div>'; // Close grid
+		echo '</div>'; // Close content
+		
+		// Show debugging information for administrators
+		if ( current_user_can( 'manage_options' ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			echo '<div class="notice notice-info"><p>';
+			echo '<strong>' . esc_html__( 'Info Debug (solo amministratori):', 'fp-digital-marketing' ) . '</strong><br>';
+			echo sprintf( 
+				esc_html__( 'Modulo admin per la pagina "%s" non disponibile. Verifica log degli errori per dettagli.', 'fp-digital-marketing' ),
+				esc_html( $current_page )
+			);
+			echo '</p></div>';
+		}
+		
+		echo '</div>';
 	}
 
 	/**
@@ -285,10 +361,54 @@ class MenuManager {
 	public function render_placeholder_page(): void {
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__( 'FP Digital Marketing Suite', 'fp-digital-marketing' ) . '</h1>';
-		echo '<div class="notice notice-info"><p>';
-		echo esc_html__( 'This page is being configured. Please check back soon.', 'fp-digital-marketing' );
+		echo '<div class="notice notice-warning"><p>';
+		echo '<strong>' . esc_html__( 'Pagina in configurazione', 'fp-digital-marketing' ) . '</strong><br>';
+		echo esc_html__( 'Questa pagina admin non è ancora completamente configurata. Se vedi questo messaggio, potrebbe esserci un problema con il caricamento del modulo amministrativo.', 'fp-digital-marketing' );
 		echo '</p></div>';
+		
+		// Show debugging information for administrators
+		if ( current_user_can( 'manage_options' ) && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			echo '<div class="notice notice-info"><p>';
+			echo '<strong>' . esc_html__( 'Informazioni di debug (solo per amministratori):', 'fp-digital-marketing' ) . '</strong><br>';
+			echo esc_html__( 'Questa pagina placeholder viene mostrata quando il callback del menu non può essere risolto. Verifica che tutte le classi admin siano caricate correttamente.', 'fp-digital-marketing' );
+			echo '</p></div>';
+		}
+		
+		echo '<div style="margin-top: 20px;">';
+		echo '<a href="' . esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ) . '" class="button button-primary">';
+		echo esc_html__( 'Vai alla Dashboard', 'fp-digital-marketing' );
+		echo '</a>';
+		echo ' ';
+		echo '<a href="' . esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ) . '" class="button">';
+		echo esc_html__( 'Impostazioni Plugin', 'fp-digital-marketing' );
+		echo '</a>';
 		echo '</div>';
+		
+		echo '</div>';
+	}
+
+	/**
+	 * Get page name from slug for display
+	 *
+	 * @param string $slug Page slug
+	 * @return string Page display name
+	 */
+	private function get_page_name_from_slug( string $slug ): string {
+		$page_names = [
+			'fp-digital-marketing-dashboard' => __( 'Dashboard', 'fp-digital-marketing' ),
+			'fp-digital-marketing-reports' => __( 'Analytics & Reports', 'fp-digital-marketing' ),
+			'fp-utm-campaign-manager' => __( 'Campaign Management', 'fp-digital-marketing' ),
+			'fp-digital-marketing-funnel-analysis' => __( 'Funnel Analysis', 'fp-digital-marketing' ),
+			'fp-audience-segments' => __( 'Audience Segmentation', 'fp-digital-marketing' ),
+			'fp-digital-marketing-alerts' => __( 'Monitoring & Alerts', 'fp-digital-marketing' ),
+			'fp-digital-marketing-anomalies' => __( 'Anomaly Detection', 'fp-digital-marketing' ),
+			'fp-digital-marketing-cache-performance' => __( 'Performance Cache', 'fp-digital-marketing' ),
+			'fp-digital-marketing-security' => __( 'Security Settings', 'fp-digital-marketing' ),
+			'fp-digital-marketing-settings' => __( 'Settings', 'fp-digital-marketing' ),
+			'fp-digital-marketing-onboarding' => __( 'Setup Wizard', 'fp-digital-marketing' ),
+		];
+		
+		return $page_names[$slug] ?? __( 'FP Digital Marketing', 'fp-digital-marketing' );
 	}
 
 	/**

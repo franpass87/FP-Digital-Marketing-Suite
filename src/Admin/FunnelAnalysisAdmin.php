@@ -1015,19 +1015,220 @@ class FunnelAnalysisAdmin {
 		<div class="analytics-widgets">
 			<div class="analytics-widget">
 				<h3><?php esc_html_e( 'Funnel Performance Overview', 'fp-digital-marketing' ); ?></h3>
-				<p><?php esc_html_e( 'Coming soon...', 'fp-digital-marketing' ); ?></p>
+				<?php $this->render_funnel_performance_widget(); ?>
 			</div>
 			
 			<div class="analytics-widget">
 				<h3><?php esc_html_e( 'Customer Journey Insights', 'fp-digital-marketing' ); ?></h3>
-				<p><?php esc_html_e( 'Coming soon...', 'fp-digital-marketing' ); ?></p>
+				<?php $this->render_customer_journey_widget(); ?>
 			</div>
 			
 			<div class="analytics-widget">
 				<h3><?php esc_html_e( 'Attribution Analysis', 'fp-digital-marketing' ); ?></h3>
-				<p><?php esc_html_e( 'Coming soon...', 'fp-digital-marketing' ); ?></p>
+				<?php $this->render_attribution_analysis_widget(); ?>
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Render funnel performance widget
+	 *
+	 * @return void
+	 */
+	private function render_funnel_performance_widget(): void {
+		try {
+			$total_funnels = FunnelTable::count_funnels();
+			$active_funnels = FunnelTable::count_active_funnels();
+			$conversion_rate = $this->calculate_average_conversion_rate();
+		} catch ( \Throwable $e ) {
+			// Fallback to default values if database operation fails
+			$total_funnels = 0;
+			$active_funnels = 0;
+			$conversion_rate = 0.0;
+			
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'FP Digital Marketing FunnelAnalysisAdmin: Failed to load funnel stats - ' . $e->getMessage() );
+			}
+		}
+		
+		?>
+		<div class="funnel-stats">
+			<div class="stat-item">
+				<strong><?php echo esc_html( $total_funnels ); ?></strong>
+				<span><?php esc_html_e( 'Total Funnels', 'fp-digital-marketing' ); ?></span>
+			</div>
+			<div class="stat-item">
+				<strong><?php echo esc_html( $active_funnels ); ?></strong>
+				<span><?php esc_html_e( 'Active Funnels', 'fp-digital-marketing' ); ?></span>
+			</div>
+			<div class="stat-item">
+				<strong><?php echo esc_html( number_format( $conversion_rate, 2 ) ); ?>%</strong>
+				<span><?php esc_html_e( 'Avg. Conversion Rate', 'fp-digital-marketing' ); ?></span>
+			</div>
+		</div>
+		<p class="description">
+			<?php esc_html_e( 'Overview of your funnel performance metrics. Create new funnels to track user journeys and optimize conversion rates.', 'fp-digital-marketing' ); ?>
+		</p>
+		<?php if ( $total_funnels === 0 ): ?>
+		<div class="notice notice-info inline">
+			<p><?php esc_html_e( 'No funnels found. Create your first funnel to start tracking conversion paths.', 'fp-digital-marketing' ); ?></p>
+		</div>
+		<?php endif; ?>
+		<?php
+	}
+
+	/**
+	 * Render customer journey widget
+	 *
+	 * @return void
+	 */
+	private function render_customer_journey_widget(): void {
+		try {
+			$recent_journeys = CustomerJourneyTable::get_recent_journeys( 5 );
+			$total_sessions = CustomerJourneyTable::count_total_sessions();
+		} catch ( \Throwable $e ) {
+			// Fallback to empty data if database operation fails
+			$recent_journeys = [];
+			$total_sessions = 0;
+			
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'FP Digital Marketing FunnelAnalysisAdmin: Failed to load journey stats - ' . $e->getMessage() );
+			}
+		}
+		
+		?>
+		<div class="journey-stats">
+			<div class="stat-item">
+				<strong><?php echo esc_html( $total_sessions ); ?></strong>
+				<span><?php esc_html_e( 'Total Sessions Tracked', 'fp-digital-marketing' ); ?></span>
+			</div>
+			<div class="stat-item">
+				<strong><?php echo esc_html( count( $recent_journeys ) ); ?></strong>
+				<span><?php esc_html_e( 'Recent Journeys', 'fp-digital-marketing' ); ?></span>
+			</div>
+		</div>
+		<p class="description">
+			<?php esc_html_e( 'Track and analyze customer journeys through your marketing funnels. Understand user behavior patterns and optimize touchpoints.', 'fp-digital-marketing' ); ?>
+		</p>
+		<?php if ( ! empty( $recent_journeys ) ) : ?>
+			<div class="recent-journeys">
+				<h4><?php esc_html_e( 'Recent Customer Journeys', 'fp-digital-marketing' ); ?></h4>
+				<ul>
+					<?php foreach ( $recent_journeys as $journey ) : ?>
+						<li>
+							<?php
+							echo esc_html( sprintf(
+								__( 'Journey #%d - %s steps - %s', 'fp-digital-marketing' ),
+								$journey->get_id(),
+								count( $journey->get_touchpoints() ),
+								$journey->get_created_at()
+							) );
+							?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		<?php else: ?>
+			<div class="notice notice-info inline">
+				<p><?php esc_html_e( 'No customer journeys tracked yet. Journey data will appear as users interact with your funnels.', 'fp-digital-marketing' ); ?></p>
+			</div>
+		<?php endif; ?>
+		<?php
+	}
+
+	/**
+	 * Render attribution analysis widget
+	 *
+	 * @return void
+	 */
+	private function render_attribution_analysis_widget(): void {
+		$attribution_data = $this->get_attribution_summary();
+		
+		?>
+		<div class="attribution-stats">
+			<div class="stat-item">
+				<strong><?php echo esc_html( $attribution_data['total_conversions'] ); ?></strong>
+				<span><?php esc_html_e( 'Total Conversions', 'fp-digital-marketing' ); ?></span>
+			</div>
+			<div class="stat-item">
+				<strong><?php echo esc_html( $attribution_data['top_channel'] ); ?></strong>
+				<span><?php esc_html_e( 'Top Channel', 'fp-digital-marketing' ); ?></span>
+			</div>
+		</div>
+		<p class="description">
+			<?php esc_html_e( 'Understand which marketing channels and touchpoints contribute most to conversions. Use this data to optimize your marketing attribution strategy.', 'fp-digital-marketing' ); ?>
+		</p>
+		
+		<?php if ( ! empty( $attribution_data['channels'] ) ) : ?>
+			<div class="channel-breakdown">
+				<h4><?php esc_html_e( 'Channel Performance', 'fp-digital-marketing' ); ?></h4>
+				<ul>
+					<?php foreach ( $attribution_data['channels'] as $channel => $conversions ) : ?>
+						<li>
+							<strong><?php echo esc_html( $channel ); ?>:</strong>
+							<?php echo esc_html( sprintf( __( '%d conversions', 'fp-digital-marketing' ), $conversions ) ); ?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		<?php else : ?>
+			<p><em><?php esc_html_e( 'No attribution data available yet. Data will appear as users interact with your funnels.', 'fp-digital-marketing' ); ?></em></p>
+		<?php endif; ?>
+		<?php
+	}
+
+	/**
+	 * Calculate average conversion rate across all funnels
+	 *
+	 * @return float
+	 */
+	private function calculate_average_conversion_rate(): float {
+		try {
+			$funnels = FunnelTable::get_all_funnels();
+			
+			if ( empty( $funnels ) ) {
+				return 0.0;
+			}
+			
+			$total_rate = 0.0;
+			$count = 0;
+			
+			foreach ( $funnels as $funnel ) {
+				try {
+					$funnel_obj = new Funnel( $funnel );
+					$rate = $funnel_obj->calculate_conversion_rate();
+					if ( $rate > 0 ) {
+						$total_rate += $rate;
+						$count++;
+					}
+				} catch ( \Throwable $e ) {
+					// Skip this funnel if it can't be processed
+					continue;
+				}
+			}
+			
+			return $count > 0 ? ( $total_rate / $count ) : 0.0;
+		} catch ( \Throwable $e ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'FP Digital Marketing FunnelAnalysisAdmin: Failed to calculate conversion rate - ' . $e->getMessage() );
+			}
+			return 0.0;
+		}
+	}
+
+	/**
+	 * Get attribution analysis summary
+	 *
+	 * @return array
+	 */
+	private function get_attribution_summary(): array {
+		// This would integrate with actual attribution data
+		// For now, providing sample structure
+		return [
+			'total_conversions' => 0,
+			'top_channel' => __( 'N/A', 'fp-digital-marketing' ),
+			'channels' => []
+		];
 	}
 }

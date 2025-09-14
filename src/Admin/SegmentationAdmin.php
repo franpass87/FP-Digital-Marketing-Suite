@@ -196,7 +196,16 @@ class SegmentationAdmin {
 	 * @return void
 	 */
 	private function render_segments_list(): void {
-		$segments = AudienceSegmentTable::get_segments( [], 50, 0 );
+		try {
+			$segments = AudienceSegmentTable::get_segments( [], 50, 0 );
+		} catch ( \Throwable $e ) {
+			// Fallback to empty array if database operation fails
+			$segments = [];
+			
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'FP Digital Marketing SegmentationAdmin: Failed to load segments - ' . $e->getMessage() );
+			}
+		}
 
 		echo '<div class="segments-header">';
 		echo '<a href="' . esc_url( add_query_arg( 'action', 'create' ) ) . '" class="button button-primary">';
@@ -675,5 +684,15 @@ class SegmentationAdmin {
 				count( $sample_users )
 			),
 		] );
+	}
+
+	/**
+	 * Alias method for MenuManager compatibility
+	 * Renders the segmentation page (same as render_admin_page)
+	 *
+	 * @return void
+	 */
+	public function render_segmentation_page(): void {
+		$this->render_admin_page();
 	}
 }
