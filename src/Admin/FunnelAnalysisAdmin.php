@@ -1037,9 +1037,20 @@ class FunnelAnalysisAdmin {
 	 * @return void
 	 */
 	private function render_funnel_performance_widget(): void {
-		$total_funnels = FunnelTable::count_funnels();
-		$active_funnels = FunnelTable::count_active_funnels();
-		$conversion_rate = $this->calculate_average_conversion_rate();
+		try {
+			$total_funnels = FunnelTable::count_funnels();
+			$active_funnels = FunnelTable::count_active_funnels();
+			$conversion_rate = $this->calculate_average_conversion_rate();
+		} catch ( \Throwable $e ) {
+			// Fallback to default values if database operation fails
+			$total_funnels = 0;
+			$active_funnels = 0;
+			$conversion_rate = 0.0;
+			
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'FP Digital Marketing FunnelAnalysisAdmin: Failed to load funnel stats - ' . $e->getMessage() );
+			}
+		}
 		
 		?>
 		<div class="funnel-stats">
@@ -1059,6 +1070,11 @@ class FunnelAnalysisAdmin {
 		<p class="description">
 			<?php esc_html_e( 'Overview of your funnel performance metrics. Create new funnels to track user journeys and optimize conversion rates.', 'fp-digital-marketing' ); ?>
 		</p>
+		<?php if ( $total_funnels === 0 ): ?>
+		<div class="notice notice-info inline">
+			<p><?php esc_html_e( 'No funnels found. Create your first funnel to start tracking conversion paths.', 'fp-digital-marketing' ); ?></p>
+		</div>
+		<?php endif; ?>
 		<?php
 	}
 
@@ -1068,8 +1084,18 @@ class FunnelAnalysisAdmin {
 	 * @return void
 	 */
 	private function render_customer_journey_widget(): void {
-		$recent_journeys = CustomerJourneyTable::get_recent_journeys( 5 );
-		$total_sessions = CustomerJourneyTable::count_total_sessions();
+		try {
+			$recent_journeys = CustomerJourneyTable::get_recent_journeys( 5 );
+			$total_sessions = CustomerJourneyTable::count_total_sessions();
+		} catch ( \Throwable $e ) {
+			// Fallback to empty data if database operation fails
+			$recent_journeys = [];
+			$total_sessions = 0;
+			
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'FP Digital Marketing FunnelAnalysisAdmin: Failed to load journey stats - ' . $e->getMessage() );
+			}
+		}
 		
 		?>
 		<div class="journey-stats">
@@ -1102,6 +1128,10 @@ class FunnelAnalysisAdmin {
 						</li>
 					<?php endforeach; ?>
 				</ul>
+			</div>
+		<?php else: ?>
+			<div class="notice notice-info inline">
+				<p><?php esc_html_e( 'No customer journeys tracked yet. Journey data will appear as users interact with your funnels.', 'fp-digital-marketing' ); ?></p>
 			</div>
 		<?php endif; ?>
 		<?php
@@ -1154,25 +1184,37 @@ class FunnelAnalysisAdmin {
 	 * @return float
 	 */
 	private function calculate_average_conversion_rate(): float {
-		$funnels = FunnelTable::get_all_funnels();
-		
-		if ( empty( $funnels ) ) {
+		try {
+			$funnels = FunnelTable::get_all_funnels();
+			
+			if ( empty( $funnels ) ) {
+				return 0.0;
+			}
+			
+			$total_rate = 0.0;
+			$count = 0;
+			
+			foreach ( $funnels as $funnel ) {
+				try {
+					$funnel_obj = new Funnel( $funnel );
+					$rate = $funnel_obj->calculate_conversion_rate();
+					if ( $rate > 0 ) {
+						$total_rate += $rate;
+						$count++;
+					}
+				} catch ( \Throwable $e ) {
+					// Skip this funnel if it can't be processed
+					continue;
+				}
+			}
+			
+			return $count > 0 ? ( $total_rate / $count ) : 0.0;
+		} catch ( \Throwable $e ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'FP Digital Marketing FunnelAnalysisAdmin: Failed to calculate conversion rate - ' . $e->getMessage() );
+			}
 			return 0.0;
 		}
-		
-		$total_rate = 0.0;
-		$count = 0;
-		
-		foreach ( $funnels as $funnel ) {
-			$funnel_obj = new Funnel( $funnel );
-			$rate = $funnel_obj->calculate_conversion_rate();
-			if ( $rate > 0 ) {
-				$total_rate += $rate;
-				$count++;
-			}
-		}
-		
-		return $count > 0 ? ( $total_rate / $count ) : 0.0;
 	}
 
 	/**

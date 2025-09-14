@@ -183,10 +183,42 @@ class CachePerformance {
 			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
 		}
 
-		$cache_stats = PerformanceCache::get_cache_stats();
-		$benchmark_history = CacheBenchmark::get_benchmark_history( 10 );
-		$performance_report = CacheBenchmark::generate_performance_report();
-		$cache_settings = PerformanceCache::get_cache_settings();
+		try {
+			$cache_stats = PerformanceCache::get_cache_stats();
+			$benchmark_history = CacheBenchmark::get_benchmark_history( 10 );
+			$performance_report = CacheBenchmark::generate_performance_report();
+			$cache_settings = PerformanceCache::get_cache_settings();
+		} catch ( \Throwable $e ) {
+			// Fallback to empty/default data if operations fail
+			$cache_stats = [
+				'total_requests' => 0,
+				'cache_hits' => 0,
+				'cache_misses' => 0,
+				'hit_ratio' => 0.0,
+				'groups' => []
+			];
+			$benchmark_history = [];
+			$performance_report = [
+				'cache_health_score' => 0,
+				'recommendations' => [
+					[
+						'type' => 'warning',
+						'message' => __( 'Cache performance monitoring non disponibile. Verifica la configurazione del sistema di cache.', 'fp-digital-marketing' )
+					]
+				]
+			];
+			$cache_settings = [
+				'enabled' => false,
+				'use_object_cache' => false,
+				'use_transients' => false,
+				'default_ttl' => 3600,
+				'benchmark_enabled' => false
+			];
+			
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'FP Digital Marketing CachePerformance: Failed to load cache data - ' . $e->getMessage() );
+			}
+		}
 
 		?>
 		<div class="wrap">
