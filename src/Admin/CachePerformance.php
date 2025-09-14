@@ -563,4 +563,14 @@ class CachePerformance {
 		CacheBenchmark::clear_benchmark_history();
 		add_settings_error( 'cache_performance', 'stats_cleared', __( 'Statistiche cancellate con successo.', 'fp-digital-marketing' ), 'updated' );
 	}
+
+	/**
+	 * Alias method for MenuManager compatibility
+	 * Renders the performance page (same as render_page)
+	 *
+	 * @return void
+	 */
+	public function render_performance_page(): void {
+		$this->render_page();
+	}
 }

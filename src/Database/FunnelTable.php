@@ -369,4 +369,46 @@ class FunnelTable {
 
 		return $result !== false;
 	}
+
+	/**
+	 * Count total number of funnels
+	 *
+	 * @return int
+	 */
+	public static function count_funnels(): int {
+		global $wpdb;
+
+		$table_name = self::get_table_name();
+		$count = $wpdb->get_var( "SELECT COUNT(*) FROM `{$table_name}`" );
+
+		return (int) $count;
+	}
+
+	/**
+	 * Count active funnels
+	 *
+	 * @return int
+	 */
+	public static function count_active_funnels(): int {
+		global $wpdb;
+
+		$table_name = self::get_table_name();
+		$count = $wpdb->get_var( "SELECT COUNT(*) FROM `{$table_name}` WHERE status = 'active'" );
+
+		return (int) $count;
+	}
+
+	/**
+	 * Get all funnels
+	 *
+	 * @return array
+	 */
+	public static function get_all_funnels(): array {
+		global $wpdb;
+
+		$table_name = self::get_table_name();
+		$results = $wpdb->get_results( "SELECT * FROM `{$table_name}` ORDER BY created_at DESC", ARRAY_A );
+
+		return $results ?: [];
+	}
 }

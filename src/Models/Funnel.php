@@ -472,4 +472,41 @@ class Funnel {
 			'inactive' => __( 'Inactive', 'fp-digital-marketing' ),
 		];
 	}
+
+	/**
+	 * Calculate conversion rate for this funnel
+	 *
+	 * @return float Conversion rate as percentage
+	 */
+	public function calculate_conversion_rate(): float {
+		if ( ! $this->id ) {
+			return 0.0;
+		}
+
+		$stages = FunnelTable::get_funnel_stages( $this->id );
+		if ( empty( $stages ) ) {
+			return 0.0;
+		}
+
+		// Get conversion data for this funnel's stages
+		$stage_event_types = array_column( $stages, 'event_type' );
+		$funnel_data = CustomerJourneyTable::get_funnel_conversion_data( 
+			$stage_event_types, 
+			[ 'client_id' => $this->client_id ] 
+		);
+
+		if ( empty( $funnel_data ) || count( $funnel_data ) < 2 ) {
+			return 0.0;
+		}
+
+		// Calculate overall conversion rate from first to last step
+		$first_step_sessions = $funnel_data[0]['sessions'] ?? 0;
+		$last_step_sessions = end( $funnel_data )['sessions'] ?? 0;
+
+		if ( $first_step_sessions === 0 ) {
+			return 0.0;
+		}
+
+		return round( ( $last_step_sessions / $first_step_sessions ) * 100, 2 );
+	}
 }

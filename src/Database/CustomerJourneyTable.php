@@ -532,4 +532,52 @@ class CustomerJourneyTable {
 
 		return $funnel_data;
 	}
+
+	/**
+	 * Get recent customer journeys
+	 *
+	 * @param int $limit Number of recent journeys to retrieve
+	 * @return array Array of recent customer journey objects
+	 */
+	public static function get_recent_journeys( int $limit = 10 ): array {
+		global $wpdb;
+
+		$sessions_table = self::get_sessions_table_name();
+		
+		$sql = $wpdb->prepare(
+			"SELECT * FROM {$sessions_table} 
+			 ORDER BY first_event_timestamp DESC 
+			 LIMIT %d",
+			$limit
+		);
+
+		$results = $wpdb->get_results( $sql, ARRAY_A );
+		$journeys = [];
+
+		foreach ( $results as $session_data ) {
+			// Create simplified journey objects from session data
+			$journeys[] = (object) [
+				'id' => $session_data['id'],
+				'session_id' => $session_data['session_id'],
+				'created_at' => $session_data['first_event_timestamp'],
+				'touchpoints' => [], // Would be populated from events table
+			];
+		}
+
+		return $journeys;
+	}
+
+	/**
+	 * Count total sessions
+	 *
+	 * @return int
+	 */
+	public static function count_total_sessions(): int {
+		global $wpdb;
+
+		$sessions_table = self::get_sessions_table_name();
+		$count = $wpdb->get_var( "SELECT COUNT(*) FROM {$sessions_table}" );
+
+		return (int) $count;
+	}
 }

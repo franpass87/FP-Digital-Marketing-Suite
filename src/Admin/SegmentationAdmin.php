@@ -676,4 +676,14 @@ class SegmentationAdmin {
 			),
 		] );
 	}
+
+	/**
+	 * Alias method for MenuManager compatibility
+	 * Renders the segmentation page (same as render_admin_page)
+	 *
+	 * @return void
+	 */
+	public function render_segmentation_page(): void {
+		$this->render_admin_page();
+	}
 }
