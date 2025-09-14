@@ -25,6 +25,7 @@ use FP\DigitalMarketing\Admin\UTMCampaignManager;
 use FP\DigitalMarketing\Admin\ConversionEventsAdmin;
 use FP\DigitalMarketing\Admin\SegmentationAdmin;
 use FP\DigitalMarketing\Admin\FunnelAnalysisAdmin;
+use FP\DigitalMarketing\Admin\MenuManager;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Database\AlertRulesTable;
 use FP\DigitalMarketing\Database\AnomalyRulesTable;
@@ -175,6 +176,13 @@ class DigitalMarketingSuite {
 	private ?FunnelAnalysisAdmin $funnel_analysis_admin = null;
 
 	/**
+	 * Menu Manager instance
+	 *
+	 * @var MenuManager|null
+	 */
+	private ?MenuManager $menu_manager = null;
+
+	/**
 	 * Constructor with error handling
 	 */
 	public function __construct() {
@@ -289,6 +297,28 @@ class DigitalMarketingSuite {
 		} catch ( \Throwable $e ) {
 			$this->funnel_analysis_admin = null;
 			$this->log_initialization_error( 'FunnelAnalysisAdmin', $e );
+		}
+
+		try {
+			// Create MenuManager with pre-instantiated admin classes
+			$admin_instances = [
+				'Dashboard' => $this->dashboard,
+				'Reports' => $this->reports,
+				'Settings' => $this->settings,
+				'UTMCampaignManager' => $this->utm_campaign_manager,
+				'FunnelAnalysisAdmin' => $this->funnel_analysis_admin,
+				'SegmentationAdmin' => $this->segmentation_admin,
+				'AlertingAdmin' => $this->alerting_admin,
+				'AnomalyDetectionAdmin' => $this->anomaly_detection_admin,
+				'CachePerformance' => $this->cache_performance,
+				'SecurityAdmin' => $this->security_admin,
+				'OnboardingWizard' => $this->onboarding_wizard
+			];
+			
+			$this->menu_manager = new MenuManager( array_filter( $admin_instances ) );
+		} catch ( \Throwable $e ) {
+			$this->menu_manager = null;
+			$this->log_initialization_error( 'MenuManager', $e );
 		}
 	}
 
@@ -456,6 +486,15 @@ class DigitalMarketingSuite {
 			}
 		} catch ( \Throwable $e ) {
 			$this->log_initialization_error( 'FunnelAnalysisAdmin->init()', $e );
+		}
+
+		// Initialize centralized menu manager
+		try {
+			if ( $this->menu_manager !== null ) {
+				$this->menu_manager->init();
+			}
+		} catch ( \Throwable $e ) {
+			$this->log_initialization_error( 'MenuManager->init()', $e );
 		}
 
 		// Initialize static helper classes with error handling

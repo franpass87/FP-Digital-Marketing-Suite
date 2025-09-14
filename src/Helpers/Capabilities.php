@@ -30,6 +30,7 @@ class Capabilities {
 	public const VIEW_SEGMENTS = 'fp_dms_view_segments';
 	public const MANAGE_SEGMENTS = 'fp_dms_manage_segments';
 	public const FUNNEL_ANALYSIS = 'fp_dms_funnel_analysis';
+	public const VIEW_REPORTS = 'fp_dms_view_reports';
 
 	/**
 	 * All custom capabilities
@@ -48,6 +49,7 @@ class Capabilities {
 		self::VIEW_SEGMENTS,
 		self::MANAGE_SEGMENTS,
 		self::FUNNEL_ANALYSIS,
+		self::VIEW_REPORTS,
 	];
 
 	/**

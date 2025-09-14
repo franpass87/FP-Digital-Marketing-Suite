@@ -1,0 +1,212 @@
+/**
+ * Rationalized Admin Menu Styles
+ * Improved styling for the reorganized FP Digital Marketing Suite admin menu
+ */
+
+/* Main menu item styling */
+#adminmenu #toplevel_page_fp-digital-marketing-dashboard .wp-menu-image:before {
+    content: '\f239';
+    color: #82878c;
+}
+
+#adminmenu #toplevel_page_fp-digital-marketing-dashboard:hover .wp-menu-image:before,
+#adminmenu #toplevel_page_fp-digital-marketing-dashboard.wp-has-current-submenu .wp-menu-image:before {
+    color: #00a0d2;
+}
+
+/* Submenu item grouping */
+.fp-dms-menu-group {
+    border-top: 1px solid #3c434a;
+    margin-top: 5px;
+    padding-top: 3px;
+}
+
+.fp-dms-menu-group:first-child {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+/* Submenu item styling with better visual hierarchy */
+#adminmenu .wp-submenu li a[href*="fp-digital-marketing"] {
+    position: relative;
+    padding-left: 15px;
+}
+
+/* Group indicators via pseudo-elements */
+#adminmenu .wp-submenu li a[href*="analytics"]::before,
+#adminmenu .wp-submenu li a[href*="reports"]::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background-color: #00a0d2;
+    border-radius: 2px;
+}
+
+#adminmenu .wp-submenu li a[href*="campaigns"]::before,
+#adminmenu .wp-submenu li a[href*="funnels"]::before,
+#adminmenu .wp-submenu li a[href*="segments"]::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background-color: #46b450;
+    border-radius: 2px;
+}
+
+#adminmenu .wp-submenu li a[href*="monitoring"]::before,
+#adminmenu .wp-submenu li a[href*="anomalies"]::before,
+#adminmenu .wp-submenu li a[href*="performance"]::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background-color: #ffb900;
+    border-radius: 2px;
+}
+
+#adminmenu .wp-submenu li a[href*="security"]::before,
+#adminmenu .wp-submenu li a[href*="settings"]::before,
+#adminmenu .wp-submenu li a[href*="wizard"]::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background-color: #dc3232;
+    border-radius: 2px;
+}
+
+/* Hover effects for better UX */
+#adminmenu .wp-submenu li a[href*="fp-digital-marketing"]:hover {
+    background-color: #0073aa;
+    color: #fff;
+}
+
+#adminmenu .wp-submenu li a[href*="fp-digital-marketing"]:hover::before {
+    background-color: #fff;
+}
+
+/* Current page highlighting */
+#adminmenu .wp-submenu li.current a[href*="fp-digital-marketing"] {
+    font-weight: 600;
+    background-color: #0073aa;
+    color: #fff;
+}
+
+#adminmenu .wp-submenu li.current a[href*="fp-digital-marketing"]::before {
+    background-color: #fff;
+}
+
+/* Emoji spacing fix for better alignment */
+#adminmenu .wp-submenu li a[href*="fp-digital-marketing"] {
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+/* Menu item spacing improvements */
+#adminmenu .wp-submenu li {
+    margin: 0;
+}
+
+#adminmenu .wp-submenu li a {
+    padding: 8px 12px;
+    min-height: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 960px) {
+    #adminmenu .wp-submenu li a[href*="fp-digital-marketing"] {
+        padding-left: 12px;
+    }
+    
+    #adminmenu .wp-submenu li a[href*="fp-digital-marketing"]::before {
+        left: 5px;
+        width: 2px;
+        height: 15px;
+    }
+}
+
+/* Accessibility improvements */
+#adminmenu .wp-submenu li a[href*="fp-digital-marketing"]:focus {
+    outline: 2px solid #005177;
+    outline-offset: -2px;
+    box-shadow: none;
+}
+
+/* Better visual separation between menu groups */
+.fp-dms-admin-page .nav-tab-wrapper {
+    border-bottom: 1px solid #ccd0d4;
+    margin-bottom: 20px;
+}
+
+.fp-dms-admin-page .nav-tab {
+    position: relative;
+    border: 1px solid #ccd0d4;
+    background: #f1f1f1;
+    color: #555;
+}
+
+.fp-dms-admin-page .nav-tab:hover {
+    background: #fafafa;
+    color: #222;
+}
+
+.fp-dms-admin-page .nav-tab-active {
+    background: #fff;
+    color: #222;
+    border-bottom-color: #fff;
+}
+
+/* Loading states for AJAX-heavy pages */
+.fp-dms-loading {
+    position: relative;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.fp-dms-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #0073aa;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: fp-dms-spin 1s linear infinite;
+}
+
+@keyframes fp-dms-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Notification badge for menu items */
+.fp-dms-menu-badge {
+    display: inline-block;
+    padding: 1px 5px;
+    margin-left: 5px;
+    background: #dc3232;
+    color: white;
+    border-radius: 10px;
+    font-size: 10px;
+    line-height: 1.2;
+    font-weight: 600;
+    vertical-align: middle;
+}

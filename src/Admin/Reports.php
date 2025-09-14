@@ -54,10 +54,20 @@ class Reports {
 
 	/**
 	 * Add admin menu page
+	 * 
+	 * Note: This method is disabled when MenuManager is active to prevent
+	 * duplicate menu registrations in the rationalized menu structure.
 	 *
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
+		// Check if centralized MenuManager is active
+		if ( class_exists( '\FP\DigitalMarketing\Admin\MenuManager' ) ) {
+			// MenuManager will handle menu registration
+			return;
+		}
+
+		// Legacy menu registration (fallback)
 		add_submenu_page(
 			'fp-digital-marketing-dashboard',
 			__( 'Reports & Analytics', 'fp-digital-marketing' ),
