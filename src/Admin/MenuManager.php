@@ -56,6 +56,8 @@ class MenuManager {
 	public function init(): void {
 		add_action( 'admin_menu', [ $this, 'register_menus' ], 5 );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+		add_action( 'admin_notices', [ $this, 'show_rationalization_notice' ] );
+		add_action( 'wp_ajax_fp_dms_dismiss_menu_notice', [ $this, 'handle_dismiss_notice' ] );
 	}
 
 	/**
@@ -89,7 +91,7 @@ class MenuManager {
 					'page_title' => __( 'Analytics & Reports', 'fp-digital-marketing' ),
 					'menu_title' => __( '📊 Analytics & Reports', 'fp-digital-marketing' ),
 					'capability' => Capabilities::EXPORT_REPORTS,
-					'menu_slug' => 'fp-digital-marketing-analytics',
+					'menu_slug' => 'fp-digital-marketing-reports',
 					'callback' => 'Reports::render_reports_page',
 					'group' => 'analytics'
 				],
@@ -98,8 +100,8 @@ class MenuManager {
 					'page_title' => __( 'Campaign Management', 'fp-digital-marketing' ),
 					'menu_title' => __( '🚀 Campaign Management', 'fp-digital-marketing' ),
 					'capability' => Capabilities::MANAGE_CAMPAIGNS,
-					'menu_slug' => 'fp-digital-marketing-campaigns',
-					'callback' => 'UTMCampaignManager::render_campaigns_page',
+					'menu_slug' => 'fp-utm-campaign-manager',
+					'callback' => 'UTMCampaignManager::render_page',
 					'group' => 'campaigns'
 				],
 				[
@@ -107,8 +109,8 @@ class MenuManager {
 					'page_title' => __( 'Funnel Analysis', 'fp-digital-marketing' ),
 					'menu_title' => __( '🎯 Funnel Analysis', 'fp-digital-marketing' ),
 					'capability' => Capabilities::VIEW_REPORTS,
-					'menu_slug' => 'fp-digital-marketing-funnels',
-					'callback' => 'FunnelAnalysisAdmin::render_funnel_page',
+					'menu_slug' => 'fp-digital-marketing-funnel-analysis',
+					'callback' => 'FunnelAnalysisAdmin::render_admin_page',
 					'group' => 'campaigns'
 				],
 				[
@@ -116,7 +118,7 @@ class MenuManager {
 					'page_title' => __( 'Audience Segmentation', 'fp-digital-marketing' ),
 					'menu_title' => __( '👥 Audience Segmentation', 'fp-digital-marketing' ),
 					'capability' => Capabilities::MANAGE_SEGMENTS,
-					'menu_slug' => 'fp-digital-marketing-segments',
+					'menu_slug' => 'fp-audience-segments',
 					'callback' => 'SegmentationAdmin::render_segmentation_page',
 					'group' => 'campaigns'
 				],
@@ -125,8 +127,8 @@ class MenuManager {
 					'page_title' => __( 'Monitoring & Alerts', 'fp-digital-marketing' ),
 					'menu_title' => __( '🔔 Monitoring & Alerts', 'fp-digital-marketing' ),
 					'capability' => Capabilities::MANAGE_ALERTS,
-					'menu_slug' => 'fp-digital-marketing-monitoring',
-					'callback' => 'AlertingAdmin::render_alerts_page',
+					'menu_slug' => 'fp-digital-marketing-alerts',
+					'callback' => 'AlertingAdmin::display_admin_page',
 					'group' => 'monitoring'
 				],
 				[
@@ -135,7 +137,7 @@ class MenuManager {
 					'menu_title' => __( '🔍 Anomaly Detection', 'fp-digital-marketing' ),
 					'capability' => Capabilities::MANAGE_ALERTS,
 					'menu_slug' => 'fp-digital-marketing-anomalies',
-					'callback' => 'AnomalyDetectionAdmin::render_anomaly_page',
+					'callback' => 'AnomalyDetectionAdmin::display_admin_page',
 					'group' => 'monitoring'
 				],
 				[
@@ -143,7 +145,7 @@ class MenuManager {
 					'page_title' => __( 'Performance Cache', 'fp-digital-marketing' ),
 					'menu_title' => __( '⚡ Performance', 'fp-digital-marketing' ),
 					'capability' => Capabilities::MANAGE_SETTINGS,
-					'menu_slug' => 'fp-digital-marketing-performance',
+					'menu_slug' => 'fp-digital-marketing-cache-performance',
 					'callback' => 'CachePerformance::render_performance_page',
 					'group' => 'monitoring'
 				],
@@ -170,7 +172,7 @@ class MenuManager {
 					'page_title' => __( 'Setup Wizard', 'fp-digital-marketing' ),
 					'menu_title' => __( '🛠️ Setup Wizard', 'fp-digital-marketing' ),
 					'capability' => Capabilities::MANAGE_SETTINGS,
-					'menu_slug' => 'fp-digital-marketing-wizard',
+					'menu_slug' => 'fp-digital-marketing-onboarding',
 					'callback' => 'OnboardingWizard::render_wizard_page',
 					'group' => 'administration'
 				]
@@ -311,6 +313,73 @@ class MenuManager {
 	 */
 	public function get_menu_structure(): array {
 		return $this->menu_structure;
+	}
+
+	/**
+	 * Show admin notice about menu rationalization
+	 *
+	 * @return void
+	 */
+	public function show_rationalization_notice(): void {
+		// Only show on FP Digital Marketing pages
+		$screen = get_current_screen();
+		if ( ! $screen || strpos( $screen->id, 'fp-digital-marketing' ) === false ) {
+			return;
+		}
+
+		// Only show to users with manage_options capability
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		// Show notice only once per user
+		$user_id = get_current_user_id();
+		$notice_dismissed = get_user_meta( $user_id, 'fp_dms_menu_rationalization_notice_dismissed', true );
+		
+		if ( $notice_dismissed ) {
+			return;
+		}
+
+		echo '<div class="notice notice-success is-dismissible" data-notice="fp-dms-menu-rationalization">';
+		echo '<p><strong>' . esc_html__( 'FP Digital Marketing Suite', 'fp-digital-marketing' ) . '</strong> - ';
+		echo esc_html__( 'The admin menu has been rationalized and reorganized for better user experience. All functionality remains accessible through the new logical grouping.', 'fp-digital-marketing' );
+		echo '</p>';
+		echo '</div>';
+
+		// Add script to handle dismissible notice
+		echo '<script>
+		jQuery(document).ready(function($) {
+			$(document).on("click", "[data-notice=\'fp-dms-menu-rationalization\'] .notice-dismiss", function() {
+				$.post(ajaxurl, {
+					action: "fp_dms_dismiss_menu_notice",
+					nonce: "' . wp_create_nonce( 'fp_dms_dismiss_notice' ) . '"
+				});
+			});
+		});
+		</script>';
+	}
+
+	/**
+	 * Handle AJAX request to dismiss menu rationalization notice
+	 *
+	 * @return void
+	 */
+	public function handle_dismiss_notice(): void {
+		// Verify nonce
+		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_dms_dismiss_notice' ) ) {
+			wp_die( 'Security check failed' );
+		}
+
+		// Check user capability
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'Insufficient permissions' );
+		}
+
+		// Mark notice as dismissed for current user
+		$user_id = get_current_user_id();
+		update_user_meta( $user_id, 'fp_dms_menu_rationalization_notice_dismissed', true );
+
+		wp_send_json_success();
 	}
 
 	/**
