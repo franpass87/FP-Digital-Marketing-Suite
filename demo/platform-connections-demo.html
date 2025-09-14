@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FP Digital Marketing Suite - Platform Connections Demo</title>
+    <link rel="stylesheet" href="../assets/admin/platform-connections.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            background: #f1f1f1;
+            color: #23282d;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 23px;
+            font-weight: 400;
+            margin: 0 0 20px 0;
+            line-height: 1.3;
+            color: #23282d;
+        }
+        
+        .button {
+            display: inline-block;
+            text-decoration: none;
+            font-size: 13px;
+            line-height: 2.15384615;
+            min-height: 30px;
+            margin: 0;
+            padding: 0 10px;
+            cursor: pointer;
+            border-width: 1px;
+            border-style: solid;
+            border-radius: 3px;
+            white-space: nowrap;
+            box-sizing: border-box;
+            background: #f6f7f7;
+            border-color: #ddd;
+            color: #555;
+        }
+        
+        .button:hover {
+            background: #f0f0f1;
+            border-color: #999;
+            color: #23282d;
+        }
+        
+        .button-primary {
+            background: #2271b1;
+            border-color: #2271b1;
+            color: #fff;
+        }
+        
+        .button-primary:hover {
+            background: #135e96;
+            border-color: #135e96;
+            color: #fff;
+        }
+        
+        .button-secondary {
+            background: #f6f7f7;
+            border-color: #ddd;
+            color: #555;
+        }
+        
+        .notice {
+            background: #fff;
+            border-left: 4px solid #00a32a;
+            box-shadow: 0 1px 1px rgba(0,0,0,.04);
+            margin: 5px 15px 2px;
+            padding: 1px 12px;
+        }
+        
+        .notice-success {
+            border-left-color: #00a32a;
+        }
+        
+        .dashicons {
+            font-family: dashicons;
+            font-size: 16px;
+            line-height: 1;
+            width: 16px;
+            height: 16px;
+        }
+        
+        .dashicons-lightbulb:before { content: "\f339"; }
+        .dashicons-arrow-up-alt:before { content: "\f342"; }
+        .dashicons-arrow-down-alt:before { content: "\f346"; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>🔗 Connessioni Piattaforme</h1>
+
+        <div class="notice notice-success">
+            <p><strong>✅ Nuove Funzionalità Implementate!</strong><br>
+            Sistema di gestione connessioni piattaforme con monitoraggio stato in tempo reale e suggerimenti intelligenti per anomalie.</p>
+        </div>
+
+        <!-- Health Score -->
+        <div class="fp-connection-health-card">
+            <h2>Stato Connessioni</h2>
+            <div class="health-score-container">
+                <div class="health-score health-good">
+                    <span class="score-number">75%</span>
+                    <span class="score-label">Health Score</span>
+                </div>
+                <div class="health-details">
+                    <p>3 di 4 piattaforme connesse</p>
+                    <button type="button" class="button button-secondary" id="refresh-connections">
+                        Aggiorna Stato
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="fp-recommendations-card">
+            <h3>Raccomandazioni</h3>
+            <ul class="recommendations-list">
+                <li class="recommendation-item priority-high">
+                    <strong>Configura Google Analytics 4</strong>
+                    <p>Client ID e Client Secret non configurati - necessario per raccolta dati completa</p>
+                </li>
+                <li class="recommendation-item priority-medium">
+                    <strong>Verifica Microsoft Clarity</strong>
+                    <p>Configura almeno un cliente per monitoraggio comportamento utenti</p>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Connections Grid -->
+        <div class="fp-connections-grid" id="connections-grid">
+            <!-- Google Analytics 4 -->
+            <div class="connection-card status-disconnected">
+                <div class="connection-header">
+                    <h3>Google Analytics 4</h3>
+                    <span class="connection-status status-disconnected">Disconnesso</span>
+                </div>
+                <div class="connection-details">
+                    <p><strong>Stato:</strong> Client ID e Client Secret non configurati</p>
+                    <p><small>Ultimo controllo: 2024-09-14 06:31:23</small></p>
+                </div>
+                <div class="connection-actions">
+                    <button type="button" class="button button-secondary test-connection" data-platform="google_analytics_4">
+                        Testa Connessione
+                    </button>
+                    <a href="#" class="button button-primary">Configura</a>
+                </div>
+                <div class="setup-steps">
+                    <h4>Procedura di configurazione:</h4>
+                    <ol>
+                        <li>
+                            <strong>Crea progetto Google Cloud</strong>
+                            <br><small>Accedi a Google Cloud Console e crea un nuovo progetto</small>
+                            <br><a href="https://console.cloud.google.com/" target="_blank">Apri link ↗</a>
+                        </li>
+                        <li>
+                            <strong>Abilita Analytics API</strong>
+                            <br><small>Abilita Google Analytics Reporting API nel tuo progetto</small>
+                        </li>
+                        <li>
+                            <strong>Configura OAuth 2.0</strong>
+                            <br><small>Crea credenziali OAuth 2.0 per applicazione web</small>
+                        </li>
+                        <li>
+                            <strong>Inserisci credenziali</strong>
+                            <br><small>Copia Client ID e Client Secret nelle impostazioni del plugin</small>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Google Search Console -->
+            <div class="connection-card status-disconnected">
+                <div class="connection-header">
+                    <h3>Google Search Console</h3>
+                    <span class="connection-status status-disconnected">Disconnesso</span>
+                </div>
+                <div class="connection-details">
+                    <p><strong>Stato:</strong> Richiede configurazione Google OAuth</p>
+                    <p><small>Ultimo controllo: 2024-09-14 06:31:23</small></p>
+                    <p><em>Dipende da: google_analytics_4</em></p>
+                </div>
+                <div class="connection-actions">
+                    <a href="#" class="button button-primary">Configura</a>
+                </div>
+            </div>
+
+            <!-- Microsoft Clarity -->
+            <div class="connection-card status-connected">
+                <div class="connection-header">
+                    <h3>Microsoft Clarity</h3>
+                    <span class="connection-status status-connected">Connesso</span>
+                </div>
+                <div class="connection-details">
+                    <p><strong>Stato:</strong> 2 clienti configurati</p>
+                    <p><small>Ultimo controllo: 2024-09-14 06:31:23</small></p>
+                    <p><strong>Clienti configurati:</strong> 2</p>
+                </div>
+                <div class="connection-actions">
+                    <a href="#" class="button button-secondary">Configura Clienti</a>
+                </div>
+            </div>
+
+            <!-- Google Ads -->
+            <div class="connection-card status-disconnected">
+                <div class="connection-header">
+                    <h3>Google Ads</h3>
+                    <span class="connection-status status-disconnected">Disconnesso</span>
+                </div>
+                <div class="connection-details">
+                    <p><strong>Stato:</strong> Integrazione pianificata - non ancora disponibile</p>
+                    <p><small>Ultimo controllo: 2024-09-14 06:31:23</small></p>
+                </div>
+                <div class="connection-actions">
+                    <!-- No actions for coming soon -->
+                </div>
+                <div class="coming-soon-notice">
+                    <p>Questa integrazione sarà disponibile in una versione futura.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="fp-quick-actions">
+            <h3>Azioni Rapide</h3>
+            <div class="action-buttons">
+                <a href="#" class="button button-primary">
+                    Configura Impostazioni API
+                </a>
+                <a href="#" class="button button-secondary">
+                    Gestisci Clienti
+                </a>
+                <a href="#" class="button button-secondary">
+                    Aggiorna Cache
+                </a>
+            </div>
+        </div>
+
+        <!-- Demo Section -->
+        <div style="margin-top: 30px; padding: 20px; background: #f0f6fc; border: 1px solid #0969da; border-radius: 6px;">
+            <h3 style="color: #0969da; margin-top: 0;">🚀 Caratteristiche Implementate</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Connection Health Monitoring</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Score di salute visuale con monitoraggio stato in tempo reale</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Setup Guidato</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Procedure step-by-step per configurazione piattaforme</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Test Connessioni Real-time</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Verifica istantanea dello stato delle connessioni</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Suggerimenti Intelligenti</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Raccomandazioni prioritizzate per miglioramento</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Interface Responsive</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Design moderno ottimizzato per tutti i dispositivi</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Auto-refresh</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Aggiornamento automatico dello stato ogni 30 secondi</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Simple demo functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const testButtons = document.querySelectorAll('.test-connection');
+        
+        testButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const card = this.closest('.connection-card');
+                const originalText = this.textContent;
+                
+                // Show testing state
+                this.textContent = 'Test in corso...';
+                this.disabled = true;
+                card.classList.add('testing');
+                
+                // Simulate test
+                setTimeout(() => {
+                    this.textContent = originalText;
+                    this.disabled = false;
+                    card.classList.remove('testing');
+                    
+                    // Show result
+                    const existing = card.querySelector('.test-result');
+                    if (existing) existing.remove();
+                    
+                    const result = document.createElement('div');
+                    result.className = 'test-result test-result-error';
+                    result.innerHTML = '<strong>✗</strong> Token non valido o scaduto';
+                    this.parentNode.appendChild(result);
+                    
+                    setTimeout(() => {
+                        result.style.opacity = '0';
+                        setTimeout(() => result.remove(), 300);
+                    }, 5000);
+                }, 2000);
+            });
+        });
+    });
+    </script>
+</body>
+</html>

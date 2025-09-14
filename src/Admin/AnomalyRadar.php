@@ -13,6 +13,7 @@ use FP\DigitalMarketing\Models\DetectedAnomaly;
 use FP\DigitalMarketing\Models\AnomalyRule;
 use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Helpers\AnomalySuggestionEngine;
 use FP\DigitalMarketing\PostTypes\ClientePostType;
 
 /**
@@ -404,7 +405,7 @@ class AnomalyRadar {
 	private function render_anomalies_table( array $anomalies, bool $compact = false ): void {
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
 
-		echo '<table class="wp-list-table widefat fixed striped">';
+		echo '<table class="wp-list-table widefat fixed striped fp-anomalies-table">';
 		echo '<thead><tr>';
 		echo '<th>' . esc_html__( 'Metrica', 'fp-digital-marketing' ) . '</th>';
 		echo '<th>' . esc_html__( 'Valore', 'fp-digital-marketing' ) . '</th>';
@@ -414,13 +415,15 @@ class AnomalyRadar {
 		}
 		echo '<th>' . esc_html__( 'Gravità', 'fp-digital-marketing' ) . '</th>';
 		echo '<th>' . esc_html__( 'Rilevata', 'fp-digital-marketing' ) . '</th>';
+		echo '<th>' . esc_html__( 'Azioni', 'fp-digital-marketing' ) . '</th>';
 		echo '</tr></thead><tbody>';
 
 		foreach ( $anomalies as $anomaly ) {
 			$metric_name = $kpi_definitions[ $anomaly->metric ]['name'] ?? $anomaly->metric;
 			$row_class = $anomaly->acknowledged ? 'acknowledged' : 'unacknowledged';
+			$anomaly_id = 'anomaly-' . $anomaly->id;
 
-			echo '<tr class="' . esc_attr( $row_class ) . '">';
+			echo '<tr class="' . esc_attr( $row_class ) . '" data-anomaly-id="' . esc_attr( $anomaly->id ) . '">';
 			echo '<td><strong>' . esc_html( $metric_name ) . '</strong></td>';
 			echo '<td>';
 			echo '<span class="current-value">' . esc_html( number_format( $anomaly->current_value, 2 ) ) . '</span>';
@@ -446,10 +449,223 @@ class AnomalyRadar {
 			
 			echo '<td><span style="color: ' . esc_attr( $severity_color ) . '; font-weight: bold;">' . esc_html( ucfirst( $anomaly->severity ) ) . '</span></td>';
 			echo '<td>' . esc_html( wp_date( 'Y-m-d H:i', strtotime( $anomaly->detected_at ) ) ) . '</td>';
+			echo '<td>';
+			echo '<button type="button" class="button button-small toggle-suggestions" data-target="' . esc_attr( $anomaly_id ) . '">';
+			echo '<span class="dashicons dashicons-lightbulb"></span> ' . esc_html__( 'Suggerimenti', 'fp-digital-marketing' );
+			echo '</button>';
+			echo '</td>';
+			echo '</tr>';
+
+			// Suggestions row (initially hidden)
+			echo '<tr class="suggestions-row" id="' . esc_attr( $anomaly_id ) . '" style="display: none;">';
+			echo '<td colspan="' . ( $compact ? '5' : '7' ) . '">';
+			$this->render_anomaly_suggestions( $anomaly );
+			echo '</td>';
 			echo '</tr>';
 		}
 
 		echo '</tbody></table>';
+
+		// Add JavaScript for expandable suggestions
+		?>
+		<script type="text/javascript">
+		jQuery(document).ready(function($) {
+			$('.toggle-suggestions').on('click', function() {
+				const target = $(this).data('target');
+				const $suggestionRow = $('#' + target);
+				const $button = $(this);
+				
+				if ($suggestionRow.is(':visible')) {
+					$suggestionRow.hide();
+					$button.find('.dashicons').removeClass('dashicons-lightbulb').addClass('dashicons-lightbulb');
+				} else {
+					$suggestionRow.show();
+					$button.find('.dashicons').removeClass('dashicons-lightbulb').addClass('dashicons-dismiss');
+				}
+			});
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Render suggestions for a specific anomaly
+	 *
+	 * @param DetectedAnomaly $anomaly Anomaly object
+	 * @return void
+	 */
+	private function render_anomaly_suggestions( DetectedAnomaly $anomaly ): void {
+		$suggestions = AnomalySuggestionEngine::generate_suggestions( $anomaly );
+
+		if ( empty( $suggestions ) ) {
+			echo '<div class="notice notice-info inline">';
+			echo '<p>' . esc_html__( 'Nessun suggerimento automatico disponibile per questa anomalia.', 'fp-digital-marketing' ) . '</p>';
+			echo '</div>';
+			return;
+		}
+
+		echo '<div class="anomaly-suggestions">';
+		echo '<h4>' . esc_html__( 'Suggerimenti per risolvere l\'anomalia:', 'fp-digital-marketing' ) . '</h4>';
+
+		foreach ( $suggestions as $suggestion ) {
+			$priority_class = 'priority-' . $suggestion['priority'];
+			$category_icon = $this->get_category_icon( $suggestion['category'] );
+			
+			echo '<div class="suggestion-card ' . esc_attr( $priority_class ) . '">';
+			echo '<div class="suggestion-header">';
+			echo '<span class="category-icon">' . $category_icon . '</span>';
+			echo '<h5>' . esc_html( $suggestion['title'] ) . '</h5>';
+			echo '<span class="priority-badge priority-' . esc_attr( $suggestion['priority'] ) . '">';
+			echo esc_html( $this->get_priority_label( $suggestion['priority'] ) );
+			echo '</span>';
+			echo '</div>';
+			
+			echo '<div class="suggestion-content">';
+			echo '<p>' . esc_html( $suggestion['description'] ) . '</p>';
+			
+			if ( ! empty( $suggestion['actions'] ) ) {
+				echo '<div class="suggested-actions">';
+				echo '<strong>' . esc_html__( 'Azioni consigliate:', 'fp-digital-marketing' ) . '</strong>';
+				echo '<ul>';
+				foreach ( $suggestion['actions'] as $action ) {
+					echo '<li>' . esc_html( $action ) . '</li>';
+				}
+				echo '</ul>';
+				echo '</div>';
+			}
+			echo '</div>';
+			echo '</div>';
+		}
+
+		echo '</div>';
+
+		// Add CSS for suggestions
+		?>
+		<style>
+		.anomaly-suggestions {
+			background: #f9f9f9;
+			padding: 15px;
+			border-radius: 4px;
+			margin: 10px 0;
+		}
+		
+		.suggestion-card {
+			background: white;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			padding: 15px;
+			margin: 10px 0;
+			border-left-width: 4px;
+		}
+		
+		.suggestion-card.priority-critical {
+			border-left-color: #d63638;
+		}
+		
+		.suggestion-card.priority-high {
+			border-left-color: #dba617;
+		}
+		
+		.suggestion-card.priority-medium {
+			border-left-color: #00a0d2;
+		}
+		
+		.suggestion-card.priority-low {
+			border-left-color: #007cba;
+		}
+		
+		.suggestion-header {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 10px;
+		}
+		
+		.suggestion-header h5 {
+			margin: 0;
+			flex-grow: 1;
+		}
+		
+		.category-icon {
+			font-size: 18px;
+		}
+		
+		.priority-badge {
+			padding: 2px 8px;
+			border-radius: 12px;
+			font-size: 11px;
+			font-weight: bold;
+			text-transform: uppercase;
+		}
+		
+		.priority-badge.priority-critical {
+			background: #d63638;
+			color: white;
+		}
+		
+		.priority-badge.priority-high {
+			background: #dba617;
+			color: white;
+		}
+		
+		.priority-badge.priority-medium {
+			background: #00a0d2;
+			color: white;
+		}
+		
+		.priority-badge.priority-low {
+			background: #007cba;
+			color: white;
+		}
+		
+		.suggested-actions {
+			margin-top: 10px;
+		}
+		
+		.suggested-actions ul {
+			margin: 5px 0 0 20px;
+		}
+		
+		.suggested-actions li {
+			margin: 5px 0;
+		}
+		</style>
+		<?php
+	}
+
+	/**
+	 * Get icon for suggestion category
+	 *
+	 * @param string $category Category name
+	 * @return string Icon HTML
+	 */
+	private function get_category_icon( string $category ): string {
+		$icons = [
+			AnomalySuggestionEngine::CATEGORY_TECHNICAL => '🔧',
+			AnomalySuggestionEngine::CATEGORY_CONTENT => '📝',
+			AnomalySuggestionEngine::CATEGORY_MARKETING => '📈',
+			AnomalySuggestionEngine::CATEGORY_PERFORMANCE => '⚡',
+			AnomalySuggestionEngine::CATEGORY_PLATFORM => '🔗',
+		];
+
+		return $icons[ $category ] ?? '💡';
+	}
+
+	/**
+	 * Get human-readable priority label
+	 *
+	 * @param string $priority Priority level
+	 * @return string Priority label
+	 */
+	private function get_priority_label( string $priority ): string {
+		$labels = [
+			AnomalySuggestionEngine::PRIORITY_CRITICAL => __( 'Critico', 'fp-digital-marketing' ),
+			AnomalySuggestionEngine::PRIORITY_HIGH => __( 'Alto', 'fp-digital-marketing' ),
+			AnomalySuggestionEngine::PRIORITY_MEDIUM => __( 'Medio', 'fp-digital-marketing' ),
+			AnomalySuggestionEngine::PRIORITY_LOW => __( 'Basso', 'fp-digital-marketing' ),
+		];
+
+		return $labels[ $priority ] ?? $priority;
 	}
 
 	/**
