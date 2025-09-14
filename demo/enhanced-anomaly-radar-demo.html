@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FP Digital Marketing Suite - Enhanced Anomaly Radar Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            background: #f1f1f1;
+            color: #23282d;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 23px;
+            font-weight: 400;
+            margin: 0 0 20px 0;
+            line-height: 1.3;
+            color: #23282d;
+        }
+        
+        .wp-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .wp-list-table th,
+        .wp-list-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .wp-list-table th {
+            background: #f9f9f9;
+            font-weight: 600;
+        }
+        
+        .wp-list-table .unacknowledged {
+            border-left: 4px solid #d63638;
+        }
+        
+        .button {
+            display: inline-block;
+            text-decoration: none;
+            font-size: 13px;
+            line-height: 2.15384615;
+            min-height: 30px;
+            margin: 0;
+            padding: 0 10px;
+            cursor: pointer;
+            border-width: 1px;
+            border-style: solid;
+            border-radius: 3px;
+            white-space: nowrap;
+            box-sizing: border-box;
+            background: #f6f7f7;
+            border-color: #ddd;
+            color: #555;
+        }
+        
+        .button:hover {
+            background: #f0f0f1;
+            border-color: #999;
+            color: #23282d;
+        }
+        
+        .button-small {
+            font-size: 11px;
+            height: 24px;
+            line-height: 22px;
+            padding: 0 8px;
+        }
+        
+        .dashicons {
+            font-family: dashicons;
+            font-size: 16px;
+            line-height: 1;
+            width: 16px;
+            height: 16px;
+        }
+        
+        .dashicons-lightbulb:before { content: "\f339"; }
+        .dashicons-arrow-up-alt:before { content: "\f342"; }
+        .dashicons-arrow-down-alt:before { content: "\f346"; }
+        .dashicons-dismiss:before { content: "\f153"; }
+        
+        /* Anomaly suggestions styles */
+        .anomaly-suggestions {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .suggestion-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left-width: 4px;
+        }
+        
+        .suggestion-card.priority-critical {
+            border-left-color: #d63638;
+        }
+        
+        .suggestion-card.priority-high {
+            border-left-color: #dba617;
+        }
+        
+        .suggestion-card.priority-medium {
+            border-left-color: #00a0d2;
+        }
+        
+        .suggestion-card.priority-low {
+            border-left-color: #007cba;
+        }
+        
+        .suggestion-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .suggestion-header h5 {
+            margin: 0;
+            flex-grow: 1;
+        }
+        
+        .category-icon {
+            font-size: 18px;
+        }
+        
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .priority-badge.priority-critical {
+            background: #d63638;
+            color: white;
+        }
+        
+        .priority-badge.priority-high {
+            background: #dba617;
+            color: white;
+        }
+        
+        .priority-badge.priority-medium {
+            background: #00a0d2;
+            color: white;
+        }
+        
+        .priority-badge.priority-low {
+            background: #007cba;
+            color: white;
+        }
+        
+        .suggested-actions {
+            margin-top: 10px;
+        }
+        
+        .suggested-actions ul {
+            margin: 5px 0 0 20px;
+        }
+        
+        .suggested-actions li {
+            margin: 5px 0;
+        }
+        
+        .notice {
+            background: #fff;
+            border-left: 4px solid #00a32a;
+            box-shadow: 0 1px 1px rgba(0,0,0,.04);
+            margin: 5px 15px 2px;
+            padding: 1px 12px;
+        }
+        
+        .notice-success {
+            border-left-color: #00a32a;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>📡 Anomaly Radar - Enhanced Suggestions Demo</h1>
+
+        <div class="notice notice-success">
+            <p><strong>✅ Suggerimenti Intelligenti Implementati!</strong><br>
+            Sistema di analisi anomalie con suggerimenti contestuali e azioni prioritizzate per risoluzione problemi.</p>
+        </div>
+
+        <h2>Anomalie Rilevate con Suggerimenti</h2>
+        
+        <table class="wp-list-table widefat fixed striped fp-anomalies-table">
+            <thead>
+                <tr>
+                    <th>Metrica</th>
+                    <th>Valore</th>
+                    <th>Valore Atteso</th>
+                    <th>Metodo</th>
+                    <th>Gravità</th>
+                    <th>Rilevata</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Bounce Rate Anomaly -->
+                <tr class="unacknowledged" data-anomaly-id="1">
+                    <td><strong>Frequenza di Rimbalzo</strong></td>
+                    <td>
+                        <span class="current-value">85.3%</span>
+                        <span class="dashicons dashicons-arrow-up-alt" style="color: #d63638;"></span>
+                    </td>
+                    <td>65.2%</td>
+                    <td>Z-score</td>
+                    <td><span style="color: #d63638; font-weight: bold;">High</span></td>
+                    <td>2024-09-14 05:30</td>
+                    <td>
+                        <button type="button" class="button button-small toggle-suggestions" data-target="anomaly-1">
+                            <span class="dashicons dashicons-lightbulb"></span> Suggerimenti
+                        </button>
+                    </td>
+                </tr>
+                <tr class="suggestions-row" id="anomaly-1" style="display: none;">
+                    <td colspan="7">
+                        <div class="anomaly-suggestions">
+                            <h4>Suggerimenti per risolvere l'anomalia:</h4>
+                            
+                            <div class="suggestion-card priority-high">
+                                <div class="suggestion-header">
+                                    <span class="category-icon">⚡</span>
+                                    <h5>Ottimizza la velocità di caricamento</h5>
+                                    <span class="priority-badge priority-high">Alto</span>
+                                </div>
+                                <div class="suggestion-content">
+                                    <p>Un sito lento è una delle cause principali di alto bounce rate</p>
+                                    <div class="suggested-actions">
+                                        <strong>Azioni consigliate:</strong>
+                                        <ul>
+                                            <li>Comprimi e ottimizza le immagini</li>
+                                            <li>Minimizza CSS e JavaScript</li>
+                                            <li>Implementa la cache del browser</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="suggestion-card priority-high">
+                                <div class="suggestion-header">
+                                    <span class="category-icon">📝</span>
+                                    <h5>Migliora la rilevanza del contenuto</h5>
+                                    <span class="priority-badge priority-high">Alto</span>
+                                </div>
+                                <div class="suggestion-content">
+                                    <p>Assicurati che il contenuto corrisponda alle aspettative dei visitatori</p>
+                                    <div class="suggested-actions">
+                                        <strong>Azioni consigliate:</strong>
+                                        <ul>
+                                            <li>Rivedi i titoli e le meta description</li>
+                                            <li>Analizza le query di ricerca che portano traffico</li>
+                                            <li>Migliora la struttura e leggibilità del contenuto</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="suggestion-card priority-medium">
+                                <div class="suggestion-header">
+                                    <span class="category-icon">🔧</span>
+                                    <h5>Ottimizza l'esperienza mobile</h5>
+                                    <span class="priority-badge priority-medium">Medio</span>
+                                </div>
+                                <div class="suggestion-content">
+                                    <p>Verifica che il sito sia completamente responsive e usabile su mobile</p>
+                                    <div class="suggested-actions">
+                                        <strong>Azioni consigliate:</strong>
+                                        <ul>
+                                            <li>Testa il sito su diversi dispositivi mobili</li>
+                                            <li>Verifica la dimensione dei pulsanti e link</li>
+                                            <li>Ottimizza i form per mobile</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Sessions Decrease Anomaly -->
+                <tr class="unacknowledged" data-anomaly-id="2">
+                    <td><strong>Sessioni</strong></td>
+                    <td>
+                        <span class="current-value">1,234</span>
+                        <span class="dashicons dashicons-arrow-down-alt" style="color: #d63638;"></span>
+                    </td>
+                    <td>2,150</td>
+                    <td>Moving Average</td>
+                    <td><span style="color: #dba617; font-weight: bold;">Medium</span></td>
+                    <td>2024-09-14 04:15</td>
+                    <td>
+                        <button type="button" class="button button-small toggle-suggestions" data-target="anomaly-2">
+                            <span class="dashicons dashicons-lightbulb"></span> Suggerimenti
+                        </button>
+                    </td>
+                </tr>
+                <tr class="suggestions-row" id="anomaly-2" style="display: none;">
+                    <td colspan="7">
+                        <div class="anomaly-suggestions">
+                            <h4>Suggerimenti per risolvere l'anomalia:</h4>
+                            
+                            <div class="suggestion-card priority-high">
+                                <div class="suggestion-header">
+                                    <span class="category-icon">🔧</span>
+                                    <h5>Verifica problemi tecnici del sito</h5>
+                                    <span class="priority-badge priority-high">Alto</span>
+                                </div>
+                                <div class="suggestion-content">
+                                    <p>Controlla se ci sono problemi di caricamento, errori server o problemi di accessibilità</p>
+                                    <div class="suggested-actions">
+                                        <strong>Azioni consigliate:</strong>
+                                        <ul>
+                                            <li>Testa la velocità del sito</li>
+                                            <li>Verifica i Core Web Vitals</li>
+                                            <li>Controlla i log degli errori del server</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="suggestion-card priority-high">
+                                <div class="suggestion-header">
+                                    <span class="category-icon">📈</span>
+                                    <h5>Analizza i canali di traffico</h5>
+                                    <span class="priority-badge priority-high">Alto</span>
+                                </div>
+                                <div class="suggestion-content">
+                                    <p>Identifica quale canale di traffico ha subito il calo maggiore</p>
+                                    <div class="suggested-actions">
+                                        <strong>Azioni consigliate:</strong>
+                                        <ul>
+                                            <li>Verifica le campagne pubblicitarie attive</li>
+                                            <li>Controlla il posizionamento SEO</li>
+                                            <li>Analizza il traffico social media</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Core Web Vitals Anomaly -->
+                <tr class="unacknowledged" data-anomaly-id="3">
+                    <td><strong>Largest Contentful Paint</strong></td>
+                    <td>
+                        <span class="current-value">4.2s</span>
+                        <span class="dashicons dashicons-arrow-up-alt" style="color: #d63638;"></span>
+                    </td>
+                    <td>2.1s</td>
+                    <td>Threshold</td>
+                    <td><span style="color: #d63638; font-weight: bold;">Critical</span></td>
+                    <td>2024-09-14 03:45</td>
+                    <td>
+                        <button type="button" class="button button-small toggle-suggestions" data-target="anomaly-3">
+                            <span class="dashicons dashicons-lightbulb"></span> Suggerimenti
+                        </button>
+                    </td>
+                </tr>
+                <tr class="suggestions-row" id="anomaly-3" style="display: none;">
+                    <td colspan="7">
+                        <div class="anomaly-suggestions">
+                            <h4>Suggerimenti per risolvere l'anomalia:</h4>
+                            
+                            <div class="suggestion-card priority-high">
+                                <div class="suggestion-header">
+                                    <span class="category-icon">⚡</span>
+                                    <h5>Ottimizza il Largest Contentful Paint</h5>
+                                    <span class="priority-badge priority-high">Alto</span>
+                                </div>
+                                <div class="suggestion-content">
+                                    <p>Migliora i tempi di caricamento dell'elemento principale della pagina</p>
+                                    <div class="suggested-actions">
+                                        <strong>Azioni consigliate:</strong>
+                                        <ul>
+                                            <li>Ottimizza e comprimi le immagini hero</li>
+                                            <li>Implementa lazy loading intelligente</li>
+                                            <li>Riduci il tempo di risposta del server</li>
+                                            <li>Elimina risorse che bloccano il rendering</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Feature Highlights -->
+        <div style="margin-top: 30px; padding: 20px; background: #f0f6fc; border: 1px solid #0969da; border-radius: 6px;">
+            <h3 style="color: #0969da; margin-top: 0;">🚀 Funzionalità Suggerimenti Intelligenti</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Suggerimenti Contestuali</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Analisi specifica per tipo di metrica e deviazione</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Categorizzazione Intelligente</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Technical, Content, Marketing, Performance, Platform</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Prioritizzazione</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Critical, High, Medium, Low con coding colore</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Azioni Specifiche</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Step actionable per risolvere ogni anomalia</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Interface Espandibile</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Suggerimenti on-demand senza sovraccaricare la vista</p>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 4px; border-left: 4px solid #00a32a;">
+                    <strong>✅ Platform-aware</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 14px;">Integrazione con stato connessioni piattaforme</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.toggle-suggestions');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const target = this.getAttribute('data-target');
+                const suggestionRow = document.getElementById(target);
+                const icon = this.querySelector('.dashicons');
+                
+                if (suggestionRow.style.display === 'none') {
+                    suggestionRow.style.display = 'table-row';
+                    icon.classList.remove('dashicons-lightbulb');
+                    icon.classList.add('dashicons-dismiss');
+                } else {
+                    suggestionRow.style.display = 'none';
+                    icon.classList.remove('dashicons-dismiss');
+                    icon.classList.add('dashicons-lightbulb');
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>
