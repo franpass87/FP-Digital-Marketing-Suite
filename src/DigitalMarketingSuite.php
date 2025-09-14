@@ -26,6 +26,7 @@ use FP\DigitalMarketing\Admin\ConversionEventsAdmin;
 use FP\DigitalMarketing\Admin\SegmentationAdmin;
 use FP\DigitalMarketing\Admin\FunnelAnalysisAdmin;
 use FP\DigitalMarketing\Admin\MenuManager;
+use FP\DigitalMarketing\Admin\PlatformConnections;
 use FP\DigitalMarketing\Database\MetricsCacheTable;
 use FP\DigitalMarketing\Database\AlertRulesTable;
 use FP\DigitalMarketing\Database\AnomalyRulesTable;
@@ -183,6 +184,13 @@ class DigitalMarketingSuite {
 	private ?MenuManager $menu_manager = null;
 
 	/**
+	 * Platform Connections instance
+	 *
+	 * @var PlatformConnections|null
+	 */
+	private ?PlatformConnections $platform_connections = null;
+
+	/**
 	 * Constructor with error handling
 	 */
 	public function __construct() {
@@ -300,11 +308,19 @@ class DigitalMarketingSuite {
 		}
 
 		try {
+			$this->platform_connections = new PlatformConnections();
+		} catch ( \Throwable $e ) {
+			$this->platform_connections = null;
+			$this->log_initialization_error( 'PlatformConnections', $e );
+		}
+
+		try {
 			// Create MenuManager with pre-instantiated admin classes
 			$admin_instances = [
 				'Dashboard' => $this->dashboard,
 				'Reports' => $this->reports,
 				'Settings' => $this->settings,
+				'PlatformConnections' => $this->platform_connections,
 				'UTMCampaignManager' => $this->utm_campaign_manager,
 				'FunnelAnalysisAdmin' => $this->funnel_analysis_admin,
 				'SegmentationAdmin' => $this->segmentation_admin,
@@ -486,6 +502,14 @@ class DigitalMarketingSuite {
 			}
 		} catch ( \Throwable $e ) {
 			$this->log_initialization_error( 'FunnelAnalysisAdmin->init()', $e );
+		}
+
+		try {
+			if ( $this->platform_connections !== null ) {
+				$this->platform_connections->init();
+			}
+		} catch ( \Throwable $e ) {
+			$this->log_initialization_error( 'PlatformConnections->init()', $e );
 		}
 
 		// Initialize centralized menu manager
