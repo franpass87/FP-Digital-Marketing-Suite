@@ -149,6 +149,14 @@ register_activation_hook( __FILE__, function () {
 			\FP\DigitalMarketing\Database\CustomerJourneyTable::create_table();
 			\FP\DigitalMarketing\Database\CustomerJourneyTable::create_sessions_table();
 		}
+
+		if ( class_exists( '\FP\DigitalMarketing\Database\CustomReportsTable' ) ) {
+			\FP\DigitalMarketing\Database\CustomReportsTable::create_table();
+		}
+
+		if ( class_exists( '\FP\DigitalMarketing\Database\SocialSentimentTable' ) ) {
+			\FP\DigitalMarketing\Database\SocialSentimentTable::create_table();
+		}
 		
 		// Register custom capabilities with error handling.
 		if ( class_exists( '\FP\DigitalMarketing\Helpers\Capabilities' ) ) {
