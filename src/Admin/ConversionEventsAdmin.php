@@ -638,19 +638,24 @@ class ConversionEventsAdmin {
 	private function handle_delete_event(): void {
 		$event_id = isset( $_POST['event_id'] ) ? (int) $_POST['event_id'] : 0;
 
-		if ( $event_id <= 0 ) {
-			wp_redirect( add_query_arg( 'error', 'invalid_id', wp_get_referer() ) );
-			exit;
-		}
+               $referer = esc_url_raw( wp_get_referer() );
+               if ( empty( $referer ) ) {
+                       $referer = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+               }
 
-		$event = ConversionEvent::load_by_id( $event_id );
-		if ( $event && $event->delete() ) {
-			wp_redirect( add_query_arg( 'message', 'deleted', wp_get_referer() ) );
-		} else {
-			wp_redirect( add_query_arg( 'error', 'delete_failed', wp_get_referer() ) );
-		}
-		exit;
-	}
+               if ( $event_id <= 0 ) {
+                       wp_safe_redirect( add_query_arg( 'error', 'invalid_id', $referer ) );
+                       exit;
+               }
+
+               $event = ConversionEvent::load_by_id( $event_id );
+               if ( $event && $event->delete() ) {
+                       wp_safe_redirect( add_query_arg( 'message', 'deleted', $referer ) );
+               } else {
+                       wp_safe_redirect( add_query_arg( 'error', 'delete_failed', $referer ) );
+               }
+               exit;
+       }
 
 	/**
 	 * Handle mark as duplicate action
@@ -658,21 +663,26 @@ class ConversionEventsAdmin {
 	 * @return void
 	 */
 	private function handle_mark_duplicate(): void {
-		$event_id = isset( $_POST['event_id'] ) ? (int) $_POST['event_id'] : 0;
+               $event_id = isset( $_POST['event_id'] ) ? (int) $_POST['event_id'] : 0;
 
-		if ( $event_id <= 0 ) {
-			wp_redirect( add_query_arg( 'error', 'invalid_id', wp_get_referer() ) );
-			exit;
-		}
+               $referer = esc_url_raw( wp_get_referer() );
+               if ( empty( $referer ) ) {
+                       $referer = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+               }
 
-		$event = ConversionEvent::load_by_id( $event_id );
-		if ( $event && $event->mark_as_duplicate() ) {
-			wp_redirect( add_query_arg( 'message', 'marked_duplicate', wp_get_referer() ) );
-		} else {
-			wp_redirect( add_query_arg( 'error', 'mark_failed', wp_get_referer() ) );
-		}
-		exit;
-	}
+               if ( $event_id <= 0 ) {
+                       wp_safe_redirect( add_query_arg( 'error', 'invalid_id', $referer ) );
+                       exit;
+               }
+
+               $event = ConversionEvent::load_by_id( $event_id );
+               if ( $event && $event->mark_as_duplicate() ) {
+                       wp_safe_redirect( add_query_arg( 'message', 'marked_duplicate', $referer ) );
+               } else {
+                       wp_safe_redirect( add_query_arg( 'error', 'mark_failed', $referer ) );
+               }
+               exit;
+       }
 
 	/**
 	 * Handle bulk actions
