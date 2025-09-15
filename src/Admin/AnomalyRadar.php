@@ -58,8 +58,8 @@ class AnomalyRadar {
 	 * @return void
 	 */
 	public function display_radar_page(): void {
-		$client_id = (int) ( $_GET['client_id'] ?? 0 );
-		$action = $_GET['action'] ?? 'overview';
+                $client_id = (int) ( $_GET['client_id'] ?? 0 );
+                $action = sanitize_key( $_GET['action'] ?? 'overview' );
 
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__( 'Anomaly Radar (KPI Watchdog)', 'fp-digital-marketing' ) . '</h1>';
