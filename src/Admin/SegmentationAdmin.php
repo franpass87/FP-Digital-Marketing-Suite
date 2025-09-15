@@ -163,8 +163,8 @@ class SegmentationAdmin {
 	 * @return void
 	 */
 	public function render_admin_page(): void {
-		$action = $_GET['action'] ?? 'list';
-		$segment_id = isset( $_GET['segment_id'] ) ? (int) $_GET['segment_id'] : 0;
+		$action = sanitize_key( $_GET['action'] ?? 'list' );
+		$segment_id = isset( $_GET['segment_id'] ) ? intval( $_GET['segment_id'] ) : 0;
 
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__( 'Segmentazione Audience', 'fp-digital-marketing' ) . '</h1>';
