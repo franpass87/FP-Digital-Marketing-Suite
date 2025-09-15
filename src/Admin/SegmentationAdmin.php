@@ -535,8 +535,13 @@ class SegmentationAdmin {
 	 * @return void
 	 */
 	private function handle_delete_segment(): void {
-		$segment_id = (int) $_GET['segment_id'];
-		$segment = AudienceSegment::load_by_id( $segment_id );
+                if ( ! isset( $_GET['segment_id'] ) ) {
+                        wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id' ] ) ) );
+                        exit;
+                }
+
+                $segment_id = (int) $_GET['segment_id'];
+                $segment = AudienceSegment::load_by_id( $segment_id );
 
 		if ( ! $segment ) {
 			wp_redirect( add_query_arg( [ 'message' => 'not_found' ], remove_query_arg( [ 'action', 'segment_id' ] ) ) );
