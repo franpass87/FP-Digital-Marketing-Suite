@@ -92,34 +92,54 @@ class Reports {
 			return;
 		}
 
-		// Handle PDF download
-		// Handle PDF download with security verification
-		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_pdf' && isset( $_GET['client_id'] ) ) {
-			if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
-				$this->download_pdf_report( intval( $_GET['client_id'] ) );
-			} else {
-				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
-			}
-		}
+                // Handle PDF download with nonce verification
+                if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_pdf' && isset( $_GET['client_id'] ) ) {
+                        $client_id = intval( $_GET['client_id'] );
+                        $nonce     = sanitize_text_field( $_GET['_wpnonce'] ?? '' );
 
-		// Handle CSV download
-		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_csv' && isset( $_GET['client_id'] ) ) {
-			if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
-				$separator = sanitize_text_field( $_GET['separator'] ?? ',' );
-				$this->download_csv_report( intval( $_GET['client_id'] ), $separator );
-			} else {
-				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
-			}
-		}
+                        if ( ! wp_verify_nonce( $nonce, 'download_pdf_' . $client_id ) ) {
+                                wp_die( esc_html__( 'Nonce non valido', 'fp-digital-marketing' ) );
+                        }
 
-		// Handle custom report download
-		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_custom_report' && isset( $_GET['report_id'] ) ) {
-			if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
-				$this->download_custom_report( intval( $_GET['report_id'] ) );
-			} else {
-				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
-			}
-		}
+                        if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
+                                $this->download_pdf_report( $client_id );
+                        } else {
+                                wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+                        }
+                }
+
+                // Handle CSV download with nonce verification
+                if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_csv' && isset( $_GET['client_id'] ) ) {
+                        $client_id = intval( $_GET['client_id'] );
+                        $nonce     = sanitize_text_field( $_GET['_wpnonce'] ?? '' );
+
+                        if ( ! wp_verify_nonce( $nonce, 'download_csv_' . $client_id ) ) {
+                                wp_die( esc_html__( 'Nonce non valido', 'fp-digital-marketing' ) );
+                        }
+
+                        if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
+                                $separator = sanitize_text_field( $_GET['separator'] ?? ',' );
+                                $this->download_csv_report( $client_id, $separator );
+                        } else {
+                                wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+                        }
+                }
+
+                // Handle custom report download with nonce verification
+                if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_custom_report' && isset( $_GET['report_id'] ) ) {
+                        $report_id = intval( $_GET['report_id'] );
+                        $nonce     = sanitize_text_field( $_GET['_wpnonce'] ?? '' );
+
+                        if ( ! wp_verify_nonce( $nonce, 'download_custom_report_' . $report_id ) ) {
+                                wp_die( esc_html__( 'Nonce non valido', 'fp-digital-marketing' ) );
+                        }
+
+                        if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
+                                $this->download_custom_report( $report_id );
+                        } else {
+                                wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+                        }
+                }
 
 		// Handle custom report generation
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_custom_report' && 
@@ -605,14 +625,14 @@ class Reports {
 						<div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 4px;">
 							<h4 style="margin: 0 0 10px 0;"><?php echo esc_html( $cliente->post_title ); ?></h4>
 							<div style="display: flex; gap: 5px; flex-wrap: wrap;">
-								<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-								   class="button button-secondary">
-									<?php esc_html_e( 'PDF', 'fp-digital-marketing' ); ?>
-								</a>
-								<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_csv', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-								   class="button button-secondary">
-									<?php esc_html_e( 'CSV', 'fp-digital-marketing' ); ?>
-								</a>
+                                                                <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_pdf_' . $cliente->ID ) ); ?>"
+                                                                   class="button button-secondary">
+                                                                        <?php esc_html_e( 'PDF', 'fp-digital-marketing' ); ?>
+                                                                </a>
+                                                                <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_csv', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_csv_' . $cliente->ID ) ); ?>"
+                                                                   class="button button-secondary">
+                                                                        <?php esc_html_e( 'CSV', 'fp-digital-marketing' ); ?>
+                                                                </a>
 							</div>
 						</div>
 					<?php endforeach; ?>
@@ -936,10 +956,10 @@ class Reports {
 									</td>
 									<td>
 										<div style="display: flex; gap: 5px; flex-wrap: wrap;">
-											<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_custom_report', 'report_id' => $report['id'], 'format' => 'pdf' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-											   class="button button-small">PDF</a>
-											<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_custom_report', 'report_id' => $report['id'], 'format' => 'csv' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-											   class="button button-small">CSV</a>
+                                                                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_custom_report', 'report_id' => $report['id'], 'format' => 'pdf' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_custom_report_' . $report['id'] ) ); ?>"
+                                                                                           class="button button-small">PDF</a>
+                                                                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_custom_report', 'report_id' => $report['id'], 'format' => 'csv' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_custom_report_' . $report['id'] ) ); ?>"
+                                                                                           class="button button-small">CSV</a>
 										</div>
 									</td>
 								</tr>
@@ -1331,10 +1351,10 @@ class Reports {
 				<?php echo $demo_html; ?>
 			</div>
 			
-			<a href="<?php echo esc_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => 1 ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-			   class="button button-primary" target="_blank">
-				<?php esc_html_e( 'Scarica Report Demo PDF', 'fp-digital-marketing' ); ?>
-			</a>
+                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => 1 ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_pdf_1' ) ); ?>"
+                           class="button button-primary" target="_blank">
+                                <?php esc_html_e( 'Scarica Report Demo PDF', 'fp-digital-marketing' ); ?>
+                        </a>
 		</div>
 
 		<!-- Debug Section - Data Sources -->
