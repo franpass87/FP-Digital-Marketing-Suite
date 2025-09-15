@@ -688,9 +688,15 @@ class DataExporter {
 	 * @param string $token Export token
 	 * @return string Download URL
 	 */
-	private static function get_download_url( string $token ): string {
-		return admin_url( 'admin-ajax.php?action=fp_download_export&token=' . $token );
-	}
+       private static function get_download_url( string $token ): string {
+               return add_query_arg(
+                       [
+                               'action' => 'fp_download_export',
+                               'token'  => $token,
+                       ],
+                       admin_url( 'admin-ajax.php' )
+               );
+       }
 
 	/**
 	 * Handle export download request

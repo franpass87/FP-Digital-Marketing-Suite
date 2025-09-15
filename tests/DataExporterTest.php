@@ -46,13 +46,19 @@ class DataExporterTest extends TestCase {
 			}
 		}
 
-		if ( ! function_exists( 'admin_url' ) ) {
-			function admin_url( $path ) {
-				return 'http://example.com/wp-admin/' . $path;
-			}
-		}
+                if ( ! function_exists( 'admin_url' ) ) {
+                        function admin_url( $path ) {
+                                return 'http://example.com/wp-admin/' . $path;
+                        }
+                }
 
-		if ( ! function_exists( 'wp_upload_dir' ) ) {
+                if ( ! function_exists( 'add_query_arg' ) ) {
+                        function add_query_arg( $args, $url ) {
+                                return $url . ( strpos( $url, '?' ) === false ? '?' : '&' ) . http_build_query( $args );
+                        }
+                }
+
+                if ( ! function_exists( 'wp_upload_dir' ) ) {
 			function wp_upload_dir() {
 				return [
 					'basedir' => '/tmp',
