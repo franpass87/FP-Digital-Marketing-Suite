@@ -264,11 +264,11 @@ class SegmentationAdmin {
 			echo '<td>';
 			echo '<a href="' . esc_url( $view_url ) . '" class="button button-small">' . esc_html__( 'Visualizza', 'fp-digital-marketing' ) . '</a> ';
 			echo '<a href="' . esc_url( $edit_url ) . '" class="button button-small">' . esc_html__( 'Modifica', 'fp-digital-marketing' ) . '</a> ';
-			echo '<button class="button button-small evaluate-segment" data-segment-id="' . esc_attr( $segment['id'] ) . '">' . esc_html__( 'Valuta', 'fp-digital-marketing' ) . '</button> ';
-			echo '<a href="' . esc_url( wp_nonce_url( $delete_url, self::NONCE_ACTION, 'fp_segmentation_nonce' ) ) . '" class="button button-small button-link-delete" onclick="return confirm(\'' . esc_js( __( 'Sei sicuro di voler eliminare questo segmento?', 'fp-digital-marketing' ) ) . '\')">' . esc_html__( 'Elimina', 'fp-digital-marketing' ) . '</a>';
-			echo '</td>';
-			echo '</tr>';
-		}
+                       echo '<button class="button button-small evaluate-segment" data-segment-id="' . esc_attr( $segment['id'] ) . '">' . esc_html__( 'Valuta', 'fp-digital-marketing' ) . '</button> ';
+                       echo '<a href="' . esc_url( wp_nonce_url( $delete_url, 'fp_delete_segment', 'segment_nonce' ) ) . '" class="button button-small button-link-delete" onclick="return confirm(\'' . esc_js( __( 'Sei sicuro di voler eliminare questo segmento?', 'fp-digital-marketing' ) ) . '\')">' . esc_html__( 'Elimina', 'fp-digital-marketing' ) . '</a>';
+                       echo '</td>';
+                       echo '</tr>';
+               }
 
 		echo '</tbody>';
 		echo '</table>';
@@ -534,28 +534,33 @@ class SegmentationAdmin {
 	 *
 	 * @return void
 	 */
-	private function handle_delete_segment(): void {
-                if ( ! isset( $_GET['segment_id'] ) ) {
-                        wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id' ] ) ) );
-                        exit;
-                }
+       private function handle_delete_segment(): void {
+               if ( ! wp_verify_nonce( $_GET['segment_nonce'] ?? '', 'fp_delete_segment' ) ) {
+                       wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
+                       exit;
+               }
 
-                $segment_id = (int) $_GET['segment_id'];
-                $segment = AudienceSegment::load_by_id( $segment_id );
+               if ( ! isset( $_GET['segment_id'] ) ) {
+                       wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
+                       exit;
+               }
 
-		if ( ! $segment ) {
-			wp_redirect( add_query_arg( [ 'message' => 'not_found' ], remove_query_arg( [ 'action', 'segment_id' ] ) ) );
-			exit;
-		}
+               $segment_id = (int) $_GET['segment_id'];
+               $segment = AudienceSegment::load_by_id( $segment_id );
 
-		if ( $segment->delete() ) {
-			wp_redirect( add_query_arg( [ 'message' => 'deleted' ], remove_query_arg( [ 'action', 'segment_id' ] ) ) );
-			exit;
-		} else {
-			wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id' ] ) ) );
-			exit;
-		}
-	}
+               if ( ! $segment ) {
+                       wp_redirect( add_query_arg( [ 'message' => 'not_found' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
+                       exit;
+               }
+
+               if ( $segment->delete() ) {
+                       wp_redirect( add_query_arg( [ 'message' => 'deleted' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
+                       exit;
+               } else {
+                       wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
+                       exit;
+               }
+       }
 
 	/**
 	 * Sanitize segment data from form
