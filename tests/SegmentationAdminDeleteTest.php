@@ -24,6 +24,12 @@ if ( ! function_exists( 'wp_redirect' ) ) {
     }
 }
 
+if ( ! function_exists( 'wp_verify_nonce' ) ) {
+    function wp_verify_nonce( $nonce, $action ) {
+        return $nonce === 'valid' && $action === 'fp_delete_segment';
+    }
+}
+
 if ( ! defined( 'ARRAY_A' ) ) {
     define( 'ARRAY_A', 'ARRAY_A' );
 }
@@ -49,6 +55,7 @@ class SegmentationAdminDeleteTest extends TestCase {
 
     public function test_delete_without_segment_id_redirects_error(): void {
         $admin = new SegmentationAdmin();
+        $_GET['segment_nonce'] = 'valid';
         try {
             $this->invoke_delete($admin);
             $this->fail('Expected redirect');
@@ -74,6 +81,7 @@ class SegmentationAdminDeleteTest extends TestCase {
         ] ];
 
         $_GET['segment_id'] = 5;
+        $_GET['segment_nonce'] = 'valid';
         $admin = new SegmentationAdmin();
 
         try {
