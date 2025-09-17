@@ -92,15 +92,28 @@ class PerformanceCache {
 		return update_option( self::OPTION_CACHE_SETTINGS, $updated );
 	}
 
-	/**
-	 * Check if caching is enabled
-	 *
-	 * @return bool True if caching is enabled
-	 */
-	public static function is_cache_enabled(): bool {
-		$settings = self::get_cache_settings();
-		return (bool) $settings['enabled'];
-	}
+        /**
+         * Check if caching is enabled
+         *
+         * @return bool True if caching is enabled
+         */
+        public static function is_cache_enabled(): bool {
+                $settings = self::get_cache_settings();
+                return (bool) $settings['enabled'];
+        }
+
+        /**
+         * Wrapper for get_cached to maintain backwards compatibility.
+         *
+         * @param string        $key      Cache key
+         * @param string        $group    Cache group
+         * @param callable|null $callback Callback to generate data if not cached
+         * @param int|null      $ttl      Time to live in seconds
+         * @return mixed Cached or generated data
+         */
+        public static function get( string $key, string $group, ?callable $callback = null, ?int $ttl = null ) {
+                return self::get_cached( $key, $group, $callback, $ttl );
+        }
 
 	/**
 	 * Get cached data with performance monitoring
@@ -165,10 +178,10 @@ class PerformanceCache {
 	 * @param int|null $ttl Time to live in seconds
 	 * @return bool Success status
 	 */
-	public static function set_cached( string $key, string $group, $data, ?int $ttl = null ): bool {
-		if ( ! self::is_cache_enabled() ) {
-			return false;
-		}
+        public static function set_cached( string $key, string $group, $data, ?int $ttl = null ): bool {
+                if ( ! self::is_cache_enabled() ) {
+                        return false;
+                }
 
 		$settings = self::get_cache_settings();
 		$ttl = $ttl ?? $settings['default_ttl'];
@@ -184,10 +197,23 @@ class PerformanceCache {
 		if ( $settings['use_transients'] ) {
 			$transient_key = self::get_transient_key( $key, $group );
 			$success = set_transient( $transient_key, $data, $ttl ) && $success;
-		}
+                }
 
-		return $success;
-	}
+                return $success;
+        }
+
+        /**
+         * Wrapper for set_cached to maintain backwards compatibility.
+         *
+         * @param string   $key   Cache key
+         * @param string   $group Cache group
+         * @param mixed    $data  Data to cache
+         * @param int|null $ttl   Time to live in seconds
+         * @return bool Success status
+         */
+        public static function set( string $key, string $group, $data, ?int $ttl = null ): bool {
+                return self::set_cached( $key, $group, $data, $ttl );
+        }
 
 	/**
 	 * Delete cached data
@@ -196,18 +222,107 @@ class PerformanceCache {
 	 * @param string $group Cache group
 	 * @return bool Success status
 	 */
-	public static function delete_cached( string $key, string $group ): bool {
-		$success = true;
+        public static function delete_cached( string $key, string $group ): bool {
+                $success = true;
 
-		// Delete from object cache
-		$success = wp_cache_delete( $key, $group ) && $success;
+                // Delete from object cache
+                $success = wp_cache_delete( $key, $group ) && $success;
 
-		// Delete from transients
-		$transient_key = self::get_transient_key( $key, $group );
-		$success = delete_transient( $transient_key ) && $success;
+                // Delete from transients
+                $transient_key = self::get_transient_key( $key, $group );
+                $success = delete_transient( $transient_key ) && $success;
 
-		return $success;
-	}
+                return $success;
+        }
+
+        /**
+         * Clear cache entries matching a wildcard pattern.
+         *
+         * @param string      $pattern Pattern supporting `*` and `?` wildcards
+         * @param string|null $group   Optional cache group for object cache invalidation
+         * @return void
+         */
+        public static function clear_cache_by_pattern( string $pattern, ?string $group = null ): void {
+                global $wpdb;
+
+                $patterns = [ $pattern ];
+                $has_transient_prefix = false !== strpos( $pattern, '_transient_' );
+                $has_site_transient_prefix = false !== strpos( $pattern, '_site_transient_' );
+
+                if ( $has_transient_prefix || $has_site_transient_prefix ) {
+                        if ( $has_transient_prefix ) {
+                                $patterns[] = str_replace( '_transient_timeout_', '_transient_', $pattern );
+                                $patterns[] = str_replace( '_transient_', '_transient_timeout_', $pattern );
+                        }
+
+                        if ( $has_site_transient_prefix ) {
+                                $patterns[] = str_replace( '_site_transient_timeout_', '_site_transient_', $pattern );
+                                $patterns[] = str_replace( '_site_transient_', '_site_transient_timeout_', $pattern );
+                        }
+                } else {
+                        $patterns = [
+                                '_transient_' . $pattern,
+                                '_transient_timeout_' . $pattern,
+                                '_site_transient_' . $pattern,
+                                '_site_transient_timeout_' . $pattern,
+                        ];
+                }
+
+                $transient_keys = [];
+
+                foreach ( array_unique( $patterns ) as $like_pattern ) {
+                        $like = self::wildcard_to_like( $like_pattern );
+                        $option_names = $wpdb->get_col(
+                                $wpdb->prepare(
+                                        "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+                                        $like
+                                )
+                        );
+
+                        if ( empty( $option_names ) ) {
+                                continue;
+                        }
+
+                        foreach ( $option_names as $option_name ) {
+                                if ( 0 === strpos( $option_name, '_transient_timeout_' ) ) {
+                                        $transient_keys[ substr( $option_name, strlen( '_transient_timeout_' ) ) ] = true;
+                                        continue;
+                                }
+
+                                if ( 0 === strpos( $option_name, '_transient_' ) ) {
+                                        $transient_keys[ substr( $option_name, strlen( '_transient_' ) ) ] = true;
+                                        continue;
+                                }
+
+                                if ( 0 === strpos( $option_name, '_site_transient_timeout_' ) ) {
+                                        $transient_keys[ substr( $option_name, strlen( '_site_transient_timeout_' ) ) ] = true;
+                                        continue;
+                                }
+
+                                if ( 0 === strpos( $option_name, '_site_transient_' ) ) {
+                                        $transient_keys[ substr( $option_name, strlen( '_site_transient_' ) ) ] = true;
+                                }
+                        }
+                }
+
+                if ( empty( $transient_keys ) ) {
+                        if ( $group ) {
+                                self::invalidate_object_cache_entries( $group, [] );
+                        }
+
+                        return;
+                }
+
+                $transient_names = array_keys( $transient_keys );
+
+                foreach ( $transient_names as $transient_key ) {
+                        delete_transient( $transient_key );
+                }
+
+                if ( $group ) {
+                        self::invalidate_object_cache_entries( $group, $transient_names );
+                }
+        }
 
 	/**
 	 * Invalidate cache by group
@@ -346,21 +461,56 @@ class PerformanceCache {
 	 * @param array $params Additional parameters
 	 * @return string Cache key
 	 */
-	public static function generate_report_key( int $client_id, string $report_type, array $params = [] ): string {
-		$key_data = [
-			'client_id' => $client_id,
-			'type' => $report_type,
-			'params' => $params,
-		];
-		ksort( $key_data );
-		return 'report_' . md5( serialize( $key_data ) );
-	}
+        public static function generate_report_key( int $client_id, string $report_type, array $params = [] ): string {
+                $key_data = [
+                        'client_id' => $client_id,
+                        'type' => $report_type,
+                        'params' => $params,
+                ];
+                ksort( $key_data );
+                return 'report_' . md5( serialize( $key_data ) );
+        }
 
-	/**
-	 * Get transient key with group prefix
-	 *
-	 * @param string $key Cache key
-	 * @param string $group Cache group
+        /**
+         * Convert a wildcard pattern into a SQL LIKE expression.
+         *
+         * @param string $pattern Wildcard pattern supporting `*` and `?` tokens
+         * @return string SQL LIKE compatible pattern
+         */
+        private static function wildcard_to_like( string $pattern ): string {
+                return str_replace( [ '*', '?' ], [ '%', '_' ], $pattern );
+        }
+
+        /**
+         * Invalidate object cache entries derived from transient names.
+         *
+         * @param string $group           Cache group name
+         * @param array  $transient_names Transient identifiers without prefix
+         * @return void
+         */
+        private static function invalidate_object_cache_entries( string $group, array $transient_names ): void {
+                $group_prefix = "fp_dms_{$group}_";
+
+                foreach ( $transient_names as $transient_name ) {
+                        if ( strpos( $transient_name, $group_prefix ) === 0 ) {
+                                $cache_key = substr( $transient_name, strlen( $group_prefix ) );
+                                wp_cache_delete( $cache_key, $group );
+                        } else {
+                                wp_cache_delete( $transient_name, $group );
+                        }
+                }
+
+                $version_key = "cache_version_{$group}";
+                $current_version = wp_cache_get( $version_key, 'cache_versions' );
+                $new_version = $current_version ? $current_version + 1 : 1;
+                wp_cache_set( $version_key, $new_version, 'cache_versions' );
+        }
+
+        /**
+         * Get transient key with group prefix
+         *
+         * @param string $key Cache key
+         * @param string $group Cache group
 	 * @return string Transient key
 	 */
 	private static function get_transient_key( string $key, string $group ): string {
