@@ -123,13 +123,13 @@ class PerformanceCache {
 		$start_time = microtime( true );
 		$cache_hit = false;
 
-		// Try object cache first
-		$cached_data = null;
-		if ( $settings['use_object_cache'] ) {
-			$cached_data = wp_cache_get( $key, $group );
-			if ( $cached_data !== false ) {
-				$cache_hit = true;
-			}
+               // Try object cache first
+               $cached_data = false;
+               if ( $settings['use_object_cache'] ) {
+                       $cached_data = wp_cache_get( $key, $group );
+                       if ( $cached_data !== false ) {
+                               $cache_hit = true;
+                       }
 		}
 
 		// Fallback to transients if object cache failed
