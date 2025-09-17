@@ -251,6 +251,82 @@ class ConversionEventsTest extends TestCase {
 	}
 
 	/**
+	 * Ensure events with different user IDs are not marked as duplicates.
+	 */
+	public function test_events_with_different_user_ids_are_not_marked_as_duplicates(): void {
+		$client_id = 654;
+		$source = 'facebook_ads';
+
+		$base_event = [
+			'event_type' => 'purchase',
+			'value' => 199.99,
+			'currency' => 'EUR',
+			'ip_address' => '198.51.100.10',
+			'timestamp' => '2024-01-05 12:00:00',
+		];
+
+		$first_event = ConversionEventManager::ingest_event(
+			$source,
+			array_merge(
+				$base_event,
+				[
+					'user_id' => 'duplicate-user-a',
+				]
+			),
+			$client_id
+		);
+
+		$this->assertInstanceOf( ConversionEvent::class, $first_event );
+		$this->assertFalse( $first_event->is_duplicate() );
+
+		$second_event = ConversionEventManager::ingest_event(
+			$source,
+			array_merge(
+				$base_event,
+				[
+					'user_id' => 'duplicate-user-b',
+					'timestamp' => '2024-01-05 12:00:30',
+				]
+			),
+			$client_id
+		);
+
+		$this->assertInstanceOf( ConversionEvent::class, $second_event );
+		$this->assertFalse( $second_event->is_duplicate() );
+
+		$user_a_events = ConversionEventsTable::get_events(
+			[
+				'client_id' => $client_id,
+				'user_id' => 'duplicate-user-a',
+			],
+			10,
+			0
+		);
+		$this->assertCount( 1, $user_a_events );
+		$this->assertSame( 'duplicate-user-a', $user_a_events[0]['user_id'] );
+
+		$user_b_events = ConversionEventsTable::get_events(
+			[
+				'client_id' => $client_id,
+				'user_id' => 'duplicate-user-b',
+			],
+			10,
+			0
+		);
+		$this->assertCount( 1, $user_b_events );
+		$this->assertSame( 'duplicate-user-b', $user_b_events[0]['user_id'] );
+		$this->assertEquals(
+			1,
+			ConversionEventsTable::get_events_count(
+				[
+					'client_id' => $client_id,
+					'user_id' => 'duplicate-user-b',
+				]
+			)
+		);
+	}
+
+	/**
 	 * Test bulk event ingestion
 	 */
 	public function test_bulk_ingestion(): void {

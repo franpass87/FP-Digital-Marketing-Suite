@@ -197,6 +197,28 @@ class ConversionEventsTable {
 			}
 		}
 
+		if ( isset( $criteria['user_id'] ) ) {
+			if ( is_array( $criteria['user_id'] ) ) {
+				$user_ids = array_map(
+					static function ( $user_id ) {
+						return sanitize_text_field( (string) $user_id );
+					},
+					$criteria['user_id']
+				);
+
+				if ( empty( $user_ids ) ) {
+					$where_clauses[] = '1=0';
+				} else {
+					$placeholders = implode( ',', array_fill( 0, count( $user_ids ), '%s' ) );
+					$where_clauses[] = "user_id IN ($placeholders)";
+					$where_values = array_merge( $where_values, $user_ids );
+				}
+			} else {
+				$where_clauses[] = 'user_id = %s';
+				$where_values[] = sanitize_text_field( (string) $criteria['user_id'] );
+			}
+		}
+
 		if ( isset( $criteria['source'] ) ) {
 			if ( is_array( $criteria['source'] ) ) {
 				$placeholders = implode( ',', array_fill( 0, count( $criteria['source'] ), '%s' ) );
@@ -276,6 +298,28 @@ class ConversionEventsTable {
 			} else {
 				$where_clauses[] = 'event_type = %s';
 				$where_values[] = $criteria['event_type'];
+			}
+		}
+
+		if ( isset( $criteria['user_id'] ) ) {
+			if ( is_array( $criteria['user_id'] ) ) {
+				$user_ids = array_map(
+					static function ( $user_id ) {
+						return sanitize_text_field( (string) $user_id );
+					},
+					$criteria['user_id']
+				);
+
+				if ( empty( $user_ids ) ) {
+					$where_clauses[] = '1=0';
+				} else {
+					$placeholders = implode( ',', array_fill( 0, count( $user_ids ), '%s' ) );
+					$where_clauses[] = "user_id IN ($placeholders)";
+					$where_values = array_merge( $where_values, $user_ids );
+				}
+			} else {
+				$where_clauses[] = 'user_id = %s';
+				$where_values[] = sanitize_text_field( (string) $criteria['user_id'] );
 			}
 		}
 

@@ -10,6 +10,9 @@ require_once __DIR__ . '/bootstrap.php';
 
 use FP\DigitalMarketing\Models\AudienceSegment;
 use FP\DigitalMarketing\Database\AudienceSegmentTable;
+use FP\DigitalMarketing\Database\ConversionEventsTable;
+use FP\DigitalMarketing\Helpers\ConversionEventManager;
+use FP\DigitalMarketing\Helpers\ConversionEventRegistry;
 use FP\DigitalMarketing\Helpers\SegmentationEngine;
 use PHPUnit\Framework\TestCase;
 
@@ -218,5 +221,115 @@ class AudienceSegmentationTest extends TestCase {
 
 		$segment->update_evaluation_timestamp();
 		$this->assertNotNull( $segment->get_last_evaluated_at() );
+	}
+
+	/**
+	 * Test segment evaluation only considers events for the evaluated user.
+	 */
+	public function test_segment_evaluation_filters_events_by_user(): void {
+		$client_id = 4321;
+
+		ConversionEventsTable::create_table();
+
+		try {
+			$segment = new AudienceSegment( [
+				'name' => 'High Value Buyers',
+				'client_id' => $client_id,
+				'is_active' => true,
+				'rules' => [
+					'logic' => 'AND',
+					'conditions' => [
+						[
+							'type' => 'event',
+							'field' => ConversionEventRegistry::EVENT_PURCHASE,
+							'operator' => 'greater_than',
+							'value' => '1',
+						],
+					],
+				],
+			] );
+
+			$base_event = [
+				'event_type' => 'purchase',
+				'value' => 125.0,
+				'currency' => 'EUR',
+				'ip_address' => '203.0.113.10',
+			];
+
+			ConversionEventManager::ingest_event(
+				'google_analytics_4',
+				array_merge(
+					$base_event,
+					[
+						'user_id' => 'segment-user-a',
+						'timestamp' => '2024-01-03 09:00:00',
+					]
+				),
+				$client_id
+			);
+
+			ConversionEventManager::ingest_event(
+				'google_analytics_4',
+				array_merge(
+					$base_event,
+					[
+						'user_id' => 'segment-user-a',
+						'timestamp' => '2024-01-03 09:10:00',
+					]
+				),
+				$client_id
+			);
+
+			ConversionEventManager::ingest_event(
+				'google_analytics_4',
+				array_merge(
+					$base_event,
+					[
+						'user_id' => 'segment-user-b',
+						'timestamp' => '2024-01-03 09:00:30',
+					]
+				),
+				$client_id
+			);
+
+			$user_a_events = ConversionEventsTable::get_events(
+				[
+					'client_id' => $client_id,
+					'user_id' => 'segment-user-a',
+				],
+				10,
+				0
+			);
+			$this->assertCount( 2, $user_a_events );
+
+			$user_b_events = ConversionEventsTable::get_events(
+				[
+					'client_id' => $client_id,
+					'user_id' => 'segment-user-b',
+				],
+				10,
+				0
+			);
+			$this->assertCount( 1, $user_b_events );
+			$this->assertEquals( 0, $user_b_events[0]['is_duplicate'] );
+			$this->assertEquals(
+				1,
+				ConversionEventsTable::get_events_count(
+					[
+						'client_id' => $client_id,
+						'user_id' => 'segment-user-b',
+					]
+				)
+			);
+
+			$this->assertTrue(
+				SegmentationEngine::evaluate_user_against_segment( 'segment-user-a', $segment )
+			);
+			$this->assertFalse(
+				SegmentationEngine::evaluate_user_against_segment( 'segment-user-b', $segment )
+			);
+		} finally {
+			ConversionEventsTable::drop_table();
+		}
 	}
 }
