@@ -87,10 +87,10 @@ class DetectedAnomaliesTable {
 	public static function drop_table(): bool {
 		global $wpdb;
 
-		$table_name = self::get_table_name();
-		$result = $wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $table_name ) );
-		
-		return $result !== false;
+                $table_name = self::get_table_name();
+                $result = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+
+                return $result !== false;
 	}
 
 	/**

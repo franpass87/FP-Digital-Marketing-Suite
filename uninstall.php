@@ -24,7 +24,24 @@ if ( ! current_user_can( 'activate_plugins' ) ) {
  */
 function fp_dms_cleanup_database_tables() {
     global $wpdb;
-    
+
+    $table_classes = array(
+        '\\FP\\DigitalMarketing\\Database\\MetricsCacheTable' => __DIR__ . '/src/Database/MetricsCacheTable.php',
+        '\\FP\\DigitalMarketing\\Database\\AlertRulesTable' => __DIR__ . '/src/Database/AlertRulesTable.php',
+        '\\FP\\DigitalMarketing\\Database\\AnomalyRulesTable' => __DIR__ . '/src/Database/AnomalyRulesTable.php',
+        '\\FP\\DigitalMarketing\\Database\\DetectedAnomaliesTable' => __DIR__ . '/src/Database/DetectedAnomaliesTable.php',
+    );
+
+    foreach ( $table_classes as $class => $path ) {
+        if ( ! class_exists( $class ) && file_exists( $path ) ) {
+            require_once $path;
+        }
+
+        if ( class_exists( $class ) && method_exists( $class, 'drop_table' ) ) {
+            $class::drop_table();
+        }
+    }
+
     // List of custom tables to remove
     $tables = array(
         $wpdb->prefix . 'fp_dms_clients',
@@ -35,10 +52,10 @@ function fp_dms_cleanup_database_tables() {
         $wpdb->prefix . 'fp_dms_alerts',
         $wpdb->prefix . 'fp_dms_performance_metrics'
     );
-    
+
     // Drop each table
     foreach ( $tables as $table ) {
-        $wpdb->query( $wpdb->prepare( "DROP TABLE IF EXISTS %i", $table ) );
+        $wpdb->query( "DROP TABLE IF EXISTS {$table}" );
     }
 }
 
