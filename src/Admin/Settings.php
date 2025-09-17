@@ -81,6 +81,15 @@ class Settings {
 	private const OPTION_API_KEYS = 'fp_digital_marketing_api_keys';
 
 	/**
+	 * Sensitive API keys stored encrypted.
+	 */
+	private const SENSITIVE_API_KEYS = [
+		'google_client_secret',
+		'api_token',
+		'secret_key',
+	];
+
+	/**
 	 * Sync settings option name
 	 */
 	private const OPTION_SYNC = 'fp_digital_marketing_sync_settings';
@@ -560,6 +569,21 @@ class Settings {
 	 */
 	public function render_api_keys_field(): void {
 		$api_keys = get_option( self::OPTION_API_KEYS, [] );
+
+		if ( ! is_array( $api_keys ) ) {
+		        $api_keys = [];
+		}
+
+		$display_api_keys = $api_keys;
+
+		foreach ( self::SENSITIVE_API_KEYS as $sensitive_key ) {
+		        if ( isset( $api_keys[ $sensitive_key ] ) && is_string( $api_keys[ $sensitive_key ] ) && '' !== $api_keys[ $sensitive_key ] ) {
+		                $display_api_keys[ $sensitive_key ] = Security::decrypt_sensitive_data( $api_keys[ $sensitive_key ] );
+		        } else {
+		                $display_api_keys[ $sensitive_key ] = '';
+		        }
+		}
+
 		$oauth = new GoogleOAuth();
 		$connection_status = $oauth->get_connection_status();
 		?>
@@ -570,10 +594,10 @@ class Settings {
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Client ID', 'fp-digital-marketing' ); ?></th>
 					<td>
-						<input 
-							type="text" 
-							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_id]"
-							value="<?php echo esc_attr( $api_keys['google_client_id'] ?? '' ); ?>"
+		                                <input
+		                                        type="text"
+		                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_id]"
+		                                        value="<?php echo esc_attr( $display_api_keys['google_client_id'] ?? '' ); ?>"
 							class="regular-text"
 							placeholder="<?php esc_attr_e( 'Google OAuth Client ID', 'fp-digital-marketing' ); ?>"
 						/>
@@ -585,10 +609,10 @@ class Settings {
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Client Secret', 'fp-digital-marketing' ); ?></th>
 					<td>
-						<input 
-							type="password" 
-							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_secret]"
-							value="<?php echo esc_attr( $api_keys['google_client_secret'] ?? '' ); ?>"
+		                                <input
+		                                        type="password"
+		                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_secret]"
+		                                        value="<?php echo esc_attr( $display_api_keys['google_client_secret'] ?? '' ); ?>"
 							class="regular-text"
 							placeholder="<?php esc_attr_e( 'Google OAuth Client Secret', 'fp-digital-marketing' ); ?>"
 						/>
@@ -600,10 +624,10 @@ class Settings {
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Property ID', 'fp-digital-marketing' ); ?></th>
 					<td>
-						<input 
-							type="text" 
-							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[ga4_property_id]"
-							value="<?php echo esc_attr( $api_keys['ga4_property_id'] ?? '' ); ?>"
+		                                <input
+		                                        type="text"
+		                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[ga4_property_id]"
+		                                        value="<?php echo esc_attr( $display_api_keys['ga4_property_id'] ?? '' ); ?>"
 							class="regular-text"
 							placeholder="<?php esc_attr_e( 'GA4 Property ID (es: 123456789)', 'fp-digital-marketing' ); ?>"
 						/>
@@ -673,10 +697,10 @@ class Settings {
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Site URL', 'fp-digital-marketing' ); ?></th>
 					<td>
-						<input 
-							type="url" 
-							name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[gsc_site_url]"
-							value="<?php echo esc_attr( $api_keys['gsc_site_url'] ?? '' ); ?>"
+		                                <input
+		                                        type="url"
+		                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[gsc_site_url]"
+		                                        value="<?php echo esc_attr( $display_api_keys['gsc_site_url'] ?? '' ); ?>"
 							class="regular-text"
 							placeholder="<?php printf( esc_attr__( '%s o sc-domain:%s', 'fp-digital-marketing' ), get_site_url() . '/', parse_url( get_site_url(), PHP_URL_HOST ) ); ?>"
 						/>
@@ -825,14 +849,13 @@ class Settings {
 
 		$current_keys = get_option( self::OPTION_API_KEYS, [] );
 		$sanitized = [];
-		$sensitive_keys = [ 'google_client_secret', 'api_token', 'secret_key' ];
 
 		foreach ( $input as $key => $value ) {
-			$sanitized_key = sanitize_key( $key );
-			$sanitized_value = sanitize_text_field( $value );
+		        $sanitized_key = sanitize_key( $key );
+		        $sanitized_value = sanitize_text_field( $value );
 
-			// Encrypt sensitive API keys
-			if ( in_array( $sanitized_key, $sensitive_keys, true ) && ! empty( $sanitized_value ) ) {
+		        // Encrypt sensitive API keys
+		        if ( in_array( $sanitized_key, self::SENSITIVE_API_KEYS, true ) && ! empty( $sanitized_value ) ) {
 				// Only encrypt if value has changed to avoid double encryption
 				if ( ! isset( $current_keys[ $sanitized_key ] ) || 
 					 Security::decrypt_sensitive_data( $current_keys[ $sanitized_key ] ) !== $sanitized_value ) {
@@ -874,19 +897,22 @@ class Settings {
 	 */
 	public function get_api_keys( bool $decrypt_sensitive = true ): array {
 		$api_keys = get_option( self::OPTION_API_KEYS, [] );
-		
-		if ( ! $decrypt_sensitive ) {
-			return $api_keys;
+
+		if ( ! is_array( $api_keys ) ) {
+		        $api_keys = [];
 		}
 
-		$sensitive_keys = [ 'google_client_secret', 'api_token', 'secret_key' ];
+		if ( ! $decrypt_sensitive ) {
+		        return $api_keys;
+		}
+
 		$decrypted_keys = [];
 
 		foreach ( $api_keys as $key => $value ) {
-			if ( in_array( $key, $sensitive_keys, true ) && ! empty( $value ) ) {
-				$decrypted_keys[ $key ] = Security::decrypt_sensitive_data( $value );
-			} else {
-				$decrypted_keys[ $key ] = $value;
+		        if ( in_array( $key, self::SENSITIVE_API_KEYS, true ) && ! empty( $value ) ) {
+		                $decrypted_keys[ $key ] = Security::decrypt_sensitive_data( $value );
+		        } else {
+		                $decrypted_keys[ $key ] = $value;
 			}
 		}
 
