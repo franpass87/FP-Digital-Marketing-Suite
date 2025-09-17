@@ -904,14 +904,16 @@ class ConversionEventsAdmin {
 	 * @return string CSV line
 	 */
 	private function array_to_csv_line( array $data ): string {
-		$escaped_data = array_map( function( $field ) {
-			// Escape quotes and wrap in quotes if necessary
-			$field = str_replace( '"', '""', $field );
-			if ( strpos( $field, ',' ) !== false || strpos( $field, '"' ) !== false || strpos( $field, "\n" ) !== false ) {
-				$field = '"' . $field . '"';
-			}
-			return $field;
-		}, $data );
+                $escaped_data = array_map( function( $field ) {
+                        // Escape quotes and wrap in quotes if necessary
+                        $field = (string) $field;
+                        $quote = '"';
+                        $field = str_replace( $quote, $quote . $quote, $field );
+                        if ( strpos( $field, ',' ) !== false || strpos( $field, $quote ) !== false || strpos( $field, "\n" ) !== false ) {
+                                $field = $quote . $field . $quote;
+                        }
+                        return $field;
+                }, $data );
 		
 		return implode( ',', $escaped_data );
 	}
