@@ -33,30 +33,36 @@ class SyncEngineTest extends TestCase {
 	/**
 	 * Test sync frequency settings
 	 */
-	public function test_get_sync_frequency(): void {
-		// Test default frequency
-		$default_frequency = SyncEngine::get_sync_frequency();
-		$this->assertEquals( 3600, $default_frequency ); // 1 hour default
+        public function test_get_sync_frequency(): void {
+                // Test default frequency mapping.
+                $default_frequency = SyncEngine::get_sync_frequency();
+                $this->assertIsArray( $default_frequency );
+                $this->assertArrayHasKey( 'interval', $default_frequency );
+                $this->assertArrayHasKey( 'slug', $default_frequency );
+                $this->assertSame( 3600, $default_frequency['interval'] ); // 1 hour default
+                $this->assertSame( 'hourly', $default_frequency['slug'] );
 
-		// Test with custom settings
-		update_option( 'fp_digital_marketing_sync_settings', [
-			'sync_frequency' => 'every_15_minutes',
-		] );
-		
-		$frequency = SyncEngine::get_sync_frequency();
-		$this->assertEquals( 900, $frequency ); // 15 minutes
+                // Test with custom settings.
+                update_option( 'fp_digital_marketing_sync_settings', [
+                        'sync_frequency' => 'every_15_minutes',
+                ] );
 
-		// Test hourly setting
-		update_option( 'fp_digital_marketing_sync_settings', [
-			'sync_frequency' => 'hourly',
-		] );
-		
-		$frequency = SyncEngine::get_sync_frequency();
-		$this->assertEquals( 3600, $frequency ); // 1 hour
+                $frequency = SyncEngine::get_sync_frequency();
+                $this->assertSame( 900, $frequency['interval'] ); // 15 minutes
+                $this->assertSame( 'fp_dms_every_15_minutes', $frequency['slug'] );
 
-		// Clean up
-		delete_option( 'fp_digital_marketing_sync_settings' );
-	}
+                // Test hourly setting.
+                update_option( 'fp_digital_marketing_sync_settings', [
+                        'sync_frequency' => 'hourly',
+                ] );
+
+                $frequency = SyncEngine::get_sync_frequency();
+                $this->assertSame( 3600, $frequency['interval'] ); // 1 hour
+                $this->assertSame( 'hourly', $frequency['slug'] );
+
+                // Clean up
+                delete_option( 'fp_digital_marketing_sync_settings' );
+        }
 
 	/**
 	 * Test sync enabled check

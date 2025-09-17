@@ -18,43 +18,96 @@ use FP\DigitalMarketing\Helpers\AlertEngine;
  */
 class SyncEngine {
 
-	/**
-	 * Cron hook name for sync operations
-	 */
-	private const CRON_HOOK = 'fp_dms_sync_data_sources';
+        /**
+         * Cron hook name for sync operations
+         */
+        private const CRON_HOOK = 'fp_dms_sync_data_sources';
 
-	/**
-	 * Default sync frequency in seconds (1 hour)
-	 */
-	private const DEFAULT_SYNC_FREQUENCY = 3600;
+        /**
+         * Default sync frequency option key.
+         */
+        private const DEFAULT_SYNC_OPTION = 'hourly';
 
-	/**
-	 * Initialize sync engine
-	 *
-	 * @return void
-	 */
-	public static function init(): void {
-		add_action( 'init', [ self::class, 'schedule_sync' ] );
-		add_action( self::CRON_HOOK, [ self::class, 'run_sync' ] );
-	}
+        /**
+         * Supported sync frequency definitions.
+         *
+         * @var array<string, array{interval:int, slug:string}>
+         */
+        private const SYNC_FREQUENCIES = [
+                'every_15_minutes' => [
+                        'interval' => 900,
+                        'slug'     => 'fp_dms_every_15_minutes',
+                ],
+                'every_30_minutes' => [
+                        'interval' => 1800,
+                        'slug'     => 'fp_dms_every_30_minutes',
+                ],
+                'hourly' => [
+                        'interval' => 3600,
+                        'slug'     => 'hourly',
+                ],
+                'twice_daily' => [
+                        'interval' => 43200,
+                        'slug'     => 'twicedaily',
+                ],
+                'daily' => [
+                        'interval' => 86400,
+                        'slug'     => 'daily',
+                ],
+        ];
 
-	/**
-	 * Schedule sync if not already scheduled
-	 *
-	 * @return void
-	 */
-	public static function schedule_sync(): void {
-		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
-			$frequency = self::get_sync_frequency();
-			
-			// Schedule hourly sync (demo requirement)
-			wp_schedule_event( 
-				time() + $frequency, 
-				'hourly', 
-				self::CRON_HOOK 
-			);
-		}
-	}
+        /**
+         * Initialize sync engine
+         *
+         * @return void
+         */
+        public static function init(): void {
+                add_filter( 'cron_schedules', [ self::class, 'register_custom_cron_schedules' ] );
+                add_action( 'init', [ self::class, 'schedule_sync' ] );
+                add_action( self::CRON_HOOK, [ self::class, 'run_sync' ] );
+        }
+
+        /**
+         * Schedule sync if not already scheduled
+         *
+         * @return void
+         */
+        public static function schedule_sync(): void {
+                if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
+                        $frequency = self::get_sync_frequency();
+
+                        wp_schedule_event(
+                                time() + $frequency['interval'],
+                                $frequency['slug'],
+                                self::CRON_HOOK
+                        );
+                }
+        }
+
+        /**
+         * Register custom cron schedules used by the sync engine.
+         *
+         * @param array $schedules Existing cron schedules.
+         * @return array Modified cron schedules.
+         */
+        public static function register_custom_cron_schedules( array $schedules ): array {
+                $custom_frequencies = [
+                        'every_15_minutes' => __( 'Every 15 Minutes (FP DMS)', 'fp-digital-marketing' ),
+                        'every_30_minutes' => __( 'Every 30 Minutes (FP DMS)', 'fp-digital-marketing' ),
+                ];
+
+                foreach ( $custom_frequencies as $key => $label ) {
+                        if ( isset( self::SYNC_FREQUENCIES[ $key ] ) ) {
+                                $definition = self::SYNC_FREQUENCIES[ $key ];
+                                $schedules[ $definition['slug'] ] = [
+                                        'interval' => $definition['interval'],
+                                        'display'  => $label,
+                                ];
+                        }
+                }
+
+                return $schedules;
+        }
 
 	/**
 	 * Unschedule sync operations
@@ -391,30 +444,21 @@ class SyncEngine {
 		return ! empty( $settings['enable_sync'] );
 	}
 
-	/**
-	 * Get sync frequency from settings
-	 *
-	 * @return int Sync frequency in seconds
-	 */
-	public static function get_sync_frequency(): int {
-		$settings = get_option( 'fp_digital_marketing_sync_settings', [] );
-		$frequency = $settings['sync_frequency'] ?? 'hourly';
-		
-		switch ( $frequency ) {
-			case 'every_15_minutes':
-				return 900;
-			case 'every_30_minutes':
-				return 1800;
-			case 'hourly':
-				return 3600;
-			case 'twice_daily':
-				return 43200;
-			case 'daily':
-				return 86400;
-			default:
-				return self::DEFAULT_SYNC_FREQUENCY;
-		}
-	}
+        /**
+         * Get sync frequency definition from settings.
+         *
+         * @return array{interval:int, slug:string} Sync frequency definition.
+         */
+        public static function get_sync_frequency(): array {
+                $settings      = get_option( 'fp_digital_marketing_sync_settings', [] );
+                $frequency_key = $settings['sync_frequency'] ?? self::DEFAULT_SYNC_OPTION;
+
+                if ( isset( self::SYNC_FREQUENCIES[ $frequency_key ] ) ) {
+                        return self::SYNC_FREQUENCIES[ $frequency_key ];
+                }
+
+                return self::SYNC_FREQUENCIES[ self::DEFAULT_SYNC_OPTION ];
+        }
 
 	/**
 	 * Check if sync is scheduled
