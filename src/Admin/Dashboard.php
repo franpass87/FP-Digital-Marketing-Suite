@@ -88,11 +88,10 @@ class Dashboard {
 	 */
 	public function add_admin_menu(): void {
 		// Check if centralized MenuManager is active
-		if ( class_exists( '\FP\DigitalMarketing\Admin\MenuManager' ) && 
-		     has_action( 'admin_menu', [ '\FP\DigitalMarketing\Admin\MenuManager', 'register_menus' ] ) ) {
-			// MenuManager will handle menu registration
-			return;
-		}
+                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+                        // MenuManager will handle menu registration
+                        return;
+                }
 
 		// Legacy menu registration (fallback)
 		// Main menu

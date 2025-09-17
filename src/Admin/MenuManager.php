@@ -19,6 +19,13 @@ use FP\DigitalMarketing\Helpers\Capabilities;
  */
 class MenuManager {
 
+        /**
+         * Indicates whether the menu manager has been initialized.
+         *
+         * @var bool
+         */
+        private static bool $initialized = false;
+
 	/**
 	 * Main menu slug
 	 */
@@ -53,12 +60,20 @@ class MenuManager {
 	 *
 	 * @return void
 	 */
-	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'register_menus' ], 5 );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
-		add_action( 'admin_notices', [ $this, 'show_rationalization_notice' ] );
-		add_action( 'wp_ajax_fp_dms_dismiss_menu_notice', [ $this, 'handle_dismiss_notice' ] );
-	}
+        public function init(): void {
+                self::$initialized = true;
+                add_action( 'admin_menu', [ $this, 'register_menus' ], 5 );
+                add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+                add_action( 'admin_notices', [ $this, 'show_rationalization_notice' ] );
+                add_action( 'wp_ajax_fp_dms_dismiss_menu_notice', [ $this, 'handle_dismiss_notice' ] );
+        }
+
+        /**
+         * Returns the initialization state of the menu manager.
+         */
+        public static function is_initialized(): bool {
+                return self::$initialized;
+        }
 
 	/**
 	 * Define the rationalized menu structure
