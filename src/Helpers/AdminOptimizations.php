@@ -60,7 +60,7 @@ class AdminOptimizations {
         wp_enqueue_script(
             'fp-dms-admin-optimizations',
             FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/admin-optimizations.js',
-            [ 'jquery' ],
+            [ 'jquery', 'wp-util' ],
             FP_DIGITAL_MARKETING_VERSION,
             true
         );
