@@ -329,22 +329,39 @@ class AdminOptimizations {
             return false;
         }
 
-        // Check if it's one of our admin pages
-        $fp_dms_pages = [
-            'toplevel_page_fp-digital-marketing-dashboard',
-            'fp-digital-marketing_page_fp-digital-marketing-reports',
-            'fp-digital-marketing_page_fp-cache-performance',
-            'fp-digital-marketing_page_fp-conversion-events-admin',
-            'fp-digital-marketing_page_fp-utm-campaign-manager',
-            'fp-digital-marketing_page_fp-segmentation-admin',
-            'fp-digital-marketing_page_fp-digital-marketing-alerts',
-            'fp-digital-marketing_page_fp-digital-marketing-anomalies',
-            'fp-digital-marketing_page_fp-digital-marketing-settings',
-            'fp-digital-marketing_page_fp-digital-marketing-security',
-            'fp-digital-marketing_page_fp-digital-marketing-onboarding',
+        $main_menu_slug = 'fp-digital-marketing-dashboard';
+
+        $page_slugs = [
+            'fp-digital-marketing-dashboard',
+            'fp-digital-marketing-reports',
+            'fp-utm-campaign-manager',
+            'fp-digital-marketing-funnel-analysis',
+            'fp-audience-segments',
+            'fp-conversion-events',
+            'fp-platform-connections',
+            'fp-digital-marketing-cache-performance',
+            'fp-digital-marketing-alerts',
+            'fp-digital-marketing-anomalies',
+            'fp-digital-marketing-settings',
+            'fp-digital-marketing-security',
+            'fp-digital-marketing-onboarding',
         ];
 
-        return in_array( $screen->id, $fp_dms_pages, true );
+        $screen_ids = [ 'toplevel_page_' . $main_menu_slug ];
+
+        foreach ( $page_slugs as $slug ) {
+            $screen_ids[] = $main_menu_slug . '_page_' . $slug;
+
+            // Legacy prefix support when menus are registered without the "-dashboard" suffix.
+            $screen_ids[] = 'fp-digital-marketing_page_' . $slug;
+        }
+
+        // Client-specific admin tools registered under the Cliente post type menu.
+        $screen_ids[] = 'cliente_page_fp-anomaly-radar';
+
+        $screen_ids = array_values( array_unique( $screen_ids ) );
+
+        return in_array( $screen->id, $screen_ids, true );
     }
 
     /**
