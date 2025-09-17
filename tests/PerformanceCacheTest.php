@@ -13,31 +13,194 @@ use FP\DigitalMarketing\Helpers\PerformanceCache;
  */
 class PerformanceCacheTest extends TestCase {
 
-	/**
-	 * Set up test environment
-	 *
-	 * @return void
-	 */
-	protected function setUp(): void {
-		parent::setUp();
-		
-		// Clear any existing cache settings
-		delete_option( 'fp_digital_marketing_cache_settings' );
-		delete_option( 'fp_digital_marketing_benchmark_data' );
-	}
+        /**
+         * Mocked object cache storage.
+         *
+         * @var array<string, array<string, mixed>>
+         */
+        private $mock_object_cache = [];
+
+        /**
+         * Mocked transient storage.
+         *
+         * @var array<string, mixed>
+         */
+        private $mock_transients = [];
+
+        /**
+         * Mocked cache versions for object cache groups.
+         *
+         * @var array<string, int>
+         */
+        private $mock_cache_versions = [];
+
+        /**
+         * Previously registered WordPress mock functions.
+         *
+         * @var array<string, callable>
+         */
+        private $previous_wp_mock_functions = [];
+
+        /**
+         * Set up test environment
+         *
+         * @return void
+         */
+        protected function setUp(): void {
+                parent::setUp();
+
+                global $wp_mock_functions;
+                global $wp_options;
+
+                $this->mock_object_cache = [];
+                $this->mock_transients = [];
+                $this->mock_cache_versions = [];
+
+                if ( isset( $wp_options ) && is_array( $wp_options ) ) {
+                        foreach ( array_keys( $wp_options ) as $option_name ) {
+                                if ( strpos( $option_name, '_transient_' ) === 0 ) {
+                                        unset( $wp_options[ $option_name ] );
+                                }
+                        }
+                }
+
+                $existing_mocks = [];
+                if ( isset( $wp_mock_functions ) && is_array( $wp_mock_functions ) ) {
+                        $existing_mocks = $wp_mock_functions;
+                }
+
+                $this->previous_wp_mock_functions = $existing_mocks;
+                $wp_mock_functions = $existing_mocks;
+
+                $object_cache =& $this->mock_object_cache;
+                $transients =& $this->mock_transients;
+                $cache_versions =& $this->mock_cache_versions;
+
+                $wp_mock_functions['wp_cache_get'] = function( $key, $group = '' ) use ( &$object_cache, &$cache_versions ) {
+                        if ( 'cache_versions' === $group ) {
+                                return $cache_versions[ $key ] ?? false;
+                        }
+
+                        if ( isset( $object_cache[ $group ][ $key ] ) ) {
+                                $entry = $object_cache[ $group ][ $key ];
+                                if ( is_array( $entry ) && array_key_exists( 'version', $entry ) && array_key_exists( 'data', $entry ) ) {
+                                        $current_version = $cache_versions[ 'cache_version_' . $group ] ?? 0;
+                                        if ( $entry['version'] === $current_version ) {
+                                                return $entry['data'];
+                                        }
+                                        return false;
+                                }
+                                return $entry;
+                        }
+                        return false;
+                };
+
+                $wp_mock_functions['wp_cache_set'] = function( $key, $data, $group = '', $expire = 0 ) use ( &$object_cache, &$cache_versions ) {
+                        if ( 'cache_versions' === $group ) {
+                                $cache_versions[ $key ] = (int) $data;
+                                return true;
+                        }
+
+                        if ( ! isset( $object_cache[ $group ] ) ) {
+                                $object_cache[ $group ] = [];
+                        }
+
+                        $current_version = $cache_versions[ 'cache_version_' . $group ] ?? 0;
+
+                        $object_cache[ $group ][ $key ] = [
+                                'version' => $current_version,
+                                'data'    => $data,
+                        ];
+                        return true;
+                };
+
+                $wp_mock_functions['wp_cache_delete'] = function( $key, $group = '' ) use ( &$object_cache, &$cache_versions ) {
+                        if ( 'cache_versions' === $group ) {
+                                if ( isset( $cache_versions[ $key ] ) ) {
+                                        unset( $cache_versions[ $key ] );
+                                        return true;
+                                }
+                                return false;
+                        }
+
+                        if ( isset( $object_cache[ $group ][ $key ] ) ) {
+                                unset( $object_cache[ $group ][ $key ] );
+                                return true;
+                        }
+                        return false;
+                };
+
+                $wp_mock_functions['get_transient'] = function( $transient ) use ( &$transients ) {
+                        return $transients[ $transient ] ?? false;
+                };
+
+                $wp_mock_functions['set_transient'] = function( $transient, $value, $expiration = 0 ) use ( &$transients ) {
+                        global $wp_options;
+
+                        $transients[ $transient ] = $value;
+
+                        if ( isset( $wp_options ) && is_array( $wp_options ) ) {
+                                $wp_options[ '_transient_' . $transient ] = $value;
+                        }
+
+                        return true;
+                };
+
+                $wp_mock_functions['delete_transient'] = function( $transient ) use ( &$transients ) {
+                        global $wp_options;
+
+                        $deleted = false;
+
+                        if ( isset( $transients[ $transient ] ) ) {
+                                unset( $transients[ $transient ] );
+                                $deleted = true;
+                        }
+
+                        if ( isset( $wp_options ) && is_array( $wp_options ) ) {
+                                $option_key = '_transient_' . $transient;
+                                if ( isset( $wp_options[ $option_key ] ) ) {
+                                        unset( $wp_options[ $option_key ] );
+                                        $deleted = true;
+                                }
+                        }
+
+                        return $deleted;
+                };
+
+                // Clear any existing cache settings
+                delete_option( 'fp_digital_marketing_cache_settings' );
+                delete_option( 'fp_digital_marketing_benchmark_data' );
+        }
 
 	/**
 	 * Clean up after tests
 	 *
 	 * @return void
 	 */
-	protected function tearDown(): void {
-		parent::tearDown();
-		
-		// Clean up test data
-		delete_option( 'fp_digital_marketing_cache_settings' );
-		delete_option( 'fp_digital_marketing_benchmark_data' );
-	}
+        protected function tearDown(): void {
+                global $wp_mock_functions;
+                global $wp_options;
+
+                $wp_mock_functions = $this->previous_wp_mock_functions;
+                $this->previous_wp_mock_functions = [];
+                $this->mock_object_cache = [];
+                $this->mock_transients = [];
+                $this->mock_cache_versions = [];
+
+                if ( isset( $wp_options ) && is_array( $wp_options ) ) {
+                        foreach ( array_keys( $wp_options ) as $option_name ) {
+                                if ( strpos( $option_name, '_transient_' ) === 0 ) {
+                                        unset( $wp_options[ $option_name ] );
+                                }
+                        }
+                }
+
+                // Clean up test data
+                delete_option( 'fp_digital_marketing_cache_settings' );
+                delete_option( 'fp_digital_marketing_benchmark_data' );
+
+                parent::tearDown();
+        }
 
 	/**
 	 * Test default cache settings
@@ -152,7 +315,7 @@ class PerformanceCacheTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testGetCachedWithCallback(): void {
+        public function testGetCachedWithCallback(): void {
 		$cache_key = 'test_key';
 		$cache_group = PerformanceCache::CACHE_GROUP_METRICS;
 		$test_data = [ 'test' => 'data' ];
@@ -174,8 +337,45 @@ class PerformanceCacheTest extends TestCase {
 		// Second call should use cache (callback should not be called)
 		$result2 = PerformanceCache::get_cached( $cache_key, $cache_group, $callback );
 		$this->assertEquals( $test_data, $result2 );
-		$this->assertFalse( $callback_called );
-	}
+                $this->assertFalse( $callback_called );
+        }
+
+        /**
+         * Test transients fallback when object cache is disabled
+         *
+         * @return void
+         */
+        public function testGetCachedUsesTransientsWhenObjectCacheDisabled(): void {
+                PerformanceCache::update_cache_settings(
+                        [
+                                'use_object_cache' => false,
+                                'use_transients' => true,
+                                'enabled' => true,
+                        ]
+                );
+
+                $cache_key = 'transient_only_key';
+                $cache_group = PerformanceCache::CACHE_GROUP_METRICS;
+                $expected_data = [ 'value' => 'generated' ];
+
+                $callback_calls = 0;
+                $callback = function() use ( $expected_data, &$callback_calls ) {
+                        $callback_calls++;
+                        return $expected_data;
+                };
+
+                $result = PerformanceCache::get_cached( $cache_key, $cache_group, $callback );
+                $this->assertEquals( $expected_data, $result );
+                $this->assertEquals( 1, $callback_calls );
+
+                $transient_key = 'fp_dms_' . $cache_group . '_' . $cache_key;
+                $this->assertArrayHasKey( $transient_key, $this->mock_transients );
+                $this->assertEquals( $expected_data, $this->mock_transients[ $transient_key ] );
+
+                $cached_result = PerformanceCache::get_cached( $cache_key, $cache_group, $callback );
+                $this->assertEquals( $expected_data, $cached_result );
+                $this->assertEquals( 1, $callback_calls );
+        }
 
 	/**
 	 * Test cache when disabled

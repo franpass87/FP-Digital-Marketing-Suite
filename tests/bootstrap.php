@@ -663,6 +663,13 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
                 public $insert_id = 0;
 
                 /**
+                 * Options table name.
+                 *
+                 * @var string
+                 */
+                public $options = 'wp_options';
+
+                /**
                  * Simple query preparer that performs basic sprintf replacement.
                  *
                  * @param string $query SQL query with placeholders.
@@ -696,6 +703,27 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
                 }
 
                 public function get_col( $query ) { // phpcs:ignore WordPress.DB
+                        global $wp_options;
+
+                        if (
+                                isset( $wp_options )
+                                && is_array( $wp_options )
+                                && strpos( $query, 'FROM ' . $this->options ) !== false
+                                && preg_match( "/LIKE\s+'([^']+)'/i", $query, $matches )
+                        ) {
+                                $like_pattern = $matches[1];
+                                $prefix = rtrim( $like_pattern, '%' );
+                                $results = [];
+
+                                foreach ( array_keys( $wp_options ) as $option_name ) {
+                                        if ( strpos( $option_name, $prefix ) === 0 ) {
+                                                $results[] = $option_name;
+                                        }
+                                }
+
+                                return $results;
+                        }
+
                         return [];
                 }
 
