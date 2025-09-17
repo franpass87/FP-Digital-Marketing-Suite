@@ -58,27 +58,29 @@ class Capabilities {
 	 * @var array
 	 */
 	private static array $default_role_capabilities = [
-		'administrator' => [
-			self::VIEW_DASHBOARD,
-			self::MANAGE_DATA_SOURCES,
-			self::EXPORT_REPORTS,
-			self::MANAGE_ALERTS,
-			self::MANAGE_SETTINGS,
-			self::MANAGE_CAMPAIGNS,
-			self::MANAGE_CONVERSIONS,
-			self::VIEW_SEGMENTS,
-			self::MANAGE_SEGMENTS,
-			self::FUNNEL_ANALYSIS,
-		],
-		'editor' => [
-			self::VIEW_DASHBOARD,
-			self::EXPORT_REPORTS,
-			self::MANAGE_CAMPAIGNS,
-			self::MANAGE_CONVERSIONS,
-			self::VIEW_SEGMENTS,
-			self::FUNNEL_ANALYSIS,
-		],
-	];
+                'administrator' => [
+                        self::VIEW_DASHBOARD,
+                        self::MANAGE_DATA_SOURCES,
+                        self::EXPORT_REPORTS,
+                        self::MANAGE_ALERTS,
+                        self::MANAGE_SETTINGS,
+                        self::MANAGE_CAMPAIGNS,
+                        self::MANAGE_CONVERSIONS,
+                        self::VIEW_SEGMENTS,
+                        self::VIEW_REPORTS,
+                        self::MANAGE_SEGMENTS,
+                        self::FUNNEL_ANALYSIS,
+                ],
+                'editor' => [
+                        self::VIEW_DASHBOARD,
+                        self::EXPORT_REPORTS,
+                        self::MANAGE_CAMPAIGNS,
+                        self::MANAGE_CONVERSIONS,
+                        self::VIEW_SEGMENTS,
+                        self::VIEW_REPORTS,
+                        self::FUNNEL_ANALYSIS,
+                ],
+        ];
 
 	/**
 	 * Initialize capabilities system
@@ -95,25 +97,58 @@ class Capabilities {
 	 * @return void
 	 */
 	public static function register_capabilities(): void {
-		// Only run this once during plugin activation or when capabilities are missing
-		if ( get_option( 'fp_dms_capabilities_registered', false ) ) {
-			return;
+		$registered_data    = get_option( 'fp_dms_capabilities_registered', [] );
+		$serialized_mapping = wp_json_encode( self::$default_role_capabilities );
+		if ( false === $serialized_mapping ) {
+			$serialized_mapping = json_encode( self::$default_role_capabilities );
 		}
+		$expected_signature = md5( (string) $serialized_mapping );
+		$has_expected_state = is_array( $registered_data )
+			&& isset( $registered_data['signature'] )
+			&& is_string( $registered_data['signature'] )
+			&& hash_equals( $registered_data['signature'], $expected_signature );
 
-		// Add capabilities to roles
-		foreach ( self::$default_role_capabilities as $role_name => $capabilities ) {
-			$role = get_role( $role_name );
-			if ( $role ) {
+		$needs_assignment = ! $has_expected_state;
+
+		if ( ! $needs_assignment ) {
+			foreach ( self::$default_role_capabilities as $role_name => $capabilities ) {
+				$role = get_role( $role_name );
+				if ( ! $role ) {
+					continue;
+				}
+
 				foreach ( $capabilities as $capability ) {
-					$role->add_cap( $capability, true );
+					if ( ! $role->has_cap( $capability ) ) {
+						$needs_assignment = true;
+						break 2;
+					}
 				}
 			}
 		}
 
-		// Mark capabilities as registered
-		update_option( 'fp_dms_capabilities_registered', true );
+		if ( ! $needs_assignment ) {
+			return;
+		}
 
-		// Log the capability registration
+		foreach ( self::$default_role_capabilities as $role_name => $capabilities ) {
+			$role = get_role( $role_name );
+			if ( ! $role ) {
+				continue;
+			}
+
+			foreach ( $capabilities as $capability ) {
+				$role->add_cap( $capability, true );
+			}
+		}
+
+		$option_payload = [
+			'signature'  => $expected_signature,
+			'version'    => defined( 'FP_DIGITAL_MARKETING_VERSION' ) ? FP_DIGITAL_MARKETING_VERSION : '1.0.0',
+			'updated_at' => time(),
+		];
+
+		update_option( 'fp_dms_capabilities_registered', $option_payload );
+
 		Security::log_security_event( 'capabilities_registered', [
 			'capabilities' => self::$custom_capabilities,
 			'roles' => array_keys( self::$default_role_capabilities ),
