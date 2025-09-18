@@ -73,15 +73,37 @@ class SyncEngine {
          * @return void
          */
         public static function schedule_sync(): void {
-                if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
-                        $frequency = self::get_sync_frequency();
+                $settings = get_option( 'fp_digital_marketing_sync_settings', [] );
 
-                        wp_schedule_event(
-                                time() + $frequency['interval'],
-                                $frequency['slug'],
-                                self::CRON_HOOK
-                        );
+                if ( ! is_array( $settings ) ) {
+                        $settings = [];
                 }
+
+                self::schedule_sync_with_settings( $settings );
+        }
+
+        /**
+         * Schedule sync using provided settings.
+         *
+         * @param array $settings Sync settings array.
+         * @return void
+         */
+        public static function schedule_sync_with_settings( array $settings ): void {
+                if ( empty( $settings['enable_sync'] ) ) {
+                        return;
+                }
+
+                if ( wp_next_scheduled( self::CRON_HOOK ) ) {
+                        return;
+                }
+
+                $frequency = self::get_sync_frequency( $settings );
+
+                wp_schedule_event(
+                        time() + $frequency['interval'],
+                        $frequency['slug'],
+                        self::CRON_HOOK
+                );
         }
 
         /**
@@ -447,10 +469,18 @@ class SyncEngine {
         /**
          * Get sync frequency definition from settings.
          *
+         * @param array|null $settings Optional settings array to evaluate.
          * @return array{interval:int, slug:string} Sync frequency definition.
          */
-        public static function get_sync_frequency(): array {
-                $settings      = get_option( 'fp_digital_marketing_sync_settings', [] );
+        public static function get_sync_frequency( ?array $settings = null ): array {
+                if ( null === $settings ) {
+                        $settings = get_option( 'fp_digital_marketing_sync_settings', [] );
+                }
+
+                if ( ! is_array( $settings ) ) {
+                        $settings = [];
+                }
+
                 $frequency_key = $settings['sync_frequency'] ?? self::DEFAULT_SYNC_OPTION;
 
                 if ( isset( self::SYNC_FREQUENCIES[ $frequency_key ] ) ) {
