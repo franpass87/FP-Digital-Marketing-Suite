@@ -15,6 +15,7 @@ use FP\DigitalMarketing\Helpers\SegmentationEngine;
 use FP\DigitalMarketing\Helpers\ConversionEventRegistry;
 use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\PostTypes\ClientePostType;
+use FP\DigitalMarketing\Admin\MenuManager;
 
 /**
  * Segmentation Admin class
@@ -47,13 +48,17 @@ class SegmentationAdmin {
 
 	/**
 	 * Add admin menu
-	 *
-	 * @return void
-	 */
-	public function add_admin_menu(): void {
-		add_submenu_page(
-			'fp-digital-marketing-dashboard',
-			__( 'Segmentazione Audience', 'fp-digital-marketing' ),
+        *
+         * @return void
+         */
+        public function add_admin_menu(): void {
+                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+                        return;
+                }
+
+                add_submenu_page(
+                        'fp-digital-marketing-dashboard',
+                        __( 'Segmentazione Audience', 'fp-digital-marketing' ),
 			__( '👥 Segmentazione', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_SEGMENTS,
 			self::PAGE_SLUG,

@@ -15,6 +15,7 @@ use FP\DigitalMarketing\Helpers\AlertEngine;
 use FP\DigitalMarketing\Helpers\AnomalyDetector;
 use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Admin\MenuManager;
 
 /**
  * AnomalyDetectionAdmin class for managing anomaly detection interface
@@ -47,13 +48,17 @@ class AnomalyDetectionAdmin {
 
 	/**
 	 * Add admin menu
-	 *
-	 * @return void
-	 */
-	public function add_admin_menu(): void {
-		add_submenu_page(
-			'fp-digital-marketing-dashboard',
-			__( 'Rilevazione Anomalie', 'fp-digital-marketing' ),
+        *
+         * @return void
+         */
+        public function add_admin_menu(): void {
+                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+                        return;
+                }
+
+                add_submenu_page(
+                        'fp-digital-marketing-dashboard',
+                        __( 'Rilevazione Anomalie', 'fp-digital-marketing' ),
 			__( '🔍 Rilevazione Anomalie', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_ALERTS,
 			'fp-digital-marketing-anomalies',
