@@ -448,10 +448,61 @@ class PerformanceCache {
 	 * @param array $params Query parameters
 	 * @return string Cache key
 	 */
-	public static function generate_metrics_key( array $params ): string {
-		ksort( $params );
-		return 'metrics_' . md5( serialize( $params ) );
-	}
+        public static function generate_metrics_key( array $params ): string {
+                ksort( $params );
+
+                $prefix_parts = [];
+
+                $client_component = self::normalize_key_component( $params['client_id'] ?? 'global' );
+                if ( '' === $client_component ) {
+                        $client_component = 'global';
+                }
+                $prefix_parts[] = 'client_' . $client_component;
+
+                if ( array_key_exists( 'method', $params ) ) {
+                        $method_component = self::normalize_key_component( $params['method'] );
+                        if ( '' === $method_component ) {
+                                $method_component = 'default';
+                        }
+                        $prefix_parts[] = 'method_' . $method_component;
+                }
+
+                if ( array_key_exists( 'segment', $params ) ) {
+                        $segment_component = self::normalize_key_component( $params['segment'] );
+                        if ( '' === $segment_component ) {
+                                $segment_component = 'all';
+                        }
+                        $prefix_parts[] = 'segment_' . $segment_component;
+                }
+
+                $prefix = implode( '_', $prefix_parts );
+
+                return sprintf(
+                        'metrics_%s_%s',
+                        $prefix,
+                        md5( serialize( $params ) )
+                );
+        }
+
+        /**
+         * Normalize a value for usage in cache key components.
+         *
+         * @param mixed $value Value to normalize
+         * @return string Normalized value limited to alphanumeric characters
+         */
+        private static function normalize_key_component( $value ): string {
+                if ( is_bool( $value ) ) {
+                        $value = $value ? 'true' : 'false';
+                } elseif ( is_array( $value ) || is_object( $value ) ) {
+                        $encoded = json_encode( $value );
+                        $value = false !== $encoded ? $encoded : '';
+                }
+
+                $value = strtolower( (string) $value );
+                $value = preg_replace( '/[^a-z0-9]+/', '_', $value );
+
+                return trim( (string) $value, '_' );
+        }
 
 	/**
 	 * Generate cache key for reports

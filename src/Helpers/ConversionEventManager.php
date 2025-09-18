@@ -405,18 +405,18 @@ class ConversionEventManager {
 	 * @param string $event_type Event type
 	 * @return void
 	 */
-	private static function clear_related_caches( int $client_id, string $event_type ): void {
-		// Clear conversion-related performance caches
-		$cache_patterns = [
-			"metrics_aggregated_client_{$client_id}_*",
-			"conversion_events_client_{$client_id}_*",
-			"conversion_summary_{$client_id}_*",
-		];
+        private static function clear_related_caches( int $client_id, string $event_type ): void {
+                $base_key = PerformanceCache::generate_metrics_key([
+                        'client_id' => $client_id,
+                ]);
 
-		foreach ( $cache_patterns as $pattern ) {
-			PerformanceCache::clear_cache_by_pattern( $pattern );
-		}
-	}
+                $prefix_end = strrpos( $base_key, '_' );
+                $prefix = false === $prefix_end ? $base_key : substr( $base_key, 0, $prefix_end );
+                $pattern = $prefix . '_*';
+
+                PerformanceCache::clear_cache_by_pattern( $pattern, PerformanceCache::CACHE_GROUP_AGGREGATED );
+                PerformanceCache::clear_cache_by_pattern( $pattern, PerformanceCache::CACHE_GROUP_REPORTS );
+        }
 
 	/**
 	 * Get conversion funnel analysis
