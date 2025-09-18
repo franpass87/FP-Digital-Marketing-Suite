@@ -23,23 +23,27 @@ class MetricsAggregator {
 	/**
 	 * Default fallback values for missing data
 	 */
-	private const DEFAULT_FALLBACKS = [
-		MetricsSchema::KPI_SESSIONS => 0,
-		MetricsSchema::KPI_USERS => 0,
-		MetricsSchema::KPI_PAGEVIEWS => 0,
-		MetricsSchema::KPI_BOUNCE_RATE => 0.0,
-		MetricsSchema::KPI_CONVERSIONS => 0,
-		MetricsSchema::KPI_REVENUE => 0.0,
-		MetricsSchema::KPI_IMPRESSIONS => 0,
-		MetricsSchema::KPI_CLICKS => 0,
-		MetricsSchema::KPI_CTR => 0.0,
-		MetricsSchema::KPI_CPC => 0.0,
-		MetricsSchema::KPI_COST => 0.0,
-		MetricsSchema::KPI_ORGANIC_CLICKS => 0,
-		MetricsSchema::KPI_ORGANIC_IMPRESSIONS => 0,
-		MetricsSchema::KPI_EMAIL_OPENS => 0,
-		MetricsSchema::KPI_EMAIL_CLICKS => 0,
-	];
+        private const DEFAULT_FALLBACKS = [
+                MetricsSchema::KPI_SESSIONS => 0,
+                MetricsSchema::KPI_USERS => 0,
+                MetricsSchema::KPI_PAGEVIEWS => 0,
+                MetricsSchema::KPI_BOUNCE_RATE => 0.0,
+                MetricsSchema::KPI_CONVERSIONS => 0,
+                MetricsSchema::KPI_REVENUE => 0.0,
+                MetricsSchema::KPI_IMPRESSIONS => 0,
+                MetricsSchema::KPI_CLICKS => 0,
+                MetricsSchema::KPI_CTR => 0.0,
+                MetricsSchema::KPI_CPC => 0.0,
+                MetricsSchema::KPI_COST => 0.0,
+                MetricsSchema::KPI_ORGANIC_CLICKS => 0,
+                MetricsSchema::KPI_ORGANIC_IMPRESSIONS => 0,
+                MetricsSchema::KPI_AVG_POSITION => 0.0,
+                MetricsSchema::KPI_LCP => 0.0,
+                MetricsSchema::KPI_INP => 0.0,
+                MetricsSchema::KPI_CLS => 0.0,
+                MetricsSchema::KPI_EMAIL_OPENS => 0,
+                MetricsSchema::KPI_EMAIL_CLICKS => 0,
+        ];
 
 	/**
 	 * Get aggregated metrics for a client across all sources
@@ -137,11 +141,15 @@ class MetricsAggregator {
 			// Apply aggregation method
 			$aggregation_method = MetricsSchema::get_aggregation_method( $normalized_kpi );
 			
-			if ( $aggregation_method === 'sum' ) {
-				$aggregated[ $normalized_kpi ]['total_value'] += $value;
-			} elseif ( $aggregation_method === 'average' ) {
-				$aggregated[ $normalized_kpi ]['total_value'] = array_sum( $aggregated[ $normalized_kpi ]['values'] ) / $aggregated[ $normalized_kpi ]['count'];
-			}
+                        if ( $aggregation_method === 'sum' ) {
+                                $aggregated[ $normalized_kpi ]['total_value'] += $value;
+                        } elseif ( in_array( $aggregation_method, [ 'average', 'avg' ], true ) ) {
+                                if ( $aggregated[ $normalized_kpi ]['count'] > 0 ) {
+                                        $aggregated[ $normalized_kpi ]['total_value'] = array_sum( $aggregated[ $normalized_kpi ]['values'] ) / $aggregated[ $normalized_kpi ]['count'];
+                                }
+                        } elseif ( $aggregation_method === 'percentile_75' ) {
+                                $aggregated[ $normalized_kpi ]['total_value'] = self::calculate_percentile( $aggregated[ $normalized_kpi ]['values'], 0.75 );
+                        }
 		}
 
 		// Apply fallbacks for missing KPIs
@@ -402,15 +410,50 @@ class MetricsAggregator {
 			];
 		}
 
-		return $mock_data;
-	}
+                return $mock_data;
+        }
 
-	/**
-	 * Apply fallback values for missing KPIs
-	 *
-	 * @param array $aggregated Existing aggregated data
-	 * @param array $requested_kpis Requested KPIs
-	 * @return array Aggregated data with fallbacks applied
+        /**
+         * Calculate a percentile value from a dataset.
+         *
+         * @param array $values     Collection of numeric values.
+         * @param float $percentile Percentile to calculate (0 - 1 range).
+         * @return float Calculated percentile value.
+         */
+        private static function calculate_percentile( array $values, float $percentile ): float {
+                if ( empty( $values ) ) {
+                        return 0.0;
+                }
+
+                sort( $values );
+
+                $count = count( $values );
+                if ( $count === 1 ) {
+                        return (float) $values[0];
+                }
+
+                $percentile = max( 0.0, min( 1.0, $percentile ) );
+                $rank = ( $count - 1 ) * $percentile;
+                $lower_index = (int) floor( $rank );
+                $upper_index = (int) ceil( $rank );
+
+                if ( $lower_index === $upper_index ) {
+                        return (float) $values[ $lower_index ];
+                }
+
+                $lower_value = (float) $values[ $lower_index ];
+                $upper_value = (float) $values[ $upper_index ];
+                $weight = $rank - $lower_index;
+
+                return $lower_value + $weight * ( $upper_value - $lower_value );
+        }
+
+        /**
+         * Apply fallback values for missing KPIs
+         *
+         * @param array $aggregated Existing aggregated data
+         * @param array $requested_kpis Requested KPIs
+         * @return array Aggregated data with fallbacks applied
 	 */
 	private static function apply_fallbacks( array $aggregated, array $requested_kpis = [] ): array {
 		$all_kpis = ! empty( $requested_kpis ) ? $requested_kpis : array_keys( self::DEFAULT_FALLBACKS );
@@ -959,8 +1002,9 @@ class MetricsAggregator {
 			return 'stable';
 		}
 
-		$first_half = array_slice( $values, 0, ceil( count( $values ) / 2 ) );
-		$second_half = array_slice( $values, floor( count( $values ) / 2 ) );
+                $values_count = count( $values );
+                $first_half = array_slice( $values, 0, (int) ceil( $values_count / 2 ) );
+                $second_half = array_slice( $values, (int) floor( $values_count / 2 ) );
 
 		$first_avg = array_sum( $first_half ) / count( $first_half );
 		$second_avg = array_sum( $second_half ) / count( $second_half );

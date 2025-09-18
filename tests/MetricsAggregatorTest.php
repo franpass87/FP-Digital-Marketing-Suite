@@ -11,16 +11,102 @@ use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Models\MetricsCache;
 
 /**
+ * Lightweight wpdb stub to control database responses in tests.
+ */
+class WPDBStub {
+
+        /**
+         * Database table prefix.
+         *
+         * @var string
+         */
+        public $prefix = 'wp_';
+
+        /**
+         * Mocked query results returned by get_results.
+         *
+         * @var array
+         */
+        public $results = [];
+
+        /**
+         * Insert id placeholder for compatibility.
+         *
+         * @var int
+         */
+        public $insert_id = 0;
+
+        /**
+         * Mimic wpdb::prepare by returning the original query.
+         *
+         * @param string $query SQL query.
+         * @param mixed  ...$args Unused parameters.
+         * @return string Prepared query.
+         */
+        public function prepare( string $query, ...$args ): string { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+                return $query;
+        }
+
+        /**
+         * Return the configured mock results for a query.
+         *
+         * @param mixed $query SQL query.
+         * @return array Mocked results.
+         */
+        public function get_results( $query ): array { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+                return $this->results;
+        }
+
+        /**
+         * Provide compatibility for calls to get_var.
+         *
+         * @param mixed $query SQL query.
+         * @return mixed Null for tests.
+         */
+        public function get_var( $query = null, $x = 0, $y = 0 ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+                return null;
+        }
+
+        /**
+         * Simulate insert operations.
+         *
+         * @return int Always indicates success.
+         */
+        public function insert( ...$args ): int { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+                $this->insert_id++;
+                return 1;
+        }
+
+        /**
+         * Provide compatibility for query method.
+         *
+         * @return bool Always success.
+         */
+        public function query( ...$args ): bool { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+                return true;
+        }
+
+        /**
+         * Return a default charset for table creation helpers.
+         *
+         * @return string Charset string.
+         */
+        public function get_charset_collate(): string {
+                return 'utf8_general_ci';
+        }
+}
+
+/**
  * Test class for MetricsAggregator
  */
 class MetricsAggregatorTest extends TestCase {
 
-	/**
-	 * Mock wpdb object
-	 *
-	 * @var object
-	 */
-	private $wpdb_mock;
+        /**
+         * Mock wpdb object
+         *
+         * @var WPDBStub
+         */
+        private $wpdb_mock;
 
 	/**
 	 * Set up test environment
@@ -28,15 +114,13 @@ class MetricsAggregatorTest extends TestCase {
 	public function setUp(): void {
 		parent::setUp();
 
-		// Create mock wpdb
-                $this->wpdb_mock = $this->createMock( stdClass::class );
-                $this->wpdb_mock->prefix = 'wp_';
-                $this->wpdb_mock->method( 'prepare' )->willReturnArgument( 0 );
+                // Create mock wpdb
+                $this->wpdb_mock = new WPDBStub();
 
-		// Set global wpdb
-		global $wpdb;
-		$wpdb = $this->wpdb_mock;
-	}
+                // Set global wpdb
+                global $wpdb;
+                $wpdb = $this->wpdb_mock;
+        }
 
 	/**
 	 * Test generating mock data
@@ -79,11 +163,11 @@ class MetricsAggregatorTest extends TestCase {
 	/**
 	 * Test getting aggregated metrics with mocked MetricsCache
 	 */
-	public function test_get_aggregated_metrics(): void {
-		// Since we can't easily mock static methods in this setup,
-		// we'll test the core normalization and aggregation logic instead
-		
-		// Test metric normalization
+        public function test_get_aggregated_metrics(): void {
+                // Since we can't easily mock static methods in this setup,
+                // we'll test the core normalization and aggregation logic instead
+
+                // Test metric normalization
 		$normalized_sessions = MetricsSchema::normalize_metric_name( 'google_analytics_4', 'sessions' );
 		$this->assertEquals( MetricsSchema::KPI_SESSIONS, $normalized_sessions );
 
@@ -142,16 +226,122 @@ class MetricsAggregatorTest extends TestCase {
 		$this->assertArrayHasKey( MetricsSchema::KPI_USERS, $aggregated );
 		$this->assertArrayHasKey( MetricsSchema::KPI_IMPRESSIONS, $aggregated );
 
-		$this->assertEquals( 1500, $aggregated[ MetricsSchema::KPI_SESSIONS ]['total_value'] );
-		$this->assertEquals( 1200, $aggregated[ MetricsSchema::KPI_USERS ]['total_value'] );
-		$this->assertEquals( 25000, $aggregated[ MetricsSchema::KPI_IMPRESSIONS ]['total_value'] );
-	}
+                $this->assertEquals( 1500, $aggregated[ MetricsSchema::KPI_SESSIONS ]['total_value'] );
+                $this->assertEquals( 1200, $aggregated[ MetricsSchema::KPI_USERS ]['total_value'] );
+                $this->assertEquals( 25000, $aggregated[ MetricsSchema::KPI_IMPRESSIONS ]['total_value'] );
+        }
 
-	/**
-	 * Test fallback application
-	 */
-	public function test_fallback_application(): void {
-		// Test with empty data to ensure fallbacks are applied
+        /**
+         * Ensure average and percentile aggregations work for search and Core Web Vitals metrics.
+         */
+        public function test_average_and_percentile_aggregations(): void {
+                $client_id = 456;
+                $period_start = '2024-03-01 00:00:00';
+                $period_end = '2024-03-31 23:59:59';
+
+                $dataset = [
+                        (object) [
+                                'source' => 'google_search_console',
+                                'metric' => 'position',
+                                'value' => '2.5',
+                        ],
+                        (object) [
+                                'source' => 'google_search_console',
+                                'metric' => 'position',
+                                'value' => '3.5',
+                        ],
+                        (object) [
+                                'source' => 'core_web_vitals',
+                                'metric' => 'lcp',
+                                'value' => '1800',
+                        ],
+                        (object) [
+                                'source' => 'core_web_vitals',
+                                'metric' => 'lcp',
+                                'value' => '2600',
+                        ],
+                        (object) [
+                                'source' => 'core_web_vitals',
+                                'metric' => 'lcp',
+                                'value' => '4000',
+                        ],
+                        (object) [
+                                'source' => 'core_web_vitals',
+                                'metric' => 'inp',
+                                'value' => '150',
+                        ],
+                        (object) [
+                                'source' => 'core_web_vitals',
+                                'metric' => 'inp',
+                                'value' => '450',
+                        ],
+                        (object) [
+                                'source' => 'core_web_vitals',
+                                'metric' => 'cls',
+                                'value' => '0.05',
+                        ],
+                        (object) [
+                                'source' => 'core_web_vitals',
+                                'metric' => 'cls',
+                                'value' => '0.12',
+                        ],
+                        (object) [
+                                'source' => 'core_web_vitals',
+                                'metric' => 'cls',
+                                'value' => '0.30',
+                        ],
+                ];
+
+                $this->wpdb_mock->results = $dataset;
+
+                $kpis = [
+                        MetricsSchema::KPI_AVG_POSITION,
+                        MetricsSchema::KPI_LCP,
+                        MetricsSchema::KPI_INP,
+                        MetricsSchema::KPI_CLS,
+                ];
+
+                $aggregated = MetricsAggregator::get_aggregated_metrics( $client_id, $period_start, $period_end, $kpis );
+
+                $this->assertEqualsWithDelta( 3.0, $aggregated[ MetricsSchema::KPI_AVG_POSITION ]['total_value'], 0.0001 );
+                $this->assertEquals( 2, $aggregated[ MetricsSchema::KPI_AVG_POSITION ]['count'] );
+
+                $this->assertEqualsWithDelta( 3300.0, $aggregated[ MetricsSchema::KPI_LCP ]['total_value'], 0.0001 );
+                $this->assertEquals( 3, $aggregated[ MetricsSchema::KPI_LCP ]['count'] );
+
+                $this->assertEqualsWithDelta( 375.0, $aggregated[ MetricsSchema::KPI_INP ]['total_value'], 0.0001 );
+                $this->assertEquals( 2, $aggregated[ MetricsSchema::KPI_INP ]['count'] );
+
+                $this->assertEqualsWithDelta( 0.21, $aggregated[ MetricsSchema::KPI_CLS ]['total_value'], 0.0001 );
+                $this->assertEquals( 3, $aggregated[ MetricsSchema::KPI_CLS ]['count'] );
+
+                // Reset dataset for summary call to avoid cache side effects.
+                $this->wpdb_mock->results = $dataset;
+
+                $summary = MetricsAggregator::get_kpi_summary( $client_id, $period_start, $period_end );
+
+                $this->assertArrayHasKey( MetricsSchema::KPI_AVG_POSITION, $summary );
+                $this->assertEqualsWithDelta( 3.0, $summary[ MetricsSchema::KPI_AVG_POSITION ]['value'], 0.0001 );
+                $this->assertTrue( $summary[ MetricsSchema::KPI_AVG_POSITION ]['has_data'] );
+
+                $this->assertArrayHasKey( MetricsSchema::KPI_LCP, $summary );
+                $this->assertEqualsWithDelta( 3300.0, $summary[ MetricsSchema::KPI_LCP ]['value'], 0.0001 );
+                $this->assertTrue( $summary[ MetricsSchema::KPI_LCP ]['has_data'] );
+
+                $this->assertArrayHasKey( MetricsSchema::KPI_INP, $summary );
+                $this->assertEqualsWithDelta( 375.0, $summary[ MetricsSchema::KPI_INP ]['value'], 0.0001 );
+                $this->assertTrue( $summary[ MetricsSchema::KPI_INP ]['has_data'] );
+
+                $this->assertArrayHasKey( MetricsSchema::KPI_CLS, $summary );
+                $this->assertEqualsWithDelta( 0.21, $summary[ MetricsSchema::KPI_CLS ]['value'], 0.0001 );
+                $this->assertTrue( $summary[ MetricsSchema::KPI_CLS ]['has_data'] );
+        }
+
+        /**
+         * Test fallback application
+         */
+        public function test_fallback_application(): void {
+                // Test with empty data to ensure fallbacks are applied
 		$mock_data = MetricsAggregator::generate_mock_data( 123, '2024-01-01 00:00:00', '2024-01-31 23:59:59' );
 		
 		// Clear data to test fallbacks
