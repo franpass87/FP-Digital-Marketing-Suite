@@ -264,22 +264,24 @@ class CoreWebVitals {
 	 * @return void
 	 */
 	private function store_metrics( int $client_id, array $metrics, string $start_date, string $end_date ): void {
-		foreach ( $metrics as $metric_name => $value ) {
-			MetricsCache::create_metric([
-				'client_id'   => $client_id,
-				'source'      => self::SOURCE_ID,
-				'metric_name' => $metric_name,
-				'value'       => $value,
-				'timestamp'   => current_time( 'mysql' ),
-				'period_start' => $start_date,
-				'period_end'   => $end_date,
-				'metadata'     => wp_json_encode([
-					'origin_url' => $this->origin_url,
-					'percentile' => 75,
-					'collection_period' => '28_days',
-				]),
-			]);
-		}
+                $period_start = $start_date . ' 00:00:00';
+                $period_end = $end_date . ' 23:59:59';
+
+                foreach ( $metrics as $metric_name => $value ) {
+                        MetricsCache::save(
+                                $client_id,
+                                self::SOURCE_ID,
+                                $metric_name,
+                                $period_start,
+                                $period_end,
+                                $value,
+                                [
+                                        'origin_url' => $this->origin_url,
+                                        'percentile' => 75,
+                                        'collection_period' => '28_days',
+                                ]
+                        );
+                }
 	}
 
 	/**

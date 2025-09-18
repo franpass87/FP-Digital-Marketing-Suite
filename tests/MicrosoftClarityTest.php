@@ -264,16 +264,87 @@ class MicrosoftClarityTest extends TestCase {
 	/**
 	 * Test client-focused approach documentation
 	 */
-	public function test_client_focused_approach() {
-		// Verify that the class supports client-focused methods
-		$this->assertTrue( method_exists( MicrosoftClarity::class, 'get_client_project_id' ) );
-		$this->assertTrue( method_exists( MicrosoftClarity::class, 'for_client' ) );
-		
-		// Verify static methods return expected types
-		$project_id = MicrosoftClarity::get_client_project_id( 999 );
-		$this->assertIsString( $project_id );
-		
-		$clarity_instance = MicrosoftClarity::for_client( 999 );
-		$this->assertTrue( is_null( $clarity_instance ) || $clarity_instance instanceof MicrosoftClarity );
-	}
+        public function test_client_focused_approach() {
+                // Verify that the class supports client-focused methods
+                $this->assertTrue( method_exists( MicrosoftClarity::class, 'get_client_project_id' ) );
+                $this->assertTrue( method_exists( MicrosoftClarity::class, 'for_client' ) );
+
+                // Verify static methods return expected types
+                $project_id = MicrosoftClarity::get_client_project_id( 999 );
+                $this->assertIsString( $project_id );
+
+                $clarity_instance = MicrosoftClarity::for_client( 999 );
+                $this->assertTrue( is_null( $clarity_instance ) || $clarity_instance instanceof MicrosoftClarity );
+        }
+
+        /**
+         * Test that metrics are stored through MetricsCache::save without errors.
+         */
+        public function test_fetch_metrics_saves_into_metrics_cache(): void {
+                $project_id = 'testproject123';
+                $clarity = new MicrosoftClarity( $project_id );
+
+                $client_id = 42;
+                $start_date = '2024-02-01';
+                $end_date = '2024-02-07';
+
+                global $wpdb;
+                $original_wpdb = $wpdb;
+
+                $wpdb_mock = new class extends WPDB_Mock {
+                        /**
+                         * Track insert operations performed during the test.
+                         *
+                         * @var array
+                         */
+                        public $records = [];
+
+                        /**
+                         * Number of insert calls executed.
+                         *
+                         * @var int
+                         */
+                        public $insert_calls = 0;
+
+                        /**
+                         * Capture insert invocations for later assertions.
+                         *
+                         * @param string     $table  Table name.
+                         * @param array      $data   Row data.
+                         * @param array|null $format Column formats.
+                         * @return int Insert result.
+                         */
+                        public function insert( $table, $data, $format = null ) { // phpcs:ignore WordPress.DB
+                                $this->insert_calls++;
+                                $this->records[] = [
+                                        'table'  => $table,
+                                        'data'   => $data,
+                                        'format' => $format,
+                                ];
+
+                                return parent::insert( $table, $data, $format );
+                        }
+                };
+
+                $wpdb = $wpdb_mock;
+
+                $metrics = $clarity->fetch_metrics( $client_id, $start_date, $end_date );
+
+                $wpdb = $original_wpdb;
+
+                $this->assertIsArray( $metrics );
+                $this->assertGreaterThan( 0, $wpdb_mock->insert_calls );
+
+                foreach ( $wpdb_mock->records as $record ) {
+                        $this->assertEquals( 'wp_fp_metrics_cache', $record['table'] );
+                        $this->assertEquals( $client_id, (int) $record['data']['client_id'] );
+                        $this->assertEquals( MicrosoftClarity::SOURCE_ID, $record['data']['source'] );
+                        $this->assertEquals( $start_date . ' 00:00:00', $record['data']['period_start'] );
+                        $this->assertEquals( $end_date . ' 23:59:59', $record['data']['period_end'] );
+
+                        $meta = json_decode( (string) $record['data']['meta'], true );
+                        $this->assertIsArray( $meta );
+                        $this->assertArrayHasKey( 'period_days', $meta );
+                }
+        }
 }

@@ -96,20 +96,24 @@ class MicrosoftClarity {
 			// In a real implementation, this would make API calls to Clarity endpoints
 			$demo_data = $this->generate_demo_data( $start_date, $end_date );
 
-			// Store metrics in cache
-			$cache = new MetricsCache();
-			$normalized_data = $this->normalize_metrics( $demo_data, $client_id, $start_date, $end_date );
-			
-			foreach ( $normalized_data as $metric ) {
-				$cache->store_metric( 
-					$metric['client_id'],
-					$metric['source'],
-					$metric['kpi'],
-					$metric['value'],
-					$metric['date'],
-					$metric['metadata']
-				);
-			}
+                        // Store metrics in cache
+                        $normalized_data = $this->normalize_metrics( $demo_data, $client_id, $start_date, $end_date );
+                        $period_start = $start_date . ' 00:00:00';
+                        $period_end = $end_date . ' 23:59:59';
+
+                        foreach ( $normalized_data as $metric ) {
+                                MetricsCache::save(
+                                        (int) $metric['client_id'],
+                                        (string) $metric['source'],
+                                        (string) $metric['kpi'],
+                                        $period_start,
+                                        $period_end,
+                                        $metric['value'],
+                                        isset( $metric['metadata'] ) && is_array( $metric['metadata'] )
+                                                ? $metric['metadata']
+                                                : []
+                                );
+                        }
 
 			return $demo_data;
 
