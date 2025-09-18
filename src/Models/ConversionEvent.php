@@ -232,29 +232,61 @@ class ConversionEvent {
 	 * @param string $source Source system
 	 * @return self|null ConversionEvent instance or null if not found
 	 */
-	public static function load_by_event_id( string $event_id, string $source ): ?self {
-		global $wpdb;
+        public static function load_by_event_id( string $event_id, string $source ): ?self {
+                global $wpdb;
 
-		$table_name = ConversionEventsTable::get_table_name();
-		$sql = $wpdb->prepare(
-			"SELECT * FROM $table_name WHERE event_id = %s AND source = %s LIMIT 1",
-			$event_id,
-			$source
-		);
+                $table_name = ConversionEventsTable::get_table_name();
+                $sql = $wpdb->prepare(
+                        "SELECT * FROM $table_name WHERE event_id = %s AND source = %s LIMIT 1",
+                        $event_id,
+                        $source
+                );
 
-		$result = $wpdb->get_row( $sql, ARRAY_A );
+                $result = $wpdb->get_row( $sql, ARRAY_A );
 
-		if ( $result ) {
-			return new self( $result );
-		}
+                if ( $result ) {
+                        return new self( $result );
+                }
 
-		return null;
-	}
+                return null;
+        }
 
-	/**
-	 * Populate object from array data
-	 *
-	 * @param array $data Event data array
+        /**
+         * Load event by source event ID
+         *
+         * @param string $source_event_id Source event ID from the originating system
+         * @param string $source          Source system identifier
+         * @return self|null ConversionEvent instance or null if not found
+         */
+        public static function load_by_source_event_id( string $source_event_id, string $source ): ?self {
+                global $wpdb;
+
+                $source_event_id = trim( $source_event_id );
+
+                if ( '' === $source_event_id ) {
+                        return null;
+                }
+
+                $table_name = ConversionEventsTable::get_table_name();
+                $sql = $wpdb->prepare(
+                        "SELECT * FROM $table_name WHERE source_event_id = %s AND source = %s LIMIT 1",
+                        $source_event_id,
+                        $source
+                );
+
+                $result = $wpdb->get_row( $sql, ARRAY_A );
+
+                if ( $result ) {
+                        return new self( $result );
+                }
+
+                return null;
+        }
+
+        /**
+         * Populate object from array data
+         *
+         * @param array $data Event data array
 	 * @return void
 	 */
 	private function populate_from_array( array $data ): void {

@@ -107,17 +107,24 @@ class ConversionEventManager {
 	 */
 	private static function check_for_duplicate( array $event_data ): ?ConversionEvent {
 		// Check by source event ID first
-		if ( ! empty( $event_data['source_event_id'] ) ) {
-			$existing = ConversionEvent::load_by_event_id( $event_data['source_event_id'], $event_data['source'] );
-			if ( $existing ) {
-				return $existing;
-			}
-		}
+                $existing = null;
 
-		// Check by multiple criteria for potential duplicates
-		$criteria = [
-			'client_id' => $event_data['client_id'],
-			'event_type' => $event_data['event_type'],
+                if ( ! empty( $event_data['source_event_id'] ) ) {
+                        $existing = ConversionEvent::load_by_source_event_id( $event_data['source_event_id'], $event_data['source'] );
+                }
+
+                if ( ! $existing && ! empty( $event_data['event_id'] ) ) {
+                        $existing = ConversionEvent::load_by_event_id( $event_data['event_id'], $event_data['source'] );
+                }
+
+                if ( $existing ) {
+                        return $existing;
+                }
+
+                // Check by multiple criteria for potential duplicates
+                $criteria = [
+                        'client_id' => $event_data['client_id'],
+                        'event_type' => $event_data['event_type'],
 			'source' => $event_data['source'],
 		];
 

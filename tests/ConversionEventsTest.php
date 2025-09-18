@@ -219,11 +219,11 @@ class ConversionEventsTest extends TestCase {
 	/**
 	 * Test event ingestion and deduplication
 	 */
-	public function test_event_ingestion(): void {
-		// Test event ingestion
-		$source_data = [
-			'event_type' => 'purchase',
-			'value' => 150.00,
+        public function test_event_ingestion(): void {
+                // Test event ingestion
+                $source_data = [
+                        'event_type' => 'purchase',
+                        'value' => 150.00,
 			'currency' => 'EUR',
 			'transaction_id' => 'txn_123',
 			'user_id' => 'user789',
@@ -245,16 +245,75 @@ class ConversionEventsTest extends TestCase {
 
 		// Test duplicate detection - ingest same event again
 		$duplicate_event = ConversionEventManager::ingest_event( 'facebook_ads', $source_data, 999 );
-		$this->assertInstanceOf( ConversionEvent::class, $duplicate_event );
-		// One of the events should be marked as duplicate
-		$this->assertTrue( $duplicate_event->is_duplicate() || $event->is_duplicate() );
-	}
+                $this->assertInstanceOf( ConversionEvent::class, $duplicate_event );
+                // One of the events should be marked as duplicate
+                $this->assertTrue( $duplicate_event->is_duplicate() || $event->is_duplicate() );
+        }
 
-	/**
-	 * Ensure events with different user IDs are not marked as duplicates.
-	 */
-	public function test_events_with_different_user_ids_are_not_marked_as_duplicates(): void {
-		$client_id = 654;
+        /**
+         * Ensure duplicate detection works based on source_event_id even with distant timestamps.
+         */
+        public function test_duplicate_detection_by_source_event_id(): void {
+                $client_id = 555;
+                $source = 'google_analytics_4';
+                $shared_source_event_id = 'shared-source-event-123';
+
+                $base_source_data = [
+                        'event_type' => 'purchase',
+                        'value' => 129.99,
+                        'currency' => 'EUR',
+                        'source_event_id' => $shared_source_event_id,
+                ];
+
+                $first_event = ConversionEventManager::ingest_event(
+                        $source,
+                        array_merge(
+                                $base_source_data,
+                                [
+                                        'timestamp' => '2024-01-01 10:00:00',
+                                ]
+                        ),
+                        $client_id
+                );
+
+                $this->assertInstanceOf( ConversionEvent::class, $first_event );
+                $this->assertFalse( $first_event->is_duplicate() );
+
+                $second_event = ConversionEventManager::ingest_event(
+                        $source,
+                        array_merge(
+                                $base_source_data,
+                                [
+                                        'timestamp' => '2024-03-01 10:00:00',
+                                ]
+                        ),
+                        $client_id
+                );
+
+                $this->assertInstanceOf( ConversionEvent::class, $second_event );
+                $this->assertTrue( $second_event->is_duplicate() );
+
+                $stored_events = ConversionEventsTable::get_events(
+                        [
+                                'client_id' => $client_id,
+                                'source' => $source,
+                        ],
+                        10,
+                        0
+                );
+
+                $this->assertCount( 2, $stored_events );
+                $this->assertEquals( $shared_source_event_id, $stored_events[0]['source_event_id'] );
+                $this->assertEquals( 1, (int) $stored_events[0]['is_duplicate'] );
+                $this->assertEquals( $shared_source_event_id, $stored_events[1]['source_event_id'] );
+                $this->assertEquals( 0, (int) $stored_events[1]['is_duplicate'] );
+        }
+
+        /**
+         * Ensure events with different user IDs are not marked as duplicates.
+         */
+        public function test_events_with_different_user_ids_are_not_marked_as_duplicates(): void {
+                $client_id = 654;
 		$source = 'facebook_ads';
 
 		$base_event = [
