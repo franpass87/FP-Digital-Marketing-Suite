@@ -56,15 +56,12 @@ jobs:
       run: composer install --no-dev --optimize-autoloader --no-interaction
     
     - name: Run build script
+      env:
+        PLUGIN_VERSION: ${{ steps.version.outputs.version }}
       run: |
         # Make build script executable
         chmod +x build.sh
-        
-        # Update version in build script if version override is provided
-        if [ -n "${{ github.event.inputs.version_override }}" ]; then
-          sed -i 's/VERSION=".*"/VERSION="${{ steps.version.outputs.version }}"/' build.sh
-        fi
-        
+
         # Run the build process
         ./build.sh
     
