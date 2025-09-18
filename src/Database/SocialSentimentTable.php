@@ -46,11 +46,11 @@ class SocialSentimentTable {
 	 *
 	 * @return bool
 	 */
-	public static function create_table(): bool {
-		global $wpdb;
+        public static function create_table(): bool {
+                global $wpdb;
 
-		$table_name = self::get_table_name();
-		
+                $table_name = self::get_table_name();
+
 		$charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE {$table_name} (
@@ -86,8 +86,22 @@ class SocialSentimentTable {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $sql );
 
-		return true;
-	}
+                return true;
+        }
+
+        /**
+         * Drop the social sentiment table (for uninstall).
+         *
+         * @return bool True on success, false on failure
+         */
+        public static function drop_table(): bool {
+                global $wpdb;
+
+                $table_name = self::get_table_name();
+                $result = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+
+                return $result !== false;
+        }
 
 	/**
 	 * Insert a new sentiment analysis record

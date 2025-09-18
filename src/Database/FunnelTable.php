@@ -119,11 +119,11 @@ class FunnelTable {
 	 *
 	 * @return bool True on success, false on failure
 	 */
-	public static function create_stages_table(): bool {
-		global $wpdb;
+        public static function create_stages_table(): bool {
+                global $wpdb;
 
-		$table_name = self::get_stages_table_name();
-		$charset_collate = $wpdb->get_charset_collate();
+                $table_name = self::get_stages_table_name();
+                $charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -146,8 +146,36 @@ class FunnelTable {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$result = dbDelta( $sql );
 
-		return self::stages_table_exists();
-	}
+                return self::stages_table_exists();
+        }
+
+        /**
+         * Drop the funnels table.
+         *
+         * @return bool True on success, false on failure
+         */
+        public static function drop_table(): bool {
+                global $wpdb;
+
+                $table_name = self::get_table_name();
+                $result = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+
+                return $result !== false;
+        }
+
+        /**
+         * Drop the funnel stages table.
+         *
+         * @return bool True on success, false on failure
+         */
+        public static function drop_stages_table(): bool {
+                global $wpdb;
+
+                $table_name = self::get_stages_table_name();
+                $result = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+
+                return $result !== false;
+        }
 
 	/**
 	 * Insert a new funnel
@@ -403,11 +431,11 @@ class FunnelTable {
 	 *
 	 * @return array
 	 */
-	public static function get_all_funnels(): array {
-		global $wpdb;
+        public static function get_all_funnels(): array {
+                global $wpdb;
 
-		$table_name = self::get_table_name();
-		$results = $wpdb->get_results( "SELECT * FROM `{$table_name}` ORDER BY created_at DESC", ARRAY_A );
+                $table_name = self::get_table_name();
+                $results = $wpdb->get_results( "SELECT * FROM `{$table_name}` ORDER BY created_at DESC", ARRAY_A );
 
 		return $results ?: [];
 	}
