@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Admin;
 
+use FP\DigitalMarketing\Admin\MenuManager;
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
 use FP\DigitalMarketing\DataSources\GoogleSearchConsole;
@@ -160,8 +161,8 @@ class Settings {
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
-		// Check if centralized MenuManager is active
-		if ( class_exists( '\FP\DigitalMarketing\Admin\MenuManager' ) ) {
+                // Check if centralized MenuManager is active
+                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
 			// MenuManager will handle menu registration
 			return;
 		}
