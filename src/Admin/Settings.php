@@ -136,14 +136,20 @@ class Settings {
 	 */
 	public function init(): void {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
-		add_action( 'admin_init', [ $this, 'register_settings' ] );
-		add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );
-		add_action( 'admin_init', [ $this, 'handle_gsc_oauth_callback' ] );
-		add_action( 'wp_ajax_fp_clear_sitemap_cache', [ $this, 'handle_clear_sitemap_cache' ] );
-		add_action( 'wp_ajax_fp_warmup_cache', [ $this, 'handle_cache_warmup' ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
-		add_action( 'fp_dms_cache_warmup', [ $this, 'scheduled_cache_warmup' ] );
-	}
+                add_action( 'admin_init', [ $this, 'register_settings' ] );
+                add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );
+                add_action( 'admin_init', [ $this, 'handle_gsc_oauth_callback' ] );
+                add_action( 'wp_ajax_fp_clear_sitemap_cache', [ $this, 'handle_clear_sitemap_cache' ] );
+                add_action( 'wp_ajax_fp_warmup_cache', [ $this, 'handle_cache_warmup' ] );
+                add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+                add_action( 'fp_dms_cache_warmup', [ $this, 'scheduled_cache_warmup' ] );
+                add_action(
+                        'update_option_' . self::OPTION_SYNC,
+                        [ $this, 'handle_sync_settings_update' ],
+                        10,
+                        3
+                );
+        }
 
 	/**
 	 * Add admin menu page
@@ -1155,10 +1161,10 @@ class Settings {
 	 * @param mixed $input The input data.
 	 * @return array Sanitized sync settings array.
 	 */
-	public function sanitize_sync_settings( $input ): array {
-		if ( ! is_array( $input ) ) {
-			return [];
-		}
+        public function sanitize_sync_settings( $input ): array {
+                if ( ! is_array( $input ) ) {
+                        return [];
+                }
 
 		$sanitized = [];
 		
@@ -1173,22 +1179,42 @@ class Settings {
 
 		// If sync settings changed, reschedule the sync
 		$current_settings = get_option( self::OPTION_SYNC, [] );
-		if ( $sanitized !== $current_settings ) {
-			// Unschedule and reschedule with new settings
-			SyncEngine::unschedule_sync();
-			if ( $sanitized['enable_sync'] ) {
-				SyncEngine::schedule_sync();
-			}
-		}
+                if ( $sanitized !== $current_settings ) {
+                        // Unschedule existing events; rescheduling is handled after the option update.
+                        SyncEngine::unschedule_sync();
+                }
 
-		return $sanitized;
-	}
+                return $sanitized;
+        }
 
-	/**
-	 * Get sync settings
-	 *
-	 * @return array The sync settings array.
-	 */
+        /**
+         * Handle sync settings updates after they are saved.
+         *
+         * @param mixed  $old_value Previous option value.
+         * @param mixed  $value     New option value.
+         * @param string $option    Option name.
+         * @return void
+         */
+        public function handle_sync_settings_update( $old_value, $value, string $option ): void {
+                if ( ! is_array( $value ) ) {
+                        SyncEngine::unschedule_sync();
+                        return;
+                }
+
+                SyncEngine::unschedule_sync();
+
+                if ( empty( $value['enable_sync'] ) ) {
+                        return;
+                }
+
+                SyncEngine::schedule_sync_with_settings( $value );
+        }
+
+        /**
+         * Get sync settings
+         *
+         * @return array The sync settings array.
+         */
 	public function get_sync_settings(): array {
 		return get_option( self::OPTION_SYNC, [] );
 	}
