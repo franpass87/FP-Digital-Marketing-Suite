@@ -5,9 +5,12 @@
 
 set -e
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${ROOT}"
+
 # Configuration
 PLUGIN_NAME="fp-digital-marketing-suite"
-VERSION="1.0.0"
+VERSION="${PLUGIN_VERSION:-$(grep "Version:" "${ROOT}/fp-digital-marketing-suite.php" | head -1 | awk -F': ' '{print $2}' | tr -d '\r')}"
 BUILD_DIR="build"
 DIST_DIR="dist"
 
