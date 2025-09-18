@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Admin;
 
+use Exception;
 use FP\DigitalMarketing\Helpers\SeoMetadata;
 use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Helpers\ContentSeoAnalyzer;

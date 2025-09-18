@@ -9,9 +9,11 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Helpers;
 
+use Exception;
+
 /**
  * AnomalyDetector class for statistical anomaly detection
- * 
+ *
  * This class implements various statistical methods for detecting anomalies
  * in digital marketing metrics including Z-score and moving average band analysis.
  */
