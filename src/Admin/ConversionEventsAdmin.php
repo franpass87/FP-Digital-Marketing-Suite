@@ -14,6 +14,7 @@ use FP\DigitalMarketing\Helpers\ConversionEventRegistry;
 use FP\DigitalMarketing\Models\ConversionEvent;
 use FP\DigitalMarketing\Database\ConversionEventsTable;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Admin\MenuManager;
 
 /**
  * Conversion Events Admin class
@@ -48,13 +49,17 @@ class ConversionEventsAdmin {
 
 	/**
 	 * Add admin menu
-	 *
-	 * @return void
-	 */
-	public function add_admin_menu(): void {
-		add_submenu_page(
-			'fp-digital-marketing-dashboard',
-			__( 'Eventi Conversione', 'fp-digital-marketing' ),
+        *
+         * @return void
+         */
+        public function add_admin_menu(): void {
+                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+                        return;
+                }
+
+                add_submenu_page(
+                        'fp-digital-marketing-dashboard',
+                        __( 'Eventi Conversione', 'fp-digital-marketing' ),
 			__( '🎯 Eventi Conversione', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_CONVERSIONS,
 			self::PAGE_SLUG,

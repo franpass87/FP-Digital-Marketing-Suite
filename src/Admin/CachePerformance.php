@@ -12,6 +12,7 @@ namespace FP\DigitalMarketing\Admin;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
 use FP\DigitalMarketing\Helpers\CacheBenchmark;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Admin\MenuManager;
 
 /**
  * Cache Performance admin page class
@@ -36,13 +37,17 @@ class CachePerformance {
 
 	/**
 	 * Add admin menu page
-	 *
-	 * @return void
-	 */
-	public function add_admin_menu(): void {
-		add_submenu_page(
-			'fp-digital-marketing-dashboard',
-			__( 'Cache Performance', 'fp-digital-marketing' ),
+        *
+         * @return void
+         */
+        public function add_admin_menu(): void {
+                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+                        return;
+                }
+
+                add_submenu_page(
+                        'fp-digital-marketing-dashboard',
+                        __( 'Cache Performance', 'fp-digital-marketing' ),
 			__( '⚡ Cache Performance', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_SETTINGS,
 			self::PAGE_SLUG,

@@ -11,6 +11,7 @@ namespace FP\DigitalMarketing\Admin;
 
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Admin\MenuManager;
 
 /**
  * Security admin page for monitoring and auditing
@@ -35,13 +36,17 @@ class SecurityAdmin {
 
 	/**
 	 * Add security admin menu
-	 *
-	 * @return void
-	 */
-	public function add_admin_menu(): void {
-		add_submenu_page(
-			'fp-digital-marketing-dashboard',
-			__( 'Security Settings', 'fp-digital-marketing' ),
+        *
+         * @return void
+         */
+        public function add_admin_menu(): void {
+                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+                        return;
+                }
+
+                add_submenu_page(
+                        'fp-digital-marketing-dashboard',
+                        __( 'Security Settings', 'fp-digital-marketing' ),
 			__( '🔒 Security', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_SETTINGS,
 			self::PAGE_SLUG,
