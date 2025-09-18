@@ -517,26 +517,44 @@ class SyncEngine {
 	 *
 	 * @return array Sync results
 	 */
-	public static function trigger_manual_sync(): array {
-		$sync_start = microtime( true );
-		
-		try {
-			$results = self::sync_all_data_sources();
-			$sync_end = microtime( true );
-			$results['duration'] = round( $sync_end - $sync_start, 2 );
-			$results['status'] = 'success';
-			
-			// Log manual sync
-			self::log_sync_start( 'manual' );
-			
-			return $results;
-			
-		} catch ( \Exception $e ) {
-			return [
-				'status' => 'error',
-				'message' => $e->getMessage(),
-				'sources_count' => 0,
-				'records_updated' => 0,
+        public static function trigger_manual_sync(): array {
+                $sync_start = microtime( true );
+                $sync_id = self::log_sync_start( 'manual' );
+
+                try {
+                        $results = self::sync_all_data_sources();
+                        $sync_end = microtime( true );
+                        $results['duration'] = round( $sync_end - $sync_start, 2 );
+                        $results['status'] = 'success';
+
+                        self::log_sync_complete(
+                                $sync_id,
+                                'success',
+                                sprintf(
+                                        'Manual sync completed. Sources: %d, Records updated: %d',
+                                        $results['sources_count'],
+                                        $results['records_updated']
+                                )
+                        );
+
+                        return $results;
+
+                } catch ( \Exception $e ) {
+                        if ( $sync_id > 0 ) {
+                                self::log_sync_complete(
+                                        $sync_id,
+                                        'error',
+                                        'Manual sync failed: ' . $e->getMessage()
+                                );
+                        } else {
+                                error_log( 'FP DMS Manual Sync Error: ' . $e->getMessage() );
+                        }
+
+                        return [
+                                'status' => 'error',
+                                'message' => $e->getMessage(),
+                                'sources_count' => 0,
+                                'records_updated' => 0,
 				'errors_count' => 1,
 			];
 		}
