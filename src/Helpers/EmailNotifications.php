@@ -653,13 +653,15 @@ class EmailNotifications {
 		}
 
 		// Gather daily statistics
+		$cache_stats = PerformanceCache::get_cache_stats();
+
 		$digest_data = [
 			'report_type' => 'daily_digest',
 			'date' => current_time( 'Y-m-d' ),
 			'summary' => __( 'Here is your daily summary from FP Digital Marketing Suite.', 'fp-digital-marketing' ),
 			'metrics' => [
 				'Cache Performance' => [
-					'current' => PerformanceCache::get_cache_statistics()['hit_ratio'] ?? 0,
+					'current' => $cache_stats['hit_ratio'] ?? 0,
 					'previous' => 'N/A',
 					'change' => 'N/A',
 				],
