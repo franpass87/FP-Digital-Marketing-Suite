@@ -138,11 +138,11 @@ class CustomerJourneyTable {
 	 *
 	 * @return bool True on success, false on failure
 	 */
-	public static function create_sessions_table(): bool {
-		global $wpdb;
+        public static function create_sessions_table(): bool {
+                global $wpdb;
 
-		$table_name = self::get_sessions_table_name();
-		$charset_collate = $wpdb->get_charset_collate();
+                $table_name = self::get_sessions_table_name();
+                $charset_collate = $wpdb->get_charset_collate();
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -183,8 +183,36 @@ class CustomerJourneyTable {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$result = dbDelta( $sql );
 
-		return self::sessions_table_exists();
-	}
+                return self::sessions_table_exists();
+        }
+
+        /**
+         * Drop the customer journeys events table.
+         *
+         * @return bool True on success, false on failure
+         */
+        public static function drop_table(): bool {
+                global $wpdb;
+
+                $table_name = self::get_table_name();
+                $result = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+
+                return $result !== false;
+        }
+
+        /**
+         * Drop the customer journey sessions table.
+         *
+         * @return bool True on success, false on failure
+         */
+        public static function drop_sessions_table(): bool {
+                global $wpdb;
+
+                $table_name = self::get_sessions_table_name();
+                $result = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+
+                return $result !== false;
+        }
 
 	/**
 	 * Insert a journey event
