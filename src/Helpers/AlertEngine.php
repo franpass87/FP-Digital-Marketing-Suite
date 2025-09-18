@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Helpers;
 
+use Exception;
 use FP\DigitalMarketing\Models\AlertRule;
 use FP\DigitalMarketing\Models\AnomalyRule;
 use FP\DigitalMarketing\Models\DetectedAnomaly;

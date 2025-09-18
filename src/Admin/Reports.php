@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Admin;
 
+use Exception;
 use FP\DigitalMarketing\Helpers\DataSources;
 use FP\DigitalMarketing\Helpers\ReportGenerator;
 use FP\DigitalMarketing\Helpers\ReportScheduler;
