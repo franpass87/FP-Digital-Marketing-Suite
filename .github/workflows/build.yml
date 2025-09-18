@@ -148,7 +148,7 @@ jobs:
         cat build-info.md
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: wp-plugin-${{ steps.version.outputs.version }}-${{ github.run_number }}
         path: |
