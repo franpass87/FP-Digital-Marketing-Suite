@@ -84,6 +84,8 @@ class ConnectionManager {
 		}
 
 		$connection_status = $oauth->get_connection_status();
+		$is_connected = ! empty( $connection_status['connected'] );
+		$is_expired = ! empty( $connection_status['expired'] );
 		$property_id = $api_keys['ga4_property_id'] ?? '';
 
 		if ( empty( $property_id ) ) {
@@ -101,7 +103,7 @@ class ConnectionManager {
 		$status = self::STATUS_DISCONNECTED;
 		$message = __( 'Non connesso', 'fp-digital-marketing' );
 
-		if ( $connection_status['connected'] ) {
+		if ( $is_connected ) {
 			// Test actual connection
 			$test_result = self::test_ga4_connection();
 			if ( $test_result['success'] ) {
@@ -111,7 +113,7 @@ class ConnectionManager {
 				$status = self::STATUS_ERROR;
 				$message = $test_result['error'] ?? __( 'Errore di connessione', 'fp-digital-marketing' );
 			}
-		} elseif ( $connection_status['expired'] ) {
+		} elseif ( $is_expired ) {
 			$status = self::STATUS_EXPIRED;
 			$message = __( 'Token scaduto, riconnessione necessaria', 'fp-digital-marketing' );
 		}
@@ -148,13 +150,15 @@ class ConnectionManager {
 		}
 
 		$connection_status = $oauth->get_connection_status();
-		
-		$status = $connection_status['connected'] ? self::STATUS_CONNECTED : self::STATUS_DISCONNECTED;
-		$message = $connection_status['connected'] 
-			? __( 'Connesso tramite Google OAuth', 'fp-digital-marketing' )
-			: __( 'Non connesso', 'fp-digital-marketing' );
+		$is_connected = ! empty( $connection_status['connected'] );
+		$is_expired = ! empty( $connection_status['expired'] );
 
-		if ( $connection_status['expired'] ) {
+		$status = $is_connected ? self::STATUS_CONNECTED : self::STATUS_DISCONNECTED;
+		$message = $is_connected
+                        ? __( 'Connesso tramite Google OAuth', 'fp-digital-marketing' )
+                        : __( 'Non connesso', 'fp-digital-marketing' );
+
+		if ( $is_expired ) {
 			$status = self::STATUS_EXPIRED;
 			$message = __( 'Token scaduto', 'fp-digital-marketing' );
 		}
@@ -259,10 +263,13 @@ class ConnectionManager {
 			$oauth = new GoogleOAuth();
 			$connection_status = $oauth->get_connection_status();
 			
-			if ( $connection_status['connected'] && ! $connection_status['expired'] ) {
-				return [
-					'success' => true,
-					'message' => __( 'Connessione verificata con successo', 'fp-digital-marketing' ),
+			$is_connected = ! empty( $connection_status['connected'] );
+			$is_expired = ! empty( $connection_status['expired'] );
+
+			if ( $is_connected && ! $is_expired ) {
+                                return [
+                                        'success' => true,
+                                        'message' => __( 'Connessione verificata con successo', 'fp-digital-marketing' ),
 				];
 			}
 
