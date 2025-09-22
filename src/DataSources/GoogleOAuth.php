@@ -78,15 +78,25 @@ class GoogleOAuth {
 	 *
 	 * @return array OAuth credentials
 	 */
-	private function get_oauth_credentials(): array {
-		$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
-		
-		return [
-			'client_id' => $api_keys['google_client_id'] ?? '',
-			'client_secret' => $api_keys['google_client_secret'] ?? '',
-			'redirect_uri' => admin_url( 'admin.php?page=fp-digital-marketing-settings&ga4_callback=1' ),
-		];
-	}
+        private function get_oauth_credentials(): array {
+                $api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
+
+                $client_id = $api_keys['google_client_id'] ?? '';
+                $raw_client_secret = $api_keys['google_client_secret'] ?? '';
+                $client_secret = '';
+
+                if ( ! empty( $raw_client_secret ) ) {
+                        $decrypted_secret = Security::decrypt_sensitive_data( $raw_client_secret );
+
+                        $client_secret = ! empty( $decrypted_secret ) ? $decrypted_secret : $raw_client_secret;
+                }
+
+                return [
+                        'client_id' => $client_id,
+                        'client_secret' => $client_secret,
+                        'redirect_uri' => admin_url( 'admin.php?page=fp-digital-marketing-settings&ga4_callback=1' ),
+                ];
+        }
 
 	/**
 	 * Check if OAuth is properly configured
