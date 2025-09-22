@@ -8,6 +8,7 @@
     class FPSettingsTabs {
         constructor() {
             this.activeTab = 'general';
+            this.sections = [];
             this.init();
         }
 
@@ -27,33 +28,69 @@
             const sections = this.getSections();
             if (sections.length === 0) return;
 
+            const $sectionsContainer = $form.find('.wp-settings-sections');
+            if (!$sectionsContainer.length) return;
+
+            // Cache section elements before we reparent them into the tab panels
+            const sectionElementsMap = {};
+            const availableSections = [];
+
+            sections.forEach(section => {
+                if (!section.wpSectionId) {
+                    return;
+                }
+
+                const $heading = $sectionsContainer.find(`#${section.wpSectionId}`);
+                if (!$heading.length) {
+                    return;
+                }
+
+                const $sectionElements = $heading.nextUntil('h2, h3').addBack();
+                if (!$sectionElements.length) {
+                    return;
+                }
+
+                sectionElementsMap[section.id] = $sectionElements;
+                availableSections.push(section);
+            });
+
+            if (availableSections.length === 0) return;
+
+            this.sections = availableSections;
+
+            if (!sectionElementsMap[this.activeTab]) {
+                this.activeTab = availableSections[0].id;
+            }
+
             // Create tab navigation
-            const $tabNav = this.createTabNavigation(sections);
-            
+            const $tabNav = this.createTabNavigation(availableSections);
+
             // Create tab content wrapper
             const $tabContent = $('<div class="fp-dms-tab-content"></div>');
-            
+
             // Move each section to its own tab panel
-            sections.forEach((section, index) => {
+            availableSections.forEach(section => {
                 const $panel = $(`<div class="fp-dms-tab-panel" data-tab="${section.id}"></div>`);
-                
+
                 // Add section header
                 $panel.append(this.createSectionHeader(section));
-                
+
                 // Move section content to panel
-                const $sectionElements = $(`.form-table:eq(${index}), h2:contains("${section.title}"), h3:contains("${section.title}")`);
-                $sectionElements.appendTo($panel);
-                
+                const $sectionElements = sectionElementsMap[section.id];
+                if ($sectionElements && $sectionElements.length) {
+                    $panel.append($sectionElements);
+                }
+
                 $tabContent.append($panel);
             });
 
             // Insert tabs before form content
             $form.find('h1').after($tabNav);
-            $form.find('.wp-settings-sections, .form-table').first().before($tabContent);
-            
+            $sectionsContainer.first().before($tabContent);
+
             // Hide original sections container
             $('.wp-settings-sections').hide();
-            
+
             // Show first tab
             this.showTab(this.activeTab);
         }
@@ -91,49 +128,57 @@
                     id: 'general',
                     title: 'Configurazione Generale',
                     description: 'Impostazioni di base e configurazioni generali del plugin.',
-                    icon: 'dashicons-admin-generic'
+                    icon: 'dashicons-admin-generic',
+                    wpSectionId: 'fp_digital_marketing_general'
                 },
                 {
                     id: 'api-keys',
                     title: 'Chiavi API',
                     description: 'Configurazione delle chiavi API per servizi esterni come Google Analytics, Search Console e altri.',
-                    icon: 'dashicons-admin-network'
+                    icon: 'dashicons-admin-network',
+                    wpSectionId: 'fp_digital_marketing_api_keys'
                 },
                 {
                     id: 'sync',
                     title: 'Sincronizzazione',
                     description: 'Configurazione della sincronizzazione automatica dei dati e pianificazione degli aggiornamenti.',
-                    icon: 'dashicons-update'
+                    icon: 'dashicons-update',
+                    wpSectionId: 'fp_digital_marketing_sync'
                 },
                 {
                     id: 'cache',
                     title: 'Performance & Cache',
                     description: 'Configurazione del sistema di caching per migliorare le performance delle query sui report.',
-                    icon: 'dashicons-performance'
+                    icon: 'dashicons-performance',
+                    wpSectionId: 'fp_digital_marketing_cache'
                 },
                 {
                     id: 'seo',
                     title: 'SEO & Social Media',
                     description: 'Configurazione delle impostazioni SEO predefinite e template per meta tag.',
-                    icon: 'dashicons-search'
+                    icon: 'dashicons-search',
+                    wpSectionId: 'fp_digital_marketing_seo'
                 },
                 {
                     id: 'sitemap',
                     title: 'XML Sitemap',
                     description: 'Configurazione della generazione di sitemap XML modulari per migliorare l\'indicizzazione del sito.',
-                    icon: 'dashicons-networking'
+                    icon: 'dashicons-networking',
+                    wpSectionId: 'fp_digital_marketing_sitemap'
                 },
                 {
                     id: 'schema',
                     title: 'Schema Markup',
                     description: 'Configurazione del markup Schema.org per migliorare la struttura dei dati del sito.',
-                    icon: 'dashicons-editor-code'
+                    icon: 'dashicons-editor-code',
+                    wpSectionId: 'fp_digital_marketing_schema'
                 },
                 {
                     id: 'email',
                     title: 'Notifiche Email',
                     description: 'Configurazione delle notifiche email per alert, report e aggiornamenti del sistema.',
-                    icon: 'dashicons-email-alt'
+                    icon: 'dashicons-email-alt',
+                    wpSectionId: 'fp_digital_marketing_email'
                 }
             ];
         }
@@ -160,6 +205,13 @@
         }
 
         showTab(tabId) {
+            if (this.sections.length) {
+                const hasTab = this.sections.some(section => section.id === tabId);
+                if (!hasTab) {
+                    tabId = this.sections[0].id;
+                }
+            }
+
             // Update navigation
             $('.fp-dms-tab-button').removeClass('active');
             $(`.fp-dms-tab-button[data-tab="${tabId}"]`).addClass('active');
