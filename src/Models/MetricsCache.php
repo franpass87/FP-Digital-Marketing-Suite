@@ -116,20 +116,9 @@ class MetricsCache {
 		$where_clauses = [];
 		$where_values = [];
 
-		if ( ! is_null( $args['client_id'] ) ) {
-			$where_clauses[] = 'client_id = %d';
-			$where_values[] = $args['client_id'];
-		}
-
-		if ( ! is_null( $args['source'] ) ) {
-			$where_clauses[] = 'source = %s';
-			$where_values[] = $args['source'];
-		}
-
-		if ( ! is_null( $args['metric'] ) ) {
-			$where_clauses[] = 'metric = %s';
-			$where_values[] = $args['metric'];
-		}
+		self::add_filter_clause( 'client_id', $args['client_id'], $where_clauses, $where_values, true );
+		self::add_filter_clause( 'source', $args['source'], $where_clauses, $where_values );
+		self::add_filter_clause( 'metric', $args['metric'], $where_clauses, $where_values );
 
 		if ( ! is_null( $args['period_start'] ) ) {
 			$where_clauses[] = 'period_start >= %s';
@@ -274,34 +263,90 @@ class MetricsCache {
 
 		$table_name = MetricsCacheTable::get_table_name();
 
+		$defaults = [
+		        'client_id' => null,
+		        'source'    => null,
+		        'metric'    => null,
+		];
+
+		$args = wp_parse_args( $args, $defaults );
+
 		$where_clauses = [];
 		$where_values = [];
 
-		if ( ! empty( $args['client_id'] ) ) {
-			$where_clauses[] = 'client_id = %d';
-			$where_values[] = $args['client_id'];
-		}
-
-		if ( ! empty( $args['source'] ) ) {
-			$where_clauses[] = 'source = %s';
-			$where_values[] = $args['source'];
-		}
-
-		if ( ! empty( $args['metric'] ) ) {
-			$where_clauses[] = 'metric = %s';
-			$where_values[] = $args['metric'];
-		}
+		self::add_filter_clause( 'client_id', $args['client_id'], $where_clauses, $where_values, true );
+		self::add_filter_clause( 'source', $args['source'], $where_clauses, $where_values );
+		self::add_filter_clause( 'metric', $args['metric'], $where_clauses, $where_values );
 
 		$where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
 
 		$sql = "SELECT COUNT(*) FROM $table_name $where_sql";
 
 		if ( ! empty( $where_values ) ) {
-			$result = $wpdb->get_var( $wpdb->prepare( $sql, ...$where_values ) );
+		        $result = $wpdb->get_var( $wpdb->prepare( $sql, ...$where_values ) );
 		} else {
-			$result = $wpdb->get_var( $sql );
+		        $result = $wpdb->get_var( $sql );
 		}
 
 		return (int) $result;
+	}
+
+	/**
+	 * Add a sanitized filter clause to the WHERE portion of a query.
+	 *
+	 * @param string $column        Column name to filter.
+	 * @param mixed  $value         Filter value or list of values.
+	 * @param array  $where_clauses Reference to the WHERE clause array.
+	 * @param array  $where_values  Reference to the prepared value array.
+	 * @param bool   $is_numeric    Whether the column expects numeric values.
+	 */
+	private static function add_filter_clause( string $column, $value, array &$where_clauses, array &$where_values, bool $is_numeric = false ): void {
+		if ( is_null( $value ) ) {
+		        return;
+		}
+
+		$values = is_array( $value ) ? $value : [ $value ];
+		$sanitized_values = [];
+
+		foreach ( $values as $single_value ) {
+		        if ( is_null( $single_value ) ) {
+		                continue;
+		        }
+
+		        $original_value = (string) $single_value;
+		        $normalized_value = trim( $original_value );
+
+		        if ( $is_numeric ) {
+		                if ( '' === $normalized_value || ! is_numeric( $normalized_value ) ) {
+		                        continue;
+		                }
+
+		                $sanitized_value = abs( (int) $normalized_value );
+		        } else {
+		                $sanitized_value = sanitize_text_field( $normalized_value );
+		                if ( '' === $sanitized_value && '0' !== $normalized_value ) {
+		                        continue;
+		                }
+		        }
+
+		        $sanitized_values[] = $is_numeric ? (int) $sanitized_value : $sanitized_value;
+		}
+
+		if ( empty( $sanitized_values ) ) {
+		        return;
+		}
+
+		$placeholder = $is_numeric ? '%d' : '%s';
+
+		if ( count( $sanitized_values ) > 1 ) {
+		        $placeholders = implode( ', ', array_fill( 0, count( $sanitized_values ), $placeholder ) );
+		        $where_clauses[] = sprintf( '%s IN (%s)', $column, $placeholders );
+		} else {
+		        $where_clauses[] = sprintf( '%s = %s', $column, $placeholder );
+		}
+
+		foreach ( $sanitized_values as $sanitized_value ) {
+		        $where_values[] = $sanitized_value;
+		}
 	}
 }
