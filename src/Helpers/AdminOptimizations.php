@@ -453,7 +453,16 @@ class AdminOptimizations {
      * Clear performance cache
      */
     public function clear_performance_cache(): void {
-        wp_cache_flush_group( self::CACHE_GROUP );
+        if ( function_exists( 'wp_cache_flush_group' ) ) {
+            wp_cache_flush_group( self::CACHE_GROUP );
+            return;
+        }
+
+        if ( class_exists( PerformanceCache::class ) && method_exists( PerformanceCache::class, 'invalidate_group' ) ) {
+            PerformanceCache::invalidate_group( self::CACHE_GROUP );
+        }
+
+        wp_cache_delete( 'performance_recommendations', self::CACHE_GROUP );
     }
 
     /**
