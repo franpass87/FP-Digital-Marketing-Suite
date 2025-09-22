@@ -96,10 +96,13 @@ class CoreWebVitals {
 			'filters' => $filters,
 		]);
 
-		$cached_data = PerformanceCache::get_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS );
-		if ( $cached_data !== false ) {
-			return $cached_data;
-		}
+               $cached_data = null;
+               if ( PerformanceCache::is_cache_enabled() ) {
+                       $cached_data = PerformanceCache::get_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS );
+                       if ( $cached_data !== false && $cached_data !== null ) {
+                               return $cached_data;
+                       }
+               }
 
 		try {
 			if ( ! $this->is_connected() ) {
