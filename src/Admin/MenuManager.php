@@ -164,20 +164,29 @@ class MenuManager {
 					'callback' => 'CachePerformance::render_performance_page',
 					'group' => 'monitoring'
 				],
-				[
-					'parent_slug' => self::MAIN_MENU_SLUG,
-					'page_title' => __( 'Security Settings', 'fp-digital-marketing' ),
-					'menu_title' => __( '🔒 Security', 'fp-digital-marketing' ),
-					'capability' => Capabilities::MANAGE_SETTINGS,
-					'menu_slug' => 'fp-digital-marketing-security',
-					'callback' => 'SecurityAdmin::render_security_page',
-					'group' => 'administration'
-				],
-				[
-					'parent_slug' => self::MAIN_MENU_SLUG,
-					'page_title' => __( 'Settings', 'fp-digital-marketing' ),
-					'menu_title' => __( '⚙️ Settings', 'fp-digital-marketing' ),
-					'capability' => Capabilities::MANAGE_SETTINGS,
+                                [
+                                        'parent_slug' => self::MAIN_MENU_SLUG,
+                                        'page_title' => __( 'Security Settings', 'fp-digital-marketing' ),
+                                        'menu_title' => __( '🔒 Security', 'fp-digital-marketing' ),
+                                        'capability' => Capabilities::MANAGE_SETTINGS,
+                                        'menu_slug' => 'fp-digital-marketing-security',
+                                        'callback' => 'SecurityAdmin::render_security_page',
+                                        'group' => 'administration'
+                                ],
+                                [
+                                        'parent_slug' => self::MAIN_MENU_SLUG,
+                                        'page_title' => __( 'Platform Connections', 'fp-digital-marketing' ),
+                                        'menu_title' => __( '🔗 Platform Connections', 'fp-digital-marketing' ),
+                                        'capability' => Capabilities::MANAGE_SETTINGS,
+                                        'menu_slug' => 'fp-platform-connections',
+                                        'callback' => 'PlatformConnections::render_connections_page',
+                                        'group' => 'administration'
+                                ],
+                                [
+                                        'parent_slug' => self::MAIN_MENU_SLUG,
+                                        'page_title' => __( 'Settings', 'fp-digital-marketing' ),
+                                        'menu_title' => __( '⚙️ Settings', 'fp-digital-marketing' ),
+                                        'capability' => Capabilities::MANAGE_SETTINGS,
 					'menu_slug' => 'fp-digital-marketing-settings',
 					'callback' => 'Settings::render_settings_page',
 					'group' => 'administration'
@@ -417,9 +426,10 @@ class MenuManager {
 			'fp-audience-segments' => __( 'Audience Segmentation', 'fp-digital-marketing' ),
 			'fp-digital-marketing-alerts' => __( 'Monitoring & Alerts', 'fp-digital-marketing' ),
 			'fp-digital-marketing-anomalies' => __( 'Anomaly Detection', 'fp-digital-marketing' ),
-			'fp-digital-marketing-cache-performance' => __( 'Performance Cache', 'fp-digital-marketing' ),
-			'fp-digital-marketing-security' => __( 'Security Settings', 'fp-digital-marketing' ),
-			'fp-digital-marketing-settings' => __( 'Settings', 'fp-digital-marketing' ),
+                        'fp-digital-marketing-cache-performance' => __( 'Performance Cache', 'fp-digital-marketing' ),
+                        'fp-digital-marketing-security' => __( 'Security Settings', 'fp-digital-marketing' ),
+                        'fp-platform-connections' => __( 'Platform Connections', 'fp-digital-marketing' ),
+                        'fp-digital-marketing-settings' => __( 'Settings', 'fp-digital-marketing' ),
 			'fp-digital-marketing-onboarding' => __( 'Setup Wizard', 'fp-digital-marketing' ),
 		];
 		
