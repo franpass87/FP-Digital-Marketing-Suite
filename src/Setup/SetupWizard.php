@@ -10,6 +10,8 @@
 
 namespace FP\DigitalMarketing\Setup;
 
+use FP\DigitalMarketing\Helpers\PerformanceCache;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -421,21 +423,25 @@ class SetupWizard {
      * Save analytics settings
      */
     private function save_analytics_settings( $data ) {
-        $settings = array();
-        
+        $api_keys = get_option( 'fp_digital_marketing_api_keys', array() );
+
+        if ( ! is_array( $api_keys ) ) {
+            $api_keys = array();
+        }
+
         if ( ! empty( $data['ga4_measurement_id'] ) ) {
-            $settings['ga4_measurement_id'] = sanitize_text_field( $data['ga4_measurement_id'] );
+            $api_keys['ga4_property_id'] = sanitize_text_field( $data['ga4_measurement_id'] );
         }
-        
+
         if ( ! empty( $data['google_ads_id'] ) ) {
-            $settings['google_ads_id'] = sanitize_text_field( $data['google_ads_id'] );
+            $api_keys['google_ads_id'] = sanitize_text_field( $data['google_ads_id'] );
         }
-        
+
         if ( ! empty( $data['clarity_project_id'] ) ) {
-            $settings['clarity_project_id'] = sanitize_text_field( $data['clarity_project_id'] );
+            $api_keys['clarity_project_id'] = sanitize_text_field( $data['clarity_project_id'] );
         }
-        
-        update_option( 'fp_dms_analytics_settings', $settings );
+
+        update_option( 'fp_digital_marketing_api_keys', $api_keys );
     }
     
     /**
@@ -447,20 +453,35 @@ class SetupWizard {
             'enable_xml_sitemap' => isset( $data['enable_xml_sitemap'] ),
             'enable_schema_markup' => isset( $data['enable_schema_markup'] ),
         );
-        
-        update_option( 'fp_dms_seo_settings', $settings );
+
+        $current_settings = get_option( 'fp_digital_marketing_seo_settings', array() );
+
+        if ( ! is_array( $current_settings ) ) {
+            $current_settings = array();
+        }
+
+        update_option( 'fp_digital_marketing_seo_settings', array_merge( $current_settings, $settings ) );
     }
-    
+
     /**
      * Save performance settings
      */
     private function save_performance_settings( $data ) {
-        $settings = array(
-            'enable_caching' => isset( $data['enable_caching'] ),
-            'enable_core_web_vitals' => isset( $data['enable_core_web_vitals'] ),
-            'enable_email_alerts' => isset( $data['enable_email_alerts'] ),
+        $cache_settings = array(
+            'enabled' => isset( $data['enable_caching'] ),
+            'benchmark_enabled' => isset( $data['enable_core_web_vitals'] ),
         );
-        
-        update_option( 'fp_dms_performance_settings', $settings );
+
+        PerformanceCache::update_cache_settings( $cache_settings );
+
+        $email_settings = get_option( 'fp_digital_marketing_email_settings', array() );
+
+        if ( ! is_array( $email_settings ) ) {
+            $email_settings = array();
+        }
+
+        $email_settings['alerts_enabled'] = isset( $data['enable_email_alerts'] );
+
+        update_option( 'fp_digital_marketing_email_settings', $email_settings );
     }
 }
