@@ -132,12 +132,13 @@ class FP_CLI_Commands {
         
         // Include migration tools
         require_once plugin_dir_path(__FILE__) . 'src/Tools/MigrationTools.php';
-        
-        if (!class_exists('FP_Migration_Tools')) {
+
+        if (!class_exists('\\FP\\DigitalMarketing\\Tools\\MigrationTools')) {
             WP_CLI::error("Migration tools not available");
         }
-        
-        $migration = new FP_Migration_Tools();
+
+        // Instantiate the namespaced MigrationTools class.
+        $migration = new \FP\DigitalMarketing\Tools\MigrationTools();
         
         try {
             switch ($source) {
