@@ -195,15 +195,35 @@ class AdminOptimizations {
             return $tag;
         }
 
+        // Scripts that interact with wp.ajax (or depend on WordPress-provided globals)
+        // must retain execution order. Use defer so dependencies run first.
+        $defer_handles = apply_filters(
+            'fp_dms_admin_defer_script_handles',
+            [
+                'fp-dms-admin-optimizations',
+            ]
+        );
+
+        if ( in_array( $handle, $defer_handles, true ) ) {
+            if ( strpos( $tag, ' defer' ) === false ) {
+                $tag = str_replace( ' src', ' defer src', $tag );
+            }
+
+            return $tag;
+        }
+
         // Add async to non-critical scripts
         $async_handles = [
-            'fp-dms-admin-optimizations',
             'fp-dms-analytics',
             'fp-dms-charts'
         ];
 
         if ( in_array( $handle, $async_handles, true ) ) {
-            return str_replace( ' src', ' async src', $tag );
+            if ( strpos( $tag, ' async' ) === false ) {
+                $tag = str_replace( ' src', ' async src', $tag );
+            }
+
+            return $tag;
         }
 
         return $tag;
