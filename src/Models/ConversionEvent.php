@@ -207,23 +207,21 @@ class ConversionEvent {
 		return new self( $data );
 	}
 
-	/**
-	 * Load event from database by ID
-	 *
-	 * @param int $event_id Event ID
-	 * @return self|null ConversionEvent instance or null if not found
-	 */
-	public static function load_by_id( int $event_id ): ?self {
-		$events = ConversionEventsTable::get_events( [], 1, 0 );
-		
-		foreach ( $events as $event_data ) {
-			if ( (int) $event_data['id'] === $event_id ) {
-				return new self( $event_data );
-			}
-		}
+        /**
+         * Load event from database by ID
+         *
+         * @param int $event_id Event ID
+         * @return self|null ConversionEvent instance or null if not found
+         */
+        public static function load_by_id( int $event_id ): ?self {
+                $event_data = ConversionEventsTable::get_event_by_id( $event_id );
 
-		return null;
-	}
+                if ( null === $event_data ) {
+                        return null;
+                }
+
+                return new self( $event_data );
+        }
 
 	/**
 	 * Load event by unique event ID
