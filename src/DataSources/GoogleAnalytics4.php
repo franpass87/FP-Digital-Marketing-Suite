@@ -61,18 +61,26 @@ class GoogleAnalytics4 {
 	 *
 	 * @return bool True if configured and connected
 	 */
-	public function is_connected(): bool {
-		return $this->oauth_client->is_authenticated() && ! empty( $this->property_id );
-	}
+        public function is_connected(): bool {
+                if ( ! $this->has_oauth_client() ) {
+                        return false;
+                }
+
+                return $this->oauth_client->is_authenticated() && ! empty( $this->property_id );
+        }
 
 	/**
 	 * Get OAuth authorization URL
 	 *
 	 * @return string Authorization URL
 	 */
-	public function get_authorization_url(): string {
-		return $this->oauth_client->get_authorization_url();
-	}
+        public function get_authorization_url(): string {
+                if ( ! $this->has_oauth_client() ) {
+                        return '';
+                }
+
+                return $this->oauth_client->get_authorization_url();
+        }
 
 	/**
 	 * Handle OAuth callback and exchange code for tokens
@@ -80,9 +88,13 @@ class GoogleAnalytics4 {
 	 * @param string $authorization_code The authorization code from Google
 	 * @return bool True on success, false on failure
 	 */
-	public function handle_oauth_callback( string $authorization_code ): bool {
-		return $this->oauth_client->exchange_code_for_tokens( $authorization_code );
-	}
+        public function handle_oauth_callback( string $authorization_code ): bool {
+                if ( ! $this->has_oauth_client() ) {
+                        return false;
+                }
+
+                return $this->oauth_client->exchange_code_for_tokens( $authorization_code );
+        }
 
 	/**
 	 * Fetch basic metrics from GA4
@@ -94,13 +106,13 @@ class GoogleAnalytics4 {
 	 */
 	public function fetch_metrics( int $client_id, string $start_date, string $end_date ): array|false {
 		try {
-			// Check if OAuth client is available (could be null from constructor error)
-			if ( $this->oauth_client === null ) {
-				if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
-					error_log( 'FP Digital Marketing GoogleAnalytics4: OAuth client not available' );
-				}
-				return false;
-			}
+                        // Check if OAuth client is available (could be null from constructor error)
+                        if ( ! $this->has_oauth_client() ) {
+                                if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
+                                        error_log( 'FP Digital Marketing GoogleAnalytics4: OAuth client not available' );
+                                }
+                                return false;
+                        }
 
 			if ( ! $this->is_connected() ) {
 				return false;
@@ -206,9 +218,9 @@ class GoogleAnalytics4 {
 	 * @param string $end_date   End date
 	 * @return void
 	 */
-	private function store_metrics_in_cache( int $client_id, array $metrics, string $start_date, string $end_date ): void {
-		$period_start = $start_date . ' 00:00:00';
-		$period_end = $end_date . ' 23:59:59';
+        private function store_metrics_in_cache( int $client_id, array $metrics, string $start_date, string $end_date ): void {
+                $period_start = $start_date . ' 00:00:00';
+                $period_end = $end_date . ' 23:59:59';
 
 		foreach ( $metrics as $metric_name => $value ) {
 			MetricsCache::save(
@@ -241,7 +253,16 @@ class GoogleAnalytics4 {
 	 * @param string $property_id Property ID
 	 * @return void
 	 */
-	public function set_property_id( string $property_id ): void {
-		$this->property_id = $property_id;
-	}
+        public function set_property_id( string $property_id ): void {
+                $this->property_id = $property_id;
+        }
+
+        /**
+         * Check if the OAuth client is available
+         *
+         * @return bool True if the OAuth client is instantiated
+         */
+        private function has_oauth_client(): bool {
+                return $this->oauth_client instanceof GoogleOAuth;
+        }
 }
