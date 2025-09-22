@@ -76,26 +76,38 @@ class CachePerformance {
 			return;
 		}
 
+		$handled_action = false;
+
 		switch ( $action ) {
 			case 'run_benchmark':
 				$this->run_performance_benchmark();
+				$handled_action = true;
 				break;
 				
 			case 'run_load_test':
 				$this->run_load_test();
+				$handled_action = true;
 				break;
 				
 			case 'run_memory_test':
 				$this->run_memory_test();
+				$handled_action = true;
 				break;
 				
 			case 'clear_cache':
 				$this->clear_cache();
+				$handled_action = true;
 				break;
 				
 			case 'clear_stats':
 				$this->clear_statistics();
+				$handled_action = true;
 				break;
+		}
+
+		if ( $handled_action ) {
+			wp_safe_redirect( remove_query_arg( [ 'action', '_wpnonce' ] ) );
+			exit;
 		}
 	}
 
