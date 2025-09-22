@@ -426,34 +426,72 @@ class FP_CLI_Commands {
     
     private function clear_analytics_cache() {
         global $wpdb;
-        
+
         $count = $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'fp_analytics_cache_%'");
-        wp_cache_flush_group('fp_analytics');
-        
+        $this->flush_cache_group('fp_analytics', [
+            'analytics_overview',
+            'analytics_top_pages',
+            'analytics_events',
+        ]);
+
         return $count;
     }
-    
+
     private function clear_seo_cache() {
         global $wpdb;
-        
+
         $count = $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'fp_seo_cache_%'");
-        wp_cache_flush_group('fp_seo');
-        
+        $this->flush_cache_group('fp_seo', [
+            'seo_overview',
+            'seo_keywords',
+            'seo_audit',
+        ]);
+
         return $count;
     }
-    
+
     private function clear_performance_cache() {
         global $wpdb;
-        
+
         $count = $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'fp_performance_cache_%'");
-        wp_cache_flush_group('fp_performance');
-        
+        $this->flush_cache_group('fp_performance', [
+            'performance_overview',
+            'performance_metrics',
+            'performance_scores',
+        ]);
+
+        if ( class_exists('\\FP\\DigitalMarketing\\Helpers\\AdminOptimizations') ) {
+            $admin_optimizations = new \FP\DigitalMarketing\Helpers\AdminOptimizations();
+            $admin_optimizations->clear_performance_cache();
+        }
+
         return $count;
     }
-    
+
     private function clear_general_cache() {
         wp_cache_flush();
         return 1;
+    }
+
+    private function flush_cache_group($group, array $known_keys = []) {
+        if (function_exists('wp_cache_flush_group')) {
+            wp_cache_flush_group($group);
+            return;
+        }
+
+        if (class_exists('\\FP\\DigitalMarketing\\Helpers\\PerformanceCache')
+            && method_exists('\\FP\\DigitalMarketing\\Helpers\\PerformanceCache', 'invalidate_group')
+        ) {
+            \FP\DigitalMarketing\Helpers\PerformanceCache::invalidate_group($group);
+        }
+
+        foreach ($known_keys as $key) {
+            wp_cache_delete($key, $group);
+        }
+
+        if (empty($known_keys) && function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
     }
     
     private function generate_analytics_report($format, $period) {
