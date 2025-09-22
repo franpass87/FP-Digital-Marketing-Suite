@@ -153,24 +153,16 @@ class Dashboard {
 			true
 		);
 
-		// Enqueue dashboard script
-		wp_enqueue_script(
-			'fp-dms-dashboard',
-			plugin_dir_url( dirname( dirname( __FILE__ ) ) ) . 'assets/js/dashboard.js',
-			[ 'jquery', 'chartjs' ],
-			'1.0.0',
-			true
-		);
+                // Enqueue dashboard script
+                wp_enqueue_script(
+                        'fp-dms-dashboard',
+                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/dashboard.js',
+                        [ 'jquery', 'chartjs' ],
+                        '1.0.0',
+                        true
+                );
 
-		// Enqueue dashboard styles
-		wp_enqueue_style(
-			'fp-dms-dashboard',
-			plugin_dir_url( dirname( dirname( __FILE__ ) ) ) . 'assets/css/dashboard.css',
-			[],
-			'1.0.0'
-		);
-
-		// Localize script for AJAX
+                // Localize script for AJAX
 		wp_localize_script( 'fp-dms-dashboard', 'fpDmsDashboard', [
 			'ajax_url' => admin_url( 'admin-ajax.php' ),
 			'nonce' => wp_create_nonce( 'fp_dms_dashboard' ),
