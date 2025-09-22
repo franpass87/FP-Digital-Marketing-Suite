@@ -1,13 +1,26 @@
 <?php
 /**
  * CLI Management Tools
- * 
+ *
  * Command line interface for FP Digital Marketing Suite management
- * 
+ *
  * @package FP_Digital_Marketing_Suite
  * @subpackage Tools
  * @since 1.0.0
  */
+
+use FP\DigitalMarketing\Database\AlertRulesTable;
+use FP\DigitalMarketing\Database\AnomalyRulesTable;
+use FP\DigitalMarketing\Database\AudienceSegmentTable;
+use FP\DigitalMarketing\Database\ConversionEventsTable;
+use FP\DigitalMarketing\Database\CustomReportsTable;
+use FP\DigitalMarketing\Database\CustomerJourneyTable;
+use FP\DigitalMarketing\Database\DetectedAnomaliesTable;
+use FP\DigitalMarketing\Database\FunnelTable;
+use FP\DigitalMarketing\Database\MetricsCacheTable;
+use FP\DigitalMarketing\Database\SocialSentimentTable;
+use FP\DigitalMarketing\Database\UTMCampaignsTable;
+use FP\DigitalMarketing\Helpers\Security;
 
 if (!defined('WP_CLI') || !WP_CLI) {
     return;
@@ -317,111 +330,201 @@ class FP_CLI_Commands {
     
     private function check_database_tables() {
         global $wpdb;
-        
-        $tables = array(
-            'fp_clients',
-            'fp_analytics_data',
-            'fp_seo_data',
-            'fp_alerts',
-            'fp_performance_metrics',
-            'fp_utm_campaigns',
-            'fp_conversion_events'
-        );
-        
+
+        $tables = array_unique(array_filter(array(
+            MetricsCacheTable::get_table_name(),
+            ConversionEventsTable::get_table_name(),
+            AudienceSegmentTable::get_segments_table_name(),
+            AudienceSegmentTable::get_membership_table_name(),
+            FunnelTable::get_table_name(),
+            FunnelTable::get_stages_table_name(),
+            CustomerJourneyTable::get_table_name(),
+            CustomerJourneyTable::get_sessions_table_name(),
+            UTMCampaignsTable::get_table_name(),
+            AlertRulesTable::get_table_name(),
+            AnomalyRulesTable::get_table_name(),
+            DetectedAnomaliesTable::get_table_name(),
+            CustomReportsTable::get_table_name(),
+            SocialSentimentTable::get_table_name(),
+        )));
+
         $existing = 0;
-        foreach ($tables as $table) {
-            $table_name = $wpdb->prefix . $table;
-            $exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name));
+        $table_status = array();
+
+        foreach ($tables as $table_name) {
+            $result = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name));
+            $exists = ($result === $table_name);
             if ($exists) {
                 $existing++;
             }
+            $table_status[$table_name] = $exists;
         }
-        
+
         return array(
             'total' => count($tables),
-            'existing' => $existing
+            'existing' => $existing,
+            'tables' => $table_status,
         );
     }
-    
+
     private function get_plugin_settings() {
+        $api_keys = get_option('fp_digital_marketing_api_keys', array());
+        if (!is_array($api_keys)) {
+            $api_keys = array();
+        }
+
+        $seo_settings = get_option('fp_digital_marketing_seo_settings', array());
+        if (!is_array($seo_settings)) {
+            $seo_settings = array();
+        }
+
+        $cache_settings = get_option('fp_digital_marketing_cache_settings', array());
+        if (!is_array($cache_settings)) {
+            $cache_settings = array();
+        }
+
+        $google_client_secret = '';
+        if (!empty($api_keys['google_client_secret'])) {
+            $google_client_secret = Security::decrypt_sensitive_data($api_keys['google_client_secret']);
+            if ($google_client_secret === '' && !empty($api_keys['google_client_secret'])) {
+                $google_client_secret = $api_keys['google_client_secret'];
+            }
+        }
+
+        $ga4_property_id = $api_keys['ga4_property_id'] ?? '';
+        $google_client_id = $api_keys['google_client_id'] ?? '';
+
+        $google_ads_conversion_id = $api_keys['google_ads_id'] ?? ($api_keys['google_ads_conversion_id'] ?? '');
+        $google_ads_customer_id = $api_keys['google_ads_customer_id'] ?? ($api_keys['customer_id'] ?? '');
+        $google_ads_token = $api_keys['google_ads_developer_token'] ?? ($api_keys['api_key'] ?? '');
+
+        $gsc_site_url = $api_keys['gsc_site_url'] ?? '';
+        $clarity_project_id = $api_keys['clarity_project_id'] ?? '';
+
+        $ga4_configured = ($ga4_property_id !== '' && $google_client_id !== '' && $google_client_secret !== '');
+        $google_ads_configured = ($google_ads_token !== '' && ($google_ads_customer_id !== '' || $google_ads_conversion_id !== ''));
+        $search_console_configured = ($gsc_site_url !== '');
+        $clarity_configured = ($clarity_project_id !== '');
+        $seo_configured = (
+            !empty($seo_settings['default_meta_description']) ||
+            !empty($seo_settings['enable_xml_sitemap']) ||
+            !empty($seo_settings['enable_schema_markup'])
+        );
+        $cache_enabled = !empty($cache_settings['enabled']);
+
         return array(
-            'ga4_configured' => !empty(get_option('fp_google_analytics_settings')),
-            'google_ads_configured' => !empty(get_option('fp_google_ads_settings')),
-            'search_console_configured' => !empty(get_option('fp_search_console_settings')),
-            'seo_configured' => !empty(get_option('fp_seo_settings'))
+            'ga4_configured' => $ga4_configured,
+            'google_ads_configured' => $google_ads_configured,
+            'search_console_configured' => $search_console_configured,
+            'clarity_configured' => $clarity_configured,
+            'seo_configured' => $seo_configured,
+            'cache_enabled' => $cache_enabled,
         );
     }
-    
+
     private function check_integrations() {
-        $ga4_settings = get_option('fp_google_analytics_settings', array());
-        $ads_settings = get_option('fp_google_ads_settings', array());
-        $gsc_settings = get_option('fp_search_console_settings', array());
-        $clarity_settings = get_option('fp_clarity_settings', array());
-        
+        $settings = $this->get_plugin_settings();
+
         return array(
-            'google_analytics' => !empty($ga4_settings['measurement_id']),
-            'google_ads' => !empty($ads_settings['customer_id']),
-            'search_console' => !empty($gsc_settings['site_url']),
-            'clarity' => !empty($clarity_settings['project_id'])
+            'google_analytics' => !empty($settings['ga4_configured']),
+            'google_ads' => !empty($settings['google_ads_configured']),
+            'search_console' => !empty($settings['search_console_configured']),
+            'clarity' => !empty($settings['clarity_configured']),
         );
     }
-    
+
     private function setup_ga4($assoc_args) {
         if (empty($assoc_args['property-id'])) {
             WP_CLI::error("Please provide --property-id for GA4 setup");
         }
-        
-        $settings = array(
-            'measurement_id' => $assoc_args['property-id'],
-            'enabled' => true,
-            'configured_at' => current_time('mysql')
+
+        $new_values = array(
+            'ga4_property_id' => sanitize_text_field($assoc_args['property-id']),
         );
-        
-        update_option('fp_google_analytics_settings', $settings);
-        WP_CLI::success("GA4 configured with property ID: " . $assoc_args['property-id']);
+
+        if (!empty($assoc_args['client-id'])) {
+            $new_values['google_client_id'] = sanitize_text_field($assoc_args['client-id']);
+        }
+
+        if (!empty($assoc_args['client-secret'])) {
+            $encrypted = Security::encrypt_sensitive_data(sanitize_text_field($assoc_args['client-secret']));
+            if (!empty($encrypted)) {
+                $new_values['google_client_secret'] = $encrypted;
+            }
+        }
+
+        $api_keys = get_option('fp_digital_marketing_api_keys', array());
+        if (!is_array($api_keys)) {
+            $api_keys = array();
+        }
+
+        $updated = wp_parse_args($new_values, $api_keys);
+        update_option('fp_digital_marketing_api_keys', $updated);
+
+        WP_CLI::success("GA4 configured with property ID: " . $new_values['ga4_property_id']);
     }
-    
+
     private function setup_google_ads($assoc_args) {
         if (empty($assoc_args['api-key'])) {
             WP_CLI::error("Please provide --api-key for Google Ads setup");
         }
-        
-        $settings = array(
-            'api_key' => $assoc_args['api-key'],
-            'customer_id' => $assoc_args['customer-id'] ?? '',
-            'enabled' => true,
-            'configured_at' => current_time('mysql')
+
+        $new_values = array(
+            'google_ads_developer_token' => sanitize_text_field($assoc_args['api-key']),
         );
-        
-        update_option('fp_google_ads_settings', $settings);
+
+        if (!empty($assoc_args['customer-id'])) {
+            $customer_id = sanitize_text_field($assoc_args['customer-id']);
+            $new_values['customer_id'] = $customer_id;
+            $new_values['google_ads_customer_id'] = $customer_id;
+        }
+
+        if (!empty($assoc_args['property-id'])) {
+            $new_values['google_ads_id'] = sanitize_text_field($assoc_args['property-id']);
+        }
+
+        $api_keys = get_option('fp_digital_marketing_api_keys', array());
+        if (!is_array($api_keys)) {
+            $api_keys = array();
+        }
+
+        $updated = wp_parse_args($new_values, $api_keys);
+        update_option('fp_digital_marketing_api_keys', $updated);
+
         WP_CLI::success("Google Ads configured");
     }
-    
+
     private function setup_search_console($assoc_args) {
-        $site_url = get_site_url();
-        
-        $settings = array(
-            'site_url' => $site_url,
-            'enabled' => true,
-            'configured_at' => current_time('mysql')
-        );
-        
-        update_option('fp_search_console_settings', $settings);
+        $site_url = !empty($assoc_args['site-url']) ? esc_url_raw($assoc_args['site-url']) : get_site_url();
+
+        $api_keys = get_option('fp_digital_marketing_api_keys', array());
+        if (!is_array($api_keys)) {
+            $api_keys = array();
+        }
+
+        $updated = wp_parse_args(array(
+            'gsc_site_url' => $site_url,
+        ), $api_keys);
+
+        update_option('fp_digital_marketing_api_keys', $updated);
         WP_CLI::success("Search Console configured for: " . $site_url);
     }
-    
+
     private function setup_clarity($assoc_args) {
         if (empty($assoc_args['property-id'])) {
             WP_CLI::error("Please provide --property-id for Clarity setup");
         }
-        
-        $settings = array(
-            'project_id' => $assoc_args['property-id'],
-            'enabled' => true,
-            'configured_at' => current_time('mysql')
-        );
-        
-        update_option('fp_clarity_settings', $settings);
+
+        $api_keys = get_option('fp_digital_marketing_api_keys', array());
+        if (!is_array($api_keys)) {
+            $api_keys = array();
+        }
+
+        $updated = wp_parse_args(array(
+            'clarity_project_id' => sanitize_text_field($assoc_args['property-id']),
+        ), $api_keys);
+
+        update_option('fp_digital_marketing_api_keys', $updated);
         WP_CLI::success("Microsoft Clarity configured with project ID: " . $assoc_args['property-id']);
     }
     
