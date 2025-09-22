@@ -42,6 +42,7 @@ class CacheBenchmark {
 			'metrics' => [ 'sessions', 'pageviews', 'users' ],
 		];
 		$params = wp_parse_args( $test_params, $defaults );
+		$iterations = max( 0, $iterations );
 
 		$results = [
 			'test_info' => [
@@ -109,13 +110,15 @@ class CacheBenchmark {
 		PerformanceCache::update_cache_settings( [ 'enabled' => $cache_enabled ] );
 
 		// Calculate metrics
-		$avg_without_cache = array_sum( $results['without_cache'] ) / count( $results['without_cache'] );
-		$avg_with_cache = array_sum( $results['with_cache'] ) / count( $results['with_cache'] );
-		
+		$without_cache_count = count( $results['without_cache'] );
+		$with_cache_count = count( $results['with_cache'] );
+		$avg_without_cache = $without_cache_count > 0 ? array_sum( $results['without_cache'] ) / $without_cache_count : 0;
+		$avg_with_cache = $with_cache_count > 0 ? array_sum( $results['with_cache'] ) / $with_cache_count : 0;
+
 		$results['avg_without_cache'] = $avg_without_cache;
 		$results['avg_with_cache'] = $avg_with_cache;
-		$results['performance_improvement'] = ( ( $avg_without_cache - $avg_with_cache ) / $avg_without_cache ) * 100;
-		$results['cache_hit_ratio'] = ( $cache_hits / ( $iterations - 1 ) ) * 100;
+		$results['performance_improvement'] = $avg_without_cache > 0 ? ( ( $avg_without_cache - $avg_with_cache ) / $avg_without_cache ) * 100 : 0;
+		$results['cache_hit_ratio'] = $iterations > 1 ? ( $cache_hits / ( $iterations - 1 ) ) * 100 : 0;
 
 		// Store results
 		self::store_benchmark_results( $results );
