@@ -62,17 +62,21 @@ class OnboardingWizard {
 	 *
 	 * @return void
 	 */
-	public function add_admin_menu(): void {
-		// Always add as submenu under main menu, regardless of completion status
-		add_submenu_page(
-			'fp-digital-marketing-dashboard',
-			__( 'Setup Wizard', 'fp-digital-marketing' ),
-			__( '🚀 Setup Wizard', 'fp-digital-marketing' ),
-			'manage_options',
-			self::PAGE_SLUG,
-			[ $this, 'render_wizard_page' ]
-		);
-	}
+        public function add_admin_menu(): void {
+                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+                        return;
+                }
+
+                // Always add as submenu under main menu, regardless of completion status
+                add_submenu_page(
+                        'fp-digital-marketing-dashboard',
+                        __( 'Setup Wizard', 'fp-digital-marketing' ),
+                        __( '🚀 Setup Wizard', 'fp-digital-marketing' ),
+                        'manage_options',
+                        self::PAGE_SLUG,
+                        [ $this, 'render_wizard_page' ]
+                );
+        }
 
 	/**
 	 * Show admin notice to encourage wizard completion
