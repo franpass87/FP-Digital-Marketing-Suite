@@ -85,10 +85,10 @@ class GoogleOAuth {
                 $raw_client_secret = $api_keys['google_client_secret'] ?? '';
                 $client_secret = '';
 
-                if ( ! empty( $raw_client_secret ) ) {
+                if ( $raw_client_secret !== '' && $raw_client_secret !== null ) {
                         $decrypted_secret = Security::decrypt_sensitive_data( $raw_client_secret );
 
-                        $client_secret = ! empty( $decrypted_secret ) ? $decrypted_secret : $raw_client_secret;
+                        $client_secret = ($decrypted_secret !== '' && $decrypted_secret !== null) ? $decrypted_secret : $raw_client_secret;
                 }
 
                 return [
