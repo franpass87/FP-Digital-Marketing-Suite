@@ -229,6 +229,11 @@ class CachePerformance {
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Cache Performance - Analisi e Benchmark', 'fp-digital-marketing' ); ?></h1>
 			
+			<?php
+			settings_errors( 'cache_performance' );
+			settings_errors( 'cache_settings' );
+			?>
+
 			<?php $this->render_benchmark_actions(); ?>
 			
 			<div class="cache-performance-grid">
