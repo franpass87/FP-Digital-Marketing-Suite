@@ -144,31 +144,63 @@ class ConversionEventsTable {
 	 * @param array $event_data Event data to update
 	 * @return bool True on success, false on failure
 	 */
-	public static function update_event( int $event_id, array $event_data ): bool {
-		global $wpdb;
+        public static function update_event( int $event_id, array $event_data ): bool {
+                global $wpdb;
 
-		$table_name = self::get_table_name();
+                $table_name = self::get_table_name();
 
-		// Serialize attributes if it's an array
-		if ( isset( $event_data['event_attributes'] ) && is_array( $event_data['event_attributes'] ) ) {
-			$event_data['event_attributes'] = wp_json_encode( $event_data['event_attributes'] );
-		}
+                // Serialize attributes if it's an array
+                if ( isset( $event_data['event_attributes'] ) && is_array( $event_data['event_attributes'] ) ) {
+                        $event_data['event_attributes'] = wp_json_encode( $event_data['event_attributes'] );
+                }
 
-		$result = $wpdb->update( 
-			$table_name, 
-			$event_data, 
-			[ 'id' => $event_id ],
-			null,
-			[ '%d' ]
-		);
+                $result = $wpdb->update(
+                        $table_name,
+                        $event_data,
+                        [ 'id' => $event_id ],
+                        null,
+                        [ '%d' ]
+                );
 
-		return $result !== false;
-	}
+                return $result !== false;
+        }
 
-	/**
-	 * Get conversion events with filtering
-	 *
-	 * @param array $criteria Filter criteria
+        /**
+         * Get a single conversion event by ID
+         *
+         * @param int $event_id Event ID
+         * @return array|null Event data array or null if not found
+         */
+        public static function get_event_by_id( int $event_id ): ?array {
+                global $wpdb;
+
+                $table_name = self::get_table_name();
+                $sql = $wpdb->prepare(
+                        "SELECT * FROM $table_name WHERE id = %d LIMIT 1",
+                        $event_id
+                );
+
+                $result = $wpdb->get_row( $sql, ARRAY_A );
+
+                if ( ! $result ) {
+                        return null;
+                }
+
+                if ( isset( $result['event_attributes'] ) && is_string( $result['event_attributes'] ) && '' !== $result['event_attributes'] ) {
+                        $decoded_attributes = json_decode( $result['event_attributes'], true );
+
+                        if ( is_array( $decoded_attributes ) ) {
+                                $result['event_attributes'] = $decoded_attributes;
+                        }
+                }
+
+                return $result;
+        }
+
+        /**
+         * Get conversion events with filtering
+         *
+         * @param array $criteria Filter criteria
 	 * @param int   $limit Results limit
 	 * @param int   $offset Results offset
 	 * @return array Array of event objects
