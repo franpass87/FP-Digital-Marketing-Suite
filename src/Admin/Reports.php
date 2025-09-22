@@ -1506,7 +1506,7 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 				<div class="notice notice-warning inline">
 					<p>
 						<?php esc_html_e( 'Per visualizzare le metriche GA4, configura prima la connessione nelle', 'fp-digital-marketing' ); ?>
-						<a href="<?php echo esc_url( admin_url( 'options-general.php?page=fp-digital-marketing-settings' ) ); ?>">
+                                                <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>">
 							<?php esc_html_e( 'Impostazioni', 'fp-digital-marketing' ); ?>
 						</a>.
 					</p>
@@ -1556,7 +1556,7 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 				<div class="notice notice-warning inline">
 					<p>
 						<?php esc_html_e( 'Per visualizzare le metriche Search Console, configura prima la connessione nelle', 'fp-digital-marketing' ); ?>
-						<a href="<?php echo esc_url( admin_url( 'options-general.php?page=fp-digital-marketing-settings' ) ); ?>">
+                                                <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>">
 							<?php esc_html_e( 'Impostazioni', 'fp-digital-marketing' ); ?>
 						</a>.
 					</p>
