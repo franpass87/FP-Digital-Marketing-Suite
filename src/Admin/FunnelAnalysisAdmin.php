@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Admin;
 
+use FP\DigitalMarketing\Admin\MenuManager;
 use FP\DigitalMarketing\Models\Funnel;
 use FP\DigitalMarketing\Models\CustomerJourney;
 use FP\DigitalMarketing\Database\FunnelTable;
@@ -51,7 +52,7 @@ class FunnelAnalysisAdmin {
 	 */
 	public function add_admin_menu(): void {
 		// Check if centralized MenuManager is active
-		if ( class_exists( '\FP\DigitalMarketing\Admin\MenuManager' ) ) {
+		if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
 			// MenuManager will handle menu registration
 			return;
 		}
