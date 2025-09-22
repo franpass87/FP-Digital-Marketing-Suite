@@ -57,8 +57,8 @@ class FunnelAnalysisAdmin {
 		}
 
 		// Legacy menu registration (fallback)
-		add_submenu_page(
-			'fp-digital-marketing',
+               add_submenu_page(
+                       'fp-digital-marketing-dashboard',
 			__( 'Funnel Analysis', 'fp-digital-marketing' ),
 			__( 'Funnel Analysis', 'fp-digital-marketing' ),
 			Capabilities::FUNNEL_ANALYSIS,
