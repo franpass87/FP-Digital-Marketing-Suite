@@ -340,24 +340,27 @@ class GoogleOAuth {
 	public function get_connection_status(): array {
 		$tokens = $this->get_stored_tokens();
 		
-		if ( ! $tokens ) {
-			return [
-				'connected' => false,
-				'status' => __( 'Non connesso', 'fp-digital-marketing' ),
-				'class' => 'disconnected',
-			];
-		}
+                if ( ! $tokens ) {
+                        return [
+                                'connected' => false,
+                                'expired' => false,
+                                'status' => __( 'Non connesso', 'fp-digital-marketing' ),
+                                'class' => 'disconnected',
+                        ];
+                }
 
-		$expires_at = $tokens['created_at'] + $tokens['expires_in'];
-		$is_expired = time() > $expires_at;
+                $expires_at = $tokens['created_at'] + $tokens['expires_in'];
+                $is_expired = time() >= $expires_at;
 
-		return [
-			'connected' => ! $is_expired,
-			'status' => $is_expired ? 
-				__( 'Token scaduto', 'fp-digital-marketing' ) :
-				__( 'Connesso', 'fp-digital-marketing' ),
-			'class' => $is_expired ? 'expired' : 'connected',
-			'expires_at' => date( 'Y-m-d H:i:s', $expires_at ),
-		];
-	}
+                return [
+                        'connected' => ! $is_expired,
+                        'expired' => $is_expired,
+                        'status' => $is_expired ?
+                                __( 'Token scaduto', 'fp-digital-marketing' ) :
+                                __( 'Connesso', 'fp-digital-marketing' ),
+                        'class' => $is_expired ? 'expired' : 'connected',
+                        'expires_at' => date( 'Y-m-d H:i:s', $expires_at ),
+                        'expires_at_timestamp' => $expires_at,
+                ];
+        }
 }
