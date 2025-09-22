@@ -341,17 +341,22 @@ class Dashboard {
 
 		// For demo purposes, generate mock trend data
 		// In production, this would query actual daily metrics
-		$current_time = $start_time;
-		while ( $current_time <= $end_time ) {
-			$dates[] = date( 'Y-m-d', $current_time );
-			// Generate realistic mock data with trend
-			$base_value = $this->get_base_value_for_metric( $metric );
-			$trend_factor = ( $current_time - $start_time ) / ( $end_time - $start_time );
-			$random_factor = 0.8 + ( rand( 0, 40 ) / 100 ); // ±20% variation
-			$values[] = round( $base_value * ( 1 + $trend_factor * 0.2 ) * $random_factor );
-			
-			$current_time += 86400; // Add 1 day
-		}
+                $current_time = $start_time;
+                $time_range   = $end_time - $start_time;
+                while ( $current_time <= $end_time ) {
+                        $dates[] = date( 'Y-m-d', $current_time );
+                        // Generate realistic mock data with trend
+                        $base_value = $this->get_base_value_for_metric( $metric );
+                        if ( 0 === $time_range ) {
+                                $trend_factor = 0;
+                        } else {
+                                $trend_factor = ( $current_time - $start_time ) / $time_range;
+                        }
+                        $random_factor = 0.8 + ( rand( 0, 40 ) / 100 ); // ±20% variation
+                        $values[] = round( $base_value * ( 1 + $trend_factor * 0.2 ) * $random_factor );
+
+                        $current_time += 86400; // Add 1 day
+                }
 
 		return [
 			'labels' => $dates,
