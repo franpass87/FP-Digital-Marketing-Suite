@@ -14,6 +14,13 @@ namespace FP\DigitalMarketing\Models;
  */
 class SyncLog {
 
+        /**
+         * Cached column definitions for the sync log table.
+         *
+         * @var array<string, array<int, string>>
+         */
+        private static array $table_columns_cache = [];
+
 	/**
 	 * Create a new sync log entry
 	 *
@@ -62,19 +69,61 @@ class SyncLog {
 	 * @param array $data Data to update
 	 * @return bool Success status
 	 */
-	public static function update( int $id, array $data ): bool {
-		$logs = self::get_all_logs();
-		
-		foreach ( $logs as &$log ) {
-			if ( $log['id'] === $id ) {
-				$log = array_merge( $log, $data );
-				update_option( 'fp_dms_sync_logs', $logs );
-				return true;
-			}
-		}
-		
-		return false;
-	}
+        public static function update( int $id, array $data ): bool {
+                global $wpdb;
+
+                $table_name = isset( $wpdb ) ? $wpdb->prefix . 'fp_dms_sync_logs' : '';
+
+                if ( $table_name && self::table_exists( $table_name ) ) {
+                        $columns = self::get_sync_log_table_columns( $table_name );
+
+                        if ( empty( $columns ) ) {
+                                return false;
+                        }
+
+                        $update_data = array_intersect_key( $data, array_flip( $columns ) );
+                        unset( $update_data['id'] );
+
+                        if ( isset( $update_data['started_at'] ) ) {
+                                $update_data['started_at'] = self::normalize_datetime_for_storage( $update_data['started_at'] );
+                        }
+
+                        if ( array_key_exists( 'completed_at', $update_data ) ) {
+                                $update_data['completed_at'] = self::normalize_datetime_for_storage( $update_data['completed_at'] );
+                        }
+
+                        if ( empty( $update_data ) ) {
+                                return false;
+                        }
+
+                        $formats = [];
+                        foreach ( array_keys( $update_data ) as $column ) {
+                                $formats[] = self::get_column_format( $column );
+                        }
+
+                        $result = $wpdb->update(
+                                $table_name,
+                                $update_data,
+                                [ 'id' => $id ],
+                                $formats,
+                                [ '%d' ]
+                        );
+
+                        return false !== $result;
+                }
+
+                $logs = self::get_all_logs();
+
+                foreach ( $logs as &$log ) {
+                        if ( $log['id'] === $id ) {
+                                $log = array_merge( $log, $data );
+                                update_option( 'fp_dms_sync_logs', $logs );
+                                return true;
+                        }
+                }
+
+                return false;
+        }
 
 	/**
 	 * Get all sync logs
@@ -82,16 +131,38 @@ class SyncLog {
 	 * @param int $limit Number of logs to return
 	 * @return array Array of log entries
 	 */
-	public static function get_all_logs( int $limit = 50 ): array {
-		$logs = get_option( 'fp_dms_sync_logs', [] );
-		
-		// Sort by started_at desc
-		usort( $logs, function( $a, $b ) {
-			return strtotime( $b['started_at'] ) - strtotime( $a['started_at'] );
-		} );
-		
-		return array_slice( $logs, 0, $limit );
-	}
+        public static function get_all_logs( int $limit = 50 ): array {
+                global $wpdb;
+
+                $table_name = isset( $wpdb ) ? $wpdb->prefix . 'fp_dms_sync_logs' : '';
+
+                if ( $table_name && self::table_exists( $table_name ) ) {
+                        $limit = max( 1, $limit );
+
+                        $logs = $wpdb->get_results(
+                                $wpdb->prepare(
+                                        "SELECT * FROM {$table_name} ORDER BY started_at DESC LIMIT %d",
+                                        $limit
+                                ),
+                                ARRAY_A
+                        );
+
+                        if ( empty( $logs ) ) {
+                                return [];
+                        }
+
+                        return array_map( [ __CLASS__, 'format_log_entry' ], $logs );
+                }
+
+                $logs = get_option( 'fp_dms_sync_logs', [] );
+
+                // Sort by started_at desc
+                usort( $logs, function( $a, $b ) {
+                        return strtotime( $b['started_at'] ) - strtotime( $a['started_at'] );
+                } );
+
+                return array_map( [ __CLASS__, 'format_log_entry' ], array_slice( $logs, 0, $limit ) );
+        }
 
 	/**
 	 * Get sync logs by status
@@ -126,12 +197,163 @@ class SyncLog {
 	 * @param string $table_name Table name
 	 * @return bool True if table exists
 	 */
-	private static function table_exists( string $table_name ): bool {
-		global $wpdb;
-		
-		$query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name );
-		return $wpdb->get_var( $query ) === $table_name;
-	}
+        private static function table_exists( string $table_name ): bool {
+                global $wpdb;
+
+                if ( ! isset( $wpdb ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
+                        return false;
+                }
+
+                $query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name );
+                return $wpdb->get_var( $query ) === $table_name;
+        }
+
+        /**
+         * Get the column list for the sync log table.
+         *
+         * @param string $table_name Table name.
+         * @return array<int, string> Column names.
+         */
+        private static function get_sync_log_table_columns( string $table_name ): array {
+                if ( isset( self::$table_columns_cache[ $table_name ] ) ) {
+                        return self::$table_columns_cache[ $table_name ];
+                }
+
+                global $wpdb;
+
+                if ( ! isset( $wpdb ) || ! method_exists( $wpdb, 'get_results' ) ) {
+                        return [];
+                }
+
+                $columns = [];
+                $results = $wpdb->get_results( "DESCRIBE {$table_name}", ARRAY_A );
+
+                if ( is_array( $results ) ) {
+                        foreach ( $results as $column ) {
+                                if ( isset( $column['Field'] ) ) {
+                                        $columns[] = $column['Field'];
+                                }
+                        }
+                }
+
+                self::$table_columns_cache[ $table_name ] = $columns;
+
+                return $columns;
+        }
+
+        /**
+         * Map column names to wpdb formats for updates.
+         *
+         * @param string $column Column name.
+         * @return string Format string.
+         */
+        private static function get_column_format( string $column ): string {
+                switch ( $column ) {
+                        case 'records_updated':
+                        case 'sources_count':
+                        case 'errors_count':
+                                return '%d';
+                        case 'duration':
+                                return '%f';
+                        default:
+                                return '%s';
+                }
+        }
+
+        /**
+         * Normalize a datetime value for storage in the database.
+         *
+         * @param mixed $value Datetime value.
+         * @return string|null Normalized value.
+         */
+        private static function normalize_datetime_for_storage( $value ): ?string {
+                if ( $value instanceof \DateTimeInterface ) {
+                        return $value->format( 'Y-m-d H:i:s' );
+                }
+
+                if ( null === $value ) {
+                        return null;
+                }
+
+                if ( is_numeric( $value ) ) {
+                        $timestamp = (int) $value;
+
+                        if ( $timestamp <= 0 ) {
+                                return null;
+                        }
+
+                        return gmdate( 'Y-m-d H:i:s', $timestamp );
+                }
+
+                $value = trim( (string) $value );
+
+                if ( '' === $value || '0000-00-00 00:00:00' === $value ) {
+                        return null;
+                }
+
+                return $value;
+        }
+
+        /**
+         * Normalize a log entry for consistent output.
+         *
+         * @param array $log Log entry.
+         * @return array Normalized log entry.
+         */
+        private static function format_log_entry( array $log ): array {
+                if ( isset( $log['id'] ) ) {
+                        $log['id'] = (int) $log['id'];
+                }
+
+                if ( isset( $log['started_at'] ) ) {
+                        $log['started_at'] = self::normalize_datetime_output( $log['started_at'], false );
+                }
+
+                if ( array_key_exists( 'completed_at', $log ) ) {
+                        $log['completed_at'] = self::normalize_datetime_output( $log['completed_at'], true );
+                }
+
+                return $log;
+        }
+
+        /**
+         * Normalize datetime values when returning log data.
+         *
+         * @param mixed $value              Raw value.
+         * @param bool  $allow_null_default Whether to treat empty values as null.
+         * @return string|null Normalized value.
+         */
+        private static function normalize_datetime_output( $value, bool $allow_null_default = true ): ?string {
+                if ( $value instanceof \DateTimeInterface ) {
+                        $value = $value->format( 'Y-m-d H:i:s' );
+                }
+
+                if ( null === $value ) {
+                        return null;
+                }
+
+                if ( is_numeric( $value ) ) {
+                        $timestamp = (int) $value;
+
+                        if ( $timestamp <= 0 ) {
+                                return null;
+                        }
+
+                        return gmdate( 'Y-m-d H:i:s', $timestamp );
+                }
+
+                $value = (string) $value;
+
+                if ( '' === $value ) {
+                        return null;
+                }
+
+                if ( $allow_null_default && '0000-00-00 00:00:00' === $value ) {
+                        return null;
+                }
+
+                return $value;
+        }
 
 	/**
 	 * Clear old logs
