@@ -9,9 +9,10 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Admin;
 
-use FP\DigitalMarketing\Models\UTMCampaign;
-use FP\DigitalMarketing\Helpers\UTMGenerator;
+use FP\DigitalMarketing\Admin\MenuManager;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Helpers\UTMGenerator;
+use FP\DigitalMarketing\Models\UTMCampaign;
 
 /**
  * UTM Campaign Manager class for admin interface
@@ -55,12 +56,12 @@ class UTMCampaignManager {
 	 *
 	 * @return void
 	 */
-	public function add_admin_menu(): void {
-		// Check if centralized MenuManager is active
-		if ( class_exists( '\FP\DigitalMarketing\Admin\MenuManager' ) ) {
-			// MenuManager will handle menu registration
-			return;
-		}
+        public function add_admin_menu(): void {
+                // Check if centralized MenuManager is active
+                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+                        // MenuManager will handle menu registration
+                        return;
+                }
 
 		// Legacy menu registration (fallback)
 		add_submenu_page(
