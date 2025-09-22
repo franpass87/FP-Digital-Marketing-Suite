@@ -556,7 +556,7 @@ class EmailNotifications {
 	private static function update_rate_limit( string $recipient, string $type ): void {
 		$cache_key = "email_rate_limit_{$recipient}_{$type}";
 		$count = PerformanceCache::get( $cache_key, 'email_limits' ) ?: 0;
-		PerformanceCache::set( $cache_key, $count + 1, 'email_limits', HOUR_IN_SECONDS );
+                PerformanceCache::set( $cache_key, 'email_limits', $count + 1, HOUR_IN_SECONDS );
 	}
 
 	/**
