@@ -609,8 +609,8 @@ class DataExporter {
 			$memory_usage = memory_get_usage( true );
 			$memory_limit = ini_get( 'memory_limit' );
 			$memory_limit_bytes = self::return_bytes( $memory_limit );
-			
-			if ( $memory_usage > ( $memory_limit_bytes * 0.8 ) ) {
+
+			if ( null !== $memory_limit_bytes && $memory_limit_bytes > 0 && $memory_usage > ( $memory_limit_bytes * 0.8 ) ) {
 				throw new \Exception( __( 'Memoria insufficiente per la generazione PDF.', 'fp-digital-marketing' ) );
 			}
 
@@ -658,28 +658,37 @@ class DataExporter {
 	}
 
 	/**
-	 * Convert memory limit string to bytes
+	 * Convert memory limit string to bytes.
 	 *
-	 * @param string $val Memory limit string (e.g., '128M')
-	 * @return int Memory limit in bytes
+	 * @param string $val Memory limit string (e.g., '128M').
+	 * @return int|null Memory limit in bytes, null when unlimited or invalid.
 	 */
-	private static function return_bytes( string $val ): int {
+	private static function return_bytes( string $val ): ?int {
 		$val = trim( $val );
-		$last = strtolower( $val[ strlen( $val ) - 1 ] );
-		$val = (int) $val;
-		
-		switch( $last ) {
-			case 'g':
-				$val *= 1024;
-				// Fall through
-			case 'm':
-				$val *= 1024;
-				// Fall through
-			case 'k':
-				$val *= 1024;
+
+		if ( '' === $val ) {
+			return null;
 		}
-		
-		return $val;
+
+		$last_character = strtolower( $val[ strlen( $val ) - 1 ] );
+		$numeric_value  = (int) $val;
+
+		switch ( $last_character ) {
+			case 'g':
+				$numeric_value *= 1024;
+				// Fall through.
+			case 'm':
+				$numeric_value *= 1024;
+				// Fall through.
+			case 'k':
+				$numeric_value *= 1024;
+		}
+
+		if ( $numeric_value <= 0 ) {
+			return null;
+		}
+
+		return $numeric_value;
 	}
 
 	/**

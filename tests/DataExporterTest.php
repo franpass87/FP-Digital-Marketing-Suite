@@ -344,4 +344,20 @@ class DataExporterTest extends TestCase {
 		$this->assertEquals( 0, $decoded['row_count'] );
 		$this->assertEmpty( $decoded['data'] );
 	}
+	/**
+	 * Test return_bytes handles unlimited memory values.
+	 *
+	 * @return void
+	 */
+	public function test_return_bytes_handles_unlimited_memory(): void {
+		$reflection = new ReflectionClass( DataExporter::class );
+		$method = $reflection->getMethod( 'return_bytes' );
+		$method->setAccessible( true );
+
+		$this->assertNull( $method->invoke( null, '-1' ) );
+		$this->assertNull( $method->invoke( null, '0' ) );
+		$this->assertSame( 134217728, $method->invoke( null, '128M' ) );
+		$this->assertSame( 1073741824, $method->invoke( null, '1G' ) );
+	}
+
 }
