@@ -153,6 +153,35 @@ class CacheBenchmarkTest extends TestCase {
 	}
 
 	/**
+	 * Ensure load tests handle zero requests per user without errors.
+	 *
+	 * @return void
+	 */
+	public function testRunLoadTestWithZeroRequestsPerUser(): void {
+		$results = CacheBenchmark::run_load_test( 2, 0 );
+
+		$this->assertIsArray( $results );
+		$this->assertArrayHasKey( 'scenarios', $results );
+		$this->assertArrayHasKey( 'overall_stats', $results );
+
+		foreach ( $results['scenarios'] as $scenario_data ) {
+			$this->assertSame( 0, $scenario_data['total_requests'] );
+			$this->assertSame( 0.0, $scenario_data['avg_response_time'] );
+			$this->assertSame( 0.0, $scenario_data['min_response_time'] );
+			$this->assertSame( 0.0, $scenario_data['max_response_time'] );
+			$this->assertSame( 0.0, $scenario_data['error_rate'] );
+		}
+
+		$this->assertSame( 0, $results['overall_stats']['total_requests'] );
+		$this->assertSame( 0.0, $results['overall_stats']['avg_response_time'] );
+		$this->assertSame( 0.0, $results['overall_stats']['min_response_time'] );
+		$this->assertSame( 0.0, $results['overall_stats']['max_response_time'] );
+		$this->assertSame( 0.0, $results['overall_stats']['error_rate'] );
+		$this->assertSame( 0.0, $results['overall_stats']['cache_hit_ratio'] );
+	}
+
+
+	/**
 	 * Test memory usage test
 	 *
 	 * @return void

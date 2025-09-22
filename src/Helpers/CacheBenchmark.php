@@ -117,8 +117,8 @@ class CacheBenchmark {
 
 		$results['avg_without_cache'] = $avg_without_cache;
 		$results['avg_with_cache'] = $avg_with_cache;
-		$results['performance_improvement'] = $avg_without_cache > 0 ? ( ( $avg_without_cache - $avg_with_cache ) / $avg_without_cache ) * 100 : 0;
-		$results['cache_hit_ratio'] = $iterations > 1 ? ( $cache_hits / ( $iterations - 1 ) ) * 100 : 0;
+		$results['performance_improvement'] = $avg_without_cache > 0 ? ( ( $avg_without_cache - $avg_with_cache ) / $avg_without_cache ) * 100 : 0.0;
+		$results['cache_hit_ratio'] = $iterations > 1 ? (float) ( ( $cache_hits / ( $iterations - 1 ) ) * 100 ) : 0.0;
 
 		// Store results
 		self::store_benchmark_results( $results );
@@ -183,7 +183,7 @@ class CacheBenchmark {
 			'cache_memory_usage' => 0,
 			'final_memory' => 0,
 			'final_peak' => 0,
-			'memory_efficiency' => 0,
+			'memory_efficiency' => 0.0,
 		];
 
 		// Generate test data
@@ -208,7 +208,9 @@ class CacheBenchmark {
 		$results['final_peak'] = memory_get_peak_usage( true );
 
 		// Calculate efficiency (lower is better)
-		$results['memory_efficiency'] = $results['cache_memory_usage'] / $results['test_data_size'];
+		if ( $results['test_data_size'] > 0 ) {
+			$results['memory_efficiency'] = (float) ( $results['cache_memory_usage'] / $results['test_data_size'] );
+		}
 
 		// Clean up
 		for ( $i = 0; $i < 100; $i++ ) {
@@ -316,7 +318,15 @@ class CacheBenchmark {
 			'errors' => 0,
 		];
 
-		$total_requests = $concurrent_users * $requests_per_user;
+		if ( $concurrent_users < 1 || $requests_per_user < 1 ) {
+			$results['avg_response_time'] = 0.0;
+			$results['min_response_time'] = 0.0;
+			$results['max_response_time'] = 0.0;
+			$results['total_requests'] = 0;
+			$results['error_rate'] = 0.0;
+
+			return $results;
+		}
 
 		for ( $user = 0; $user < $concurrent_users; $user++ ) {
 			for ( $request = 0; $request < $requests_per_user; $request++ ) {
@@ -385,10 +395,20 @@ class CacheBenchmark {
 		}
 
 		// Calculate scenario statistics
-		$results['avg_response_time'] = array_sum( $results['request_times'] ) / count( $results['request_times'] );
+		$results['total_requests'] = count( $results['request_times'] );
+
+		if ( 0 === $results['total_requests'] ) {
+			$results['avg_response_time'] = 0.0;
+			$results['min_response_time'] = 0.0;
+			$results['max_response_time'] = 0.0;
+			$results['error_rate'] = 0.0;
+
+			return $results;
+		}
+
+		$results['avg_response_time'] = array_sum( $results['request_times'] ) / $results['total_requests'];
 		$results['min_response_time'] = min( $results['request_times'] );
 		$results['max_response_time'] = max( $results['request_times'] );
-		$results['total_requests'] = count( $results['request_times'] );
 		$results['error_rate'] = ( $results['errors'] / $results['total_requests'] ) * 100;
 
 		return $results;
@@ -415,13 +435,31 @@ class CacheBenchmark {
 			$total_cache_misses += $scenario['cache_misses'];
 		}
 
+		if ( 0 === $total_requests || empty( $all_times ) ) {
+			return [
+				'total_requests' => 0,
+				'avg_response_time' => 0.0,
+				'min_response_time' => 0.0,
+				'max_response_time' => 0.0,
+				'error_rate' => 0.0,
+				'cache_hit_ratio' => 0.0,
+			];
+		}
+
+		$cache_lookups = $total_cache_hits + $total_cache_misses;
+		$cache_hit_ratio = 0.0;
+
+		if ( $cache_lookups > 0 ) {
+			$cache_hit_ratio = ( $total_cache_hits / $cache_lookups ) * 100;
+		}
+
 		return [
 			'total_requests' => $total_requests,
 			'avg_response_time' => array_sum( $all_times ) / count( $all_times ),
 			'min_response_time' => min( $all_times ),
 			'max_response_time' => max( $all_times ),
 			'error_rate' => ( $total_errors / $total_requests ) * 100,
-			'cache_hit_ratio' => ( $total_cache_hits / ( $total_cache_hits + $total_cache_misses ) ) * 100,
+			'cache_hit_ratio' => $cache_hit_ratio,
 		];
 	}
 
