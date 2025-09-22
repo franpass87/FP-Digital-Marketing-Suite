@@ -994,7 +994,7 @@ class Settings {
 			}
 
 			// Redirect to clean URL
-			wp_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
+                        wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
 			exit;
 		}
 
@@ -1015,7 +1015,7 @@ class Settings {
 				);
 			}
 
-			wp_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
+                        wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
 			exit;
 		}
 
@@ -1049,7 +1049,7 @@ class Settings {
 				);
 			}
 
-			wp_redirect( admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) );
+                        wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
 			exit;
 		}
 	}
@@ -1390,12 +1390,12 @@ class Settings {
 			<tr>
 				<th scope="row"><?php esc_html_e( 'Gestione Cache', 'fp-digital-marketing' ); ?></th>
 				<td>
-					<a href="<?php echo esc_url( add_query_arg( 'action', 'invalidate_cache', admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+                                        <a href="<?php echo esc_url( add_query_arg( 'action', 'invalidate_cache', admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>"
 					   class="button" 
 					   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler invalidare tutta la cache?', 'fp-digital-marketing' ); ?>')">
 						<?php esc_html_e( 'Invalida Cache', 'fp-digital-marketing' ); ?>
 					</a>
-					<a href="<?php echo esc_url( add_query_arg( 'action', 'clear_cache_stats', admin_url( 'options-general.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+                                        <a href="<?php echo esc_url( add_query_arg( 'action', 'clear_cache_stats', admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>"
 					   class="button" 
 					   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler cancellare le statistiche?', 'fp-digital-marketing' ); ?>')">
 						<?php esc_html_e( 'Cancella Statistiche', 'fp-digital-marketing' ); ?>
