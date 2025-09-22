@@ -110,6 +110,12 @@ class MetricsCache {
 			'order_by'     => 'fetched_at',
 			'order'        => 'DESC',
 		];
+		$sortable_columns = [ 'fetched_at', 'period_start', 'period_end', 'client_id', 'metric', 'source' ];
+		$default_order_by = $defaults['order_by'];
+		$sanitized_default_order_by = sanitize_sql_orderby( $default_order_by );
+		if ( empty( $sanitized_default_order_by ) || ! in_array( $sanitized_default_order_by, $sortable_columns, true ) ) {
+			$sanitized_default_order_by = $default_order_by;
+		}
 
 		$args = wp_parse_args( $args, $defaults );
 
@@ -132,7 +138,15 @@ class MetricsCache {
 
 		$where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
 
-		$order_by = sanitize_sql_orderby( $args['order_by'] );
+		$order_by_column = is_string( $args['order_by'] ) ? $args['order_by'] : $default_order_by;
+		if ( ! in_array( $order_by_column, $sortable_columns, true ) ) {
+			$order_by_column = $default_order_by;
+		}
+
+		$order_by = sanitize_sql_orderby( $order_by_column );
+		if ( empty( $order_by ) || ! in_array( $order_by, $sortable_columns, true ) ) {
+			$order_by = $sanitized_default_order_by;
+		}
 		$order = in_array( strtoupper( $args['order'] ), [ 'ASC', 'DESC' ], true ) ? strtoupper( $args['order'] ) : 'DESC';
 
 		$sql = "SELECT * FROM $table_name $where_sql ORDER BY $order_by $order LIMIT %d OFFSET %d";
