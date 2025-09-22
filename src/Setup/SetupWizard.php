@@ -340,19 +340,19 @@ class SetupWizard {
         
         <h3><?php esc_html_e( 'Next Steps:', 'fp-digital-marketing' ); ?></h3>
         <ul>
-            <li><a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-dms-dashboard' ) ); ?>">
+            <li><a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ); ?>">
                 <?php esc_html_e( 'Visit your Analytics Dashboard', 'fp-digital-marketing' ); ?>
             </a></li>
             <li><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=cliente' ) ); ?>">
                 <?php esc_html_e( 'Add your first client', 'fp-digital-marketing' ); ?>
             </a></li>
-            <li><a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-dms-settings' ) ); ?>">
+            <li><a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>">
                 <?php esc_html_e( 'Configure additional settings', 'fp-digital-marketing' ); ?>
             </a></li>
         </ul>
         
         <div class="setup-buttons">
-            <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-dms-dashboard' ) ); ?>" 
+            <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ); ?>"
                class="button button-primary button-large">
                 <?php esc_html_e( 'Go to Dashboard', 'fp-digital-marketing' ); ?>
             </a>
@@ -373,11 +373,11 @@ class SetupWizard {
             </div>
             
             <p>
-                <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-dms-dashboard' ) ); ?>" 
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ); ?>"
                    class="button button-primary">
                     <?php esc_html_e( 'Go to Dashboard', 'fp-digital-marketing' ); ?>
                 </a>
-                <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-dms-settings' ) ); ?>" 
+                <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>"
                    class="button">
                     <?php esc_html_e( 'Settings', 'fp-digital-marketing' ); ?>
                 </a>
