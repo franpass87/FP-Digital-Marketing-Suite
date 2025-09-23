@@ -783,10 +783,9 @@ class ConversionEventsAdmin {
 			$event_type = isset( $criteria['event_type'] ) ? sanitize_text_field( $criteria['event_type'] ) : '';
 			$start_date = isset( $criteria['start_date'] ) ? sanitize_text_field( $criteria['start_date'] ) : '';
 			$end_date = isset( $criteria['end_date'] ) ? sanitize_text_field( $criteria['end_date'] ) : '';
-			$status = isset( $criteria['status'] ) ? sanitize_text_field( $criteria['status'] ) : '';
-			
-			// Generate unique filename
-			$filename = 'conversion_events_' . date( 'Y-m-d_H-i-s' ) . '.csv';
+
+                        // Generate unique filename
+                        $filename = 'conversion_events_' . date( 'Y-m-d_H-i-s' ) . '.csv';
 			$upload_dir = wp_upload_dir();
 			$exports_dir = $upload_dir['basedir'] . '/fp-dms-exports/';
 			
@@ -800,7 +799,7 @@ class ConversionEventsAdmin {
 			$file_path = $exports_dir . $filename;
 			
 			// Get events based on criteria
-			$events = $this->get_events_for_export( $client_id, $event_type, $start_date, $end_date, $status );
+                        $events = $this->get_events_for_export( $client_id, $event_type, $start_date, $end_date );
 			
 			// Generate CSV content
 			$csv_content = $this->generate_csv_content( $events );
@@ -836,27 +835,25 @@ class ConversionEventsAdmin {
 		}
 	}
 	
-	/**
-	 * Get events for export based on criteria
-	 *
-	 * @param int $client_id Client ID filter
-	 * @param string $event_type Event type filter  
-	 * @param string $start_date Start date filter
-	 * @param string $end_date End date filter
-	 * @param string $status Status filter
-	 * @return array Events data
-	 */
-	private function get_events_for_export( int $client_id, string $event_type, string $start_date, string $end_date, string $status ): array {
-		// This would typically query your ConversionEvent model with the criteria
-		// For now, we'll use a mock implementation that shows the structure
-		return ConversionEvent::get_events_for_export( [
-			'client_id' => $client_id,
-			'event_type' => $event_type,
-			'start_date' => $start_date,
-			'end_date' => $end_date,
-			'status' => $status,
-		] );
-	}
+        /**
+         * Get events for export based on criteria
+         *
+         * @param int    $client_id Client ID filter
+         * @param string $event_type Event type filter
+         * @param string $start_date Start date filter
+         * @param string $end_date End date filter
+         * @return array Events data
+         */
+        private function get_events_for_export( int $client_id, string $event_type, string $start_date, string $end_date ): array {
+                // This would typically query your ConversionEvent model with the criteria
+                // For now, we'll use a mock implementation that shows the structure
+                return ConversionEvent::get_events_for_export( [
+                        'client_id' => $client_id,
+                        'event_type' => $event_type,
+                        'start_date' => $start_date,
+                        'end_date' => $end_date,
+                ] );
+        }
 	
 	/**
 	 * Generate CSV content from events data
@@ -868,36 +865,50 @@ class ConversionEventsAdmin {
 		$csv_lines = [];
 		
 		// CSV headers
-		$headers = [
-			__( 'ID', 'fp-digital-marketing' ),
-			__( 'Nome Evento', 'fp-digital-marketing' ),
-			__( 'Tipo', 'fp-digital-marketing' ),
-			__( 'Cliente ID', 'fp-digital-marketing' ),
-			__( 'Valore', 'fp-digital-marketing' ),
-			__( 'Stato', 'fp-digital-marketing' ),
-			__( 'Data Creazione', 'fp-digital-marketing' ),
-			__( 'Data Aggiornamento', 'fp-digital-marketing' ),
-			__( 'Descrizione', 'fp-digital-marketing' ),
-		];
-		
-		$csv_lines[] = $this->array_to_csv_line( $headers );
-		
-		// Add event data
-		foreach ( $events as $event ) {
-			$row = [
-				$event['id'] ?? '',
-				$event['name'] ?? '',
-				$event['event_type'] ?? '',
-				$event['client_id'] ?? '',
-				$event['value'] ?? '',
-				$event['status'] ?? '',
-				$event['created_at'] ?? '',
-				$event['updated_at'] ?? '',
-				$event['description'] ?? '',
-			];
-			
-			$csv_lines[] = $this->array_to_csv_line( $row );
-		}
+                $headers = [
+                        __( 'ID', 'fp-digital-marketing' ),
+                        __( 'ID Evento', 'fp-digital-marketing' ),
+                        __( 'Nome Evento', 'fp-digital-marketing' ),
+                        __( 'Tipo', 'fp-digital-marketing' ),
+                        __( 'Cliente ID', 'fp-digital-marketing' ),
+                        __( 'Sorgente', 'fp-digital-marketing' ),
+                        __( 'ID Evento Sorgente', 'fp-digital-marketing' ),
+                        __( 'Valore Evento', 'fp-digital-marketing' ),
+                        __( 'Valuta', 'fp-digital-marketing' ),
+                        __( 'Duplicato', 'fp-digital-marketing' ),
+                        __( 'Data Creazione', 'fp-digital-marketing' ),
+                        __( 'Data Elaborazione', 'fp-digital-marketing' ),
+                ];
+
+                $csv_lines[] = $this->array_to_csv_line( $headers );
+
+                // Add event data
+                foreach ( $events as $event ) {
+                        $is_duplicate = '';
+
+                        if ( isset( $event['is_duplicate'] ) ) {
+                                $is_duplicate = ( (int) $event['is_duplicate'] ) === 1
+                                        ? __( 'Sì', 'fp-digital-marketing' )
+                                        : __( 'No', 'fp-digital-marketing' );
+                        }
+
+                        $row = [
+                                $event['id'] ?? '',
+                                $event['event_id'] ?? '',
+                                $event['event_name'] ?? '',
+                                $event['event_type'] ?? '',
+                                $event['client_id'] ?? '',
+                                $event['source'] ?? '',
+                                $event['source_event_id'] ?? '',
+                                $event['event_value'] ?? '',
+                                $event['currency'] ?? '',
+                                $is_duplicate,
+                                $event['created_at'] ?? '',
+                                $event['processed_at'] ?? '',
+                        ];
+
+                        $csv_lines[] = $this->array_to_csv_line( $row );
+                }
 		
 		return implode( "\n", $csv_lines );
 	}
