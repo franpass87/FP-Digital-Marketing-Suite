@@ -132,7 +132,7 @@
                 
                 if (!kpi) return;
 
-                const changePercent = comp ? comp.change_percent : 0;
+                const changePercent = comp ? comp.change_percentage : 0;
                 const changeClass = changePercent > 0 ? 'positive' : changePercent < 0 ? 'negative' : 'neutral';
                 const changeIcon = changePercent > 0 ? '↗' : changePercent < 0 ? '↘' : '→';
 
