@@ -421,6 +421,15 @@ class CacheBenchmark {
 	 * @return array Overall statistics
 	 */
 	private static function calculate_overall_stats( array $scenarios ): array {
+		$default_stats = [
+			'total_requests' => 0,
+			'avg_response_time' => 0.0,
+			'min_response_time' => 0.0,
+			'max_response_time' => 0.0,
+			'error_rate' => 0.0,
+			'cache_hit_ratio' => 0.0,
+		];
+
 		$all_times = [];
 		$total_requests = 0;
 		$total_errors = 0;
@@ -428,22 +437,37 @@ class CacheBenchmark {
 		$total_cache_misses = 0;
 
 		foreach ( $scenarios as $scenario ) {
-			$all_times = array_merge( $all_times, $scenario['request_times'] );
-			$total_requests += $scenario['total_requests'];
-			$total_errors += $scenario['errors'];
-			$total_cache_hits += $scenario['cache_hits'];
-			$total_cache_misses += $scenario['cache_misses'];
+			$scenario_times = [];
+
+			if ( isset( $scenario['request_times'] ) && is_array( $scenario['request_times'] ) ) {
+				$scenario_times = $scenario['request_times'];
+			}
+
+			if ( ! empty( $scenario_times ) ) {
+				$all_times = array_merge( $all_times, $scenario_times );
+			}
+
+			if ( isset( $scenario['total_requests'] ) ) {
+				$total_requests += (int) $scenario['total_requests'];
+			} else {
+				$total_requests += count( $scenario_times );
+			}
+
+			if ( isset( $scenario['errors'] ) ) {
+				$total_errors += (int) $scenario['errors'];
+			}
+
+			if ( isset( $scenario['cache_hits'] ) ) {
+				$total_cache_hits += (int) $scenario['cache_hits'];
+			}
+
+			if ( isset( $scenario['cache_misses'] ) ) {
+				$total_cache_misses += (int) $scenario['cache_misses'];
+			}
 		}
 
 		if ( 0 === $total_requests || empty( $all_times ) ) {
-			return [
-				'total_requests' => 0,
-				'avg_response_time' => 0.0,
-				'min_response_time' => 0.0,
-				'max_response_time' => 0.0,
-				'error_rate' => 0.0,
-				'cache_hit_ratio' => 0.0,
-			];
+			return $default_stats;
 		}
 
 		$cache_lookups = $total_cache_hits + $total_cache_misses;

@@ -180,12 +180,36 @@ class CacheBenchmarkTest extends TestCase {
 		$this->assertSame( 0.0, $results['overall_stats']['cache_hit_ratio'] );
 	}
 
-
 	/**
-	 * Test memory usage test
+	 * Ensure calculate_overall_stats gracefully handles empty scenario input.
 	 *
 	 * @return void
 	 */
+	public function testCalculateOverallStatsHandlesEmptyScenarios(): void {
+		$reflection = new \ReflectionMethod( CacheBenchmark::class, 'calculate_overall_stats' );
+		$reflection->setAccessible( true );
+
+		$result = $reflection->invoke( null, [] );
+
+		$this->assertIsArray( $result );
+		$this->assertSame(
+			[
+				'total_requests' => 0,
+				'avg_response_time' => 0.0,
+				'min_response_time' => 0.0,
+				'max_response_time' => 0.0,
+				'error_rate' => 0.0,
+				'cache_hit_ratio' => 0.0,
+			],
+			$result
+		);
+	}
+
+        /**
+         * Test memory usage test
+         *
+         * @return void
+         */
 	public function testRunMemoryTest(): void {
 		$results = CacheBenchmark::run_memory_test( 1 );
 		
