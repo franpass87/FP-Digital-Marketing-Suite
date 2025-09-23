@@ -93,10 +93,40 @@
          * Check if we're on an FP DMS page
          */
         isOnFPDMSPage: function() {
-            return window.location.href.includes('fp-digital-marketing') ||
-                   window.location.href.includes('fp-digital-marketing-cache-performance') ||
-                   window.location.href.includes('fp-segmentation') ||
-                   window.location.href.includes('fp-utm-campaign');
+            const fpdmsSlugs = [
+                'fp-digital-marketing-dashboard',
+                'fp-digital-marketing-reports',
+                'fp-utm-campaign-manager',
+                'fp-digital-marketing-funnel-analysis',
+                'fp-audience-segments',
+                'fp-conversion-events',
+                'fp-digital-marketing-alerts',
+                'fp-digital-marketing-anomalies',
+                'fp-digital-marketing-cache-performance',
+                'fp-platform-connections',
+                'fp-digital-marketing-settings',
+                'fp-digital-marketing-security',
+                'fp-digital-marketing-onboarding'
+            ];
+
+            const currentUrl = window.location.href;
+            let pageParam = null;
+
+            if (typeof URL !== 'undefined' && typeof URLSearchParams !== 'undefined') {
+                const parsedUrl = new URL(currentUrl);
+                pageParam = parsedUrl.searchParams.get('page');
+            } else {
+                const pageMatch = currentUrl.match(/[?&]page=([^&#]+)/);
+                pageParam = pageMatch ? decodeURIComponent(pageMatch[1]) : null;
+            }
+
+            if (pageParam && fpdmsSlugs.includes(pageParam)) {
+                return true;
+            }
+
+            return fpdmsSlugs.some(function(slug) {
+                return currentUrl.indexOf(slug) !== -1;
+            });
         },
 
         /**
