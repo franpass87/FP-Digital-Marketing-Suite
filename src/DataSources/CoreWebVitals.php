@@ -266,9 +266,9 @@ class CoreWebVitals {
 	 * @param string $end_date   End date
 	 * @return void
 	 */
-	private function store_metrics( int $client_id, array $metrics, string $start_date, string $end_date ): void {
-                $period_start = $start_date . ' 00:00:00';
-                $period_end = $end_date . ' 23:59:59';
+        private function store_metrics( int $client_id, array $metrics, string $start_date, string $end_date ): void {
+                $period_start = $this->normalize_period_boundary( $start_date, true );
+                $period_end = $this->normalize_period_boundary( $end_date, false );
 
                 foreach ( $metrics as $metric_name => $value ) {
                         MetricsCache::save(
@@ -285,7 +285,50 @@ class CoreWebVitals {
                                 ]
                         );
                 }
-	}
+        }
+
+        /**
+         * Normalize incoming date or datetime strings to MySQL timestamps.
+         *
+         * Ensures the returned value is a valid YYYY-mm-dd HH:MM:SS string and
+         * clamps the time portion to the beginning or end of the day.
+         *
+         * @param string $date_string Raw date or datetime string.
+         * @param bool   $is_start    Whether this represents the period start.
+         * @return string Normalized MySQL-compatible timestamp.
+         */
+        private function normalize_period_boundary( string $date_string, bool $is_start ): string {
+                $timestamp = strtotime( $date_string );
+
+                if ( false === $timestamp && preg_match( '/^\d{4}-\d{2}-\d{2}/', $date_string, $matches ) ) {
+                        $timestamp = strtotime( $matches[0] );
+                }
+
+                if ( false === $timestamp ) {
+                        $timestamp = time();
+                }
+
+                if ( function_exists( 'wp_timezone' ) ) {
+                        $timezone = wp_timezone();
+                } else {
+                        try {
+                                $timezone = new \DateTimeZone( date_default_timezone_get() ?: 'UTC' );
+                        } catch ( \Exception $exception ) {
+                                $timezone = new \DateTimeZone( 'UTC' );
+                        }
+                }
+
+                $date_time = new \DateTime( '@' . $timestamp );
+                $date_time->setTimezone( $timezone );
+
+                if ( $is_start ) {
+                        $date_time->setTime( 0, 0, 0 );
+                } else {
+                        $date_time->setTime( 23, 59, 59 );
+                }
+
+                return $date_time->format( 'Y-m-d H:i:s' );
+        }
 
 	/**
 	 * Generate client-side beacon JavaScript for real-time metrics
