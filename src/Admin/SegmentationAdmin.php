@@ -294,24 +294,253 @@ class SegmentationAdmin {
 	 * @param int $segment_id Segment ID
 	 * @return void
 	 */
-	private function render_edit_segment( int $segment_id ): void {
-		$segment = AudienceSegment::load_by_id( $segment_id );
-		
-		if ( ! $segment ) {
-			echo '<div class="notice notice-error"><p>';
-			echo esc_html__( 'Segmento non trovato.', 'fp-digital-marketing' );
-			echo '</p></div>';
-			return;
-		}
+        private function render_edit_segment( int $segment_id ): void {
+                $segment = AudienceSegment::load_by_id( $segment_id );
 
-		$this->render_segment_form( $segment );
-	}
+                if ( ! $segment ) {
+                        echo '<div class="notice notice-error"><p>';
+                        echo esc_html__( 'Segmento non trovato.', 'fp-digital-marketing' );
+                        echo '</p></div>';
+                        return;
+                }
 
-	/**
-	 * Render segment form
-	 *
-	 * @param AudienceSegment|null $segment Segment to edit, null for create
-	 * @return void
+                $this->render_segment_form( $segment );
+        }
+
+        /**
+         * Render view segment page
+         *
+         * @param int $segment_id Segment ID
+         * @return void
+         */
+        private function render_view_segment( int $segment_id ): void {
+                $list_url = remove_query_arg( [ 'action', 'segment_id' ] );
+
+                if ( $segment_id <= 0 ) {
+                        echo '<div class="notice notice-error"><p>';
+                        echo esc_html__( 'Segmento non trovato.', 'fp-digital-marketing' );
+                        echo '</p></div>';
+                        echo '<p><a href="' . esc_url( $list_url ) . '" class="button">' . esc_html__( 'Torna alla lista segmenti', 'fp-digital-marketing' ) . '</a></p>';
+                        return;
+                }
+
+                $segment = AudienceSegment::load_by_id( $segment_id );
+
+                if ( ! $segment ) {
+                        echo '<div class="notice notice-error"><p>';
+                        echo esc_html__( 'Segmento non trovato.', 'fp-digital-marketing' );
+                        echo '</p></div>';
+                        echo '<p><a href="' . esc_url( $list_url ) . '" class="button">' . esc_html__( 'Torna alla lista segmenti', 'fp-digital-marketing' ) . '</a></p>';
+                        return;
+                }
+
+                $edit_url = add_query_arg(
+                        [
+                                'action' => 'edit',
+                                'segment_id' => $segment->get_id(),
+                        ]
+                );
+
+                $client_name = get_the_title( $segment->get_client_id() ) ?: __( 'Cliente Sconosciuto', 'fp-digital-marketing' );
+                $client_edit_link = get_edit_post_link( $segment->get_client_id() );
+
+                $status_class = $segment->is_active() ? 'status-active' : 'status-inactive';
+                $status_text = $segment->is_active()
+                        ? __( 'Attivo', 'fp-digital-marketing' )
+                        : __( 'Inattivo', 'fp-digital-marketing' );
+
+                $last_evaluated = $segment->get_last_evaluated_at()
+                        ? date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( (string) $segment->get_last_evaluated_at() ) )
+                        : __( 'Mai', 'fp-digital-marketing' );
+
+                $created_at = $segment->get_created_at()
+                        ? date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( (string) $segment->get_created_at() ) )
+                        : '';
+
+                $updated_at = $segment->get_updated_at()
+                        ? date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( (string) $segment->get_updated_at() ) )
+                        : '';
+
+                echo '<div class="segment-view-actions">';
+                echo '<a href="' . esc_url( $list_url ) . '" class="button">&larr; ' . esc_html__( 'Torna all\'elenco segmenti', 'fp-digital-marketing' ) . '</a>';
+                echo ' <a href="' . esc_url( $edit_url ) . '" class="button button-primary">' . esc_html__( 'Modifica Segmento', 'fp-digital-marketing' ) . '</a>';
+                echo '</div>';
+
+                echo '<div class="segment-overview">';
+                echo '<h2>' . esc_html( $segment->get_name() ) . '</h2>';
+
+                if ( $segment->get_description() ) {
+                        echo '<p class="description">' . esc_html( $segment->get_description() ) . '</p>';
+                }
+
+                echo '<table class="form-table segment-view-table">';
+                echo '<tr>';
+                echo '<th>' . esc_html__( 'Cliente', 'fp-digital-marketing' ) . '</th>';
+                echo '<td>';
+                if ( $client_edit_link ) {
+                        echo '<a href="' . esc_url( $client_edit_link ) . '">' . esc_html( $client_name ) . '</a>';
+                } else {
+                        echo esc_html( $client_name );
+                }
+                echo '</td>';
+                echo '</tr>';
+
+                echo '<tr>';
+                echo '<th>' . esc_html__( 'Stato', 'fp-digital-marketing' ) . '</th>';
+                echo '<td><span class="' . esc_attr( $status_class ) . '">' . esc_html( $status_text ) . '</span></td>';
+                echo '</tr>';
+
+                echo '<tr>';
+                echo '<th>' . esc_html__( 'Membri', 'fp-digital-marketing' ) . '</th>';
+                echo '<td>' . esc_html( number_format_i18n( $segment->get_member_count() ) );
+                echo '</td>';
+                echo '</tr>';
+
+                echo '<tr>';
+                echo '<th>' . esc_html__( 'Ultima Valutazione', 'fp-digital-marketing' ) . '</th>';
+                echo '<td>' . esc_html( $last_evaluated ) . '</td>';
+                echo '</tr>';
+
+                if ( $created_at ) {
+                        echo '<tr>';
+                        echo '<th>' . esc_html__( 'Creato il', 'fp-digital-marketing' ) . '</th>';
+                        echo '<td>' . esc_html( $created_at ) . '</td>';
+                        echo '</tr>';
+                }
+
+                if ( $updated_at ) {
+                        echo '<tr>';
+                        echo '<th>' . esc_html__( 'Ultimo aggiornamento', 'fp-digital-marketing' ) . '</th>';
+                        echo '<td>' . esc_html( $updated_at ) . '</td>';
+                        echo '</tr>';
+                }
+
+                echo '</table>';
+                echo '</div>';
+
+                $rules = $segment->get_rules();
+                $conditions = is_array( $rules ) ? ( $rules['conditions'] ?? [] ) : [];
+                $logic = is_array( $rules ) ? ( $rules['logic'] ?? 'AND' ) : 'AND';
+                $rule_types = SegmentationEngine::get_rule_types();
+                $operators = SegmentationEngine::get_operators();
+                $event_types = ConversionEventRegistry::get_event_types();
+
+                $field_labels = [
+                        SegmentationEngine::RULE_TYPE_UTM => [
+                                'utm_source' => __( 'Sorgente UTM', 'fp-digital-marketing' ),
+                                'utm_medium' => __( 'Medium UTM', 'fp-digital-marketing' ),
+                                'utm_campaign' => __( 'Campagna UTM', 'fp-digital-marketing' ),
+                                'utm_term' => __( 'Termine UTM', 'fp-digital-marketing' ),
+                                'utm_content' => __( 'Contenuto UTM', 'fp-digital-marketing' ),
+                        ],
+                        SegmentationEngine::RULE_TYPE_DEVICE => [
+                                'device_type' => __( 'Tipo Dispositivo', 'fp-digital-marketing' ),
+                        ],
+                        SegmentationEngine::RULE_TYPE_GEOGRAPHY => [
+                                'country' => __( 'Paese', 'fp-digital-marketing' ),
+                        ],
+                        SegmentationEngine::RULE_TYPE_BEHAVIOR => [
+                                'visit_frequency' => __( 'Frequenza Visite', 'fp-digital-marketing' ),
+                                'total_events' => __( 'Totale Eventi', 'fp-digital-marketing' ),
+                                'recency' => __( 'Ultima Attivit\'a (giorni)', 'fp-digital-marketing' ),
+                        ],
+                        SegmentationEngine::RULE_TYPE_VALUE => [
+                                'total_value' => __( 'Valore Totale', 'fp-digital-marketing' ),
+                        ],
+                ];
+
+                echo '<div class="segment-rules">';
+                echo '<h2>' . esc_html__( 'Regole di Segmentazione', 'fp-digital-marketing' ) . '</h2>';
+
+                if ( empty( $conditions ) ) {
+                        echo '<p>' . esc_html__( 'Questo segmento non ha regole definite.', 'fp-digital-marketing' ) . '</p>';
+                } else {
+                        $logic_label = ( 'OR' === $logic )
+                                ? __( 'Almeno una regola deve essere soddisfatta (OR)', 'fp-digital-marketing' )
+                                : __( 'Tutte le regole devono essere soddisfatte (AND)', 'fp-digital-marketing' );
+
+                        echo '<p><strong>' . esc_html__( 'Logica:', 'fp-digital-marketing' ) . '</strong> ' . esc_html( $logic_label ) . '</p>';
+                        echo '<ul class="segment-rule-list">';
+
+                        foreach ( $conditions as $condition ) {
+                                $type_key = $condition['type'] ?? '';
+                                $field_key = $condition['field'] ?? '';
+                                $operator_key = $condition['operator'] ?? '';
+                                $value = $condition['value'] ?? '';
+
+                                $type_label = $rule_types[ $type_key ] ?? $type_key;
+
+                                if ( SegmentationEngine::RULE_TYPE_EVENT === $type_key ) {
+                                        $field_label = $event_types[ $field_key ]['name'] ?? $field_key;
+                                } else {
+                                        $field_label = $field_labels[ $type_key ][ $field_key ] ?? $field_key;
+                                }
+
+                                $operator_label = $operators[ $operator_key ] ?? $operator_key;
+
+                                echo '<li>';
+                                echo '<strong>' . esc_html( $type_label ) . '</strong>: ' . esc_html( $field_label );
+                                echo ' — ' . esc_html( $operator_label );
+
+                                if ( '' !== $value ) {
+                                        echo ' <code>' . esc_html( $value ) . '</code>';
+                                }
+
+                                echo '</li>';
+                        }
+
+                        echo '</ul>';
+                }
+
+                echo '</div>';
+
+                $members = AudienceSegmentTable::get_segment_members( $segment->get_id(), 10, 0 );
+
+                echo '<div class="segment-members">';
+                echo '<h2>' . esc_html__( 'Ultimi membri del segmento', 'fp-digital-marketing' ) . '</h2>';
+
+                if ( empty( $members ) ) {
+                        echo '<p>' . esc_html__( 'Questo segmento non ha ancora membri.', 'fp-digital-marketing' ) . '</p>';
+                } else {
+                        echo '<table class="widefat fixed striped">';
+                        echo '<thead><tr>';
+                        echo '<th>' . esc_html__( 'User ID', 'fp-digital-marketing' ) . '</th>';
+                        echo '<th>' . esc_html__( 'Aggiunto il', 'fp-digital-marketing' ) . '</th>';
+                        echo '<th>' . esc_html__( 'Ultima corrispondenza', 'fp-digital-marketing' ) . '</th>';
+                        echo '</tr></thead>';
+                        echo '<tbody>';
+
+                        foreach ( $members as $member ) {
+                                $added_at = ! empty( $member['added_at'] )
+                                        ? date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( (string) $member['added_at'] ) )
+                                        : __( 'N/D', 'fp-digital-marketing' );
+                                $last_matched = ! empty( $member['last_matched_at'] )
+                                        ? date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( (string) $member['last_matched_at'] ) )
+                                        : __( 'N/D', 'fp-digital-marketing' );
+
+                                echo '<tr>';
+                                echo '<td>' . esc_html( $member['user_id'] ?? '' ) . '</td>';
+                                echo '<td>' . esc_html( $added_at ) . '</td>';
+                                echo '<td>' . esc_html( $last_matched ) . '</td>';
+                                echo '</tr>';
+                        }
+
+                        echo '</tbody>';
+                        echo '</table>';
+
+                        if ( $segment->get_member_count() > count( $members ) ) {
+                                echo '<p class="description">' . esc_html__( 'Mostrati gli ultimi 10 membri. Valuta il segmento per aggiornare i risultati.', 'fp-digital-marketing' ) . '</p>';
+                        }
+                }
+
+                echo '</div>';
+        }
+
+        /**
+         * Render segment form
+         *
+         * @param AudienceSegment|null $segment Segment to edit, null for create
+         * @return void
 	 */
 	private function render_segment_form( ?AudienceSegment $segment = null ): void {
 		$is_edit = $segment !== null;
