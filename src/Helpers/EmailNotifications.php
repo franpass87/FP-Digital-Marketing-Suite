@@ -42,7 +42,6 @@ class EmailNotifications {
 		add_action( 'wp_ajax_fp_test_email', [ __CLASS__, 'handle_test_email' ] );
 		add_action( 'fp_dms_send_scheduled_report', [ __CLASS__, 'send_scheduled_report' ] );
 		add_action( 'fp_dms_security_alert', [ __CLASS__, 'send_security_alert' ] );
-		add_filter( 'wp_mail_content_type', [ __CLASS__, 'set_html_content_type' ] );
 		
 		// Schedule daily digest
 		self::schedule_daily_digest();
@@ -88,7 +87,9 @@ class EmailNotifications {
 		] );
 
 		// Send email
+		add_filter( 'wp_mail_content_type', [ __CLASS__, 'set_html_content_type' ] );
 		$sent = wp_mail( $to, $subject, $email_content, $headers );
+		remove_filter( 'wp_mail_content_type', [ __CLASS__, 'set_html_content_type' ] );
 
 		// Update rate limiting
 		self::update_rate_limit( $to, $type );
