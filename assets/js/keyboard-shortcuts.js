@@ -41,7 +41,7 @@
                         break;
                     case 'c':
                         e.preventDefault();
-                        this.navigateTo('fp-cache-performance');
+                        this.navigateTo('fp-digital-marketing-cache-performance');
                         break;
                     case 's':
                         e.preventDefault();
@@ -93,8 +93,8 @@
          * Check if we're on an FP DMS page
          */
         isOnFPDMSPage: function() {
-            return window.location.href.includes('fp-digital-marketing') || 
-                   window.location.href.includes('fp-cache-performance') ||
+            return window.location.href.includes('fp-digital-marketing') ||
+                   window.location.href.includes('fp-digital-marketing-cache-performance') ||
                    window.location.href.includes('fp-segmentation') ||
                    window.location.href.includes('fp-utm-campaign');
         },
