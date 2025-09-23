@@ -125,7 +125,7 @@ class OnboardingWizard {
 		}
 
 		// Handle GA4 OAuth callback
-		if ( isset( $_GET['code'] ) && isset( $_GET['state'] ) ) {
+		if ( isset( $_GET['state'] ) ) {
 			$this->handle_ga4_oauth_callback();
 		}
 	}
@@ -349,16 +349,122 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	private function handle_ga4_oauth_callback(): void {
-		// Delegate to existing OAuth handler
-		$oauth = new GoogleOAuth();
-		if ( $oauth->handle_callback() ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-success is-dismissible">';
-				echo '<p>' . esc_html__( 'Google Analytics 4 connected successfully!', 'fp-digital-marketing' ) . '</p>';
-				echo '</div>';
-			} );
+		$step = isset( $_GET['step'] ) ? intval( $_GET['step'] ) : 2;
+		$step = max( 1, min( $step, self::TOTAL_STEPS ) );
+
+		$state = sanitize_text_field( wp_unslash( $_GET['state'] ?? '' ) );
+		$stored_state = get_option( 'fp_dms_oauth_state', '' );
+
+		if ( empty( $state ) || ! wp_verify_nonce( $state, 'ga4_oauth_state' ) || $state !== $stored_state ) {
+			error_log( sprintf(
+				'FP Digital Marketing Security: Invalid OAuth state during onboarding from IP %s, User ID: %d',
+				$_SERVER['REMOTE_ADDR'] ?? 'unknown',
+				get_current_user_id()
+			) );
+
+			add_settings_error(
+				'ga4_oauth',
+				'invalid_state',
+				__( 'Errore di sicurezza OAuth. Riprova.', 'fp-digital-marketing' ),
+				'error'
+			);
+
+			$this->finalize_ga4_oauth_response( $step );
+			return;
 		}
+
+		delete_option( 'fp_dms_oauth_state' );
+
+		if ( isset( $_GET['error'] ) ) {
+			$oauth_error = sanitize_text_field( wp_unslash( $_GET['error'] ) );
+
+			add_settings_error(
+				'ga4_oauth',
+				'oauth_error',
+				sprintf(
+					__( 'Errore OAuth: %s', 'fp-digital-marketing' ),
+					esc_html( $oauth_error )
+				),
+				'error'
+			);
+
+			$this->finalize_ga4_oauth_response( $step );
+			return;
+		}
+
+		$authorization_code = sanitize_text_field( wp_unslash( $_GET['code'] ?? '' ) );
+
+		if ( '' === $authorization_code ) {
+			add_settings_error(
+				'ga4_oauth',
+				'missing_code',
+				__( 'Codice di autorizzazione mancante. Riprova il collegamento.', 'fp-digital-marketing' ),
+				'error'
+			);
+
+			$this->finalize_ga4_oauth_response( $step );
+			return;
+		}
+
+		$oauth = new GoogleOAuth();
+
+		if ( $oauth->exchange_code_for_tokens( $authorization_code ) ) {
+			add_settings_error(
+				'ga4_oauth',
+				'connection_success',
+				__( 'Connessione a Google Analytics 4 completata con successo!', 'fp-digital-marketing' ),
+				'success'
+			);
+		} else {
+			add_settings_error(
+				'ga4_oauth',
+				'connection_error',
+				__( 'Errore durante la connessione a Google Analytics 4.', 'fp-digital-marketing' ),
+				'error'
+			);
+		}
+
+		$this->finalize_ga4_oauth_response( $step );
 	}
+
+	/**
+	 * Persist OAuth notices and redirect back to the wizard
+	 *
+	 * @param int $step Wizard step to return to.
+	 * @return void
+	 */
+	private function finalize_ga4_oauth_response( int $step ): void {
+		$messages = get_settings_errors( 'ga4_oauth' );
+
+		if ( ! empty( $messages ) ) {
+			set_transient( 'settings_errors', $messages, 30 );
+		}
+
+		$this->redirect_after_ga4_oauth( $step );
+	}
+
+	/**
+	 * Redirect to the wizard after processing the OAuth callback
+	 *
+	 * @param int $step Wizard step to redirect to.
+	 * @return void
+	 */
+	private function redirect_after_ga4_oauth( int $step ): void {
+		$step = max( 1, min( $step, self::TOTAL_STEPS ) );
+
+		$redirect_url = add_query_arg(
+			[
+				'page' => self::PAGE_SLUG,
+				'step' => $step,
+				'settings-updated' => '1',
+			],
+			admin_url( 'admin.php' )
+		);
+
+		wp_safe_redirect( $redirect_url );
+		exit;
+	}
+
 
 	/**
 	 * Enqueue wizard-specific scripts and styles
@@ -569,6 +675,9 @@ class OnboardingWizard {
 		}
 
 		echo '<div class="wrap">';
+		if ( function_exists( 'settings_errors' ) ) {
+			settings_errors( 'ga4_oauth' );
+		}
 		echo '<div class="fp-wizard-container">';
 		
 		$this->render_wizard_header( $current_step );
