@@ -36,8 +36,8 @@
 }
 
 /* Add subtle separators between menu sections */
-#adminmenu .wp-submenu a[href*="fp-cache-performance"]::after,
-#adminmenu .wp-submenu a[href*="fp-segmentation-admin"]::after,
+#adminmenu .wp-submenu a[href*="fp-digital-marketing-cache-performance"]::after,
+#adminmenu .wp-submenu a[href*="fp-audience-segments"]::after,
 #adminmenu .wp-submenu a[href*="fp-digital-marketing-anomalies"]::after {
     content: '';
     display: block;
