@@ -27,10 +27,15 @@ use FP\DigitalMarketing\DataSources\CoreWebVitals;
  */
 class Dashboard {
 
-	/**
-	 * Page slug for dashboard
-	 */
-	private const PAGE_SLUG = 'fp-digital-marketing-dashboard';
+        /**
+         * Page slug for dashboard
+         */
+        private const PAGE_SLUG = 'fp-digital-marketing-dashboard';
+
+        /**
+         * Transient used to toggle the menu verification notice.
+         */
+        private const MENU_NOTICE_TRANSIENT = 'fp_dms_menu_structure_notice';
 
 	/**
 	 * Admin optimizations instance
@@ -656,23 +661,58 @@ class Dashboard {
 	 * 
 	 * @return void
 	 */
-	public function verify_menu_structure(): void {
-		// Only show on dashboard page to admin users
-		$screen = get_current_screen();
-		if ( ! $screen || $screen->id !== 'toplevel_page_' . self::PAGE_SLUG || ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
+       public function verify_menu_structure(): void {
+               $debug_enabled = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || (bool) get_option( 'fp_dms_enable_menu_debug', false );
+               $debug_enabled = (bool) apply_filters( 'fp_dms_menu_debug_enabled', $debug_enabled );
 
-		// Check if we have the expected submenus
-		global $submenu;
-		$menu_items = $submenu[ self::PAGE_SLUG ] ?? [];
-		
-		if ( count( $menu_items ) >= 8 ) { // Expect at least 8 submenu items
-			echo '<div class="notice notice-success is-dismissible">';
-			echo '<p><strong>FP Digital Marketing:</strong> ' . esc_html__( 'Menu structure successfully reorganized! Found', 'fp-digital-marketing' ) . ' ' . count( $menu_items ) . ' ' . esc_html__( 'menu items.', 'fp-digital-marketing' ) . '</p>';
-			echo '</div>';
-		}
-	}
+               if ( ! $debug_enabled ) {
+                       return;
+               }
+
+               $screen = get_current_screen();
+               if ( ! $screen || $screen->id !== 'toplevel_page_' . self::PAGE_SLUG || ! current_user_can( 'manage_options' ) ) {
+                       return;
+               }
+
+               $should_display_notice = (bool) get_transient( self::MENU_NOTICE_TRANSIENT );
+               $should_display_notice = (bool) apply_filters( 'fp_dms_should_show_menu_structure_notice', $should_display_notice );
+
+               if ( ! $should_display_notice ) {
+                       return;
+               }
+
+               // Check if we have the expected submenus
+               global $submenu;
+               $menu_items = $submenu[ self::PAGE_SLUG ] ?? [];
+               $menu_item_count = count( $menu_items );
+
+               if ( $menu_item_count >= 8 ) { // Expect at least 8 submenu items
+                       $message = sprintf(
+                               /* translators: %s: number of submenu items detected. */
+                               esc_html__( 'Menu structure successfully reorganized! Found %s menu items.', 'fp-digital-marketing' ),
+                               number_format_i18n( $menu_item_count )
+                       );
+                       $notice_class = 'notice notice-success is-dismissible';
+               } else {
+                       $message = sprintf(
+                               /* translators: %s: number of submenu items detected. */
+                               esc_html__( 'Menu structure not reorganized as expected. Found %s menu items.', 'fp-digital-marketing' ),
+                               number_format_i18n( $menu_item_count )
+                       );
+                       $notice_class = 'notice notice-warning is-dismissible';
+               }
+
+               $notice_markup = sprintf(
+                       '<div class="%1$s"><p><strong>%2$s</strong> %3$s</p></div>',
+                       esc_attr( $notice_class ),
+                       esc_html__( 'FP Digital Marketing:', 'fp-digital-marketing' ),
+                       esc_html( $message )
+               );
+
+               echo $notice_markup;
+
+               delete_transient( self::MENU_NOTICE_TRANSIENT );
+       }
 
 	/**
 	 * Add performance dashboard widget to WordPress dashboard
