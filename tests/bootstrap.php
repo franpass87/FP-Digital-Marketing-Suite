@@ -7,7 +7,11 @@
 
 // Define constants for WordPress if not already defined.
 if ( ! defined( 'ABSPATH' ) ) {
-	define( 'ABSPATH', dirname( __DIR__ ) . '/' );
+        define( 'ABSPATH', dirname( __DIR__ ) . '/' );
+}
+
+if ( ! defined( 'ARRAY_A' ) ) {
+        define( 'ARRAY_A', 'ARRAY_A' );
 }
 
 // Load WordPress test environment if available, otherwise create minimal environment.
