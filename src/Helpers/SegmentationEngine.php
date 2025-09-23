@@ -343,21 +343,47 @@ class SegmentationEngine {
 		$operator = $condition['operator'] ?? '';
 		$value = $condition['value'] ?? '';
 
-		switch ( $behavior_type ) {
-			case 'visit_frequency':
-				$unique_sessions = count( array_unique( array_column( $user_events, 'session_id' ) ) );
-				return self::compare_numeric_values( $unique_sessions, floatval( $value ), $operator );
+                switch ( $behavior_type ) {
+                        case 'visit_frequency':
+                                $session_ids = array_filter(
+                                        array_column( $user_events, 'session_id' ),
+                                        static function ( $session_id ) {
+                                                return null !== $session_id && '' !== $session_id;
+                                        }
+                                );
 
-			case 'total_events':
-				$total_events = count( $user_events );
-				return self::compare_numeric_values( $total_events, floatval( $value ), $operator );
+                                if ( empty( $session_ids ) ) {
+                                        return false;
+                                }
 
-			case 'recency':
-				$latest_event = max( array_column( $user_events, 'created_at' ) );
-				$days_since = self::days_since_date( $latest_event );
-				return self::compare_numeric_values( $days_since, floatval( $value ), $operator );
+                                $unique_sessions = count( array_unique( $session_ids ) );
+                                return self::compare_numeric_values( $unique_sessions, floatval( $value ), $operator );
 
-			default:
+                        case 'total_events':
+                                if ( empty( $user_events ) ) {
+                                        return false;
+                                }
+
+                                $total_events = count( $user_events );
+                                return self::compare_numeric_values( $total_events, floatval( $value ), $operator );
+
+                        case 'recency':
+                                $event_dates = array_filter(
+                                        array_column( $user_events, 'created_at' ),
+                                        static function ( $event_date ) {
+                                                return null !== $event_date && '' !== $event_date;
+                                        }
+                                );
+
+                                if ( empty( $event_dates ) ) {
+                                        return false;
+                                }
+
+                                $latest_event = max( $event_dates );
+                                $days_since = self::days_since_date( $latest_event );
+                                return self::compare_numeric_values( $days_since, floatval( $value ), $operator );
+
+                        default:
 				return false;
 		}
 	}
