@@ -378,6 +378,8 @@ class ConversionEventRegistry {
 		// Generate unique event ID if not provided
 		$event_id = $source_data['event_id'] ?? uniqid( $normalized_type . '_', true );
 
+		$created_at = self::normalize_event_timestamp( $source_data['timestamp'] ?? null );
+
 		// Basic event data
 		$event_data = [
 			'event_id' => $event_id,
@@ -388,7 +390,7 @@ class ConversionEventRegistry {
 			'source_event_id' => $source_data['source_event_id'] ?? $source_data['transaction_id'] ?? null,
 			'event_value' => (float) ( $source_data['value'] ?? $source_data['event_value'] ?? self::get_default_value( $normalized_type ) ),
 			'currency' => $source_data['currency'] ?? 'EUR',
-			'created_at' => $source_data['timestamp'] ?? current_time( 'mysql' ),
+			'created_at' => $created_at,
 		];
 
 		// UTM parameters
@@ -430,6 +432,55 @@ class ConversionEventRegistry {
 		}
 
 		return $event_data;
+	}
+
+	/**
+	 * Normalize timestamp values from source data to MySQL datetime format.
+	 *
+	 * @param mixed $timestamp Timestamp value from source data.
+	 * @return string Normalized MySQL datetime string.
+	 */
+	private static function normalize_event_timestamp( $timestamp ): string {
+		$default = current_time( 'mysql' );
+
+		if ( null === $timestamp || '' === $timestamp ) {
+			return $default;
+		}
+
+		if ( is_numeric( $timestamp ) ) {
+			return gmdate( 'Y-m-d H:i:s', (int) $timestamp );
+		}
+
+		if ( is_string( $timestamp ) ) {
+			$sanitized_timestamp = \sanitize_text_field( $timestamp );
+
+			if ( '' === $sanitized_timestamp ) {
+				return $default;
+			}
+
+			if ( self::is_valid_mysql_datetime( $sanitized_timestamp ) ) {
+				return $sanitized_timestamp;
+			}
+
+			$parsed = strtotime( $sanitized_timestamp );
+			if ( false !== $parsed ) {
+				return gmdate( 'Y-m-d H:i:s', $parsed );
+			}
+		}
+
+		return $default;
+	}
+
+	/**
+	 * Check if a string is a valid MySQL datetime format.
+	 *
+	 * @param string $datetime Datetime string to validate.
+	 * @return bool True when string matches MySQL datetime format, false otherwise.
+	 */
+	private static function is_valid_mysql_datetime( string $datetime ): bool {
+		$date = \DateTime::createFromFormat( 'Y-m-d H:i:s', $datetime );
+
+		return $date instanceof \DateTime && $date->format( 'Y-m-d H:i:s' ) === $datetime;
 	}
 
 	/**

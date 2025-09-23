@@ -103,6 +103,83 @@ class ConversionEventsTest extends TestCase {
 	}
 
 	/**
+	 * Ensure Unix timestamps are converted to MySQL datetime values.
+	 */
+	public function test_create_event_from_source_with_unix_timestamp(): void {
+		$timestamp = 1704067200; // 2024-01-01 00:00:00 UTC.
+
+		$source_data = [
+			'event_type' => 'sign_up',
+			'timestamp' => $timestamp,
+		];
+
+		$event_data = ConversionEventRegistry::create_event_from_source( 'google_analytics_4', $source_data, 456 );
+
+		$this->assertEquals( gmdate( 'Y-m-d H:i:s', $timestamp ), $event_data['created_at'] );
+	}
+
+	/**
+	 * Ensure MySQL datetime strings are sanitized before assignment.
+	 */
+	public function test_create_event_from_source_sanitizes_mysql_datetime(): void {
+		$timestamp = ' 2024-05-01 12:34:56 ';
+
+		$source_data = [
+			'event_type' => 'sign_up',
+			'timestamp' => $timestamp,
+		];
+
+		$event_data = ConversionEventRegistry::create_event_from_source( 'google_analytics_4', $source_data, 789 );
+
+		$this->assertEquals( '2024-05-01 12:34:56', $event_data['created_at'] );
+	}
+
+	/**
+	 * Ensure non-MySQL datetime strings are parsed when possible.
+	 */
+	public function test_create_event_from_source_parses_non_mysql_datetime_string(): void {
+		$timestamp = '2024-05-01T12:34:56Z';
+
+		$source_data = [
+			'event_type' => 'sign_up',
+			'timestamp' => $timestamp,
+		];
+
+		$event_data = ConversionEventRegistry::create_event_from_source( 'google_analytics_4', $source_data, 321 );
+
+		$this->assertEquals( '2024-05-01 12:34:56', $event_data['created_at'] );
+	}
+
+	/**
+	 * Ensure invalid timestamp strings fall back to the current time.
+	 */
+	public function test_create_event_from_source_with_invalid_timestamp_falls_back_to_current_time(): void {
+		$before = current_time( 'mysql' );
+
+		$source_data = [
+			'event_type' => 'sign_up',
+			'timestamp' => 'not-a-date',
+		];
+
+		$event_data = ConversionEventRegistry::create_event_from_source( 'google_analytics_4', $source_data, 654 );
+
+		$after = current_time( 'mysql' );
+
+		$this->assertMatchesRegularExpression( '/^\\d{4}-\\d{2}-\\d{2} \d{2}:\d{2}:\d{2}$/', $event_data['created_at'] );
+
+		$actual_timestamp = strtotime( $event_data['created_at'] );
+		$before_timestamp = strtotime( $before );
+		$after_timestamp = strtotime( $after );
+
+		$this->assertNotFalse( $actual_timestamp );
+		$this->assertNotFalse( $before_timestamp );
+		$this->assertNotFalse( $after_timestamp );
+
+		$this->assertGreaterThanOrEqual( $before_timestamp - 2, $actual_timestamp );
+		$this->assertLessThanOrEqual( $after_timestamp + 2, $actual_timestamp );
+	}
+
+	/**
 	 * Test ConversionEvent model
 	 */
 	public function test_conversion_event_model(): void {
