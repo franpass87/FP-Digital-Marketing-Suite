@@ -13,7 +13,8 @@ A comprehensive digital marketing toolkit built with PHP, following WordPress co
 
 ## Requirements
 
-- PHP 7.4 or higher
+- PHP 7.4 or higher with the extensions flagged in [`docs/setup.md`](docs/setup.md)
+- WordPress 5.0+ with MySQL 5.6+ (or newer) to match the bundled [`system-requirements-check.php`](system-requirements-check.php)
 - Composer 2.x
 
 ## Installation
