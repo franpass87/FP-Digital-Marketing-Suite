@@ -352,7 +352,19 @@ class ConversionEventManager {
 			$sql = $wpdb->prepare( $sql, $where_values );
 		}
 
-		$summary = $wpdb->get_row( $sql, ARRAY_A );
+                $summary = $wpdb->get_row( $sql, ARRAY_A );
+
+                if ( ! $summary ) {
+                        return [
+                                'total_events' => 0,
+                                'unique_event_types' => 0,
+                                'unique_sources' => 0,
+                                'total_value' => 0.0,
+                                'avg_value' => 0.0,
+                                'duplicate_count' => 0,
+                                'breakdown_by_type' => [],
+                        ];
+                }
 
 		// Get breakdown by event type
 		$type_sql = "SELECT event_type, COUNT(*) as count, SUM(event_value) as total_value 
@@ -364,18 +376,22 @@ class ConversionEventManager {
 			$type_sql = $wpdb->prepare( $type_sql, $where_values );
 		}
 
-		$breakdown = $wpdb->get_results( $type_sql, ARRAY_A );
+                $breakdown = $wpdb->get_results( $type_sql, ARRAY_A );
 
-		return [
-			'total_events' => (int) $summary['total_events'],
-			'unique_event_types' => (int) $summary['unique_event_types'],
-			'unique_sources' => (int) $summary['unique_sources'],
-			'total_value' => (float) $summary['total_value'],
-			'avg_value' => (float) $summary['avg_value'],
-			'duplicate_count' => (int) $summary['duplicate_count'],
-			'breakdown_by_type' => $breakdown,
-		];
-	}
+                if ( ! is_array( $breakdown ) ) {
+                        $breakdown = [];
+                }
+
+                return [
+                        'total_events' => (int) ( $summary['total_events'] ?? 0 ),
+                        'unique_event_types' => (int) ( $summary['unique_event_types'] ?? 0 ),
+                        'unique_sources' => (int) ( $summary['unique_sources'] ?? 0 ),
+                        'total_value' => (float) ( $summary['total_value'] ?? 0 ),
+                        'avg_value' => (float) ( $summary['avg_value'] ?? 0 ),
+                        'duplicate_count' => (int) ( $summary['duplicate_count'] ?? 0 ),
+                        'breakdown_by_type' => $breakdown,
+                ];
+        }
 
 	/**
 	 * Group events by a specific field
