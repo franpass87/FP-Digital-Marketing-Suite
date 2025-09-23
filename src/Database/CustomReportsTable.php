@@ -14,13 +14,69 @@ namespace FP\DigitalMarketing\Database;
  */
 class CustomReportsTable {
 
-	/**
-	 * Table name
-	 */
-	public const TABLE_NAME = 'fp_dms_custom_reports';
+        /**
+         * Table name
+         */
+        public const TABLE_NAME = 'fp_dms_custom_reports';
 
-	/**
-	 * Get the full table name with WordPress prefix
+        /**
+         * Allowed columns for ordering queries.
+         *
+         * @var string[]
+         */
+        private const ORDERABLE_COLUMNS = [
+                'id',
+                'client_id',
+                'report_name',
+                'report_description',
+                'time_period',
+                'selected_kpis',
+                'report_frequency',
+                'email_recipients',
+                'last_generated',
+                'auto_send',
+                'status',
+                'created_at',
+                'updated_at',
+        ];
+
+        /**
+         * Sanitize ORDER BY parameters for SQL queries.
+         *
+         * @param string $order_by Column to order by.
+         * @param string $order_direction Order direction (ASC/DESC).
+         * @param string $default_order_by Default column when invalid column provided.
+         * @param string $default_order_direction Default direction when invalid direction provided.
+         * @return array{0:string,1:string}
+         */
+        private static function sanitize_order_parameters( string $order_by, string $order_direction, string $default_order_by, string $default_order_direction ): array {
+                $default_order_by = strtolower( $default_order_by );
+                if ( ! in_array( $default_order_by, self::ORDERABLE_COLUMNS, true ) ) {
+                        $default_order_by = 'created_at';
+                }
+
+                $order_by = strtolower( $order_by );
+                if ( ! in_array( $order_by, self::ORDERABLE_COLUMNS, true ) ) {
+                        $order_by = $default_order_by;
+                }
+
+                $allowed_directions = ['ASC', 'DESC'];
+
+                $default_order_direction = strtoupper( $default_order_direction );
+                if ( ! in_array( $default_order_direction, $allowed_directions, true ) ) {
+                        $default_order_direction = 'DESC';
+                }
+
+                $order_direction = strtoupper( $order_direction );
+                if ( ! in_array( $order_direction, $allowed_directions, true ) ) {
+                        $order_direction = $default_order_direction;
+                }
+
+                return [ $order_by, $order_direction ];
+        }
+
+        /**
+         * Get the full table name with WordPress prefix
 	 *
 	 * @return string
 	 */
@@ -160,9 +216,16 @@ class CustomReportsTable {
 			'order' => 'DESC',
 		];
 
-		$args = wp_parse_args( $args, $defaults );
+                $args = wp_parse_args( $args, $defaults );
 
-		$where_clauses = ['client_id = %d'];
+                [ $order_by, $order_direction ] = self::sanitize_order_parameters(
+                        (string) $args['order_by'],
+                        (string) $args['order'],
+                        $defaults['order_by'],
+                        $defaults['order']
+                );
+
+                $where_clauses = ['client_id = %d'];
 		$where_values = [$client_id];
 
 		if ( ! empty( $args['status'] ) ) {
@@ -171,7 +234,7 @@ class CustomReportsTable {
 		}
 
 		$where_sql = implode( ' AND ', $where_clauses );
-		$order_sql = sprintf( 'ORDER BY %s %s', $args['order_by'], $args['order'] );
+                $order_sql = sprintf( 'ORDER BY %s %s', $order_by, $order_direction );
 		$limit_sql = sprintf( 'LIMIT %d OFFSET %d', $args['limit'], $args['offset'] );
 
 		$query = $wpdb->prepare(
@@ -207,9 +270,16 @@ class CustomReportsTable {
 			'order' => 'DESC',
 		];
 
-		$args = wp_parse_args( $args, $defaults );
+                $args = wp_parse_args( $args, $defaults );
 
-		$where_clauses = [];
+                [ $order_by, $order_direction ] = self::sanitize_order_parameters(
+                        (string) $args['order_by'],
+                        (string) $args['order'],
+                        $defaults['order_by'],
+                        $defaults['order']
+                );
+
+                $where_clauses = [];
 		$where_values = [];
 
 		if ( ! empty( $args['status'] ) ) {
@@ -218,7 +288,7 @@ class CustomReportsTable {
 		}
 
 		$where_sql = empty( $where_clauses ) ? '' : 'WHERE ' . implode( ' AND ', $where_clauses );
-		$order_sql = sprintf( 'ORDER BY %s %s', $args['order_by'], $args['order'] );
+                $order_sql = sprintf( 'ORDER BY %s %s', $order_by, $order_direction );
 		$limit_sql = sprintf( 'LIMIT %d OFFSET %d', $args['limit'], $args['offset'] );
 
 		$query = "SELECT * FROM " . self::get_table_name() . " {$where_sql} {$order_sql} {$limit_sql}";
