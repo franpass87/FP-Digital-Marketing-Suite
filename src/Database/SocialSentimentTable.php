@@ -14,10 +14,67 @@ namespace FP\DigitalMarketing\Database;
  */
 class SocialSentimentTable {
 
-	/**
-	 * Table name
-	 */
-	public const TABLE_NAME = 'fp_dms_social_sentiment';
+        /**
+         * Table name
+         */
+        public const TABLE_NAME = 'fp_dms_social_sentiment';
+
+        /**
+         * Allowed columns for ordering queries.
+         *
+         * @var string[]
+         */
+        private const ORDERABLE_COLUMNS = [
+                'id',
+                'client_id',
+                'review_source',
+                'review_platform',
+                'review_rating',
+                'review_date',
+                'sentiment_score',
+                'sentiment_label',
+                'sentiment_confidence',
+                'action_required',
+                'responded',
+                'response_date',
+                'created_at',
+                'updated_at',
+        ];
+
+        /**
+         * Sanitize ORDER BY parameters for SQL queries.
+         *
+         * @param string $order_by Column to order by.
+         * @param string $order_direction Order direction (ASC/DESC).
+         * @param string $default_order_by Default column when invalid column provided.
+         * @param string $default_order_direction Default direction when invalid direction provided.
+         * @return array{0:string,1:string}
+         */
+        private static function sanitize_order_parameters( string $order_by, string $order_direction, string $default_order_by, string $default_order_direction ): array {
+                $default_order_by = strtolower( $default_order_by );
+                if ( ! in_array( $default_order_by, self::ORDERABLE_COLUMNS, true ) ) {
+                        $default_order_by = 'review_date';
+                }
+
+                $order_by = strtolower( $order_by );
+                if ( ! in_array( $order_by, self::ORDERABLE_COLUMNS, true ) ) {
+                        $order_by = $default_order_by;
+                }
+
+                $allowed_directions = ['ASC', 'DESC'];
+
+                $default_order_direction = strtoupper( $default_order_direction );
+                if ( ! in_array( $default_order_direction, $allowed_directions, true ) ) {
+                        $default_order_direction = 'DESC';
+                }
+
+                $order_direction = strtoupper( $order_direction );
+                if ( ! in_array( $order_direction, $allowed_directions, true ) ) {
+                        $order_direction = $default_order_direction;
+                }
+
+                return [ $order_by, $order_direction ];
+        }
 
 	/**
 	 * Get the full table name with WordPress prefix
@@ -168,71 +225,89 @@ class SocialSentimentTable {
 		return $result ? $wpdb->insert_id : false;
 	}
 
-	/**
-	 * Get sentiment analysis for a client
-	 *
-	 * @param int $client_id Client ID
-	 * @param array $args Optional query arguments
-	 * @return array
-	 */
-	public static function get_client_sentiment( int $client_id, array $args = [] ): array {
-		global $wpdb;
+        /**
+         * Get sentiment analysis for a client
+         *
+         * @param int $client_id Client ID
+         * @param array $args Optional query arguments
+         * @return array
+         */
+        public static function get_client_sentiment( int $client_id, array $args = [] ): array {
+                return self::get_reviews( $client_id, $args );
+        }
 
-		$defaults = [
-			'limit' => 50,
-			'offset' => 0,
-			'order_by' => 'review_date',
-			'order' => 'DESC',
-			'sentiment_label' => null,
-			'action_required' => null,
-			'date_from' => null,
-			'date_to' => null,
-		];
+        /**
+         * Get sentiment reviews for a client
+         *
+         * @param int $client_id Client ID
+         * @param array $args Optional query arguments
+         * @return array
+         */
+        public static function get_reviews( int $client_id, array $args = [] ): array {
+                global $wpdb;
 
-		$args = wp_parse_args( $args, $defaults );
+                $defaults = [
+                        'limit' => 50,
+                        'offset' => 0,
+                        'order_by' => 'review_date',
+                        'order' => 'DESC',
+                        'sentiment_label' => null,
+                        'action_required' => null,
+                        'date_from' => null,
+                        'date_to' => null,
+                ];
 
-		$where_clauses = ['client_id = %d'];
-		$where_values = [$client_id];
+                $args = wp_parse_args( $args, $defaults );
 
-		if ( ! empty( $args['sentiment_label'] ) ) {
-			$where_clauses[] = 'sentiment_label = %s';
-			$where_values[] = $args['sentiment_label'];
-		}
+                [ $order_by, $order_direction ] = self::sanitize_order_parameters(
+                        (string) $args['order_by'],
+                        (string) $args['order'],
+                        $defaults['order_by'],
+                        $defaults['order']
+                );
 
-		if ( $args['action_required'] !== null ) {
-			$where_clauses[] = 'action_required = %d';
-			$where_values[] = $args['action_required'];
-		}
+                $where_clauses = ['client_id = %d'];
+                $where_values = [$client_id];
 
-		if ( ! empty( $args['date_from'] ) ) {
-			$where_clauses[] = 'review_date >= %s';
-			$where_values[] = $args['date_from'];
-		}
+                if ( ! empty( $args['sentiment_label'] ) ) {
+                        $where_clauses[] = 'sentiment_label = %s';
+                        $where_values[] = $args['sentiment_label'];
+                }
 
-		if ( ! empty( $args['date_to'] ) ) {
-			$where_clauses[] = 'review_date <= %s';
-			$where_values[] = $args['date_to'];
-		}
+                if ( $args['action_required'] !== null ) {
+                        $where_clauses[] = 'action_required = %d';
+                        $where_values[] = $args['action_required'];
+                }
 
-		$where_sql = implode( ' AND ', $where_clauses );
-		$order_sql = sprintf( 'ORDER BY %s %s', $args['order_by'], $args['order'] );
-		$limit_sql = sprintf( 'LIMIT %d OFFSET %d', $args['limit'], $args['offset'] );
+                if ( ! empty( $args['date_from'] ) ) {
+                        $where_clauses[] = 'review_date >= %s';
+                        $where_values[] = $args['date_from'];
+                }
 
-		$query = $wpdb->prepare(
-			"SELECT * FROM " . self::get_table_name() . " WHERE {$where_sql} {$order_sql} {$limit_sql}",
-			...$where_values
-		);
+                if ( ! empty( $args['date_to'] ) ) {
+                        $where_clauses[] = 'review_date <= %s';
+                        $where_values[] = $args['date_to'];
+                }
 
-		$results = $wpdb->get_results( $query, ARRAY_A );
+                $where_sql = implode( ' AND ', $where_clauses );
+                $order_sql = sprintf( 'ORDER BY %s %s', $order_by, $order_direction );
+                $limit_sql = sprintf( 'LIMIT %d OFFSET %d', max( 0, (int) $args['limit'] ), max( 0, (int) $args['offset'] ) );
 
-		// Decode JSON fields
-		foreach ( $results as &$result ) {
-			$result['key_issues'] = json_decode( $result['key_issues'], true ) ?: [];
-			$result['positive_aspects'] = json_decode( $result['positive_aspects'], true ) ?: [];
-		}
+                $query = $wpdb->prepare(
+                        "SELECT * FROM " . self::get_table_name() . " WHERE {$where_sql} {$order_sql} {$limit_sql}",
+                        ...$where_values
+                );
 
-		return $results;
-	}
+                $results = $wpdb->get_results( $query, ARRAY_A );
+
+                // Decode JSON fields
+                foreach ( $results as &$result ) {
+                        $result['key_issues'] = json_decode( $result['key_issues'], true ) ?: [];
+                        $result['positive_aspects'] = json_decode( $result['positive_aspects'], true ) ?: [];
+                }
+
+                return $results;
+        }
 
 	/**
 	 * Get sentiment summary for a client
