@@ -246,10 +246,10 @@ class DashboardWidgets {
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
 			$('#fp-dms-quick-cache-clear').on('click', function() {
-				if (confirm('<?php esc_html_e( 'Svuotare la cache?', 'fp-digital-marketing' ); ?>')) {
-					window.location.href = '<?php echo esc_url( wp_nonce_url( admin_url( 'admin.php?page=fp-digital-marketing-settings&action=invalidate_cache' ), 'fp_digital_marketing_settings_nonce' ) ); ?>';
-				}
-			});
+                                if (confirm('<?php esc_html_e( 'Svuotare la cache?', 'fp-digital-marketing' ); ?>')) {
+                                        window.location.href = '<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', 'invalidate_cache', admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ), 'fp_dms_cache_action' ) ); ?>';
+                                }
+                        });
 
 			$('#fp-dms-quick-cache-warmup').on('click', function() {
 				const $button = $(this);

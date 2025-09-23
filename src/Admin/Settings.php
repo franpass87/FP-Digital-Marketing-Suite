@@ -131,12 +131,18 @@ class Settings {
 	private const NONCE_ACTION = 'fp_digital_marketing_settings_nonce';
 
 	/**
+	 * Nonce action for cache management links
+	 */
+	private const CACHE_ACTION_NONCE = 'fp_dms_cache_action';
+
+	/**
 	 * Initialize the settings page
 	 *
 	 * @return void
 	 */
 	public function init(): void {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		add_action( 'admin_init', [ $this, 'handle_cache_actions' ] );
                 add_action( 'admin_init', [ $this, 'register_settings' ] );
                 add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );
                 add_action( 'admin_init', [ $this, 'handle_gsc_oauth_callback' ] );
@@ -457,6 +463,39 @@ class Settings {
 		// Check user capabilities.
 		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
 			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
+		}
+
+		if ( isset( $_GET['cache_status'] ) ) {
+			$cache_status = sanitize_key( wp_unslash( $_GET['cache_status'] ) );
+
+			switch ( $cache_status ) {
+				case 'cache_invalidated':
+					add_settings_error(
+						'cache_settings',
+						'cache_invalidated',
+						__( 'Cache invalidata con successo.', 'fp-digital-marketing' ),
+						'updated'
+					);
+					break;
+
+				case 'cache_stats_cleared':
+					add_settings_error(
+						'cache_settings',
+						'stats_cleared',
+						__( 'Statistiche cache cancellate con successo.', 'fp-digital-marketing' ),
+						'updated'
+					);
+					break;
+
+				case 'invalid_nonce':
+					add_settings_error(
+						'cache_settings',
+						'invalid_nonce',
+						__( 'Impossibile verificare la richiesta. Riprova.', 'fp-digital-marketing' ),
+						'error'
+					);
+					break;
+			}
 		}
 
 		?>
@@ -927,6 +966,69 @@ class Settings {
 	}
 
 	/**
+	 * Handle cache actions triggered via GET requests.
+	 *
+	 * @return void
+	 */
+	public function handle_cache_actions(): void {
+		if ( ! isset( $_GET['page'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
+			return;
+		}
+
+		if ( empty( $_GET['action'] ) ) {
+			return;
+		}
+
+		$action = sanitize_key( wp_unslash( $_GET['action'] ) );
+
+		if ( ! in_array( $action, [ 'invalidate_cache', 'clear_cache_stats' ], true ) ) {
+			return;
+		}
+
+		if ( empty( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), self::CACHE_ACTION_NONCE ) ) {
+			$redirect_url = add_query_arg(
+				[
+					'page'         => self::PAGE_SLUG,
+					'cache_status' => 'invalid_nonce',
+				],
+				admin_url( 'admin.php' )
+			);
+
+			wp_safe_redirect( $redirect_url );
+			exit;
+		}
+
+		$status = '';
+
+		switch ( $action ) {
+			case 'invalidate_cache':
+				PerformanceCache::invalidate_all();
+				$status = 'cache_invalidated';
+				break;
+
+			case 'clear_cache_stats':
+				PerformanceCache::clear_stats();
+				$status = 'cache_stats_cleared';
+				break;
+		}
+
+		if ( '' === $status ) {
+			return;
+		}
+
+		$redirect_url = add_query_arg(
+			[
+				'page'         => self::PAGE_SLUG,
+				'cache_status' => $status,
+			],
+			admin_url( 'admin.php' )
+		);
+
+		wp_safe_redirect( $redirect_url );
+		exit;
+	}
+
+	/**
 	 * Handle GA4 OAuth callback with enhanced security
 	 *
 	 * @return void
@@ -1236,6 +1338,7 @@ class Settings {
 	 */
 	public function render_cache_settings_field(): void {
 		$settings = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_settings();
+		$cache_actions_base = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 		?>
 		<table class="form-table">
 			<tr>
@@ -1390,12 +1493,12 @@ class Settings {
 			<tr>
 				<th scope="row"><?php esc_html_e( 'Gestione Cache', 'fp-digital-marketing' ); ?></th>
 				<td>
-                                        <a href="<?php echo esc_url( add_query_arg( 'action', 'invalidate_cache', admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>"
+                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', 'invalidate_cache', $cache_actions_base ), self::CACHE_ACTION_NONCE ) ); ?>"
 					   class="button" 
 					   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler invalidare tutta la cache?', 'fp-digital-marketing' ); ?>')">
 						<?php esc_html_e( 'Invalida Cache', 'fp-digital-marketing' ); ?>
 					</a>
-                                        <a href="<?php echo esc_url( add_query_arg( 'action', 'clear_cache_stats', admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>"
+                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', 'clear_cache_stats', $cache_actions_base ), self::CACHE_ACTION_NONCE ) ); ?>"
 					   class="button" 
 					   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler cancellare le statistiche?', 'fp-digital-marketing' ); ?>')">
 						<?php esc_html_e( 'Cancella Statistiche', 'fp-digital-marketing' ); ?>
@@ -1524,23 +1627,8 @@ class Settings {
 		$sanitized['reports_ttl'] = $this->sanitize_ttl( $input['reports_ttl'] ?? 3600 );
 		$sanitized['aggregated_ttl'] = $this->sanitize_ttl( $input['aggregated_ttl'] ?? 300 );
 
-		// Handle cache actions
-		if ( isset( $_GET['action'] ) ) {
-			switch ( $_GET['action'] ) {
-				case 'clear_cache_stats':
-					\FP\DigitalMarketing\Helpers\PerformanceCache::clear_stats();
-					add_settings_error( 'cache_settings', 'stats_cleared', __( 'Statistiche cache cancellate con successo.', 'fp-digital-marketing' ), 'updated' );
-					break;
-					
-				case 'invalidate_cache':
-					\FP\DigitalMarketing\Helpers\PerformanceCache::invalidate_all();
-					add_settings_error( 'cache_settings', 'cache_invalidated', __( 'Cache invalidata con successo.', 'fp-digital-marketing' ), 'updated' );
-					break;
-			}
-		}
-
-		return $sanitized;
-	}
+                return $sanitized;
+        }
 
 	/**
 	 * Sanitize TTL value
