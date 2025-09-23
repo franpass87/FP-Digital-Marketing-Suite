@@ -169,9 +169,8 @@
             const statusClass = errorRate > 10 ? 'error' : errorRate > 5 ? 'warning' : 'success';
             const statusIcon = errorRate > 10 ? '❌' : errorRate > 5 ? '⚠️' : '✅';
             
-            const lastSync = syncStats.last_sync ? 
-                new Date(syncStats.last_sync).toLocaleString('it-IT') : 
-                'Mai eseguita';
+            const lastSync = this.formatDateTimeForDisplay(syncStats.last_sync) || 'Mai eseguita';
+            const lastSuccessfulSync = this.formatDateTimeForDisplay(syncStats.last_successful_sync);
 
             let html = `
                 <div class="fp-dms-sync-card">
@@ -186,6 +185,11 @@
                                 <div class="fp-dms-sync-subtitle">
                                     Ultima sincronizzazione: ${lastSync}
                                 </div>
+                                ${lastSuccessfulSync ? `
+                                    <div class="fp-dms-sync-subtitle">
+                                        Ultima sincronizzazione riuscita: ${lastSuccessfulSync}
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -218,7 +222,7 @@
                 `;
                 
                 recentErrors.slice(0, 3).forEach(error => {
-                    const errorTime = new Date(error.started_at).toLocaleString('it-IT');
+                    const errorTime = this.formatDateTimeForDisplay(error.started_at) || error.started_at;
                     html += `
                         <li class="fp-dms-error-item">
                             <span class="fp-dms-error-time">${errorTime}</span>
@@ -239,7 +243,7 @@
 
         renderChart(chartData) {
             const ctx = document.getElementById('trend-chart');
-            
+
             if (this.chart) {
                 this.chart.destroy();
             }
@@ -294,6 +298,46 @@
                     }
                 }
             });
+        }
+
+        parseDateTime(dateTimeString) {
+            if (!dateTimeString || typeof dateTimeString !== 'string') {
+                return null;
+            }
+
+            const trimmed = dateTimeString.trim();
+
+            if (!trimmed) {
+                return null;
+            }
+
+            const normalized = trimmed.includes(' ') ? trimmed.replace(' ', 'T') : trimmed;
+            let parsedDate = new Date(normalized);
+
+            if (Number.isNaN(parsedDate.getTime())) {
+                const match = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);
+
+                if (match) {
+                    const [, year, month, day, hour, minute, second = '0'] = match;
+
+                    parsedDate = new Date(
+                        parseInt(year, 10),
+                        parseInt(month, 10) - 1,
+                        parseInt(day, 10),
+                        parseInt(hour, 10),
+                        parseInt(minute, 10),
+                        parseInt(second, 10)
+                    );
+                }
+            }
+
+            return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+        }
+
+        formatDateTimeForDisplay(dateTimeString) {
+            const parsedDate = this.parseDateTime(dateTimeString);
+
+            return parsedDate ? parsedDate.toLocaleString('it-IT') : null;
         }
 
         getKpiLabel(kpi) {
