@@ -86,6 +86,12 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
+	if ( ! function_exists( '_n' ) ) {
+		function _n( $single, $plural, $number, $domain = 'default' ) {
+			return 1 === (int) $number ? $single : $plural;
+		}
+	}
+
 	if ( ! function_exists( 'plugin_dir_path' ) ) {
 		function plugin_dir_path( $file ) {
 			return dirname( $file ) . '/';

@@ -183,6 +183,11 @@ class ConnectionManager {
 		$clients_with_clarity = get_posts([
 			'post_type' => 'cliente',
 			'meta_query' => [
+				'relation' => 'AND',
+				[
+					'key' => 'clarity_project_id',
+					'compare' => 'EXISTS',
+				],
 				[
 					'key' => 'clarity_project_id',
 					'value' => '',
@@ -191,6 +196,38 @@ class ConnectionManager {
 			],
 			'fields' => 'ids',
 		]);
+
+		$clients_with_clarity = array_filter(
+			$clients_with_clarity,
+			static function ( $client_id ) {
+				$project_id = get_post_meta( (int) $client_id, 'clarity_project_id', true );
+
+				if ( null === $project_id || false === $project_id ) {
+					return false;
+				}
+
+				if ( is_array( $project_id ) ) {
+					$project_id = array_filter(
+						array_map( 'trim', $project_id ),
+						static function ( $value ) {
+							return $value !== '';
+						}
+					);
+
+					return ! empty( $project_id );
+				}
+
+				if ( is_string( $project_id ) ) {
+					$project_id = trim( $project_id );
+				}
+
+				if ( is_numeric( $project_id ) ) {
+					return trim( (string) $project_id ) !== '';
+				}
+
+				return $project_id !== '';
+			}
+		);
 
 		$client_count = count( $clients_with_clarity );
 		
