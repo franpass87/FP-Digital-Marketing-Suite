@@ -421,8 +421,20 @@ class ConversionEventManager {
                 $prefix = false === $prefix_end ? $base_key : substr( $base_key, 0, $prefix_end );
                 $pattern = $prefix . '_*';
 
-                PerformanceCache::clear_cache_by_pattern( $pattern, PerformanceCache::CACHE_GROUP_AGGREGATED );
-                PerformanceCache::clear_cache_by_pattern( $pattern, PerformanceCache::CACHE_GROUP_REPORTS );
+                $cache_groups = [
+                        PerformanceCache::CACHE_GROUP_AGGREGATED,
+                        PerformanceCache::CACHE_GROUP_REPORTS,
+                ];
+
+                foreach ( $cache_groups as $cache_group ) {
+                        $prefixed_pattern = sprintf(
+                                'fp_dms_%s_%s',
+                                $cache_group,
+                                $pattern
+                        );
+
+                        PerformanceCache::clear_cache_by_pattern( $prefixed_pattern, $cache_group );
+                }
         }
 
 	/**
