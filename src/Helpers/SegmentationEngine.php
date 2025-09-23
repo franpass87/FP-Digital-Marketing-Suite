@@ -562,7 +562,7 @@ class SegmentationEngine {
 	 * @param int $client_id Client ID
 	 * @return array Array of unique user IDs
 	 */
-	private static function get_unique_users_for_client( int $client_id ): array {
+       public static function get_unique_users_for_client( int $client_id ): array {
 		global $wpdb;
 
 		$table_name = ConversionEventsTable::get_table_name();
