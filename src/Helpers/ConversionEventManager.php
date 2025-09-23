@@ -435,14 +435,13 @@ class ConversionEventManager {
 
                 $prefix_end = strrpos( $base_key, '_' );
                 $prefix = false === $prefix_end ? $base_key : substr( $base_key, 0, $prefix_end );
-                $pattern = $prefix . '_*';
 
-                $cache_groups = [
-                        PerformanceCache::CACHE_GROUP_AGGREGATED,
-                        PerformanceCache::CACHE_GROUP_REPORTS,
+                $patterns_by_group = [
+                        PerformanceCache::CACHE_GROUP_AGGREGATED => $prefix . '_*',
+                        PerformanceCache::CACHE_GROUP_REPORTS => 'report_*',
                 ];
 
-                foreach ( $cache_groups as $cache_group ) {
+                foreach ( $patterns_by_group as $cache_group => $pattern ) {
                         $prefixed_pattern = sprintf(
                                 'fp_dms_%s_%s',
                                 $cache_group,
