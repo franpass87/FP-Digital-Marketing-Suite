@@ -419,12 +419,36 @@ class SegmentationEngine {
 			case self::OP_NOT_EQUALS:
 				return $actual_value !== $expected_value;
 			case self::OP_CONTAINS:
-				return stripos( $actual_value, $expected_value ) !== false;
+				$actual_string = self::convert_value_to_string( $actual_value );
+				$expected_string = self::convert_value_to_string( $expected_value );
+
+				return stripos( $actual_string, $expected_string ) !== false;
 			case self::OP_NOT_CONTAINS:
-				return stripos( $actual_value, $expected_value ) === false;
+				$actual_string = self::convert_value_to_string( $actual_value );
+				$expected_string = self::convert_value_to_string( $expected_value );
+
+				return stripos( $actual_string, $expected_string ) === false;
 			default:
 				return false;
 		}
+	}
+
+	/**
+	 * Safely convert a value to string for comparison.
+	 *
+	 * @param mixed $value Value to convert.
+	 * @return string String representation of the value.
+	 */
+	private static function convert_value_to_string( $value ): string {
+		if ( is_string( $value ) ) {
+			return $value;
+		}
+
+		if ( is_scalar( $value ) || ( is_object( $value ) && method_exists( $value, '__toString' ) ) ) {
+			return (string) $value;
+		}
+
+		return '';
 	}
 
 	/**

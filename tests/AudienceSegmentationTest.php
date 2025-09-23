@@ -116,6 +116,23 @@ class AudienceSegmentationTest extends TestCase {
 	}
 
 	/**
+	 * Ensure value comparisons safely handle non-string inputs for contains operations.
+	 */
+	public function test_compare_values_handles_non_string_inputs(): void {
+		$reflection = new \ReflectionClass( SegmentationEngine::class );
+		$method = $reflection->getMethod( 'compare_values' );
+		$method->setAccessible( true );
+
+		$this->assertFalse(
+			$method->invoke( null, null, 'segment', SegmentationEngine::OP_CONTAINS )
+		);
+
+		$this->assertTrue(
+			$method->invoke( null, [ 'unexpected' ], 'segment', SegmentationEngine::OP_NOT_CONTAINS )
+		);
+	}
+
+	/**
 	 * Test segment array conversion
 	 */
 	public function test_segment_to_array(): void {
