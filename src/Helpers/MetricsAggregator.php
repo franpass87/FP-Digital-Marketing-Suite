@@ -45,19 +45,19 @@ class MetricsAggregator {
                 MetricsSchema::KPI_EMAIL_CLICKS => 0,
         ];
 
-	/**
-	 * Get aggregated metrics for a client across all sources
-	 *
-	 * @param int $client_id Client ID
-	 * @param string $period_start Start date (Y-m-d H:i:s)
-	 * @param string $period_end End date (Y-m-d H:i:s)
-	 * @param array $kpis Optional. Specific KPIs to retrieve
-	 * @param array $sources Optional. Specific sources to include
-	 * @return array Aggregated metrics grouped by KPI
-	 */
-	public static function get_aggregated_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
-		try {
-			// Generate cache key for performance caching
+        /**
+         * Get aggregated metrics for a client across all sources
+         *
+         * @param int $client_id Client ID
+         * @param string $period_start Start date (Y-m-d H:i:s)
+         * @param string $period_end End date (Y-m-d H:i:s)
+         * @param array $kpis Optional. Specific KPIs to retrieve
+         * @param array $sources Optional. Specific sources to include
+         * @return array Aggregated metrics grouped by KPI
+         */
+        public static function get_aggregated_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
+                try {
+                        // Generate cache key for performance caching
 			$cache_params = [
 				'client_id' => $client_id,
 				'period_start' => $period_start,
@@ -84,11 +84,28 @@ class MetricsAggregator {
 			
 			// Return fallback empty array with basic structure
 			return [];
-		}
-	}
+                }
+        }
 
-	/**
-	 * Get aggregated metrics without caching (internal method)
+        /**
+         * Retrieve metrics (legacy method).
+         *
+         * This method is kept for backwards compatibility and simply proxies
+         * to {@see self::get_aggregated_metrics()}.
+         *
+         * @param int $client_id Client ID
+         * @param string $period_start Start date (Y-m-d H:i:s)
+         * @param string $period_end End date (Y-m-d H:i:s)
+         * @param array $kpis Optional. Specific KPIs to retrieve
+         * @param array $sources Optional. Specific sources to include
+         * @return array Aggregated metrics grouped by KPI
+         */
+        public static function get_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
+                return self::get_aggregated_metrics( $client_id, $period_start, $period_end, $kpis, $sources );
+        }
+
+        /**
+         * Get aggregated metrics without caching (internal method)
 	 *
 	 * @param int $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
