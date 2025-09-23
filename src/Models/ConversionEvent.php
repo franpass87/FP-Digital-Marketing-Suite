@@ -517,16 +517,11 @@ class ConversionEvent {
 			$where_values[] = $criteria['event_type'];
 		}
 		
-		if ( ! empty( $criteria['status'] ) ) {
-			$where_conditions[] = 'status = %s';
-			$where_values[] = $criteria['status'];
-		}
-		
-		if ( ! empty( $criteria['start_date'] ) ) {
-			$where_conditions[] = 'created_at >= %s';
-			$where_values[] = $criteria['start_date'] . ' 00:00:00';
-		}
-		
+                if ( ! empty( $criteria['start_date'] ) ) {
+                        $where_conditions[] = 'created_at >= %s';
+                        $where_values[] = $criteria['start_date'] . ' 00:00:00';
+                }
+
 		if ( ! empty( $criteria['end_date'] ) ) {
 			$where_conditions[] = 'created_at <= %s';
 			$where_values[] = $criteria['end_date'] . ' 23:59:59';
@@ -535,20 +530,41 @@ class ConversionEvent {
 		$where_clause = implode( ' AND ', $where_conditions );
 		
 		// Build and execute query
-		$query = "SELECT 
-			id, event_id as name, event_type, client_id, event_value as value, 
-			status, created_at, updated_at, event_name as description 
-			FROM {$table_name} 
-			WHERE {$where_clause} 
-			ORDER BY created_at DESC 
-			LIMIT 1000";
-		
-		if ( ! empty( $where_values ) ) {
-			$query = $wpdb->prepare( $query, ...$where_values );
-		}
-		
-		$results = $wpdb->get_results( $query, ARRAY_A );
-		
-		return $results ?: [];
-	}
+                $query = "SELECT
+                        id,
+                        event_id,
+                        event_name,
+                        event_type,
+                        client_id,
+                        source,
+                        source_event_id,
+                        event_value,
+                        currency,
+                        is_duplicate,
+                        created_at,
+                        processed_at
+                        FROM {$table_name}
+                        WHERE {$where_clause}
+                        ORDER BY created_at DESC
+                        LIMIT 1000";
+
+                if ( ! empty( $where_values ) ) {
+                        $query = $wpdb->prepare( $query, ...$where_values );
+                }
+
+                $results = $wpdb->get_results( $query, ARRAY_A );
+
+                if ( empty( $results ) ) {
+                        return [];
+                }
+
+                return array_map(
+                        static function ( array $event ): array {
+                                $event['is_duplicate'] = isset( $event['is_duplicate'] ) ? (int) $event['is_duplicate'] : 0;
+
+                                return $event;
+                        },
+                        $results
+                );
+        }
 }
