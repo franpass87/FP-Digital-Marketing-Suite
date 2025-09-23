@@ -35,12 +35,27 @@ class ReportScheduler {
 	 * @return void
 	 */
 	public static function schedule_reports(): void {
-		if ( ! wp_next_scheduled( self::CRON_HOOK ) ) {
-			// Schedule daily at 8:00 AM
-			wp_schedule_event( 
-				strtotime( 'tomorrow 08:00' ), 
-				'daily', 
-				self::CRON_HOOK 
+		$next_timestamp = wp_next_scheduled( self::CRON_HOOK );
+
+		$local_now    = current_time( 'timestamp' );
+		$local_target = strtotime( 'tomorrow 08:00', $local_now );
+		$utc_target   = $local_target - ( $local_now - time() );
+
+		if ( $next_timestamp ) {
+			$scheduled_local_time = wp_date( 'H:i', $next_timestamp );
+
+			if ( '08:00' !== $scheduled_local_time ) {
+				wp_unschedule_event( $next_timestamp, self::CRON_HOOK );
+				$next_timestamp = false;
+			}
+		}
+
+		if ( ! $next_timestamp ) {
+			// Schedule daily at 8:00 AM local time converted to UTC
+			wp_schedule_event(
+				$utc_target,
+				'daily',
+				self::CRON_HOOK
 			);
 		}
 	}
