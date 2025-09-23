@@ -42,6 +42,7 @@ class SegmentationAdmin {
 	public function init(): void {
 		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+		add_action( 'admin_init', [ $this, 'maybe_handle_get_actions' ], 5 );
 		add_action( 'admin_init', [ $this, 'handle_form_submission' ] );
 		add_action( 'wp_ajax_fp_segmentation_action', [ $this, 'handle_ajax_request' ] );
 	}
@@ -127,10 +128,44 @@ class SegmentationAdmin {
 			case 'update_segment':
 				$this->handle_update_segment();
 				break;
-			case 'delete_segment':
-				$this->handle_delete_segment();
-				break;
 		}
+	}
+
+	/**
+	 * Maybe handle GET-based actions.
+	 *
+	 * @return void
+	 */
+	public function maybe_handle_get_actions(): void {
+		if ( ! isset( $_GET['action'] ) ) {
+			return;
+		}
+
+		$action = sanitize_key( wp_unslash( $_GET['action'] ) );
+
+		if ( 'delete_segment' !== $action ) {
+			return;
+		}
+
+		$segment_nonce = isset( $_GET['segment_nonce'] ) ? sanitize_text_field( wp_unslash( $_GET['segment_nonce'] ) ) : '';
+
+		if ( ! wp_verify_nonce( $segment_nonce, 'fp_delete_segment' ) ) {
+			wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
+			exit;
+		}
+
+		if ( ! current_user_can( Capabilities::MANAGE_SEGMENTS ) ) {
+			wp_die( __( 'Non hai i permessi per eseguire questa azione.', 'fp-digital-marketing' ) );
+		}
+
+		$segment_id = isset( $_GET['segment_id'] ) ? absint( wp_unslash( $_GET['segment_id'] ) ) : 0;
+
+		if ( 0 === $segment_id ) {
+			wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
+			exit;
+		}
+
+		$this->handle_delete_segment( $segment_id );
 	}
 
 	/**
@@ -768,33 +803,34 @@ class SegmentationAdmin {
 	 *
 	 * @return void
 	 */
-       private function handle_delete_segment(): void {
-               if ( ! wp_verify_nonce( $_GET['segment_nonce'] ?? '', 'fp_delete_segment' ) ) {
-                       wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
-                       exit;
-               }
+	private function handle_delete_segment( int $segment_id ): void {
+		if ( $segment_id <= 0 ) {
+			$this->redirect_after_delete( 'error' );
+		}
 
-               if ( ! isset( $_GET['segment_id'] ) ) {
-                       wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
-                       exit;
-               }
+		$segment = AudienceSegment::load_by_id( $segment_id );
 
-               $segment_id = (int) $_GET['segment_id'];
-               $segment = AudienceSegment::load_by_id( $segment_id );
+		if ( ! $segment ) {
+			$this->redirect_after_delete( 'not_found' );
+		}
 
-               if ( ! $segment ) {
-                       wp_redirect( add_query_arg( [ 'message' => 'not_found' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
-                       exit;
-               }
+		if ( $segment->delete() ) {
+			$this->redirect_after_delete( 'deleted' );
+		} else {
+			$this->redirect_after_delete( 'error' );
+		}
+	}
 
-               if ( $segment->delete() ) {
-                       wp_redirect( add_query_arg( [ 'message' => 'deleted' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
-                       exit;
-               } else {
-                       wp_redirect( add_query_arg( [ 'message' => 'error' ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
-                       exit;
-               }
-       }
+	/**
+	 * Redirect helper for delete segment actions.
+	 *
+	 * @param string $message Message key to append.
+	 * @return void
+	 */
+	private function redirect_after_delete( string $message ): void {
+		wp_redirect( add_query_arg( [ 'message' => $message ], remove_query_arg( [ 'action', 'segment_id', 'segment_nonce' ] ) ) );
+		exit;
+	}
 
 	/**
 	 * Sanitize segment data from form
