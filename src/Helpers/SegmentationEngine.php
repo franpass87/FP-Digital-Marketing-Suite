@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Models\AudienceSegment;
 use FP\DigitalMarketing\Models\ConversionEvent;
 use FP\DigitalMarketing\Database\AudienceSegmentTable;
 use FP\DigitalMarketing\Database\ConversionEventsTable;
-use DateTime;
+use DateTimeInterface;
 use Exception;
 
 /**
@@ -120,20 +120,32 @@ class SegmentationEngine {
 			// Clear existing membership for fresh evaluation
 			AudienceSegmentTable::clear_segment_membership( $segment->get_id() );
 
-			// Get all unique users for this client
-			$users = self::get_unique_users_for_client( $segment->get_client_id() );
+                        // Get all unique users for this client
+                        $users = self::get_unique_users_for_client( $segment->get_client_id() );
 
-			foreach ( $users as $user_id ) {
-				if ( self::evaluate_user_against_segment( $user_id, $segment ) ) {
-					AudienceSegmentTable::add_user_to_segment( 
-						$segment->get_id(), 
-						$user_id, 
-						$segment->get_client_id() 
-					);
-					$results['member_count']++;
-					$results['new_members']++;
-				}
-			}
+                        $user_events_index = ! empty( $users )
+                                ? self::get_user_events_index( $segment->get_client_id(), $users )
+                                : [];
+
+                        foreach ( $users as $user_id ) {
+                                $user_id = is_scalar( $user_id ) ? (string) $user_id : '';
+
+                                if ( '' === $user_id ) {
+                                        continue;
+                                }
+
+                                $user_events = $user_events_index[ $user_id ] ?? [];
+
+                                if ( self::evaluate_user_against_segment( $user_id, $segment, $user_events ) ) {
+                                        AudienceSegmentTable::add_user_to_segment(
+                                                $segment->get_id(),
+                                                $user_id,
+                                                $segment->get_client_id()
+                                        );
+                                        $results['member_count']++;
+                                        $results['new_members']++;
+                                }
+                        }
 
 			// Update segment cache
 			AudienceSegmentTable::update_member_count_cache( $segment->get_id() );
@@ -145,50 +157,61 @@ class SegmentationEngine {
 		return $results;
 	}
 
-	/**
-	 * Evaluate a specific user against a segment
-	 *
-	 * @param string          $user_id The user ID to evaluate
-	 * @param AudienceSegment $segment The segment to evaluate against
-	 * @return bool True if user matches segment criteria
-	 */
-	public static function evaluate_user_against_segment( string $user_id, AudienceSegment $segment ): bool {
-		if ( ! $user_id || ! $segment->is_active() ) {
-			return false;
-		}
+        /**
+         * Evaluate a specific user against a segment
+         *
+         * @param string          $user_id      The user ID to evaluate
+         * @param AudienceSegment $segment      The segment to evaluate against
+         * @param array|null      $user_events  Optional pre-fetched user events
+         * @return bool True if user matches segment criteria
+         */
+        public static function evaluate_user_against_segment( string $user_id, AudienceSegment $segment, ?array $user_events = null ): bool {
+                $user_id = trim( $user_id );
 
-		$rules = $segment->get_rules();
-		if ( empty( $rules ) ) {
-			return false;
-		}
+                if ( '' === $user_id || ! $segment->is_active() ) {
+                        return false;
+                }
 
-		// Get user's conversion events
-		$user_events = ConversionEventsTable::get_events( [
-			'client_id' => $segment->get_client_id(),
-			'user_id' => $user_id,
-			'exclude_duplicates' => true,
-		], 1000, 0 );
+                $rules = $segment->get_rules();
+                if ( empty( $rules ) ) {
+                        return false;
+                }
 
-		// Default to AND logic between rules (all must match)
-		$logic = $rules['logic'] ?? 'AND';
-		$rule_conditions = $rules['conditions'] ?? [];
+                $rule_conditions = isset( $rules['conditions'] ) && is_array( $rules['conditions'] )
+                        ? $rules['conditions']
+                        : [];
 
-		if ( empty( $rule_conditions ) ) {
-			return false;
-		}
+                if ( empty( $rule_conditions ) ) {
+                        return false;
+                }
 
-		$matches = [];
-		foreach ( $rule_conditions as $condition ) {
-			$matches[] = self::evaluate_condition( $condition, $user_events, $user_id );
-		}
+                if ( null === $user_events ) {
+                        $user_events = ConversionEventsTable::get_events( [
+                                'client_id' => $segment->get_client_id(),
+                                'user_id' => $user_id,
+                                'exclude_duplicates' => true,
+                        ], 1000, 0 );
+                }
 
-		// Apply logic
-		if ( $logic === 'OR' ) {
-			return in_array( true, $matches, true );
-		} else {
-			return ! in_array( false, $matches, true );
-		}
-	}
+                if ( ! is_array( $user_events ) ) {
+                        $user_events = [];
+                }
+
+                // Default to AND logic between rules (all must match)
+                $logic = strtoupper( $rules['logic'] ?? 'AND' );
+
+                $matches = [];
+                foreach ( $rule_conditions as $condition ) {
+                        $matches[] = self::evaluate_condition( $condition, $user_events, $user_id );
+                }
+
+                // Apply logic
+                if ( 'OR' === $logic ) {
+                        return in_array( true, $matches, true );
+                } else {
+                        return ! in_array( false, $matches, true );
+                }
+        }
 
 	/**
 	 * Evaluate a single condition against user data
@@ -240,9 +263,14 @@ class SegmentationEngine {
 		$operator = $condition['operator'] ?? '';
 		$value = $condition['value'] ?? '';
 
-		$matching_events = array_filter( $user_events, function( $event ) use ( $event_type ) {
-			return $event['event_type'] === $event_type;
-		} );
+                $matching_events = array_filter(
+                        $user_events,
+                        static function ( $event ) use ( $event_type ) {
+                                return is_array( $event )
+                                        && isset( $event['event_type'] )
+                                        && $event['event_type'] === $event_type;
+                        }
+                );
 
 		$count = count( $matching_events );
 
@@ -274,13 +302,17 @@ class SegmentationEngine {
 		$operator = $condition['operator'] ?? '';
 		$value = $condition['value'] ?? '';
 
-		foreach ( $user_events as $event ) {
-			$event_value = $event[ $utm_field ] ?? '';
-			
-			if ( self::compare_values( $event_value, $value, $operator ) ) {
-				return true;
-			}
-		}
+                foreach ( $user_events as $event ) {
+                        if ( ! is_array( $event ) ) {
+                                continue;
+                        }
+
+                        $event_value = $event[ $utm_field ] ?? '';
+
+                        if ( self::compare_values( $event_value, $value, $operator ) ) {
+                                return true;
+                        }
+                }
 
 		return false;
 	}
@@ -296,12 +328,16 @@ class SegmentationEngine {
 		$operator = $condition['operator'] ?? '';
 		$value = $condition['value'] ?? ''; // mobile, desktop, tablet
 
-		foreach ( $user_events as $event ) {
-			$user_agent = $event['user_agent'] ?? '';
-			$device_type = self::detect_device_type( $user_agent );
-			
-			if ( self::compare_values( $device_type, $value, $operator ) ) {
-				return true;
+                foreach ( $user_events as $event ) {
+                        if ( ! is_array( $event ) ) {
+                                continue;
+                        }
+
+                        $user_agent = $event['user_agent'] ?? '';
+                        $device_type = self::detect_device_type( $user_agent );
+
+                        if ( self::compare_values( $device_type, $value, $operator ) ) {
+                                return true;
 			}
 		}
 
@@ -319,12 +355,16 @@ class SegmentationEngine {
 		$operator = $condition['operator'] ?? '';
 		$value = $condition['value'] ?? ''; // country code or region
 
-		foreach ( $user_events as $event ) {
-			$ip_address = $event['ip_address'] ?? '';
-			$country = self::get_country_from_ip( $ip_address );
-			
-			if ( self::compare_values( $country, $value, $operator ) ) {
-				return true;
+                foreach ( $user_events as $event ) {
+                        if ( ! is_array( $event ) ) {
+                                continue;
+                        }
+
+                        $ip_address = $event['ip_address'] ?? '';
+                        $country = self::get_country_from_ip( $ip_address );
+
+                        if ( self::compare_values( $country, $value, $operator ) ) {
+                                return true;
 			}
 		}
 
@@ -345,47 +385,77 @@ class SegmentationEngine {
 
                 switch ( $behavior_type ) {
                         case 'visit_frequency':
-                                $session_ids = array_filter(
-                                        array_column( $user_events, 'session_id' ),
-                                        static function ( $session_id ) {
-                                                return null !== $session_id && '' !== $session_id;
+                                $session_ids = [];
+
+                                foreach ( $user_events as $event ) {
+                                        if ( ! is_array( $event ) ) {
+                                                continue;
                                         }
-                                );
+
+                                        $session_id = $event['session_id'] ?? null;
+
+                                        if ( null === $session_id || '' === $session_id ) {
+                                                continue;
+                                        }
+
+                                        $session_id = is_scalar( $session_id ) ? trim( (string) $session_id ) : '';
+
+                                        if ( '' === $session_id ) {
+                                                continue;
+                                        }
+
+                                        $session_ids[] = $session_id;
+                                }
 
                                 if ( empty( $session_ids ) ) {
                                         return false;
                                 }
 
                                 $unique_sessions = count( array_unique( $session_ids ) );
-                                return self::compare_numeric_values( $unique_sessions, floatval( $value ), $operator );
+                                return self::compare_numeric_values( $unique_sessions, (float) $value, $operator );
 
                         case 'total_events':
-                                if ( empty( $user_events ) ) {
-                                        return false;
-                                }
-
-                                $total_events = count( $user_events );
-                                return self::compare_numeric_values( $total_events, floatval( $value ), $operator );
-
-                        case 'recency':
-                                $event_dates = array_filter(
-                                        array_column( $user_events, 'created_at' ),
-                                        static function ( $event_date ) {
-                                                return null !== $event_date && '' !== $event_date;
+                                $valid_events = array_filter(
+                                        $user_events,
+                                        static function ( $event ): bool {
+                                                return is_array( $event );
                                         }
                                 );
 
-                                if ( empty( $event_dates ) ) {
+                                if ( empty( $valid_events ) ) {
                                         return false;
                                 }
 
-                                $latest_event = max( $event_dates );
+                                return self::compare_numeric_values( count( $valid_events ), (float) $value, $operator );
+
+                        case 'recency':
+                                $timestamps = [];
+
+                                foreach ( $user_events as $event ) {
+                                        if ( ! is_array( $event ) ) {
+                                                continue;
+                                        }
+
+                                        $timestamp = self::to_timestamp( $event['created_at'] ?? null );
+
+                                        if ( null === $timestamp ) {
+                                                continue;
+                                        }
+
+                                        $timestamps[] = $timestamp;
+                                }
+
+                                if ( empty( $timestamps ) ) {
+                                        return false;
+                                }
+
+                                $latest_event = max( $timestamps );
                                 $days_since = self::days_since_date( $latest_event );
-                                return self::compare_numeric_values( $days_since, floatval( $value ), $operator );
+                                return self::compare_numeric_values( $days_since, (float) $value, $operator );
 
                         default:
-				return false;
-		}
+                                return false;
+                }
 	}
 
 	/**
@@ -399,10 +469,20 @@ class SegmentationEngine {
 		$operator = $condition['operator'] ?? '';
 		$value = floatval( $condition['value'] ?? 0 );
 
-		$total_value = array_sum( array_column( $user_events, 'event_value' ) );
+                $total_value = 0.0;
 
-		return self::compare_numeric_values( $total_value, $value, $operator );
-	}
+                foreach ( $user_events as $event ) {
+                        if ( ! is_array( $event ) || ! isset( $event['event_value'] ) ) {
+                                continue;
+                        }
+
+                        if ( is_numeric( $event['event_value'] ) ) {
+                                $total_value += (float) $event['event_value'];
+                        }
+                }
+
+                return self::compare_numeric_values( $total_value, (float) $value, $operator );
+        }
 
 	/**
 	 * Compare two values using an operator
@@ -482,16 +562,27 @@ class SegmentationEngine {
 	 * @return bool True if any events in timeframe
 	 */
 	private static function has_events_in_last_days( array $events, int $days ): bool {
-		$cutoff_date = date( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
+                if ( $days <= 0 ) {
+                        return false;
+                }
 
-		foreach ( $events as $event ) {
-			if ( $event['created_at'] >= $cutoff_date ) {
-				return true;
-			}
-		}
+                $seconds_per_day = defined( 'DAY_IN_SECONDS' ) ? (int) DAY_IN_SECONDS : 86400;
+                $cutoff_timestamp = time() - ( $days * $seconds_per_day );
 
-		return false;
-	}
+                foreach ( $events as $event ) {
+                        if ( ! is_array( $event ) ) {
+                                continue;
+                        }
+
+                        $timestamp = self::to_timestamp( $event['created_at'] ?? null );
+
+                        if ( null !== $timestamp && $timestamp >= $cutoff_timestamp ) {
+                                return true;
+                        }
+                }
+
+                return false;
+        }
 
 	/**
 	 * Detect device type from user agent
@@ -598,13 +689,110 @@ class SegmentationEngine {
 	 * @param string $date Date string
 	 * @return int Days since date
 	 */
-	private static function days_since_date( string $date ): int {
-		$date_obj = new DateTime( $date );
-		$now = new DateTime();
-		$diff = $now->diff( $date_obj );
+        private static function days_since_date( $date ): int {
+                $timestamp = self::to_timestamp( $date );
 
-		return $diff->days;
-	}
+                if ( null === $timestamp ) {
+                        return PHP_INT_MAX;
+                }
+
+                $now = time();
+
+                if ( $timestamp > $now ) {
+                        return 0;
+                }
+
+                $seconds_per_day = defined( 'DAY_IN_SECONDS' ) ? (int) DAY_IN_SECONDS : 86400;
+
+                return (int) floor( ( $now - $timestamp ) / $seconds_per_day );
+        }
+
+        /**
+         * Convert a datetime-like value to a Unix timestamp.
+         *
+         * @param mixed $value Value to convert.
+         * @return int|null Timestamp on success, null otherwise.
+         */
+        private static function to_timestamp( $value ): ?int {
+                if ( $value instanceof DateTimeInterface ) {
+                        return $value->getTimestamp();
+                }
+
+                if ( is_int( $value ) ) {
+                        return $value >= 0 ? $value : null;
+                }
+
+                if ( is_float( $value ) ) {
+                        $value = (int) $value;
+                        return $value >= 0 ? $value : null;
+                }
+
+                if ( is_string( $value ) ) {
+                        $trimmed = trim( $value );
+
+                        if ( '' === $trimmed ) {
+                                return null;
+                        }
+
+                        if ( ctype_digit( $trimmed ) ) {
+                                return (int) $trimmed;
+                        }
+
+                        $timestamp = strtotime( $trimmed );
+
+                        return false === $timestamp ? null : $timestamp;
+                }
+
+                return null;
+        }
+
+        /**
+         * Build an index of events keyed by user ID for faster lookups.
+         *
+         * @param int   $client_id Client identifier.
+         * @param array $user_ids  User identifiers to include.
+         * @return array<string, array<int, array>> Events grouped by user ID.
+         */
+        private static function get_user_events_index( int $client_id, array $user_ids ): array {
+                if ( empty( $user_ids ) ) {
+                        return [];
+                }
+
+                $limit = count( $user_ids ) * 25;
+                $limit = max( 1000, min( 20000, $limit ) );
+
+                $events = ConversionEventsTable::get_events(
+                        [
+                                'client_id' => $client_id,
+                                'user_id' => $user_ids,
+                                'exclude_duplicates' => true,
+                        ],
+                        $limit,
+                        0
+                );
+
+                if ( ! is_array( $events ) || empty( $events ) ) {
+                        return [];
+                }
+
+                $grouped = [];
+
+                foreach ( $events as $event ) {
+                        if ( ! is_array( $event ) ) {
+                                continue;
+                        }
+
+                        $user_id = isset( $event['user_id'] ) ? (string) $event['user_id'] : '';
+
+                        if ( '' === $user_id ) {
+                                continue;
+                        }
+
+                        $grouped[ $user_id ][] = $event;
+                }
+
+                return $grouped;
+        }
 
 	/**
 	 * Get unique users for a client
@@ -612,19 +800,42 @@ class SegmentationEngine {
 	 * @param int $client_id Client ID
 	 * @return array Array of unique user IDs
 	 */
-       public static function get_unique_users_for_client( int $client_id ): array {
-		global $wpdb;
+        public static function get_unique_users_for_client( int $client_id ): array {
+                global $wpdb;
 
-		$table_name = ConversionEventsTable::get_table_name();
-		$sql = $wpdb->prepare(
-			"SELECT DISTINCT user_id FROM $table_name WHERE client_id = %d AND user_id IS NOT NULL AND user_id != ''",
-			$client_id
-		);
+                $table_name = ConversionEventsTable::get_table_name();
+                $sql = $wpdb->prepare(
+                        "SELECT DISTINCT user_id FROM $table_name WHERE client_id = %d AND user_id IS NOT NULL AND user_id != ''",
+                        $client_id
+                );
 
-		$results = $wpdb->get_col( $sql );
+                $results = $wpdb->get_col( $sql );
 
-		return array_filter( $results );
-	}
+                if ( ! is_array( $results ) || empty( $results ) ) {
+                        return [];
+                }
+
+                $sanitized = array_filter(
+                        array_map(
+                                static function ( $user_id ) {
+                                        if ( is_scalar( $user_id ) ) {
+                                                $user_id = trim( (string) $user_id );
+
+                                                if ( function_exists( 'sanitize_text_field' ) ) {
+                                                        $user_id = sanitize_text_field( $user_id );
+                                                }
+                                        } else {
+                                                $user_id = '';
+                                        }
+
+                                        return '' !== $user_id ? $user_id : null;
+                                },
+                                $results
+                        )
+                );
+
+                return array_values( array_unique( $sanitized ) );
+        }
 
 	/**
 	 * Get available rule types

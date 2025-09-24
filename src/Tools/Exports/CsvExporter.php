@@ -72,8 +72,11 @@ class CsvExporter {
 			return;
 		}
 
-		fputcsv( $handle, self::sanitize_row( $row ), $separator );
-	}
+                $enclosure = '"';
+                $escape = '\\';
+
+                fputcsv( $handle, self::sanitize_row( $row ), $separator, $enclosure, $escape );
+        }
 
 	/**
 	 * Convert a row to a CSV string.
