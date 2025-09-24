@@ -70,13 +70,13 @@ class PlatformConnections {
 			return;
 		}
 
-		wp_enqueue_script(
-			'fp-platform-connections',
-			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/admin/platform-connections.js',
-			[ 'jquery', 'wp-util' ],
-			FP_DIGITAL_MARKETING_VERSION,
-			true
-		);
+                wp_enqueue_script(
+                        'fp-platform-connections',
+                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/admin/platform-connections.js',
+                        [ 'jquery', 'wp-util', 'wp-api' ],
+                        FP_DIGITAL_MARKETING_VERSION,
+                        true
+                );
 
 		wp_localize_script(
 			'fp-platform-connections',

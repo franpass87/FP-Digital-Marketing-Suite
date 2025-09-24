@@ -60,7 +60,7 @@ class AdminOptimizations {
         wp_enqueue_script(
             'fp-dms-admin-optimizations',
             FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/admin-optimizations.js',
-            [ 'jquery', 'wp-util' ],
+            [ 'jquery', 'wp-util', 'wp-api' ],
             FP_DIGITAL_MARKETING_VERSION,
             true
         );
@@ -195,14 +195,21 @@ class AdminOptimizations {
             return $tag;
         }
 
-        // Scripts that interact with wp.ajax (or depend on WordPress-provided globals)
-        // must retain execution order. Use defer so dependencies run first.
-        $defer_handles = apply_filters(
-            'fp_dms_admin_defer_script_handles',
+        // Scripts that interact with wp.ajax or rely on WordPress globals must
+        // preserve the default loading order to avoid race conditions.
+        $sequential_handles = apply_filters(
+            'fp_dms_admin_sequential_script_handles',
             [
                 'fp-dms-admin-optimizations',
+                'fp-dms-keyboard-shortcuts',
             ]
         );
+
+        if ( in_array( $handle, $sequential_handles, true ) ) {
+            return $tag;
+        }
+
+        $defer_handles = apply_filters( 'fp_dms_admin_defer_script_handles', [] );
 
         if ( in_array( $handle, $defer_handles, true ) ) {
             if ( strpos( $tag, ' defer' ) === false ) {

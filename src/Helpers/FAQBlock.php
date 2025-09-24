@@ -62,8 +62,8 @@ class FAQBlock {
 	 * @return void
 	 */
 	public static function enqueue_block_assets(): void {
-		$script_path = plugin_dir_path( FP_DIGITAL_MARKETING_PLUGIN_FILE ) . 'assets/js/faq-block.js';
-		$script_url = plugin_dir_url( FP_DIGITAL_MARKETING_PLUGIN_FILE ) . 'assets/js/faq-block.js';
+                $script_path = FP_DIGITAL_MARKETING_PLUGIN_DIR . 'assets/js/faq-block.js';
+                $script_url  = FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/faq-block.js';
 
 		// Only enqueue if the file exists
 		if ( file_exists( $script_path ) ) {
