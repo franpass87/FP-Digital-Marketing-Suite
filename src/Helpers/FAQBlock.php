@@ -67,14 +67,19 @@ class FAQBlock {
 
 		// Only enqueue if the file exists
 		if ( file_exists( $script_path ) ) {
+			$asset_version = defined( 'FP_DIGITAL_MARKETING_VERSION' )
+				? FP_DIGITAL_MARKETING_VERSION
+				: '1.0.0';
+
 			wp_enqueue_script(
 				'fp-dms-faq-block',
 				$script_url,
 				[ 'wp-blocks', 'wp-editor', 'wp-components', 'wp-element' ],
-				'1.0.0',
+				$asset_version,
 				true
 			);
 		}
+
 	}
 
 	/**

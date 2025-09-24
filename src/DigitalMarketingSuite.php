@@ -194,6 +194,9 @@ class DigitalMarketingSuite {
 	 * Constructor with error handling
 	 */
 	public function __construct() {
+		if ( defined( 'FP_DIGITAL_MARKETING_VERSION' ) ) {
+			$this->version = FP_DIGITAL_MARKETING_VERSION;
+		}
 		// Initialize components with error handling to prevent WSOD
 		try {
 			$this->cliente_post_type = new ClientePostType();

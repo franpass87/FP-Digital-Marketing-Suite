@@ -80,20 +80,24 @@ class SegmentationAdmin {
 			return;
 		}
 
-                wp_enqueue_style(
-                        'fp-segmentation-admin',
-                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/css/segmentation-admin.css',
-                        [],
-                        '1.0.0'
-                );
+		$asset_version = defined( 'FP_DIGITAL_MARKETING_VERSION' )
+			? FP_DIGITAL_MARKETING_VERSION
+			: '1.0.0';
 
-                wp_enqueue_script(
-                        'fp-segmentation-admin',
-                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/segmentation-admin.js',
-                        [ 'jquery', 'wp-util' ],
-                        '1.0.0',
-                        true
-                );
+		wp_enqueue_style(
+			'fp-segmentation-admin',
+			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/css/segmentation-admin.css',
+			[],
+			$asset_version
+		);
+
+		wp_enqueue_script(
+			'fp-segmentation-admin',
+			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/segmentation-admin.js',
+			[ 'jquery', 'wp-util' ],
+			$asset_version,
+			true
+		);
 
 		wp_localize_script( 'fp-segmentation-admin', 'fpSegmentation', [
 			'nonce' => wp_create_nonce( self::NONCE_ACTION ),
