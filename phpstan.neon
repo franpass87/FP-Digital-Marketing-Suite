@@ -26,3 +26,4 @@ parameters:
     
     # Reporting
     reportUnmatchedIgnoredErrors: false
+
