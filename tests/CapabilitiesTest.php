@@ -20,23 +20,36 @@ class CapabilitiesTest extends TestCase {
 		parent::setUp();
 		
 		// Mock WordPress functions
-		if ( ! function_exists( 'get_role' ) ) {
-			function get_role( $role ) {
-				$valid_roles = [ 'administrator', 'editor', 'author' ];
-				if ( ! in_array( $role, $valid_roles ) ) {
-					return null;
-				}
-				return new class {
-					public $capabilities = [];
-					public function add_cap( $cap, $grant = true ) {
-						$this->capabilities[ $cap ] = $grant;
-					}
-					public function remove_cap( $cap ) {
-						unset( $this->capabilities[ $cap ] );
-					}
-				};
-			}
-		}
+                if ( ! function_exists( 'get_role' ) ) {
+                        function get_role( $role ) {
+                                static $roles = [];
+
+                                $valid_roles = [ 'administrator', 'editor', 'author' ];
+                                if ( ! in_array( $role, $valid_roles, true ) ) {
+                                        return null;
+                                }
+
+                                if ( ! isset( $roles[ $role ] ) ) {
+                                        $roles[ $role ] = new class {
+                                                public $capabilities = [];
+
+                                                public function add_cap( $cap, $grant = true ) {
+                                                        $this->capabilities[ $cap ] = $grant;
+                                                }
+
+                                                public function remove_cap( $cap ) {
+                                                        unset( $this->capabilities[ $cap ] );
+                                                }
+
+                                                public function has_cap( $cap ) {
+                                                        return ! empty( $this->capabilities[ $cap ] );
+                                                }
+                                        };
+                                }
+
+                                return $roles[ $role ];
+                        }
+                }
 
 		if ( ! function_exists( 'wp_roles' ) ) {
 			function wp_roles() {
@@ -50,22 +63,25 @@ class CapabilitiesTest extends TestCase {
 			}
 		}
 
-		if ( ! function_exists( 'user_can' ) ) {
-			function user_can( $user_id, $capability, $object_id = 0 ) {
-				// Mock admin user always has capabilities
-				if ( $user_id === 1 ) {
-					return true;
-				}
-				// Mock editor user has limited capabilities
-				if ( $user_id === 2 ) {
-					$editor_caps = [
-						Capabilities::VIEW_DASHBOARD,
-						Capabilities::EXPORT_REPORTS,
-					];
-					return in_array( $capability, $editor_caps, true );
-				}
-				return false;
-			}
+                if ( ! function_exists( 'user_can' ) ) {
+                        function user_can( $user_id, $capability, $object_id = 0 ) {
+                                // Mock admin user always has capabilities
+                                if ( $user_id === 1 ) {
+                                        return true;
+                                }
+                                // Mock editor user has limited capabilities
+                                if ( $user_id === 2 ) {
+                                        $editor_caps = [
+                                                Capabilities::VIEW_DASHBOARD,
+                                                Capabilities::EXPORT_REPORTS,
+                                                Capabilities::VIEW_REPORTS,
+                                                Capabilities::VIEW_SEGMENTS,
+                                                Capabilities::FUNNEL_ANALYSIS,
+                                        ];
+                                        return in_array( $capability, $editor_caps, true );
+                                }
+                                return false;
+                        }
 		}
 
 		if ( ! function_exists( 'get_current_user_id' ) ) {
@@ -110,75 +126,122 @@ class CapabilitiesTest extends TestCase {
 		$this->assertEquals( 'fp_dms_manage_data_sources', Capabilities::MANAGE_DATA_SOURCES );
 		$this->assertEquals( 'fp_dms_export_reports', Capabilities::EXPORT_REPORTS );
 		$this->assertEquals( 'fp_dms_manage_alerts', Capabilities::MANAGE_ALERTS );
-		$this->assertEquals( 'fp_dms_manage_settings', Capabilities::MANAGE_SETTINGS );
-	}
+                $this->assertEquals( 'fp_dms_manage_settings', Capabilities::MANAGE_SETTINGS );
+                $this->assertEquals( 'fp_dms_manage_campaigns', Capabilities::MANAGE_CAMPAIGNS );
+                $this->assertEquals( 'fp_dms_manage_conversions', Capabilities::MANAGE_CONVERSIONS );
+                $this->assertEquals( 'fp_dms_view_segments', Capabilities::VIEW_SEGMENTS );
+                $this->assertEquals( 'fp_dms_manage_segments', Capabilities::MANAGE_SEGMENTS );
+                $this->assertEquals( 'fp_dms_funnel_analysis', Capabilities::FUNNEL_ANALYSIS );
+                $this->assertEquals( 'fp_dms_view_reports', Capabilities::VIEW_REPORTS );
+        }
 
-	public function testGetCustomCapabilities(): void {
-		$capabilities = Capabilities::get_custom_capabilities();
-		
-		$this->assertIsArray( $capabilities );
-		$this->assertCount( 5, $capabilities );
-		$this->assertContains( Capabilities::VIEW_DASHBOARD, $capabilities );
-		$this->assertContains( Capabilities::MANAGE_DATA_SOURCES, $capabilities );
-		$this->assertContains( Capabilities::EXPORT_REPORTS, $capabilities );
-		$this->assertContains( Capabilities::MANAGE_ALERTS, $capabilities );
-		$this->assertContains( Capabilities::MANAGE_SETTINGS, $capabilities );
-	}
+        public function testGetCustomCapabilities(): void {
+                $capabilities = Capabilities::get_custom_capabilities();
 
-	public function testGetDefaultRoleCapabilities(): void {
-		$role_capabilities = Capabilities::get_default_role_capabilities();
-		
-		$this->assertIsArray( $role_capabilities );
-		$this->assertArrayHasKey( 'administrator', $role_capabilities );
-		$this->assertArrayHasKey( 'editor', $role_capabilities );
-		
-		// Administrator should have all capabilities
-		$admin_caps = $role_capabilities['administrator'];
-		$this->assertCount( 5, $admin_caps );
-		$this->assertContains( Capabilities::VIEW_DASHBOARD, $admin_caps );
-		$this->assertContains( Capabilities::MANAGE_DATA_SOURCES, $admin_caps );
-		$this->assertContains( Capabilities::EXPORT_REPORTS, $admin_caps );
-		$this->assertContains( Capabilities::MANAGE_ALERTS, $admin_caps );
-		$this->assertContains( Capabilities::MANAGE_SETTINGS, $admin_caps );
-		
-		// Editor should have limited capabilities
-		$editor_caps = $role_capabilities['editor'];
-		$this->assertCount( 2, $editor_caps );
-		$this->assertContains( Capabilities::VIEW_DASHBOARD, $editor_caps );
-		$this->assertContains( Capabilities::EXPORT_REPORTS, $editor_caps );
-	}
+                $this->assertIsArray( $capabilities );
+                $this->assertCount( 11, $capabilities );
+                $this->assertContains( Capabilities::VIEW_DASHBOARD, $capabilities );
+                $this->assertContains( Capabilities::MANAGE_DATA_SOURCES, $capabilities );
+                $this->assertContains( Capabilities::EXPORT_REPORTS, $capabilities );
+                $this->assertContains( Capabilities::MANAGE_ALERTS, $capabilities );
+                $this->assertContains( Capabilities::MANAGE_SETTINGS, $capabilities );
+                $this->assertContains( Capabilities::MANAGE_CAMPAIGNS, $capabilities );
+                $this->assertContains( Capabilities::MANAGE_CONVERSIONS, $capabilities );
+                $this->assertContains( Capabilities::VIEW_SEGMENTS, $capabilities );
+                $this->assertContains( Capabilities::MANAGE_SEGMENTS, $capabilities );
+                $this->assertContains( Capabilities::FUNNEL_ANALYSIS, $capabilities );
+                $this->assertContains( Capabilities::VIEW_REPORTS, $capabilities );
+        }
 
-	public function testUserCanFunction(): void {
-		// Test admin user (user_id = 1)
-		$this->assertTrue( Capabilities::user_can( Capabilities::VIEW_DASHBOARD, 0, 1 ) );
-		$this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_DATA_SOURCES, 0, 1 ) );
-		$this->assertTrue( Capabilities::user_can( Capabilities::EXPORT_REPORTS, 0, 1 ) );
-		$this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_ALERTS, 0, 1 ) );
-		$this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_SETTINGS, 0, 1 ) );
+        public function testGetDefaultRoleCapabilities(): void {
+                $role_capabilities = Capabilities::get_default_role_capabilities();
 
-		// Test editor user (user_id = 2)
-		$this->assertTrue( Capabilities::user_can( Capabilities::VIEW_DASHBOARD, 0, 2 ) );
-		$this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_DATA_SOURCES, 0, 2 ) );
-		$this->assertTrue( Capabilities::user_can( Capabilities::EXPORT_REPORTS, 0, 2 ) );
-		$this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_ALERTS, 0, 2 ) );
-		$this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_SETTINGS, 0, 2 ) );
+                $this->assertIsArray( $role_capabilities );
+                $this->assertArrayHasKey( 'administrator', $role_capabilities );
+                $this->assertArrayHasKey( 'editor', $role_capabilities );
+                $this->assertArrayHasKey( 'author', $role_capabilities );
 
-		// Test non-privileged user (user_id = 3)
-		$this->assertFalse( Capabilities::user_can( Capabilities::VIEW_DASHBOARD, 0, 3 ) );
-		$this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_DATA_SOURCES, 0, 3 ) );
-		$this->assertFalse( Capabilities::user_can( Capabilities::EXPORT_REPORTS, 0, 3 ) );
-		$this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_ALERTS, 0, 3 ) );
-		$this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_SETTINGS, 0, 3 ) );
-	}
+                // Administrator should have all capabilities
+                $admin_caps = $role_capabilities['administrator'];
+                $this->assertCount( 11, $admin_caps );
+                $this->assertContains( Capabilities::VIEW_DASHBOARD, $admin_caps );
+                $this->assertContains( Capabilities::MANAGE_DATA_SOURCES, $admin_caps );
+                $this->assertContains( Capabilities::EXPORT_REPORTS, $admin_caps );
+                $this->assertContains( Capabilities::MANAGE_ALERTS, $admin_caps );
+                $this->assertContains( Capabilities::MANAGE_SETTINGS, $admin_caps );
+                $this->assertContains( Capabilities::MANAGE_CAMPAIGNS, $admin_caps );
+                $this->assertContains( Capabilities::MANAGE_CONVERSIONS, $admin_caps );
+                $this->assertContains( Capabilities::VIEW_SEGMENTS, $admin_caps );
+                $this->assertContains( Capabilities::MANAGE_SEGMENTS, $admin_caps );
+                $this->assertContains( Capabilities::FUNNEL_ANALYSIS, $admin_caps );
+                $this->assertContains( Capabilities::VIEW_REPORTS, $admin_caps );
 
-	public function testCurrentUserCanFunction(): void {
-		// With default mock user (admin)
-		$this->assertTrue( Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) );
-		$this->assertTrue( Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) );
-		$this->assertTrue( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) );
-		$this->assertTrue( Capabilities::current_user_can( Capabilities::MANAGE_ALERTS ) );
-		$this->assertTrue( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) );
-	}
+                // Editor should have limited capabilities
+                $editor_caps = $role_capabilities['editor'];
+                $this->assertCount( 5, $editor_caps );
+                $this->assertContains( Capabilities::VIEW_DASHBOARD, $editor_caps );
+                $this->assertContains( Capabilities::EXPORT_REPORTS, $editor_caps );
+                $this->assertContains( Capabilities::VIEW_REPORTS, $editor_caps );
+                $this->assertContains( Capabilities::VIEW_SEGMENTS, $editor_caps );
+                $this->assertContains( Capabilities::FUNNEL_ANALYSIS, $editor_caps );
+
+                // Author should have read-only access to dashboards and reports
+                $author_caps = $role_capabilities['author'];
+                $this->assertCount( 2, $author_caps );
+                $this->assertContains( Capabilities::VIEW_DASHBOARD, $author_caps );
+                $this->assertContains( Capabilities::VIEW_REPORTS, $author_caps );
+        }
+
+        public function testUserCanFunction(): void {
+                // Test admin user (user_id = 1)
+                $this->assertTrue( Capabilities::user_can( Capabilities::VIEW_DASHBOARD, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_DATA_SOURCES, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::EXPORT_REPORTS, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_ALERTS, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_SETTINGS, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_CAMPAIGNS, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_CONVERSIONS, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::VIEW_SEGMENTS, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_SEGMENTS, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::FUNNEL_ANALYSIS, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::VIEW_REPORTS, 0, 1 ) );
+
+                // Test editor user (user_id = 2)
+                $this->assertTrue( Capabilities::user_can( Capabilities::VIEW_DASHBOARD, 0, 2 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_DATA_SOURCES, 0, 2 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::EXPORT_REPORTS, 0, 2 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_ALERTS, 0, 2 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_SETTINGS, 0, 2 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_CAMPAIGNS, 0, 2 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_CONVERSIONS, 0, 2 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::VIEW_SEGMENTS, 0, 2 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_SEGMENTS, 0, 2 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::FUNNEL_ANALYSIS, 0, 2 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::VIEW_REPORTS, 0, 2 ) );
+
+                // Test non-privileged user (user_id = 3)
+                $this->assertFalse( Capabilities::user_can( Capabilities::VIEW_DASHBOARD, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_DATA_SOURCES, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::EXPORT_REPORTS, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_ALERTS, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_SETTINGS, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_CAMPAIGNS, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_CONVERSIONS, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::VIEW_SEGMENTS, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_SEGMENTS, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::FUNNEL_ANALYSIS, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::VIEW_REPORTS, 0, 3 ) );
+        }
+
+        public function testCurrentUserCanFunction(): void {
+                // With default mock user (admin)
+                $this->assertTrue( Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) );
+                $this->assertTrue( Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) );
+                $this->assertTrue( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) );
+                $this->assertTrue( Capabilities::current_user_can( Capabilities::MANAGE_ALERTS ) );
+                $this->assertTrue( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) );
+                $this->assertTrue( Capabilities::current_user_can( Capabilities::VIEW_REPORTS ) );
+        }
 
 	public function testRegisterCapabilities(): void {
 		// Reset registration flag
@@ -229,34 +292,58 @@ class CapabilitiesTest extends TestCase {
 
 	public function testGetCapabilityLabel(): void {
 		$this->assertEquals( 'View Dashboard', Capabilities::get_capability_label( Capabilities::VIEW_DASHBOARD ) );
-		$this->assertEquals( 'Manage Data Sources', Capabilities::get_capability_label( Capabilities::MANAGE_DATA_SOURCES ) );
-		$this->assertEquals( 'Export Reports', Capabilities::get_capability_label( Capabilities::EXPORT_REPORTS ) );
-		$this->assertEquals( 'Manage Alerts', Capabilities::get_capability_label( Capabilities::MANAGE_ALERTS ) );
-		$this->assertEquals( 'Manage Settings', Capabilities::get_capability_label( Capabilities::MANAGE_SETTINGS ) );
-		
-		// Test unknown capability
-		$this->assertEquals( 'unknown_cap', Capabilities::get_capability_label( 'unknown_cap' ) );
-	}
+                $this->assertEquals( 'Manage Data Sources', Capabilities::get_capability_label( Capabilities::MANAGE_DATA_SOURCES ) );
+                $this->assertEquals( 'Export Reports', Capabilities::get_capability_label( Capabilities::EXPORT_REPORTS ) );
+                $this->assertEquals( 'Manage Alerts', Capabilities::get_capability_label( Capabilities::MANAGE_ALERTS ) );
+                $this->assertEquals( 'Manage Settings', Capabilities::get_capability_label( Capabilities::MANAGE_SETTINGS ) );
+                $this->assertEquals( 'Manage Campaigns', Capabilities::get_capability_label( Capabilities::MANAGE_CAMPAIGNS ) );
+                $this->assertEquals( 'Manage Conversion Events', Capabilities::get_capability_label( Capabilities::MANAGE_CONVERSIONS ) );
+                $this->assertEquals( 'View Segments', Capabilities::get_capability_label( Capabilities::VIEW_SEGMENTS ) );
+                $this->assertEquals( 'Manage Segments', Capabilities::get_capability_label( Capabilities::MANAGE_SEGMENTS ) );
+                $this->assertEquals( 'Access Funnel Analysis', Capabilities::get_capability_label( Capabilities::FUNNEL_ANALYSIS ) );
+                $this->assertEquals( 'View Reports', Capabilities::get_capability_label( Capabilities::VIEW_REPORTS ) );
+
+                // Test unknown capability
+                $this->assertEquals( 'unknown_cap', Capabilities::get_capability_label( 'unknown_cap' ) );
+        }
 
 	public function testGetCapabilityDescription(): void {
-		$dashboard_desc = Capabilities::get_capability_description( Capabilities::VIEW_DASHBOARD );
-		$this->assertContains( 'dashboard', strtolower( $dashboard_desc ) );
-		
-		$datasources_desc = Capabilities::get_capability_description( Capabilities::MANAGE_DATA_SOURCES );
-		$this->assertContains( 'data source', strtolower( $datasources_desc ) );
-		
-		$reports_desc = Capabilities::get_capability_description( Capabilities::EXPORT_REPORTS );
-		$this->assertContains( 'report', strtolower( $reports_desc ) );
-		
-		$alerts_desc = Capabilities::get_capability_description( Capabilities::MANAGE_ALERTS );
-		$this->assertContains( 'alert', strtolower( $alerts_desc ) );
-		
-		$settings_desc = Capabilities::get_capability_description( Capabilities::MANAGE_SETTINGS );
-		$this->assertContains( 'settings', strtolower( $settings_desc ) );
-		
-		// Test unknown capability
-		$this->assertEquals( '', Capabilities::get_capability_description( 'unknown_cap' ) );
-	}
+                $dashboard_desc = Capabilities::get_capability_description( Capabilities::VIEW_DASHBOARD );
+                $this->assertStringContainsString( 'dashboard', strtolower( $dashboard_desc ) );
+
+                $datasources_desc = Capabilities::get_capability_description( Capabilities::MANAGE_DATA_SOURCES );
+                $this->assertStringContainsString( 'data source', strtolower( $datasources_desc ) );
+
+                $reports_desc = Capabilities::get_capability_description( Capabilities::EXPORT_REPORTS );
+                $this->assertStringContainsString( 'report', strtolower( $reports_desc ) );
+
+                $alerts_desc = Capabilities::get_capability_description( Capabilities::MANAGE_ALERTS );
+                $this->assertStringContainsString( 'alert', strtolower( $alerts_desc ) );
+
+                $settings_desc = Capabilities::get_capability_description( Capabilities::MANAGE_SETTINGS );
+                $this->assertStringContainsString( 'settings', strtolower( $settings_desc ) );
+
+                $campaigns_desc = Capabilities::get_capability_description( Capabilities::MANAGE_CAMPAIGNS );
+                $this->assertStringContainsString( 'campaign', strtolower( $campaigns_desc ) );
+
+                $conversions_desc = Capabilities::get_capability_description( Capabilities::MANAGE_CONVERSIONS );
+                $this->assertStringContainsString( 'conversion', strtolower( $conversions_desc ) );
+
+                $view_segments_desc = Capabilities::get_capability_description( Capabilities::VIEW_SEGMENTS );
+                $this->assertStringContainsString( 'segment', strtolower( $view_segments_desc ) );
+
+                $manage_segments_desc = Capabilities::get_capability_description( Capabilities::MANAGE_SEGMENTS );
+                $this->assertStringContainsString( 'segment', strtolower( $manage_segments_desc ) );
+
+                $funnel_desc = Capabilities::get_capability_description( Capabilities::FUNNEL_ANALYSIS );
+                $this->assertStringContainsString( 'funnel', strtolower( $funnel_desc ) );
+
+                $view_reports_desc = Capabilities::get_capability_description( Capabilities::VIEW_REPORTS );
+                $this->assertStringContainsString( 'report', strtolower( $view_reports_desc ) );
+
+                // Test unknown capability
+                $this->assertEquals( '', Capabilities::get_capability_description( 'unknown_cap' ) );
+        }
 
 	public function testGetRoleCapabilities(): void {
 		// Mock role with capabilities

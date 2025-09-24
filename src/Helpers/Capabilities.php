@@ -42,6 +42,12 @@ class Capabilities {
                 self::EXPORT_REPORTS,
                 self::MANAGE_ALERTS,
                 self::MANAGE_SETTINGS,
+                self::MANAGE_CAMPAIGNS,
+                self::MANAGE_CONVERSIONS,
+                self::VIEW_SEGMENTS,
+                self::MANAGE_SEGMENTS,
+                self::FUNNEL_ANALYSIS,
+                self::VIEW_REPORTS,
         ];
 
 	/**
@@ -49,17 +55,30 @@ class Capabilities {
 	 *
 	 * @var array
 	 */
-	private static array $default_role_capabilities = [
+        private static array $default_role_capabilities = [
                 'administrator' => [
                         self::VIEW_DASHBOARD,
                         self::MANAGE_DATA_SOURCES,
                         self::EXPORT_REPORTS,
                         self::MANAGE_ALERTS,
                         self::MANAGE_SETTINGS,
+                        self::MANAGE_CAMPAIGNS,
+                        self::MANAGE_CONVERSIONS,
+                        self::VIEW_SEGMENTS,
+                        self::MANAGE_SEGMENTS,
+                        self::FUNNEL_ANALYSIS,
+                        self::VIEW_REPORTS,
                 ],
                 'editor' => [
                         self::VIEW_DASHBOARD,
                         self::EXPORT_REPORTS,
+                        self::VIEW_REPORTS,
+                        self::VIEW_SEGMENTS,
+                        self::FUNNEL_ANALYSIS,
+                ],
+                'author' => [
+                        self::VIEW_DASHBOARD,
+                        self::VIEW_REPORTS,
                 ],
         ];
 
@@ -334,13 +353,19 @@ class Capabilities {
 	 * @return string Human-readable name.
 	 */
 	public static function get_capability_label( string $capability ): string {
-		$labels = [
-			self::VIEW_DASHBOARD => __( 'View Dashboard', 'fp-digital-marketing' ),
-			self::MANAGE_DATA_SOURCES => __( 'Manage Data Sources', 'fp-digital-marketing' ),
-			self::EXPORT_REPORTS => __( 'Export Reports', 'fp-digital-marketing' ),
-			self::MANAGE_ALERTS => __( 'Manage Alerts', 'fp-digital-marketing' ),
-			self::MANAGE_SETTINGS => __( 'Manage Settings', 'fp-digital-marketing' ),
-		];
+                $labels = [
+                        self::VIEW_DASHBOARD => __( 'View Dashboard', 'fp-digital-marketing' ),
+                        self::MANAGE_DATA_SOURCES => __( 'Manage Data Sources', 'fp-digital-marketing' ),
+                        self::EXPORT_REPORTS => __( 'Export Reports', 'fp-digital-marketing' ),
+                        self::MANAGE_ALERTS => __( 'Manage Alerts', 'fp-digital-marketing' ),
+                        self::MANAGE_SETTINGS => __( 'Manage Settings', 'fp-digital-marketing' ),
+                        self::MANAGE_CAMPAIGNS => __( 'Manage Campaigns', 'fp-digital-marketing' ),
+                        self::MANAGE_CONVERSIONS => __( 'Manage Conversion Events', 'fp-digital-marketing' ),
+                        self::VIEW_SEGMENTS => __( 'View Segments', 'fp-digital-marketing' ),
+                        self::MANAGE_SEGMENTS => __( 'Manage Segments', 'fp-digital-marketing' ),
+                        self::FUNNEL_ANALYSIS => __( 'Access Funnel Analysis', 'fp-digital-marketing' ),
+                        self::VIEW_REPORTS => __( 'View Reports', 'fp-digital-marketing' ),
+                ];
 
 		return $labels[ $capability ] ?? $capability;
 	}
@@ -352,13 +377,19 @@ class Capabilities {
 	 * @return string Capability description.
 	 */
 	public static function get_capability_description( string $capability ): string {
-		$descriptions = [
-			self::VIEW_DASHBOARD => __( 'Access to view dashboard and metrics overview', 'fp-digital-marketing' ),
-			self::MANAGE_DATA_SOURCES => __( 'Configure and manage data source connections (GA4, GSC, etc.)', 'fp-digital-marketing' ),
-			self::EXPORT_REPORTS => __( 'Export reports and data in various formats', 'fp-digital-marketing' ),
-			self::MANAGE_ALERTS => __( 'Create, modify and manage alert rules and notifications', 'fp-digital-marketing' ),
-			self::MANAGE_SETTINGS => __( 'Access plugin settings and configuration options', 'fp-digital-marketing' ),
-		];
+                $descriptions = [
+                        self::VIEW_DASHBOARD => __( 'Access to view dashboard and metrics overview', 'fp-digital-marketing' ),
+                        self::MANAGE_DATA_SOURCES => __( 'Configure and manage data source connections (GA4, GSC, etc.)', 'fp-digital-marketing' ),
+                        self::EXPORT_REPORTS => __( 'Export reports and data in various formats', 'fp-digital-marketing' ),
+                        self::MANAGE_ALERTS => __( 'Create, modify and manage alert rules and notifications', 'fp-digital-marketing' ),
+                        self::MANAGE_SETTINGS => __( 'Access plugin settings and configuration options', 'fp-digital-marketing' ),
+                        self::MANAGE_CAMPAIGNS => __( 'Create and manage UTM marketing campaigns', 'fp-digital-marketing' ),
+                        self::MANAGE_CONVERSIONS => __( 'Manage conversion events and tracking rules', 'fp-digital-marketing' ),
+                        self::VIEW_SEGMENTS => __( 'View customer segments and audience breakdowns', 'fp-digital-marketing' ),
+                        self::MANAGE_SEGMENTS => __( 'Create and manage customer audience segments', 'fp-digital-marketing' ),
+                        self::FUNNEL_ANALYSIS => __( 'Access funnel analytics and journey exploration tools', 'fp-digital-marketing' ),
+                        self::VIEW_REPORTS => __( 'View advanced analytics and scheduled reports', 'fp-digital-marketing' ),
+                ];
 
 		return $descriptions[ $capability ] ?? '';
 	}
