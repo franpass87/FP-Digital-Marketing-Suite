@@ -678,13 +678,24 @@ class EmailNotifications {
 	 *
 	 * @return void
 	 */
-	private static function schedule_daily_digest(): void {
-		if ( ! wp_next_scheduled( 'fp_dms_daily_digest' ) ) {
-			wp_schedule_event( time(), 'daily', 'fp_dms_daily_digest' );
-		}
+        private static function schedule_daily_digest(): void {
+                if ( ! wp_next_scheduled( 'fp_dms_daily_digest' ) ) {
+                        wp_schedule_event( time(), 'daily', 'fp_dms_daily_digest' );
+                }
 
-		add_action( 'fp_dms_daily_digest', [ __CLASS__, 'send_daily_digest' ] );
-	}
+                add_action( 'fp_dms_daily_digest', [ __CLASS__, 'send_daily_digest' ] );
+        }
+
+        /**
+         * Unschedule the daily digest cron event.
+         *
+         * @return void
+         */
+        public static function unschedule_daily_digest(): void {
+                if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
+                        wp_clear_scheduled_hook( 'fp_dms_daily_digest' );
+                }
+        }
 
 	/**
 	 * Send daily digest email
