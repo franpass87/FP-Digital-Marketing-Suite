@@ -40,7 +40,9 @@ class SegmentationAdmin {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		}
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 		add_action( 'admin_init', [ $this, 'maybe_handle_get_actions' ], 5 );
 		add_action( 'admin_init', [ $this, 'handle_form_submission' ] );

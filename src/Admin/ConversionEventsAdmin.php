@@ -39,7 +39,9 @@ class ConversionEventsAdmin {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		}
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 		add_action( 'admin_init', [ $this, 'handle_form_submission' ] );
 		add_action( 'wp_ajax_fp_conversion_event_action', [ $this, 'handle_ajax_request' ] );

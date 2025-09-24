@@ -51,7 +51,9 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		}
 		add_action( 'admin_init', [ $this, 'handle_wizard_actions' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_wizard_scripts' ] );
 		add_action( 'admin_notices', [ $this, 'show_wizard_notice' ] );

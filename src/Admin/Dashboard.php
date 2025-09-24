@@ -63,7 +63,9 @@ class Dashboard {
 
 		// Add admin hooks with error handling to prevent WSOD
 		try {
-			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+			if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+				add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+			}
 			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_dashboard_assets' ] );
 			add_action( 'wp_ajax_fp_dms_get_dashboard_data', [ $this, 'handle_ajax_dashboard_data' ] );
 			add_action( 'wp_ajax_fp_dms_get_chart_data', [ $this, 'handle_ajax_chart_data' ] );

@@ -29,7 +29,9 @@ class SecurityAdmin {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		}
 		add_action( 'admin_init', [ $this, 'handle_security_actions' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_security_scripts' ] );
 	}

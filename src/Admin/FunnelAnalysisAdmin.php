@@ -35,7 +35,9 @@ class FunnelAnalysisAdmin {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		}
 		add_action( 'admin_init', [ $this, 'handle_funnel_actions' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_scripts' ] );
 		add_action( 'wp_ajax_fp_dms_get_funnel_data', [ $this, 'ajax_get_funnel_data' ] );
@@ -61,7 +63,7 @@ class FunnelAnalysisAdmin {
                add_submenu_page(
                        'fp-digital-marketing-dashboard',
 			__( 'Funnel Analysis', 'fp-digital-marketing' ),
-			__( 'Funnel Analysis', 'fp-digital-marketing' ),
+			__( '📈 Funnel Analysis', 'fp-digital-marketing' ),
 			Capabilities::FUNNEL_ANALYSIS,
 			self::PAGE_SLUG,
 			[ $this, 'render_admin_page' ]
