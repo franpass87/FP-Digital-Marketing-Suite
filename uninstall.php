@@ -136,6 +136,7 @@ function fp_dms_cleanup_options() {
         'fp_digital_marketing_demo_option',
         'fp_digital_marketing_report_config',
         'fp_digital_marketing_user_feedback',
+        'fp_digital_marketing_menu_state',
         'fp_digital_marketing_wizard_progress',
         'fp_digital_marketing_wizard_completed',
 
@@ -161,6 +162,9 @@ function fp_dms_cleanup_options() {
         'fp_dms_enable_performance_monitoring',
 
         // OAuth tokens and integration state.
+        'fp_digital_marketing_google_oauth_tokens',
+        'fp_digital_marketing_google_oauth_settings',
+        'fp_digital_marketing_oauth_state',
         'fp_dms_google_oauth_tokens',
         'fp_dms_google_oauth_settings',
         'fp_dms_oauth_state',

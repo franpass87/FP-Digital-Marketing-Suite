@@ -11,9 +11,11 @@ namespace FP\DigitalMarketing\Admin;
 
 use FP\DigitalMarketing\DataSources\GoogleOAuth;
 use FP\DigitalMarketing\DataSources\GoogleAnalytics4;
+use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Helpers\DataSources;
 use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Helpers\Security;
+use FP\DigitalMarketing\Setup\SettingsManager;
 
 /**
  * Onboarding Wizard class for first-time setup
@@ -23,27 +25,44 @@ class OnboardingWizard {
 	/**
 	 * Page slug for the wizard
 	 */
-	private const PAGE_SLUG = 'fp-digital-marketing-onboarding';
+        public const PAGE_SLUG = 'fp-digital-marketing-onboarding';
 
-	/**
-	 * Option name for wizard progress
-	 */
-	private const WIZARD_PROGRESS_OPTION = 'fp_digital_marketing_wizard_progress';
+        /**
+         * Option name for wizard progress
+         */
+        private const WIZARD_PROGRESS_OPTION = SettingsManager::OPTION_WIZARD_PROGRESS;
 
-	/**
-	 * Option name for wizard completion status
-	 */
-	private const WIZARD_COMPLETED_OPTION = 'fp_digital_marketing_wizard_completed';
+        /**
+         * Option name for wizard completion status
+         */
+        private const WIZARD_COMPLETED_OPTION = SettingsManager::OPTION_WIZARD_COMPLETED;
 
 	/**
 	 * Nonce action for wizard forms
 	 */
 	private const NONCE_ACTION = 'fp_digital_marketing_wizard_nonce';
 
-	/**
-	 * Total number of wizard steps
-	 */
-	private const TOTAL_STEPS = 5;
+        /**
+         * Total number of wizard steps
+         */
+        private const TOTAL_STEPS = 5;
+
+        /**
+         * Determine whether the current user can access wizard management actions.
+         *
+         * @return bool
+         */
+        private function current_user_can_manage_wizard(): bool {
+                if ( class_exists( Capabilities::class ) ) {
+                        return Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS );
+                }
+
+                if ( function_exists( 'current_user_can' ) ) {
+                        return current_user_can( 'manage_options' );
+                }
+
+                return true;
+        }
 
 	/**
 	 * Initialize the onboarding wizard
@@ -63,13 +82,22 @@ class OnboardingWizard {
 	 * Add admin menu page for the wizard
 	 *
 	 * @return void
-	 */
+        */
         public function add_admin_menu(): void {
                 if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
                         return;
                 }
 
-                // Always add as submenu under main menu, regardless of completion status
+                if ( ! SettingsManager::is_wizard_menu_enabled() ) {
+                        return;
+                }
+
+                $registered_slugs = SettingsManager::get_registered_menu_slugs();
+                if ( ! in_array( self::PAGE_SLUG, $registered_slugs, true ) ) {
+                        SettingsManager::enable_wizard_menu( self::PAGE_SLUG );
+                }
+
+                // Register fallback submenu under the main menu when the wizard is enabled
                 add_submenu_page(
                         'fp-digital-marketing-dashboard',
                         __( 'Setup Wizard', 'fp-digital-marketing' ),
@@ -86,9 +114,17 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	public function show_wizard_notice(): void {
-		if ( get_option( self::WIZARD_COMPLETED_OPTION, false ) ) {
-			return;
-		}
+                if ( ! $this->current_user_can_manage_wizard() ) {
+                        return;
+                }
+
+                if ( SettingsManager::get_option( self::WIZARD_COMPLETED_OPTION, false ) ) {
+                        return;
+                }
+
+                if ( ! function_exists( 'get_current_screen' ) ) {
+                        return;
+                }
 
                 $screen = get_current_screen();
                 if ( ! $screen ) {
@@ -121,9 +157,18 @@ class OnboardingWizard {
 			return;
 		}
 
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
-		}
+                if ( ! $this->current_user_can_manage_wizard() ) {
+                        $user_id = function_exists( 'get_current_user_id' ) ? get_current_user_id() : 0;
+                        Security::log_security_event(
+                                'wizard_access_denied',
+                                [
+                                        'user_id' => $user_id,
+                                        'page' => self::PAGE_SLUG,
+                                ]
+                        );
+
+                        wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+                }
 
 		// Handle POST requests
 		if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
@@ -182,7 +227,7 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	private function process_step_data( int $step ): void {
-		$progress = get_option( self::WIZARD_PROGRESS_OPTION, [] );
+                $progress = SettingsManager::get_option( self::WIZARD_PROGRESS_OPTION, [] );
 
 		switch ( $step ) {
 			case 1:
@@ -222,7 +267,7 @@ class OnboardingWizard {
 				break;
 		}
 
-		update_option( self::WIZARD_PROGRESS_OPTION, $progress );
+                SettingsManager::update_option( self::WIZARD_PROGRESS_OPTION, $progress );
 	}
 
 	/**
@@ -244,7 +289,7 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	private function complete_wizard(): void {
-		$progress = get_option( self::WIZARD_PROGRESS_OPTION, [] );
+                $progress = SettingsManager::get_option( self::WIZARD_PROGRESS_OPTION, [] );
 
 		// Apply service connections
 		if ( ! empty( $progress['services'] ) ) {
@@ -266,14 +311,19 @@ class OnboardingWizard {
 			$this->save_user_feedback( $progress['feedback'] );
 		}
 
-		// Mark wizard as completed
-		update_option( self::WIZARD_COMPLETED_OPTION, true );
-		delete_option( self::WIZARD_PROGRESS_OPTION );
+                // Mark wizard as completed
+                SettingsManager::update_option( self::WIZARD_COMPLETED_OPTION, true );
+                SettingsManager::delete_option( self::WIZARD_PROGRESS_OPTION );
+                if ( class_exists( MenuManager::class ) ) {
+                        MenuManager::disable_wizard_menu_entry( 'completed' );
+                } else {
+                        SettingsManager::disable_wizard_menu( self::PAGE_SLUG, 'completed' );
+                }
 
-		// Redirect to success page
-		$url = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&completed=1' );
-		wp_redirect( $url );
-		exit;
+                // Redirect to success page
+                $url = admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&completed=1' );
+                wp_redirect( $url );
+                exit;
 	}
 
 	/**
@@ -281,13 +331,19 @@ class OnboardingWizard {
 	 *
 	 * @return void
 	 */
-	private function skip_wizard(): void {
-		update_option( self::WIZARD_COMPLETED_OPTION, true );
-		delete_option( self::WIZARD_PROGRESS_OPTION );
+        private function skip_wizard(): void {
+                SettingsManager::update_option( self::WIZARD_COMPLETED_OPTION, true );
+                SettingsManager::delete_option( self::WIZARD_PROGRESS_OPTION );
+
+                if ( class_exists( MenuManager::class ) ) {
+                        MenuManager::disable_wizard_menu_entry( 'skipped' );
+                } else {
+                        SettingsManager::disable_wizard_menu( self::PAGE_SLUG, 'skipped' );
+                }
 
                 // Redirect to main dashboard page
                 $url = admin_url( 'admin.php?page=fp-digital-marketing-dashboard' );
-		wp_redirect( $url );
+                wp_redirect( $url );
 		exit;
 	}
 
@@ -298,7 +354,7 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	private function apply_service_settings( array $services ): void {
-		$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
+                $api_keys = SettingsManager::get_option( SettingsManager::OPTION_API_KEYS, [] );
 
 		foreach ( $services as $service ) {
 			if ( $service === 'google_analytics_4' ) {
@@ -307,7 +363,7 @@ class OnboardingWizard {
 			}
 		}
 
-		update_option( 'fp_digital_marketing_api_keys', $api_keys );
+                SettingsManager::update_option( SettingsManager::OPTION_API_KEYS, $api_keys );
 	}
 
 	/**
@@ -317,9 +373,9 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	private function apply_metric_settings( array $metrics ): void {
-		$sync_settings = get_option( 'fp_digital_marketing_sync_settings', [] );
-		$sync_settings['enabled_metrics'] = $metrics;
-		update_option( 'fp_digital_marketing_sync_settings', $sync_settings );
+                $sync_settings = SettingsManager::get_option( SettingsManager::OPTION_SYNC_SETTINGS, [] );
+                $sync_settings['enabled_metrics'] = $metrics;
+                SettingsManager::update_option( SettingsManager::OPTION_SYNC_SETTINGS, $sync_settings );
 	}
 
 	/**
@@ -331,7 +387,7 @@ class OnboardingWizard {
 	private function apply_report_settings( array $report_config ): void {
 		// This would integrate with the existing ReportScheduler
 		// For now, we'll save the settings for future use
-		update_option( 'fp_digital_marketing_report_config', $report_config );
+                SettingsManager::update_option( SettingsManager::OPTION_REPORT_CONFIG, $report_config );
 	}
 
 	/**
@@ -341,12 +397,12 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	private function save_user_feedback( array $feedback ): void {
-		$existing_feedback = get_option( 'fp_digital_marketing_user_feedback', [] );
-		$existing_feedback[] = array_merge( $feedback, [
-			'timestamp' => current_time( 'mysql' ),
-			'user_id' => get_current_user_id(),
-		] );
-		update_option( 'fp_digital_marketing_user_feedback', $existing_feedback );
+                $existing_feedback = SettingsManager::get_option( SettingsManager::OPTION_USER_FEEDBACK, [] );
+                $existing_feedback[] = array_merge( $feedback, [
+                        'timestamp' => current_time( 'mysql' ),
+                        'user_id' => get_current_user_id(),
+                ] );
+                SettingsManager::update_option( SettingsManager::OPTION_USER_FEEDBACK, $existing_feedback );
 	}
 
 	/**
@@ -359,7 +415,7 @@ class OnboardingWizard {
 		$step = max( 1, min( $step, self::TOTAL_STEPS ) );
 
 		$state = sanitize_text_field( wp_unslash( $_GET['state'] ?? '' ) );
-		$stored_state = get_option( 'fp_dms_oauth_state', '' );
+                $stored_state = SettingsManager::get_option( SettingsManager::OPTION_OAUTH_STATE, '' );
 
 		if ( empty( $state ) || ! wp_verify_nonce( $state, 'ga4_oauth_state' ) || $state !== $stored_state ) {
 			error_log( sprintf(
@@ -379,7 +435,7 @@ class OnboardingWizard {
 			return;
 		}
 
-		delete_option( 'fp_dms_oauth_state' );
+                SettingsManager::delete_option( SettingsManager::OPTION_OAUTH_STATE );
 
 		if ( isset( $_GET['error'] ) ) {
 			$oauth_error = sanitize_text_field( wp_unslash( $_GET['error'] ) );
@@ -479,15 +535,42 @@ class OnboardingWizard {
 	 * @return void
 	 */
         public function enqueue_wizard_scripts( string $hook ): void {
-                if ( strpos( $hook, self::PAGE_SLUG ) === false ) {
+                if ( ! function_exists( 'get_current_screen' ) ) {
                         return;
                 }
 
-		wp_enqueue_script( 'jquery' );
-		
-		wp_add_inline_style( 'wp-admin', $this->get_wizard_css() );
-		wp_add_inline_script( 'jquery', $this->get_wizard_js() );
-	}
+                $screen = get_current_screen();
+
+                if ( ! $this->is_wizard_screen( $screen ) ) {
+                        return;
+                }
+
+                wp_enqueue_script( 'jquery' );
+
+                wp_add_inline_style( 'wp-admin', $this->get_wizard_css() );
+                wp_add_inline_script( 'jquery', $this->get_wizard_js() );
+        }
+
+        /**
+         * Determine if the given admin screen corresponds to the wizard page.
+         *
+         * @param mixed $screen Current screen object.
+         * @return bool True when the wizard assets should load.
+         */
+        private function is_wizard_screen( $screen ): bool {
+                if ( ! is_object( $screen ) || ! isset( $screen->id ) ) {
+                        return false;
+                }
+
+                $screen_id = (string) $screen->id;
+                $expected_ids = [
+                        'fp-digital-marketing-dashboard_page_' . self::PAGE_SLUG,
+                        'fp-digital-marketing_page_' . self::PAGE_SLUG,
+                        'toplevel_page_' . self::PAGE_SLUG,
+                ];
+
+                return in_array( $screen_id, $expected_ids, true );
+        }
 
 	/**
 	 * Get wizard CSS styles
@@ -664,14 +747,18 @@ class OnboardingWizard {
 		';
 	}
 
-	/**
-	 * Render the main wizard page
-	 *
-	 * @return void
-	 */
-	public function render_wizard_page(): void {
-		$current_step = intval( $_GET['step'] ?? 1 );
-		$current_step = max( 1, min( $current_step, self::TOTAL_STEPS ) );
+        /**
+         * Render the main wizard page
+         *
+         * @return void
+         */
+        public function render_wizard_page(): void {
+                if ( ! $this->current_user_can_manage_wizard() ) {
+                        wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+                }
+
+                $current_step = intval( $_GET['step'] ?? 1 );
+                $current_step = max( 1, min( $current_step, self::TOTAL_STEPS ) );
 
 		// Check if wizard was just completed
 		if ( isset( $_GET['completed'] ) ) {
@@ -802,7 +889,7 @@ class OnboardingWizard {
 		echo '<h2>' . esc_html__( 'Connect Your Services', 'fp-digital-marketing' ) . '</h2>';
 		echo '<p>' . esc_html__( 'Select the services you want to connect to track your digital marketing performance.', 'fp-digital-marketing' ) . '</p>';
 
-		$progress = get_option( self::WIZARD_PROGRESS_OPTION, [] );
+                $progress = SettingsManager::get_option( self::WIZARD_PROGRESS_OPTION, [] );
 		$selected_services = $progress['services'] ?? [];
 
 		// Get available data sources
@@ -847,7 +934,7 @@ class OnboardingWizard {
 		echo '<h2>' . esc_html__( 'Choose Your Metrics', 'fp-digital-marketing' ) . '</h2>';
 		echo '<p>' . esc_html__( 'Select the metrics you want to track. You can always change these later in the settings.', 'fp-digital-marketing' ) . '</p>';
 
-		$progress = get_option( self::WIZARD_PROGRESS_OPTION, [] );
+                $progress = SettingsManager::get_option( self::WIZARD_PROGRESS_OPTION, [] );
 		$selected_metrics = $progress['metrics'] ?? [];
 
 		// Get available metrics from schema
@@ -892,7 +979,7 @@ class OnboardingWizard {
 		echo '<h2>' . esc_html__( 'Configure Reports', 'fp-digital-marketing' ) . '</h2>';
 		echo '<p>' . esc_html__( 'Set up how often you want to receive automated reports and where to send them.', 'fp-digital-marketing' ) . '</p>';
 
-		$progress = get_option( self::WIZARD_PROGRESS_OPTION, [] );
+                $progress = SettingsManager::get_option( self::WIZARD_PROGRESS_OPTION, [] );
 		$report_config = $progress['reports'] ?? [];
 
 		echo '<table class="form-table">';
@@ -945,7 +1032,7 @@ class OnboardingWizard {
 		echo '<h2>' . esc_html__( 'Almost Done!', 'fp-digital-marketing' ) . '</h2>';
 		echo '<p>' . esc_html__( 'Help us improve the setup experience by sharing your feedback.', 'fp-digital-marketing' ) . '</p>';
 
-		$progress = get_option( self::WIZARD_PROGRESS_OPTION, [] );
+                $progress = SettingsManager::get_option( self::WIZARD_PROGRESS_OPTION, [] );
 		$feedback = $progress['feedback'] ?? [];
 
 		echo '<table class="form-table">';
@@ -1063,7 +1150,7 @@ class OnboardingWizard {
 	 * @return bool True if wizard is completed.
 	 */
 	public static function is_completed(): bool {
-		return (bool) get_option( self::WIZARD_COMPLETED_OPTION, false );
+                return (bool) SettingsManager::get_option( self::WIZARD_COMPLETED_OPTION, false );
 	}
 
 	/**
@@ -1072,7 +1159,13 @@ class OnboardingWizard {
 	 * @return void
 	 */
 	public static function reset(): void {
-		delete_option( self::WIZARD_COMPLETED_OPTION );
-		delete_option( self::WIZARD_PROGRESS_OPTION );
-	}
+                SettingsManager::delete_option( self::WIZARD_COMPLETED_OPTION );
+                SettingsManager::delete_option( self::WIZARD_PROGRESS_OPTION );
+
+                SettingsManager::enable_wizard_menu( self::PAGE_SLUG );
+
+                if ( class_exists( MenuManager::class ) ) {
+                        MenuManager::enable_wizard_menu_entry();
+                }
+        }
 }

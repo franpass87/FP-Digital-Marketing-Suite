@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace FP\DigitalMarketing\Admin;
 
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Setup\SettingsManager;
 
 /**
  * MenuManager class for centralized admin menu management
@@ -26,10 +27,22 @@ class MenuManager {
          */
         private static bool $initialized = false;
 
-	/**
-	 * Main menu slug
-	 */
-	private const MAIN_MENU_SLUG = 'fp-digital-marketing-dashboard';
+        /**
+         * Main menu slug
+         */
+        private const MAIN_MENU_SLUG = 'fp-digital-marketing-dashboard';
+
+        /**
+         * Setup wizard menu slug
+         */
+        private const WIZARD_MENU_SLUG = 'fp-digital-marketing-onboarding';
+
+        /**
+         * Singleton instance reference.
+         *
+         * @var MenuManager|null
+         */
+        private static ?MenuManager $instance = null;
 
 	/**
 	 * Menu structure configuration
@@ -50,10 +63,11 @@ class MenuManager {
 	 * 
 	 * @param array $admin_instances Pre-instantiated admin class instances
 	 */
-	public function __construct( array $admin_instances = [] ) {
-		$this->admin_instances = $admin_instances;
-		$this->define_menu_structure();
-	}
+        public function __construct( array $admin_instances = [] ) {
+                $this->admin_instances = $admin_instances;
+                self::$instance = $this;
+                $this->define_menu_structure();
+        }
 
 	/**
 	 * Initialize the menu manager
@@ -82,11 +96,11 @@ class MenuManager {
 	 *
 	 * @return void
 	 */
-	private function define_menu_structure(): void {
-		$this->menu_structure = [
-			'main' => [
-				'page_title' => __( 'FP Digital Marketing Suite', 'fp-digital-marketing' ),
-				'menu_title' => __( 'FP Digital Marketing', 'fp-digital-marketing' ),
+        private function define_menu_structure(): void {
+                $this->menu_structure = [
+                        'main' => [
+                                'page_title' => __( 'FP Digital Marketing Suite', 'fp-digital-marketing' ),
+                                'menu_title' => __( 'FP Digital Marketing', 'fp-digital-marketing' ),
 				'capability' => Capabilities::VIEW_DASHBOARD,
 				'menu_slug' => self::MAIN_MENU_SLUG,
 				'callback' => 'Dashboard::render_dashboard_page',
@@ -193,28 +207,96 @@ class MenuManager {
 					'callback' => 'PlatformConnections::render_connections_page',
 					'group' => 'administration'
 				],
-				[
-					'parent_slug' => self::MAIN_MENU_SLUG,
-					'page_title' => __( 'FP Digital Marketing Settings', 'fp-digital-marketing' ),
-					'menu_title' => __( '⚙️ Settings', 'fp-digital-marketing' ),
-					'capability' => Capabilities::MANAGE_SETTINGS,
-					'menu_slug' => 'fp-digital-marketing-settings',
-					'callback' => 'Settings::render_settings_page',
-					'group' => 'administration'
-				],
-				[
-					'parent_slug' => self::MAIN_MENU_SLUG,
-					'page_title' => __( 'Setup Wizard', 'fp-digital-marketing' ),
-					'menu_title' => __( '🚀 Setup Wizard', 'fp-digital-marketing' ),
-					'capability' => 'manage_options',
-					'menu_slug' => 'fp-digital-marketing-onboarding',
-					'callback' => 'OnboardingWizard::render_wizard_page',
-					'group' => 'administration'
-				]
-			]
-		];
-		self::$initialized = true;
-	}
+                                [
+                                        'parent_slug' => self::MAIN_MENU_SLUG,
+                                        'page_title' => __( 'FP Digital Marketing Settings', 'fp-digital-marketing' ),
+                                        'menu_title' => __( '⚙️ Settings', 'fp-digital-marketing' ),
+                                        'capability' => Capabilities::MANAGE_SETTINGS,
+                                        'menu_slug' => 'fp-digital-marketing-settings',
+                                        'callback' => 'Settings::render_settings_page',
+                                        'group' => 'administration'
+                                ]
+                        ]
+                ];
+
+                if ( SettingsManager::is_wizard_menu_enabled() ) {
+                        $this->menu_structure['submenus'][] = $this->get_wizard_menu_config();
+                }
+
+                $this->persist_menu_slugs();
+                self::$initialized = true;
+        }
+
+        /**
+         * Get the configuration array for the wizard menu item.
+         *
+         * @return array
+         */
+        private function get_wizard_menu_config(): array {
+                return [
+                        'parent_slug' => self::MAIN_MENU_SLUG,
+                        'page_title' => __( 'Setup Wizard', 'fp-digital-marketing' ),
+                        'menu_title' => __( '🚀 Setup Wizard', 'fp-digital-marketing' ),
+                        'capability' => Capabilities::MANAGE_SETTINGS,
+                        'menu_slug' => self::WIZARD_MENU_SLUG,
+                        'callback' => 'OnboardingWizard::render_wizard_page',
+                        'group' => 'administration',
+                ];
+        }
+
+        /**
+         * Persist the currently registered menu slugs.
+         *
+         * @return void
+         */
+        private function persist_menu_slugs(): void {
+                $slugs = [];
+
+                if ( isset( $this->menu_structure['main']['menu_slug'] ) ) {
+                        $slugs[] = (string) $this->menu_structure['main']['menu_slug'];
+                }
+
+                foreach ( $this->menu_structure['submenus'] as $submenu ) {
+                        if ( isset( $submenu['menu_slug'] ) ) {
+                                $slugs[] = (string) $submenu['menu_slug'];
+                        }
+                }
+
+                SettingsManager::set_registered_menu_slugs( $slugs );
+        }
+
+        /**
+         * Remove the wizard menu entry from the internal structure.
+         *
+         * @return void
+         */
+        private function remove_wizard_menu_from_structure(): void {
+                if ( empty( $this->menu_structure['submenus'] ) ) {
+                        return;
+                }
+
+                $this->menu_structure['submenus'] = array_values( array_filter(
+                        $this->menu_structure['submenus'],
+                        static function ( array $menu ): bool {
+                                return ( $menu['menu_slug'] ?? '' ) !== self::WIZARD_MENU_SLUG;
+                        }
+                ) );
+        }
+
+        /**
+         * Ensure the wizard menu entry exists in the internal structure.
+         *
+         * @return void
+         */
+        private function add_wizard_menu_to_structure(): void {
+                foreach ( $this->menu_structure['submenus'] as $menu ) {
+                        if ( isset( $menu['menu_slug'] ) && $menu['menu_slug'] === self::WIZARD_MENU_SLUG ) {
+                                return;
+                        }
+                }
+
+                $this->menu_structure['submenus'][] = $this->get_wizard_menu_config();
+        }
 
 	/**
 	 * Register all menus according to the rationalized structure
@@ -522,11 +604,11 @@ class MenuManager {
 	 *
 	 * @return void
 	 */
-	public function handle_dismiss_notice(): void {
-		// Verify nonce
-		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_dms_dismiss_notice' ) ) {
-			wp_die( 'Security check failed' );
-		}
+        public function handle_dismiss_notice(): void {
+                // Verify nonce
+                if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_dms_dismiss_notice' ) ) {
+                        wp_die( 'Security check failed' );
+                }
 
 		// Check user capability
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -537,13 +619,56 @@ class MenuManager {
 		$user_id = get_current_user_id();
 		update_user_meta( $user_id, 'fp_dms_menu_rationalization_notice_dismissed', true );
 
-		wp_send_json_success();
-	}
+                wp_send_json_success();
+        }
 
-	/**
-	 * Remove legacy menu items to prevent duplicates
-	 * 
-	 * This method should be called to clean up old menu registrations
+        /**
+         * Disable the setup wizard menu entry and update stored menu state.
+         *
+         * @param string $status Wizard completion status.
+         * @return void
+         */
+        public static function disable_wizard_menu_entry( string $status = 'completed' ): void {
+                SettingsManager::disable_wizard_menu( self::WIZARD_MENU_SLUG, $status );
+
+                if ( self::$instance instanceof self ) {
+                        self::$instance->remove_wizard_menu_from_structure();
+                        self::$instance->persist_menu_slugs();
+                } else {
+                        SettingsManager::remove_registered_menu_slug( self::WIZARD_MENU_SLUG );
+                }
+
+                global $submenu;
+
+                if ( isset( $submenu[ self::MAIN_MENU_SLUG ] ) && is_array( $submenu[ self::MAIN_MENU_SLUG ] ) ) {
+                        foreach ( $submenu[ self::MAIN_MENU_SLUG ] as $index => $menu ) {
+                                if ( isset( $menu[2] ) && $menu[2] === self::WIZARD_MENU_SLUG ) {
+                                        unset( $submenu[ self::MAIN_MENU_SLUG ][ $index ] );
+                                }
+                        }
+
+                        $submenu[ self::MAIN_MENU_SLUG ] = array_values( $submenu[ self::MAIN_MENU_SLUG ] );
+                }
+        }
+
+        /**
+         * Enable the setup wizard menu entry for subsequent requests.
+         *
+         * @return void
+         */
+        public static function enable_wizard_menu_entry(): void {
+                SettingsManager::enable_wizard_menu( self::WIZARD_MENU_SLUG );
+
+                if ( self::$instance instanceof self ) {
+                        self::$instance->add_wizard_menu_to_structure();
+                        self::$instance->persist_menu_slugs();
+                }
+        }
+
+        /**
+         * Remove legacy menu items to prevent duplicates
+         *
+         * This method should be called to clean up old menu registrations
 	 *
 	 * @return void
 	 */

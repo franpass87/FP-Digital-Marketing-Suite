@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace FP\DigitalMarketing\DataSources;
 
 use FP\DigitalMarketing\Helpers\Security;
+use FP\DigitalMarketing\Setup\SettingsManager;
 
 /**
  * Google OAuth client for handling authentication
@@ -52,12 +53,12 @@ class GoogleOAuth {
 	/**
 	 * Option name for storing tokens
 	 */
-	private const TOKEN_OPTION = 'fp_dms_google_oauth_tokens';
+        private const TOKEN_OPTION = SettingsManager::OPTION_GOOGLE_OAUTH_TOKENS;
 
 	/**
 	 * Option name for storing OAuth settings
 	 */
-	private const OAUTH_SETTINGS_OPTION = 'fp_dms_google_oauth_settings';
+        private const OAUTH_SETTINGS_OPTION = SettingsManager::OPTION_GOOGLE_OAUTH_SETTINGS;
 
 	/**
 	 * Client credentials
@@ -79,7 +80,7 @@ class GoogleOAuth {
 	 * @return array OAuth credentials
 	 */
         private function get_oauth_credentials(): array {
-                $api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
+                $api_keys = SettingsManager::get_option( SettingsManager::OPTION_API_KEYS, [] );
 
                 $client_id = $api_keys['google_client_id'] ?? '';
                 $raw_client_secret = $api_keys['google_client_secret'] ?? '';
@@ -118,7 +119,7 @@ class GoogleOAuth {
 		}
 
 		$state = wp_create_nonce( 'ga4_oauth_state' );
-		update_option( 'fp_dms_oauth_state', $state );
+                SettingsManager::update_option( SettingsManager::OPTION_OAUTH_STATE, $state );
 
 		$params = [
 			'client_id' => $this->credentials['client_id'],
@@ -139,42 +140,70 @@ class GoogleOAuth {
 	 * @param string $authorization_code Authorization code from Google
 	 * @return bool True on success, false on failure
 	 */
-	public function exchange_code_for_tokens( string $authorization_code ): bool {
-		if ( ! $this->is_configured() ) {
-			return false;
-		}
+        public function exchange_code_for_tokens( string $authorization_code ): bool {
+                if ( ! $this->is_configured() ) {
+                        return false;
+                }
 
-		$data = [
-			'client_id' => $this->credentials['client_id'],
-			'client_secret' => $this->credentials['client_secret'],
-			'redirect_uri' => $this->credentials['redirect_uri'],
-			'grant_type' => 'authorization_code',
-			'code' => $authorization_code,
-		];
+                $data = [
+                        'client_id' => $this->credentials['client_id'],
+                        'client_secret' => $this->credentials['client_secret'],
+                        'redirect_uri' => $this->credentials['redirect_uri'],
+                        'grant_type' => 'authorization_code',
+                        'code' => $authorization_code,
+                ];
 
-		$response = wp_remote_post( self::TOKEN_URL, [
-			'body' => $data,
-			'headers' => [
-				'Content-Type' => 'application/x-www-form-urlencoded',
-			],
-		] );
+                $response = wp_remote_post( self::TOKEN_URL, [
+                        'body' => $data,
+                        'headers' => [
+                                'Content-Type' => 'application/x-www-form-urlencoded',
+                        ],
+                        'timeout' => 20,
+                ] );
 
-		if ( is_wp_error( $response ) ) {
-			error_log( 'GA4 OAuth token exchange error: ' . $response->get_error_message() );
-			return false;
-		}
+                if ( is_wp_error( $response ) ) {
+                        if ( function_exists( 'error_log' ) ) {
+                                error_log( 'GA4 OAuth token exchange error: ' . $response->get_error_message() );
+                        }
+                        return false;
+                }
 
-		$body = wp_remote_retrieve_body( $response );
-		$tokens = json_decode( $body, true );
+                $status_code = wp_remote_retrieve_response_code( $response );
+                $body = wp_remote_retrieve_body( $response );
 
-		if ( isset( $tokens['access_token'] ) ) {
-			$this->store_tokens( $tokens );
-			return true;
-		}
+                if ( 200 !== $status_code ) {
+                        if ( function_exists( 'error_log' ) ) {
+                                error_log( sprintf( 'GA4 OAuth token exchange HTTP %d: %s', $status_code, $body ) );
+                        }
+                        return false;
+                }
 
-		error_log( 'GA4 OAuth token exchange failed: ' . $body );
-		return false;
-	}
+                $tokens = json_decode( $body, true );
+
+                if ( ! is_array( $tokens ) ) {
+                        if ( function_exists( 'error_log' ) ) {
+                                error_log( 'GA4 OAuth token exchange returned invalid JSON.' );
+                        }
+                        return false;
+                }
+
+                if ( empty( $tokens['access_token'] ) ) {
+                        if ( function_exists( 'error_log' ) ) {
+                                $error_message = isset( $tokens['error'] ) ? $tokens['error'] : 'missing access token';
+                                error_log( 'GA4 OAuth token exchange failed: ' . $error_message );
+                        }
+                        return false;
+                }
+
+                $existing_tokens = $this->get_stored_tokens();
+                if ( empty( $tokens['refresh_token'] ) && is_array( $existing_tokens ) && ! empty( $existing_tokens['refresh_token'] ) ) {
+                        $tokens['refresh_token'] = $existing_tokens['refresh_token'];
+                }
+
+                $this->store_tokens( $tokens );
+
+                return true;
+        }
 
 	/**
 	 * Store tokens securely with encryption
@@ -182,17 +211,29 @@ class GoogleOAuth {
 	 * @param array $tokens Token data from Google
 	 * @return void
 	 */
-	private function store_tokens( array $tokens ): void {
-		$token_data = [
-			'access_token' => Security::encrypt_sensitive_data( $tokens['access_token'] ),
-			'refresh_token' => isset( $tokens['refresh_token'] ) ? Security::encrypt_sensitive_data( $tokens['refresh_token'] ) : '',
-			'expires_in' => $tokens['expires_in'] ?? 3600,
-			'token_type' => $tokens['token_type'] ?? 'Bearer',
-			'created_at' => time(),
-		];
+        private function store_tokens( array $tokens ): void {
+                $existing_tokens = $this->get_stored_tokens();
 
-		update_option( self::TOKEN_OPTION, $token_data, false ); // autoload = false for security
-	}
+                $refresh_token = $tokens['refresh_token'] ?? '';
+                if ( '' === $refresh_token && is_array( $existing_tokens ) && ! empty( $existing_tokens['refresh_token'] ) ) {
+                        $refresh_token = $existing_tokens['refresh_token'];
+                }
+
+                $expires_in = isset( $tokens['expires_in'] ) ? (int) $tokens['expires_in'] : null;
+                if ( null === $expires_in && is_array( $existing_tokens ) && isset( $existing_tokens['expires_in'] ) ) {
+                        $expires_in = (int) $existing_tokens['expires_in'];
+                }
+
+                $token_data = [
+                        'access_token' => Security::encrypt_sensitive_data( $tokens['access_token'] ),
+                        'refresh_token' => $refresh_token !== '' ? Security::encrypt_sensitive_data( $refresh_token ) : '',
+                        'expires_in' => $expires_in ?? 3600,
+                        'token_type' => $tokens['token_type'] ?? ( $existing_tokens['token_type'] ?? 'Bearer' ),
+                        'created_at' => time(),
+                ];
+
+                SettingsManager::update_option( self::TOKEN_OPTION, $token_data, false ); // autoload = false for security
+        }
 
 	/**
 	 * Get stored tokens with decryption
@@ -200,23 +241,26 @@ class GoogleOAuth {
 	 * @return array|false Token data with decrypted sensitive values or false if not found
 	 */
 	private function get_stored_tokens(): array|false {
-		$tokens = get_option( self::TOKEN_OPTION, false );
-		
-		if ( ! $tokens ) {
-			return false;
-		}
+                $tokens = SettingsManager::get_option( self::TOKEN_OPTION, [] );
 
-		// Decrypt sensitive token data
-		$decrypted_tokens = [
-			'access_token' => Security::decrypt_sensitive_data( $tokens['access_token'] ),
-			'refresh_token' => ! empty( $tokens['refresh_token'] ) ? Security::decrypt_sensitive_data( $tokens['refresh_token'] ) : '',
-			'expires_in' => $tokens['expires_in'],
-			'token_type' => $tokens['token_type'],
-			'created_at' => $tokens['created_at'],
-		];
+                if ( ! is_array( $tokens ) || empty( $tokens ) ) {
+                        return false;
+                }
 
-		return $decrypted_tokens;
-	}
+                $access_token = isset( $tokens['access_token'] ) ? Security::decrypt_sensitive_data( $tokens['access_token'] ) : '';
+                $refresh_token_encrypted = $tokens['refresh_token'] ?? '';
+                $refresh_token = '' !== $refresh_token_encrypted
+                        ? Security::decrypt_sensitive_data( $refresh_token_encrypted )
+                        : '';
+
+                return [
+                        'access_token' => $access_token,
+                        'refresh_token' => $refresh_token,
+                        'expires_in' => isset( $tokens['expires_in'] ) ? (int) $tokens['expires_in'] : 0,
+                        'token_type' => $tokens['token_type'] ?? 'Bearer',
+                        'created_at' => isset( $tokens['created_at'] ) ? (int) $tokens['created_at'] : 0,
+                ];
+        }
 
 	/**
 	 * Check if user is authenticated
@@ -328,9 +372,9 @@ class GoogleOAuth {
 		}
 
 		// Clear stored tokens
-		delete_option( self::TOKEN_OPTION );
-		return true;
-	}
+                SettingsManager::delete_option( self::TOKEN_OPTION );
+                return true;
+        }
 
 	/**
 	 * Get OAuth connection status for display
