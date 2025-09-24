@@ -64,11 +64,22 @@ class SegmentationEngine {
 	 *
 	 * @return void
 	 */
-	public static function schedule_full_evaluation(): void {
-		if ( ! wp_next_scheduled( 'fp_dms_evaluate_all_segments' ) ) {
-			wp_schedule_event( time(), 'hourly', 'fp_dms_evaluate_all_segments' );
-		}
-	}
+        public static function schedule_full_evaluation(): void {
+                if ( ! wp_next_scheduled( 'fp_dms_evaluate_all_segments' ) ) {
+                        wp_schedule_event( time(), 'hourly', 'fp_dms_evaluate_all_segments' );
+                }
+        }
+
+        /**
+         * Unschedule the periodic full segment evaluation cron event.
+         *
+         * @return void
+         */
+        public static function unschedule_full_evaluation(): void {
+                if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
+                        wp_clear_scheduled_hook( 'fp_dms_evaluate_all_segments' );
+                }
+        }
 
 	/**
 	 * Evaluate segments when a new conversion event is processed

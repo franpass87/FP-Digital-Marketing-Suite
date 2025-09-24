@@ -194,10 +194,36 @@ register_deactivation_hook( __FILE__, function () {
 		if ( class_exists( '\FP\DigitalMarketing\Helpers\Capabilities' ) ) {
 			\FP\DigitalMarketing\Helpers\Capabilities::remove_capabilities();
 		}
-		
+
+		// Unschedule cron events registered by the plugin.
+		if ( class_exists( '\FP\DigitalMarketing\Helpers\SyncEngine' ) ) {
+			\FP\DigitalMarketing\Helpers\SyncEngine::unschedule_sync();
+		}
+
+		if ( class_exists( '\FP\DigitalMarketing\Helpers\ReportScheduler' ) ) {
+			\FP\DigitalMarketing\Helpers\ReportScheduler::unschedule_reports();
+		}
+
+		if ( class_exists( '\FP\DigitalMarketing\Helpers\PerformanceCache' ) ) {
+			\FP\DigitalMarketing\Helpers\PerformanceCache::unschedule_cache_warmup();
+		}
+
+		if ( class_exists( '\FP\DigitalMarketing\Helpers\SegmentationEngine' ) ) {
+			\FP\DigitalMarketing\Helpers\SegmentationEngine::unschedule_full_evaluation();
+		}
+
+		if ( class_exists( '\FP\DigitalMarketing\Helpers\EmailNotifications' ) ) {
+			\FP\DigitalMarketing\Helpers\EmailNotifications::unschedule_daily_digest();
+		}
+
+		if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
+			wp_clear_scheduled_hook( 'fp_dms_cleanup_exports' );
+			wp_clear_scheduled_hook( 'fp_dms_cleanup_export_file' );
+		}
+
 		// Flush rewrite rules on deactivation.
 		flush_rewrite_rules();
-		
+
 	} catch ( \Error $e ) {
 		// Log deactivation errors but don't prevent deactivation
 		if ( function_exists( 'error_log' ) ) {
