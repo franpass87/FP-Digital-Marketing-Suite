@@ -160,20 +160,20 @@ class UTMCampaign {
 	 */
 	public function populate( array $data ): void {
 		$this->id = isset( $data['id'] ) ? (int) $data['id'] : null;
-		$this->campaign_name = sanitize_text_field( $data['campaign_name'] ?? '' );
-		$this->utm_source = sanitize_text_field( $data['utm_source'] ?? '' );
-		$this->utm_medium = sanitize_text_field( $data['utm_medium'] ?? '' );
-		$this->utm_campaign = sanitize_text_field( $data['utm_campaign'] ?? '' );
-		$this->utm_term = ! empty( $data['utm_term'] ) ? sanitize_text_field( $data['utm_term'] ) : null;
-		$this->utm_content = ! empty( $data['utm_content'] ) ? sanitize_text_field( $data['utm_content'] ) : null;
-		$this->base_url = esc_url_raw( $data['base_url'] ?? '' );
+                $this->campaign_name = $this->sanitize_text_value( $data['campaign_name'] ?? '' );
+                $this->utm_source = $this->sanitize_text_value( $data['utm_source'] ?? '' );
+                $this->utm_medium = $this->sanitize_text_value( $data['utm_medium'] ?? '' );
+                $this->utm_campaign = $this->sanitize_text_value( $data['utm_campaign'] ?? '' );
+                $this->utm_term = ! empty( $data['utm_term'] ) ? $this->sanitize_text_value( $data['utm_term'] ) : null;
+                $this->utm_content = ! empty( $data['utm_content'] ) ? $this->sanitize_text_value( $data['utm_content'] ) : null;
+                $this->base_url = $this->sanitize_url( $data['base_url'] ?? '' );
 		$this->final_url = esc_url_raw( $data['final_url'] ?? '' );
 		$this->short_url = ! empty( $data['short_url'] ) ? esc_url_raw( $data['short_url'] ) : null;
 		$this->preset_used = ! empty( $data['preset_used'] ) ? sanitize_text_field( $data['preset_used'] ) : null;
 		$this->clicks = isset( $data['clicks'] ) ? (int) $data['clicks'] : 0;
 		$this->conversions = isset( $data['conversions'] ) ? (int) $data['conversions'] : 0;
 		$this->revenue = isset( $data['revenue'] ) ? (float) $data['revenue'] : 0.0;
-		$this->status = sanitize_text_field( $data['status'] ?? 'active' );
+                $this->status = $this->sanitize_text_value( $data['status'] ?? 'active' );
 		$this->created_at = $data['created_at'] ?? null;
 		$this->updated_at = $data['updated_at'] ?? null;
 		$this->created_by = isset( $data['created_by'] ) ? (int) $data['created_by'] : null;
@@ -473,9 +473,9 @@ class UTMCampaign {
 	 *
 	 * @return array Model data as array.
 	 */
-	public function to_array(): array {
-		return [
-			'id'            => $this->id,
+        public function to_array(): array {
+                return [
+                        'id'            => $this->id,
 			'campaign_name' => $this->campaign_name,
 			'utm_source'    => $this->utm_source,
 			'utm_medium'    => $this->utm_medium,
@@ -492,9 +492,48 @@ class UTMCampaign {
 			'status'        => $this->status,
 			'created_at'    => $this->created_at,
 			'updated_at'    => $this->updated_at,
-			'created_by'    => $this->created_by,
-		];
-	}
+                        'created_by'    => $this->created_by,
+                ];
+        }
+
+        /**
+         * Sanitize text fields using a multi-step approach that strips script content
+         * and normalizes whitespace for safe storage.
+         *
+         * @param string $value Raw input value.
+         * @return string
+         */
+        private function sanitize_text_value( string $value ): string {
+                if ( '' === $value ) {
+                        return '';
+                }
+
+                $value = preg_replace( '#<script\b[^>]*>(.*?)</script>#is', '', $value );
+                $value = wp_strip_all_tags( $value, true );
+                $value = sanitize_text_field( $value );
+
+                return trim( $value );
+        }
+
+        /**
+         * Sanitize URL values ensuring dangerous schemes are removed.
+         *
+         * @param string $url Raw URL value.
+         * @return string
+         */
+        private function sanitize_url( string $url ): string {
+                $url = trim( (string) $url );
+
+                if ( '' === $url ) {
+                        return '';
+                }
+
+                if ( preg_match( '#^(javascript|data):#i', $url ) ) {
+                        return '';
+                }
+
+                return esc_url_raw( $url );
+        }
 
 	/**
 	 * Get campaign ID

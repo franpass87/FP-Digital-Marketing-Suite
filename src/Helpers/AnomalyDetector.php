@@ -19,6 +19,44 @@ use Exception;
  */
 class AnomalyDetector {
 
+        /**
+         * Internal override for supplying historical data during testing.
+         *
+         * @var callable|null
+         * @internal
+         */
+        public static $_test_override = null; // intentionally public for test harness compatibility.
+
+        /**
+         * Custom historical data provider for dependency injection.
+         *
+         * @var callable|null
+         */
+        /**
+         * @var callable|null
+         */
+        private static $historical_data_provider = null;
+
+        /**
+         * Set a custom historical data provider.
+         *
+         * @param callable|null $provider Callback that returns an array of values.
+         * @return void
+         */
+        public static function set_historical_data_provider( ?callable $provider ): void {
+                self::$historical_data_provider = $provider;
+        }
+
+        /**
+         * Reset any custom data providers or test overrides.
+         *
+         * @return void
+         */
+        public static function reset_historical_data_provider(): void {
+                self::$historical_data_provider = null;
+                self::$_test_override = null;
+        }
+
 	/**
 	 * Default number of days to use for historical analysis
 	 */
@@ -48,12 +86,12 @@ class AnomalyDetector {
 	 * @param array $options Optional parameters (threshold, historical_days)
 	 * @return array Anomaly detection result
 	 */
-	public static function detect_z_score_anomaly( int $client_id, string $metric, float $current_value, array $options = [] ): array {
-		$threshold = $options['threshold'] ?? self::DEFAULT_Z_SCORE_THRESHOLD;
-		$historical_days = $options['historical_days'] ?? self::DEFAULT_HISTORICAL_DAYS;
+        public static function detect_z_score_anomaly( int $client_id, string $metric, float $current_value, array $options = [] ): array {
+                $threshold = $options['threshold'] ?? self::DEFAULT_Z_SCORE_THRESHOLD;
+                $historical_days = $options['historical_days'] ?? self::DEFAULT_HISTORICAL_DAYS;
 
-		// Get historical data
-		$historical_data = self::get_historical_metric_data( $client_id, $metric, $historical_days );
+                // Get historical data
+                $historical_data = self::get_historical_metric_data( $client_id, $metric, $historical_days );
 
 		if ( count( $historical_data ) < self::MIN_DATA_POINTS ) {
 			return [
@@ -122,12 +160,13 @@ class AnomalyDetector {
 			];
 		}
 
-		// Calculate moving averages and bands
-		$moving_averages = self::calculate_moving_averages( $historical_data, $window_size );
-		$latest_ma = end( $moving_averages );
+                // Calculate moving averages and bands
+                $moving_averages = self::calculate_moving_averages( $historical_data, $window_size );
+                $latest_ma = end( $moving_averages );
 
-		// Calculate standard deviation of moving averages
-		$ma_std_dev = self::calculate_standard_deviation( $moving_averages );
+                // Calculate standard deviation using the most recent window of raw values
+                $recent_window = array_slice( $historical_data, -1 * $window_size );
+                $ma_std_dev = self::calculate_standard_deviation( $recent_window );
 
 		if ( $ma_std_dev == 0 ) {
 			return [
@@ -180,34 +219,50 @@ class AnomalyDetector {
 	 * @param int $days Number of days of historical data
 	 * @return array Array of daily metric values
 	 */
-	private static function get_historical_metric_data( int $client_id, string $metric, int $days ): array {
-		$historical_data = [];
-		$end_date = current_time( 'mysql' );
+        private static function get_historical_metric_data( int $client_id, string $metric, int $days ): array {
+                $provider = self::$historical_data_provider;
 
-		// Get daily metrics for the specified period
-		for ( $i = 1; $i <= $days; $i++ ) {
-			$day_end = date( 'Y-m-d 23:59:59', strtotime( "-{$i} days", strtotime( $end_date ) ) );
-			$day_start = date( 'Y-m-d 00:00:00', strtotime( "-{$i} days", strtotime( $end_date ) ) );
+                if ( null !== self::$_test_override ) {
+                        $provider = self::$_test_override;
+                }
 
-			try {
-				$metrics = MetricsAggregator::get_metrics( $client_id, $day_start, $day_end, [ $metric ] );
-				
-				if ( isset( $metrics[ $metric ] ) ) {
-					$historical_data[] = (float) $metrics[ $metric ]['total_value'];
-				} else {
-					// Use fallback value if no data available
-					$historical_data[] = 0.0;
-				}
-			} catch ( Exception $e ) {
-				// Log error and use fallback value
-				error_log( 'FP Digital Marketing Anomaly Detection Error: ' . $e->getMessage() );
-				$historical_data[] = 0.0;
-			}
-		}
+                if ( null !== $provider ) {
+                        $data = call_user_func( $provider, $client_id, $metric, $days );
+                        if ( is_array( $data ) ) {
+                                $normalized = array_map( 'floatval', $data );
+                                return array_values( array_reverse( $normalized ) );
+                        }
+                }
 
-		// Reverse to get chronological order (oldest first)
-		return array_reverse( $historical_data );
-	}
+                $historical_data = [];
+                $end_date = current_time( 'mysql' );
+
+                // Get daily metrics for the specified period
+                for ( $i = 1; $i <= $days; $i++ ) {
+                        $day_end = date( 'Y-m-d 23:59:59', strtotime( "-{$i} days", strtotime( $end_date ) ) );
+                        $day_start = date( 'Y-m-d 00:00:00', strtotime( "-{$i} days", strtotime( $end_date ) ) );
+
+                        try {
+                                $metrics = MetricsAggregator::get_metrics( $client_id, $day_start, $day_end, [ $metric ] );
+
+                                if ( isset( $metrics[ $metric ] ) ) {
+                                        $historical_data[] = (float) $metrics[ $metric ]['total_value'];
+                                } else {
+                                        // Use fallback value if no data available
+                                        $historical_data[] = 0.0;
+                                }
+                        } catch ( Exception $e ) {
+                                // Log error and use fallback value
+                                if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
+                                        error_log( 'FP Digital Marketing Anomaly Detection Error: ' . $e->getMessage() );
+                                }
+                                $historical_data[] = 0.0;
+                        }
+                }
+
+                // Reverse to get chronological order (oldest first)
+                return array_reverse( $historical_data );
+        }
 
 	/**
 	 * Calculate variance of a dataset

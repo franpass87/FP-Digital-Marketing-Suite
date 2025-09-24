@@ -25,19 +25,25 @@ class AnomalyDetectorTest extends TestCase {
 	/**
 	 * Set up test environment
 	 */
-	public function setUp(): void {
-		parent::setUp();
+        public function setUp(): void {
+                parent::setUp();
 
-		// Create mock wpdb
-                $this->wpdb_mock = $this->createMock( stdClass::class );
+                // Create mock wpdb with the methods used by the detector.
+                $this->wpdb_mock = $this->getMockBuilder( stdClass::class )
+                        ->addMethods( [ 'prepare', 'get_results', 'get_var' ] )
+                        ->getMock();
                 $this->wpdb_mock->prefix = 'wp_';
-                $this->wpdb_mock->method( 'prepare' )->willReturnArgument( 0 );
+                $this->wpdb_mock->method( 'prepare' )->willReturnCallback(
+                        static function ( $query ) {
+                                return $query;
+                        }
+                );
 
 		// Set global wpdb
 		global $wpdb;
 		$wpdb = $this->wpdb_mock;
 
-		// Mock WordPress functions
+                // Mock WordPress functions
 		if ( ! function_exists( 'current_time' ) ) {
 			function current_time( $format ) {
 				return date( $format );

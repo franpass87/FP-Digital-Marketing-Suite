@@ -37,14 +37,18 @@ class UTMCampaignsTable {
 	 *
 	 * @return bool True on success, false on failure
 	 */
-	public static function create_table(): bool {
-		global $wpdb;
+        public static function create_table(): bool {
+                global $wpdb;
 
-		$table_name = self::get_table_name();
-		$charset_collate = $wpdb->get_charset_collate();
+                $table_name = self::get_table_name();
+                $charset_collate = $wpdb->get_charset_collate();
 
-		$sql = "CREATE TABLE $table_name (
-			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+                if ( self::table_exists() ) {
+                        return true;
+                }
+
+                $sql = "CREATE TABLE $table_name (
+                        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			campaign_name varchar(255) NOT NULL,
 			utm_source varchar(255) NOT NULL,
 			utm_medium varchar(255) NOT NULL,
@@ -73,8 +77,17 @@ class UTMCampaignsTable {
 			KEY idx_created_by (created_by)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		dbDelta( $sql );
+                $upgrade_path = rtrim( ABSPATH, '/\\' ) . '/wp-admin/includes/upgrade.php';
+
+                if ( file_exists( $upgrade_path ) ) {
+                        require_once $upgrade_path;
+                }
+
+                if ( ! function_exists( 'dbDelta' ) ) {
+                        return false;
+                }
+
+                dbDelta( $sql );
 
 		// Check if table was created successfully.
 		return self::table_exists();
