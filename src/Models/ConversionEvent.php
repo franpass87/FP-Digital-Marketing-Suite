@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace FP\DigitalMarketing\Models;
 
 use FP\DigitalMarketing\Database\ConversionEventsTable;
+use FP\DigitalMarketing\Helpers\PerformanceCache;
 
 /**
  * Conversion Event model class
@@ -325,19 +326,26 @@ class ConversionEvent {
 		$data = $this->to_array();
 		unset( $data['id'] ); // Don't include ID in insert/update data
 
-		if ( $this->id ) {
-			// Update existing event
-			return ConversionEventsTable::update_event( $this->id, $data );
-		} else {
-			// Insert new event
-			$insert_id = ConversionEventsTable::insert_event( $data );
-			if ( $insert_id ) {
-				$this->id = $insert_id;
-				return true;
-			}
-			return false;
-		}
-	}
+                $result = false;
+
+                if ( $this->id ) {
+                        // Update existing event
+                        $result = ConversionEventsTable::update_event( $this->id, $data );
+                } else {
+                        // Insert new event
+                        $insert_id = ConversionEventsTable::insert_event( $data );
+                        if ( $insert_id ) {
+                                $this->id = $insert_id;
+                                $result = true;
+                        }
+                }
+
+                if ( $result ) {
+                        $this->invalidate_cache();
+                }
+
+                return (bool) $result;
+        }
 
 	/**
 	 * Delete event from database
@@ -349,8 +357,14 @@ class ConversionEvent {
 			return false;
 		}
 
-		return ConversionEventsTable::delete_event( $this->id );
-	}
+                $result = ConversionEventsTable::delete_event( $this->id );
+
+                if ( $result ) {
+                        $this->invalidate_cache();
+                }
+
+                return $result;
+        }
 
 	/**
 	 * Mark this event as duplicate
@@ -406,13 +420,32 @@ class ConversionEvent {
 	 * @param mixed  $value Attribute value
 	 * @return void
 	 */
-	public function set_attribute( string $key, $value ): void {
-		$this->event_attributes[ $key ] = $value;
-	}
+        public function set_attribute( string $key, $value ): void {
+                $this->event_attributes[ $key ] = $value;
+        }
 
-	/**
-	 * Convert to array representation
-	 *
+        /**
+         * Clear cached metrics related to this conversion event.
+         *
+         * @return void
+         */
+        private function invalidate_cache(): void {
+                $client_component = $this->client_id > 0 ? (string) $this->client_id : 'global';
+
+                $patterns = [
+                        PerformanceCache::CACHE_GROUP_METRICS => sprintf( 'metrics_client_%s_*', $client_component ),
+                        PerformanceCache::CACHE_GROUP_AGGREGATED => sprintf( 'metrics_client_%s_*', $client_component ),
+                        PerformanceCache::CACHE_GROUP_REPORTS => sprintf( 'report_client_%s_*', $client_component ),
+                ];
+
+                foreach ( $patterns as $group => $pattern ) {
+                        PerformanceCache::clear_cache_by_pattern( $pattern, $group );
+                }
+        }
+
+        /**
+         * Convert to array representation
+         *
 	 * @return array Event data as array
 	 */
 	public function to_array(): array {

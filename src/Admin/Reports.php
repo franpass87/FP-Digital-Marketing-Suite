@@ -19,6 +19,7 @@ use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Helpers\PerformanceCache;
 use FP\DigitalMarketing\Models\CustomReport;
 use FP\DigitalMarketing\Models\SocialSentiment;
 use FP\DigitalMarketing\Database\CustomReportsTable;
@@ -293,12 +294,17 @@ class Reports {
 			'status' => 'active',
 		]);
 
-		if ( $custom_report->save() ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-success is-dismissible"><p>';
-				echo esc_html__( 'Report personalizzato creato con successo!', 'fp-digital-marketing' );
-				echo '</p></div>';
-			} );
+                if ( $custom_report->save() ) {
+                        PerformanceCache::clear_cache_by_pattern(
+                                sprintf( 'report_client_%d_*', $client_id ),
+                                PerformanceCache::CACHE_GROUP_REPORTS
+                        );
+
+                        add_action( 'admin_notices', function() {
+                                echo '<div class="notice notice-success is-dismissible"><p>';
+                                echo esc_html__( 'Report personalizzato creato con successo!', 'fp-digital-marketing' );
+                                echo '</p></div>';
+                        } );
 		} else {
 			add_action( 'admin_notices', function() {
 				echo '<div class="notice notice-error is-dismissible"><p>';

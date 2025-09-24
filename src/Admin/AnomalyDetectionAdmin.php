@@ -962,13 +962,13 @@ class AnomalyDetectionAdmin {
 			return;
 		}
 
-		wp_enqueue_script(
-			'fp-dms-anomaly-admin',
-			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/anomaly-admin.js',
-			[ 'jquery' ],
-			FP_DIGITAL_MARKETING_VERSION,
-			true
-		);
+                wp_enqueue_script(
+                        'fp-dms-anomaly-admin',
+                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/anomaly-admin.js',
+                        [ 'jquery', 'wp-util' ],
+                        FP_DIGITAL_MARKETING_VERSION,
+                        true
+                );
 
 		wp_localize_script( 'fp-dms-anomaly-admin', 'fp_dms_anomaly_admin', [
 			'ajax_url' => admin_url( 'admin-ajax.php' ),
