@@ -2102,22 +2102,51 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	public function handle_clear_sitemap_cache(): void {
-		// Check nonce
-		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_clear_sitemap_cache' ) ) {
-			wp_send_json_error( 'Invalid nonce' );
-		}
+        public function handle_clear_sitemap_cache(): void {
+                check_ajax_referer( 'fp_clear_sitemap_cache', 'nonce' );
 
-		// Check permissions
-		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
-			wp_send_json_error( 'Insufficient permissions' );
-		}
+                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+                        Security::log_security_event(
+                                'sitemap_cache_clear_denied',
+                                [
+                                        'user_id' => get_current_user_id(),
+                                        'ip'      => Security::get_client_ip(),
+                                ]
+                        );
 
-		// Clear sitemap cache
-		XmlSitemap::invalidate_sitemap_cache();
+                        wp_send_json_error(
+                                [
+                                        'message' => __( 'Permessi insufficienti per cancellare la cache della sitemap.', 'fp-digital-marketing' ),
+                                ]
+                        );
+                }
 
-		wp_send_json_success( 'Sitemap cache cleared successfully' );
-	}
+                try {
+                        XmlSitemap::invalidate_sitemap_cache();
+
+                        Security::log_security_event(
+                                'sitemap_cache_cleared',
+                                [
+                                        'user_id' => get_current_user_id(),
+                                        'ip'      => Security::get_client_ip(),
+                                ]
+                        );
+
+                        wp_send_json_success(
+                                [
+                                        'message' => __( 'Cache della sitemap svuotata con successo.', 'fp-digital-marketing' ),
+                                ]
+                        );
+                } catch ( \Throwable $exception ) {
+                        error_log( 'FP Digital Marketing: Failed to clear sitemap cache - ' . $exception->getMessage() );
+
+                        wp_send_json_error(
+                                [
+                                        'message' => __( 'Errore durante la pulizia della cache della sitemap.', 'fp-digital-marketing' ),
+                                ]
+                        );
+                }
+        }
 
 	/**
 	 * Render schema section description
@@ -2327,36 +2356,126 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	public function handle_cache_warmup(): void {
-		// Verify nonce
-		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', 'fp_dms_settings_nonce' ) ) {
-			wp_die( esc_html__( 'Richiesta di sicurezza non valida.', 'fp-digital-marketing' ) );
-		}
+        public function handle_cache_warmup(): void {
+                check_ajax_referer( 'fp_dms_settings_nonce', 'nonce' );
 
-		// Check capabilities
-		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
-			wp_send_json_error( __( 'Permessi insufficienti.', 'fp-digital-marketing' ) );
-		}
+                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+                        Security::log_security_event(
+                                'cache_warmup_denied',
+                                [
+                                        'user_id' => get_current_user_id(),
+                                        'ip'      => Security::get_client_ip(),
+                                ]
+                        );
 
-		$warmup_results = PerformanceCache::warmup_cache();
-		
-		if ( $warmup_results['status'] === 'success' ) {
-			wp_send_json_success( [
-				'message' => sprintf(
-					__( 'Cache pre-caricata con successo! %d chiavi caricate, %d fallite in %.2f secondi.', 'fp-digital-marketing' ),
-					$warmup_results['warmed_keys'],
-					$warmup_results['failed_keys'],
-					$warmup_results['execution_time']
-				),
-				'results' => $warmup_results
-			] );
-		} else {
-			wp_send_json_error( [
-				'message' => __( 'Errore durante il pre-caricamento della cache.', 'fp-digital-marketing' ),
-				'results' => $warmup_results
-			] );
-		}
-	}
+                        wp_send_json_error(
+                                [
+                                        'message' => __( 'Permessi insufficienti.', 'fp-digital-marketing' ),
+                                ]
+                        );
+                }
+
+                try {
+                        $warmup_results = PerformanceCache::warmup_cache();
+                } catch ( \Throwable $exception ) {
+                        error_log( 'FP Digital Marketing: Cache warmup error - ' . $exception->getMessage() );
+
+                        Security::log_security_event(
+                                'cache_warmup_failed',
+                                [
+                                        'user_id' => get_current_user_id(),
+                                        'ip'      => Security::get_client_ip(),
+                                        'error'   => $exception->getMessage(),
+                                ]
+                        );
+
+                        wp_send_json_error(
+                                [
+                                        'message' => __( 'Errore durante il pre-caricamento della cache.', 'fp-digital-marketing' ),
+                                ]
+                        );
+                }
+
+                $normalized_results = $this->normalize_warmup_results( $warmup_results );
+
+                if ( 'success' === $normalized_results['status'] ) {
+                        Security::log_security_event(
+                                'cache_warmup_completed',
+                                [
+                                        'user_id'      => get_current_user_id(),
+                                        'ip'           => Security::get_client_ip(),
+                                        'warmed_keys'  => $normalized_results['warmed_keys'],
+                                        'failed_keys'  => $normalized_results['failed_keys'],
+                                        'time_seconds' => $normalized_results['execution_time'],
+                                ]
+                        );
+
+                        wp_send_json_success(
+                                [
+                                        'message' => sprintf(
+                                                __( 'Cache pre-caricata con successo! %d chiavi caricate, %d fallite in %.2f secondi.', 'fp-digital-marketing' ),
+                                                $normalized_results['warmed_keys'],
+                                                $normalized_results['failed_keys'],
+                                                $normalized_results['execution_time']
+                                        ),
+                                        'results' => $normalized_results,
+                                ]
+                        );
+                }
+
+                if ( 'disabled' === $normalized_results['status'] ) {
+                        wp_send_json_error(
+                                [
+                                        'message' => $normalized_results['message'] ?: __( 'La cache è attualmente disabilitata.', 'fp-digital-marketing' ),
+                                        'results' => $normalized_results,
+                                ]
+                        );
+                }
+
+                wp_send_json_error(
+                        [
+                                'message' => $normalized_results['message'] ?: __( 'Errore durante il pre-caricamento della cache.', 'fp-digital-marketing' ),
+                                'results' => $normalized_results,
+                        ]
+                );
+        }
+
+        /**
+         * Normalize warmup results data for safe JSON responses.
+         *
+         * @param array $warmup_results Raw warmup results.
+         * @return array Normalized results array.
+         */
+        private function normalize_warmup_results( array $warmup_results ): array {
+                $status = sanitize_key( $warmup_results['status'] ?? 'error' );
+                $message = sanitize_text_field( (string) ( $warmup_results['message'] ?? '' ) );
+
+                $normalized = [
+                        'status'         => $status ?: 'error',
+                        'message'        => $message,
+                        'warmed_keys'    => isset( $warmup_results['warmed_keys'] ) ? absint( $warmup_results['warmed_keys'] ) : 0,
+                        'failed_keys'    => isset( $warmup_results['failed_keys'] ) ? absint( $warmup_results['failed_keys'] ) : 0,
+                        'execution_time' => isset( $warmup_results['execution_time'] ) ? max( 0, (float) $warmup_results['execution_time'] ) : 0.0,
+                        'details'        => [],
+                ];
+
+                if ( isset( $warmup_results['details'] ) && is_array( $warmup_results['details'] ) ) {
+                        foreach ( $warmup_results['details'] as $detail ) {
+                                if ( ! is_array( $detail ) ) {
+                                        continue;
+                                }
+
+                                $normalized['details'][] = [
+                                        'key'       => isset( $detail['key'] ) ? sanitize_key( (string) $detail['key'] ) : '',
+                                        'status'    => isset( $detail['status'] ) ? sanitize_key( (string) $detail['status'] ) : '',
+                                        'reason'    => isset( $detail['reason'] ) ? sanitize_text_field( (string) $detail['reason'] ) : '',
+                                        'data_size' => isset( $detail['data_size'] ) ? absint( $detail['data_size'] ) : 0,
+                                ];
+                        }
+                }
+
+                return $normalized;
+        }
 
 	/**
 	 * Scheduled cache warmup callback
