@@ -482,16 +482,25 @@ class Settings {
 					);
 					break;
 
-				case 'invalid_nonce':
-					add_settings_error(
-						'cache_settings',
-						'invalid_nonce',
-						__( 'Impossibile verificare la richiesta. Riprova.', 'fp-digital-marketing' ),
-						'error'
-					);
-					break;
-			}
-		}
+                                case 'invalid_nonce':
+                                        add_settings_error(
+                                                'cache_settings',
+                                                'invalid_nonce',
+                                                __( 'Impossibile verificare la richiesta. Riprova.', 'fp-digital-marketing' ),
+                                                'error'
+                                        );
+                                        break;
+
+                                case 'insufficient_permissions':
+                                        add_settings_error(
+                                                'cache_settings',
+                                                'insufficient_permissions',
+                                                __( 'Non hai i permessi per eseguire questa operazione.', 'fp-digital-marketing' ),
+                                                'error'
+                                        );
+                                        break;
+                        }
+                }
 
 		?>
 		<div class="wrap">
@@ -953,25 +962,47 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	public function handle_cache_actions(): void {
-		if ( ! isset( $_GET['page'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
-			return;
-		}
+        public function handle_cache_actions(): void {
+                if ( ! isset( $_GET['page'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
+                        return;
+                }
 
-		if ( empty( $_GET['action'] ) ) {
-			return;
-		}
+                if ( empty( $_GET['action'] ) ) {
+                        return;
+                }
 
-		$action = sanitize_key( wp_unslash( $_GET['action'] ) );
+                $action = sanitize_key( wp_unslash( $_GET['action'] ) );
 
-		if ( ! in_array( $action, [ 'invalidate_cache', 'clear_cache_stats' ], true ) ) {
-			return;
-		}
+                if ( ! in_array( $action, [ 'invalidate_cache', 'clear_cache_stats' ], true ) ) {
+                        return;
+                }
 
-		if ( empty( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), self::CACHE_ACTION_NONCE ) ) {
-			$redirect_url = add_query_arg(
-				[
-					'page'         => self::PAGE_SLUG,
+                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+                        Security::log_security_event(
+                                'cache_action_denied',
+                                [
+                                        'action'  => $action,
+                                        'user_id' => get_current_user_id(),
+                                        'ip'      => Security::get_client_ip(),
+                                ]
+                        );
+
+                        $redirect_url = add_query_arg(
+                                [
+                                        'page'         => self::PAGE_SLUG,
+                                        'cache_status' => 'insufficient_permissions',
+                                ],
+                                admin_url( 'admin.php' )
+                        );
+
+                        wp_safe_redirect( $redirect_url );
+                        exit;
+                }
+
+                if ( empty( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), self::CACHE_ACTION_NONCE ) ) {
+                        $redirect_url = add_query_arg(
+                                [
+                                        'page'         => self::PAGE_SLUG,
 					'cache_status' => 'invalid_nonce',
 				],
 				admin_url( 'admin.php' )
@@ -981,19 +1012,33 @@ class Settings {
 			exit;
 		}
 
-		$status = '';
+                $status = '';
 
-		switch ( $action ) {
-			case 'invalidate_cache':
-				PerformanceCache::invalidate_all();
-				$status = 'cache_invalidated';
-				break;
+                switch ( $action ) {
+                        case 'invalidate_cache':
+                                PerformanceCache::invalidate_all();
+                                Security::log_security_event(
+                                        'cache_invalidated',
+                                        [
+                                                'user_id' => get_current_user_id(),
+                                                'ip'      => Security::get_client_ip(),
+                                        ]
+                                );
+                                $status = 'cache_invalidated';
+                                break;
 
-			case 'clear_cache_stats':
-				PerformanceCache::clear_stats();
-				$status = 'cache_stats_cleared';
-				break;
-		}
+                        case 'clear_cache_stats':
+                                PerformanceCache::clear_stats();
+                                Security::log_security_event(
+                                        'cache_stats_cleared',
+                                        [
+                                                'user_id' => get_current_user_id(),
+                                                'ip'      => Security::get_client_ip(),
+                                        ]
+                                );
+                                $status = 'cache_stats_cleared';
+                                break;
+                }
 
 		if ( '' === $status ) {
 			return;
