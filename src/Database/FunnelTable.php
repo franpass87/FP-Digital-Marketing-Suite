@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Database;
 
+use FP\DigitalMarketing\Database\DatabaseUtils;
+
 /**
  * Funnel table management class
  * 
@@ -36,20 +38,20 @@ class FunnelTable {
 	 *
 	 * @return string Full table name
 	 */
-	public static function get_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::$table_name;
-	}
+        public static function get_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::$table_name );
+        }
 
 	/**
 	 * Get the full stages table name with WordPress prefix
 	 *
 	 * @return string Full stages table name
 	 */
-	public static function get_stages_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::$stages_table_name;
-	}
+        public static function get_stages_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::$stages_table_name );
+        }
 
 	/**
 	 * Check if the funnels table exists
@@ -89,8 +91,8 @@ class FunnelTable {
 	public static function create_table(): bool {
 		global $wpdb;
 
-		$table_name = self::get_table_name();
-		$charset_collate = $wpdb->get_charset_collate();
+                $table_name      = self::get_table_name();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -108,10 +110,11 @@ class FunnelTable {
 			KEY idx_created_at (created_at)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$result = dbDelta( $sql );
+                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
+                        return false;
+                }
 
-		return self::table_exists();
+                return self::table_exists();
 	}
 
 	/**
@@ -122,8 +125,8 @@ class FunnelTable {
         public static function create_stages_table(): bool {
                 global $wpdb;
 
-                $table_name = self::get_stages_table_name();
-                $charset_collate = $wpdb->get_charset_collate();
+                $table_name      = self::get_stages_table_name();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -143,8 +146,9 @@ class FunnelTable {
 			CONSTRAINT fk_funnel_stages_funnel FOREIGN KEY (funnel_id) REFERENCES $table_name (id) ON DELETE CASCADE
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$result = dbDelta( $sql );
+                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
+                        return false;
+                }
 
                 return self::stages_table_exists();
         }

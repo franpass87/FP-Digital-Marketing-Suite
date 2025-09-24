@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Database;
 
+use FP\DigitalMarketing\Database\DatabaseUtils;
+
 /**
  * UTM Campaigns Table class for database table management
  * 
@@ -27,10 +29,10 @@ class UTMCampaignsTable {
 	 *
 	 * @return string Full table name
 	 */
-	public static function get_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::TABLE_NAME;
-	}
+        public static function get_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
+        }
 
 	/**
 	 * Create the UTM campaigns table
@@ -41,7 +43,7 @@ class UTMCampaignsTable {
                 global $wpdb;
 
                 $table_name = self::get_table_name();
-                $charset_collate = $wpdb->get_charset_collate();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
                 if ( self::table_exists() ) {
                         return true;
@@ -77,20 +79,12 @@ class UTMCampaignsTable {
 			KEY idx_created_by (created_by)
 		) $charset_collate;";
 
-                $upgrade_path = rtrim( ABSPATH, '/\\' ) . '/wp-admin/includes/upgrade.php';
-
-                if ( file_exists( $upgrade_path ) ) {
-                        require_once $upgrade_path;
-                }
-
-                if ( ! function_exists( 'dbDelta' ) ) {
+                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
                         return false;
                 }
 
-                dbDelta( $sql );
-
-		// Check if table was created successfully.
-		return self::table_exists();
+                // Check if table was created successfully.
+                return self::table_exists();
 	}
 
 	/**

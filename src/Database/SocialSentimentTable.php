@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Database;
 
+use FP\DigitalMarketing\Database\DatabaseUtils;
+
 /**
  * Handles database operations for social sentiment analysis
  */
@@ -81,10 +83,10 @@ class SocialSentimentTable {
 	 *
 	 * @return string
 	 */
-	public static function get_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::TABLE_NAME;
-	}
+        public static function get_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
+        }
 
 	/**
 	 * Check if table exists
@@ -108,7 +110,7 @@ class SocialSentimentTable {
 
                 $table_name = self::get_table_name();
 
-		$charset_collate = $wpdb->get_charset_collate();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE {$table_name} (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -140,10 +142,7 @@ class SocialSentimentTable {
 			INDEX idx_review_platform (review_platform)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		dbDelta( $sql );
-
-                return true;
+                return DatabaseUtils::run_schema_delta( $sql, $wpdb );
         }
 
         /**

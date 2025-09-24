@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Database;
 
+use FP\DigitalMarketing\Database\DatabaseUtils;
+
 /**
  * Customer Journey table management class
  * 
@@ -36,20 +38,20 @@ class CustomerJourneyTable {
 	 *
 	 * @return string Full table name
 	 */
-	public static function get_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::$table_name;
-	}
+        public static function get_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::$table_name );
+        }
 
 	/**
 	 * Get the full sessions table name with WordPress prefix
 	 *
 	 * @return string Full sessions table name
 	 */
-	public static function get_sessions_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::$sessions_table_name;
-	}
+        public static function get_sessions_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::$sessions_table_name );
+        }
 
 	/**
 	 * Check if the journey events table exists
@@ -89,8 +91,8 @@ class CustomerJourneyTable {
 	public static function create_table(): bool {
 		global $wpdb;
 
-		$table_name = self::get_table_name();
-		$charset_collate = $wpdb->get_charset_collate();
+                $table_name      = self::get_table_name();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -127,10 +129,11 @@ class CustomerJourneyTable {
 			KEY idx_utm_campaign (utm_campaign)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$result = dbDelta( $sql );
+                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
+                        return false;
+                }
 
-		return self::table_exists();
+                return self::table_exists();
 	}
 
 	/**
@@ -141,8 +144,8 @@ class CustomerJourneyTable {
         public static function create_sessions_table(): bool {
                 global $wpdb;
 
-                $table_name = self::get_sessions_table_name();
-                $charset_collate = $wpdb->get_charset_collate();
+                $table_name      = self::get_sessions_table_name();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -180,8 +183,9 @@ class CustomerJourneyTable {
 			KEY idx_converted (converted)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$result = dbDelta( $sql );
+                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
+                        return false;
+                }
 
                 return self::sessions_table_exists();
         }
