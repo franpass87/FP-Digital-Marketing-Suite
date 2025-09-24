@@ -136,9 +136,11 @@ class AudienceSegment {
 		$this->name = sanitize_text_field( $data['name'] ?? '' );
 		$this->description = sanitize_textarea_field( $data['description'] ?? '' );
 		$this->client_id = isset( $data['client_id'] ) ? (int) $data['client_id'] : 0;
-		$this->rules = isset( $data['rules'] ) && is_array( $data['rules'] ) 
-			? $data['rules'] 
-			: ( isset( $data['rules'] ) ? json_decode( $data['rules'], true ) ?: [] : [] );
+                $raw_rules = isset( $data['rules'] ) && is_array( $data['rules'] )
+                        ? $data['rules']
+                        : ( isset( $data['rules'] ) ? json_decode( $data['rules'], true ) ?: [] : [] );
+
+                $this->rules = $this->sanitize_rules_array( $raw_rules );
 		$this->is_active = isset( $data['is_active'] ) ? (bool) $data['is_active'] : true;
 		$this->last_evaluated_at = $data['last_evaluated_at'] ?? null;
 		$this->member_count = isset( $data['member_count'] ) ? (int) $data['member_count'] : 0;
@@ -191,9 +193,9 @@ class AudienceSegment {
 	 * @param array $rule Rule configuration
 	 * @return void
 	 */
-	public function add_rule( array $rule ): void {
-		$this->rules[] = $rule;
-	}
+        public function add_rule( array $rule ): void {
+                $this->rules[] = $this->sanitize_rules_array( $rule );
+        }
 
 	/**
 	 * Set all rules at once
@@ -201,9 +203,9 @@ class AudienceSegment {
 	 * @param array $rules Array of rule configurations
 	 * @return void
 	 */
-	public function set_rules( array $rules ): void {
-		$this->rules = $rules;
-	}
+        public function set_rules( array $rules ): void {
+                $this->rules = $this->sanitize_rules_array( $rules );
+        }
 
 	/**
 	 * Get rule by index
@@ -280,8 +282,36 @@ class AudienceSegment {
 	public function get_updated_at(): ?string { return $this->updated_at; }
 
 	// Setters
-	public function set_name( string $name ): void { $this->name = $name; }
-	public function set_description( string $description ): void { $this->description = $description; }
-	public function set_client_id( int $client_id ): void { $this->client_id = $client_id; }
-	public function set_active( bool $is_active ): void { $this->is_active = $is_active; }
+        public function set_name( string $name ): void { $this->name = $name; }
+        public function set_description( string $description ): void { $this->description = $description; }
+        public function set_client_id( int $client_id ): void { $this->client_id = $client_id; }
+        public function set_active( bool $is_active ): void { $this->is_active = $is_active; }
+
+        /**
+         * Recursively sanitize rules array values.
+         *
+         * @param array $rules Rules array to sanitize.
+         * @return array Sanitized rules array.
+         */
+        private function sanitize_rules_array( array $rules ): array {
+                $sanitized_rules = [];
+
+                foreach ( $rules as $key => $value ) {
+                        $sanitized_key = is_string( $key ) ? sanitize_key( $key ) : $key;
+
+                        if ( is_array( $value ) ) {
+                                $sanitized_value = $this->sanitize_rules_array( $value );
+                        } elseif ( is_string( $value ) ) {
+                                $sanitized_value = sanitize_text_field( $value );
+                        } elseif ( is_bool( $value ) || is_int( $value ) || is_float( $value ) ) {
+                                $sanitized_value = $value;
+                        } else {
+                                $sanitized_value = sanitize_text_field( (string) $value );
+                        }
+
+                        $sanitized_rules[ $sanitized_key ] = $sanitized_value;
+                }
+
+                return $sanitized_rules;
+        }
 }
