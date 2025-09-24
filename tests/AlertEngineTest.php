@@ -28,10 +28,9 @@ class AlertEngineTest extends TestCase {
 	public function setUp(): void {
 		parent::setUp();
 
-		// Create mock wpdb
-                $this->wpdb_mock = $this->createMock( stdClass::class );
+                // Create mock wpdb using the bootstrap helper to guarantee required methods exist.
+                $this->wpdb_mock = new WPDB_Mock();
                 $this->wpdb_mock->prefix = 'wp_';
-                $this->wpdb_mock->method( 'prepare' )->willReturnArgument( 0 );
 
 		// Set global wpdb
 		global $wpdb;
