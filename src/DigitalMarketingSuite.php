@@ -51,6 +51,8 @@ use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Helpers\DashboardWidgets;
 use FP\DigitalMarketing\Helpers\DataExporter;
 use FP\DigitalMarketing\Helpers\EmailNotifications;
+use FP\DigitalMarketing\Helpers\PerformanceCache;
+use FP\DigitalMarketing\Helpers\SiteHealth;
 
 /**
  * Main application class
@@ -629,6 +631,23 @@ class DigitalMarketingSuite {
 			}
 		} catch ( \Throwable $e ) {
 			$this->log_initialization_error( 'EmailNotifications::init()', $e );
+		}
+
+		// Ensure recurring helper events are scheduled
+		try {
+			if ( class_exists( '\FP\DigitalMarketing\Helpers\PerformanceCache' ) ) {
+				PerformanceCache::schedule_cache_warmup();
+			}
+		} catch ( \Throwable $e ) {
+			$this->log_initialization_error( 'PerformanceCache::schedule_cache_warmup()', $e );
+		}
+
+		try {
+			if ( class_exists( '\FP\DigitalMarketing\Helpers\SiteHealth' ) ) {
+				SiteHealth::init();
+			}
+		} catch ( \Throwable $e ) {
+			$this->log_initialization_error( 'SiteHealth::init()', $e );
 		}
 
 		// Schedule cleanup tasks with error handling

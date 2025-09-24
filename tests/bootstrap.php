@@ -496,6 +496,11 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 
         if ( ! function_exists( 'wp_next_scheduled' ) ) {
                 function wp_next_scheduled( $hook ) {
+                        global $wp_mock_functions;
+                        if ( isset( $wp_mock_functions['wp_next_scheduled'] ) ) {
+                                return $wp_mock_functions['wp_next_scheduled']( $hook );
+                        }
+
                         return false;
                 }
         }
