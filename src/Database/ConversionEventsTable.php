@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Database;
 
+use FP\DigitalMarketing\Database\DatabaseUtils;
+
 /**
  * Conversion Events Table class
  * 
@@ -26,10 +28,10 @@ class ConversionEventsTable {
 	 *
 	 * @return string Full table name
 	 */
-	public static function get_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::TABLE_NAME;
-	}
+        public static function get_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
+        }
 
 	/**
 	 * Create the conversion events table
@@ -40,7 +42,7 @@ class ConversionEventsTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		$charset_collate = $wpdb->get_charset_collate();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -78,10 +80,7 @@ class ConversionEventsTable {
 			PRIMARY KEY (id)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$result = dbDelta( $sql );
-
-		return ! empty( $result );
+                return DatabaseUtils::run_schema_delta( $sql, $wpdb );
 	}
 
 	/**

@@ -809,10 +809,14 @@ class SegmentationAdmin {
 	 *
 	 * @return void
 	 */
-	private function handle_delete_segment( int $segment_id ): void {
-		if ( $segment_id <= 0 ) {
-			$this->redirect_after_delete( 'error' );
-		}
+        private function handle_delete_segment( ?int $segment_id = null ): void {
+                if ( null === $segment_id ) {
+                        $segment_id = isset( $_GET['segment_id'] ) ? (int) $_GET['segment_id'] : 0; // phpcs:ignore WordPress.Security.NonceVerification
+                }
+
+                if ( $segment_id <= 0 ) {
+                        $this->redirect_after_delete( 'error' );
+                }
 
 		$segment = AudienceSegment::load_by_id( $segment_id );
 

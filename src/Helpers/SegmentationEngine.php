@@ -815,12 +815,16 @@ class SegmentationEngine {
                 global $wpdb;
 
                 $table_name = ConversionEventsTable::get_table_name();
+                if ( ! is_object( $wpdb ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_col' ) ) {
+                        return [];
+                }
+
                 $sql = $wpdb->prepare(
                         "SELECT DISTINCT user_id FROM $table_name WHERE client_id = %d AND user_id IS NOT NULL AND user_id != ''",
                         $client_id
                 );
 
-                $results = $wpdb->get_col( $sql );
+                $results = (array) $wpdb->get_col( $sql );
 
                 if ( ! is_array( $results ) || empty( $results ) ) {
                         return [];

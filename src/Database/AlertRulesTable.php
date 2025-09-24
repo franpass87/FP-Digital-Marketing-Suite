@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Database;
 
+use FP\DigitalMarketing\Database\DatabaseUtils;
+
 /**
  * Alert Rules Table class for database table management
  * 
@@ -27,10 +29,10 @@ class AlertRulesTable {
 	 *
 	 * @return string Full table name
 	 */
-	public static function get_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::TABLE_NAME;
-	}
+        public static function get_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
+        }
 
 	/**
 	 * Create the alert rules table
@@ -41,7 +43,7 @@ class AlertRulesTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		$charset_collate = $wpdb->get_charset_collate();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -65,12 +67,12 @@ class AlertRulesTable {
 			KEY last_triggered (last_triggered)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		
-		$result = dbDelta( $sql );
-		
-		// Check if table was created successfully
-		return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
+                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
+                        return false;
+                }
+
+                // Check if table was created successfully
+                return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
 	}
 
 	/**

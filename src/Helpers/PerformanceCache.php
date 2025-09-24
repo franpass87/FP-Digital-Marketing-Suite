@@ -670,16 +670,35 @@ class PerformanceCache {
 
                 $keys = [];
                 foreach ( array_unique( $option_patterns ) as $option_pattern ) {
-                        $like = self::wildcard_to_like( $option_pattern );
-                        $option_names = $wpdb->get_col(
-                                $wpdb->prepare(
-                                        "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
-                                        $like
-                                )
-                        );
+                        $option_names = [];
+
+                        if (
+                                is_object( $wpdb )
+                                && method_exists( $wpdb, 'prepare' )
+                                && method_exists( $wpdb, 'get_col' )
+                                && isset( $wpdb->options )
+                        ) {
+                                $like         = self::wildcard_to_like( $option_pattern );
+                                $option_names = (array) $wpdb->get_col(
+                                        $wpdb->prepare(
+                                                "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+                                                $like
+                                        )
+                                );
+                        } else {
+                                global $wp_options;
+
+                                if ( isset( $wp_options ) && is_array( $wp_options ) ) {
+                                        foreach ( array_keys( $wp_options ) as $option_name ) {
+                                                if ( self::wildcard_match( $option_pattern, (string) $option_name ) ) {
+                                                        $option_names[] = (string) $option_name;
+                                                }
+                                        }
+                                }
+                        }
 
                         foreach ( $option_names as $option_name ) {
-                                $extracted = self::extract_transient_key( $option_name, $group );
+                                $extracted = self::extract_transient_key( (string) $option_name, $group );
                                 if ( null === $extracted ) {
                                         continue;
                                 }

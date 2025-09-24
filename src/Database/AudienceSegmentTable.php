@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Database;
 
+use FP\DigitalMarketing\Database\DatabaseUtils;
+
 /**
  * Audience Segment Table class
  * 
@@ -31,20 +33,20 @@ class AudienceSegmentTable {
 	 *
 	 * @return string Full table name
 	 */
-	public static function get_segments_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::SEGMENTS_TABLE_NAME;
-	}
+        public static function get_segments_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::SEGMENTS_TABLE_NAME );
+        }
 
 	/**
 	 * Get full membership table name with WordPress prefix
 	 *
 	 * @return string Full table name
 	 */
-	public static function get_membership_table_name(): string {
-		global $wpdb;
-		return $wpdb->prefix . self::MEMBERSHIP_TABLE_NAME;
-	}
+        public static function get_membership_table_name(): string {
+                global $wpdb;
+                return DatabaseUtils::resolve_table_name( $wpdb, self::MEMBERSHIP_TABLE_NAME );
+        }
 
 	/**
 	 * Create the audience segments table
@@ -55,7 +57,7 @@ class AudienceSegmentTable {
 		global $wpdb;
 
 		$table_name = self::get_segments_table_name();
-		$charset_collate = $wpdb->get_charset_collate();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -74,10 +76,7 @@ class AudienceSegmentTable {
 			PRIMARY KEY (id)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$result = dbDelta( $sql );
-
-		return ! empty( $result );
+                return DatabaseUtils::run_schema_delta( $sql, $wpdb );
 	}
 
 	/**
@@ -89,7 +88,7 @@ class AudienceSegmentTable {
 		global $wpdb;
 
 		$table_name = self::get_membership_table_name();
-		$charset_collate = $wpdb->get_charset_collate();
+                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -106,10 +105,7 @@ class AudienceSegmentTable {
 			PRIMARY KEY (id)
 		) $charset_collate;";
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		$result = dbDelta( $sql );
-
-		return ! empty( $result );
+                return DatabaseUtils::run_schema_delta( $sql, $wpdb );
 	}
 
 	/**
