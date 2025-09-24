@@ -369,13 +369,13 @@ class MetricsAggregator {
 
 			$normalized_kpi = MetricsSchema::normalize_metric_name( $metric->source, $metric->metric );
 			
-			$by_source[ $metric->source ]['metrics'][ $normalized_kpi ] = [
-				'original_name' => $metric->metric,
-				'normalized_name' => $normalized_kpi,
-				'value' => $metric->value,
-				'meta' => $metric->meta ? json_decode( $metric->meta, true ) : [],
-				'fetched_at' => $metric->fetched_at,
-			];
+                        $by_source[ $metric->source ]['metrics'][ $normalized_kpi ] = [
+                                'original_name' => $metric->metric,
+                                'normalized_name' => $normalized_kpi,
+                                'value' => $metric->value,
+                                'meta' => self::extract_meta_array( $metric ),
+                                'fetched_at' => $metric->fetched_at,
+                        ];
 			
 			$by_source[ $metric->source ]['total_metrics']++;
 		}
@@ -391,8 +391,8 @@ class MetricsAggregator {
 	 * @param string $period_end End date (Y-m-d H:i:s)
 	 * @return array Mock aggregated data
 	 */
-	public static function generate_mock_data( int $client_id, string $period_start, string $period_end ): array {
-		$mock_data = [];
+        public static function generate_mock_data( int $client_id, string $period_start, string $period_end ): array {
+                $mock_data = [];
 		
 		// Generate realistic mock values for different KPIs
 		$mock_values = [
@@ -422,6 +422,36 @@ class MetricsAggregator {
 		}
 
                 return $mock_data;
+        }
+
+        /**
+         * Normalize metadata payload into an array regardless of storage format.
+         *
+         * @param object $metric Metric record retrieved from the cache layer.
+         * @return array<string, mixed>
+         */
+        private static function extract_meta_array( object $metric ): array {
+                if ( isset( $metric->metadata ) && is_string( $metric->metadata ) && '' !== $metric->metadata ) {
+                        $decoded = json_decode( $metric->metadata, true );
+                        if ( is_array( $decoded ) ) {
+                                return $decoded;
+                        }
+                }
+
+                $raw_meta = $metric->meta ?? null;
+
+                if ( is_array( $raw_meta ) ) {
+                        return $raw_meta;
+                }
+
+                if ( is_string( $raw_meta ) && '' !== $raw_meta ) {
+                        $decoded = json_decode( $raw_meta, true );
+                        if ( is_array( $decoded ) ) {
+                                return $decoded;
+                        }
+                }
+
+                return [];
         }
 
         /**
