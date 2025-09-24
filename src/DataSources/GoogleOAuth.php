@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace FP\DigitalMarketing\DataSources;
 
 use FP\DigitalMarketing\Helpers\Security;
+use FP\DigitalMarketing\Helpers\SecretsManager;
 use FP\DigitalMarketing\Setup\SettingsManager;
 
 /**
@@ -80,22 +81,70 @@ class GoogleOAuth {
 	 * @return array OAuth credentials
 	 */
         private function get_oauth_credentials(): array {
-                $api_keys = SettingsManager::get_option( SettingsManager::OPTION_API_KEYS, [] );
+                $api_keys = SecretsManager::get_api_keys();
+                $display_context = SecretsManager::prepare_for_display( $api_keys );
+                $decrypted_keys = $display_context['values'];
+                $decryption_errors = $display_context['errors'];
 
-                $client_id = $api_keys['google_client_id'] ?? '';
-                $raw_client_secret = $api_keys['google_client_secret'] ?? '';
+                $client_id = '';
+                if ( isset( $decrypted_keys['google_client_id'] ) && is_string( $decrypted_keys['google_client_id'] ) ) {
+                        $client_id = trim( $decrypted_keys['google_client_id'] );
+                }
+
                 $client_secret = '';
+                if ( isset( $decrypted_keys['google_client_secret'] ) && is_string( $decrypted_keys['google_client_secret'] ) ) {
+                        $client_secret = $decrypted_keys['google_client_secret'];
+                }
 
-                if ( $raw_client_secret !== '' && $raw_client_secret !== null ) {
-                        $decrypted_secret = Security::decrypt_sensitive_data( $raw_client_secret );
+                $secret_decryption_failed = in_array( 'google_client_secret', $decryption_errors, true );
+                $credentials_expired = $secret_decryption_failed || '' === $client_id || '' === $client_secret;
 
-                        $client_secret = ($decrypted_secret !== '' && $decrypted_secret !== null) ? $decrypted_secret : $raw_client_secret;
+                $status = SettingsManager::get_option( self::OAUTH_SETTINGS_OPTION, [] );
+                if ( ! is_array( $status ) ) {
+                        $status = [];
+                }
+
+                $reason = 'ok';
+                if ( $secret_decryption_failed ) {
+                        $reason = 'decryption_failed';
+                } elseif ( '' === $client_id || '' === $client_secret ) {
+                        $reason = 'missing_credentials';
+                }
+
+                $status_update = array_merge(
+                        $status,
+                        [
+                                'credentials_expired' => $credentials_expired,
+                                'decryption_failed' => $secret_decryption_failed,
+                                'has_client_id' => '' !== $client_id,
+                                'has_client_secret' => '' !== $client_secret,
+                                'reason' => $reason,
+                        ]
+                );
+
+                $status_has_changed = (
+                        ( $status['credentials_expired'] ?? null ) !== $status_update['credentials_expired'] ||
+                        ( $status['decryption_failed'] ?? null ) !== $status_update['decryption_failed'] ||
+                        ( $status['has_client_id'] ?? null ) !== $status_update['has_client_id'] ||
+                        ( $status['has_client_secret'] ?? null ) !== $status_update['has_client_secret'] ||
+                        ( $status['reason'] ?? null ) !== $status_update['reason']
+                );
+
+                if ( $status_has_changed ) {
+                        $status_update['checked_at'] = time();
+
+                        if ( ! $credentials_expired ) {
+                                $status_update['last_valid_credentials_at'] = time();
+                        }
+
+                        SettingsManager::update_option( self::OAUTH_SETTINGS_OPTION, $status_update, false );
                 }
 
                 return [
                         'client_id' => $client_id,
                         'client_secret' => $client_secret,
                         'redirect_uri' => admin_url( 'admin.php?page=fp-digital-marketing-settings&ga4_callback=1' ),
+                        'expired' => $credentials_expired,
                 ];
         }
 
