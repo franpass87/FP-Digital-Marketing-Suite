@@ -19,6 +19,20 @@ use FP\DigitalMarketing\Database\MetricsCacheTable;
  */
 class MetricsCache {
 
+        /**
+         * Columns that can be safely used for ORDER BY clauses.
+         *
+         * @var string[]
+         */
+        private const ORDERABLE_COLUMNS = [
+                'fetched_at',
+                'period_start',
+                'period_end',
+                'client_id',
+                'metric',
+                'source',
+        ];
+
 	/**
 	 * Save a metric record to the cache
 	 *
@@ -94,76 +108,71 @@ class MetricsCache {
 	 * @param array $args Query arguments
 	 * @return array Array of metric record objects
 	 */
-	public static function get_metrics( array $args = [] ): array {
-		global $wpdb;
+        public static function get_metrics( array $args = [] ): array {
+                global $wpdb;
 
-		$table_name = MetricsCacheTable::get_table_name();
+                $table_name = MetricsCacheTable::get_table_name();
 
-		$defaults = [
+                $defaults = [
 			'client_id'    => null,
 			'source'       => null,
 			'metric'       => null,
 			'period_start' => null,
 			'period_end'   => null,
 			'limit'        => 100,
-			'offset'       => 0,
-			'order_by'     => 'fetched_at',
-			'order'        => 'DESC',
-		];
-		$sortable_columns = [ 'fetched_at', 'period_start', 'period_end', 'client_id', 'metric', 'source' ];
-		$default_order_by = $defaults['order_by'];
-		$sanitized_default_order_by = sanitize_sql_orderby( $default_order_by );
-		if ( empty( $sanitized_default_order_by ) || ! in_array( $sanitized_default_order_by, $sortable_columns, true ) ) {
-			$sanitized_default_order_by = $default_order_by;
-		}
+                        'offset'       => 0,
+                        'order_by'     => 'fetched_at',
+                        'order'        => 'DESC',
+                ];
 
-		$args = wp_parse_args( $args, $defaults );
+                $args = wp_parse_args( $args, $defaults );
 
-		$where_clauses = [];
-		$where_values = [];
+                [ $order_by, $order_direction ] = self::sanitize_order_parameters(
+                        (string) $args['order_by'],
+                        (string) $args['order'],
+                        $defaults['order_by'],
+                        $defaults['order']
+                );
 
-		self::add_filter_clause( 'client_id', $args['client_id'], $where_clauses, $where_values, true );
-		self::add_filter_clause( 'source', $args['source'], $where_clauses, $where_values );
-		self::add_filter_clause( 'metric', $args['metric'], $where_clauses, $where_values );
+                $where_clauses = [];
+                $where_values = [];
 
-		if ( ! is_null( $args['period_start'] ) ) {
-			$where_clauses[] = 'period_start >= %s';
-			$where_values[] = $args['period_start'];
-		}
+                self::add_filter_clause( 'client_id', $args['client_id'], $where_clauses, $where_values, true );
+                self::add_filter_clause( 'source', $args['source'], $where_clauses, $where_values );
+                self::add_filter_clause( 'metric', $args['metric'], $where_clauses, $where_values );
 
-		if ( ! is_null( $args['period_end'] ) ) {
-			$where_clauses[] = 'period_end <= %s';
-			$where_values[] = $args['period_end'];
-		}
+                if ( ! is_null( $args['period_start'] ) ) {
+                        $where_clauses[] = 'period_start >= %s';
+                        $where_values[] = $args['period_start'];
+                }
 
-		$where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
+                if ( ! is_null( $args['period_end'] ) ) {
+                        $where_clauses[] = 'period_end <= %s';
+                        $where_values[] = $args['period_end'];
+                }
 
-		$order_by_column = is_string( $args['order_by'] ) ? $args['order_by'] : $default_order_by;
-		if ( ! in_array( $order_by_column, $sortable_columns, true ) ) {
-			$order_by_column = $default_order_by;
-		}
+                $where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
 
-		$order_by = sanitize_sql_orderby( $order_by_column );
-		if ( empty( $order_by ) || ! in_array( $order_by, $sortable_columns, true ) ) {
-			$order_by = $sanitized_default_order_by;
-		}
-		$order = in_array( strtoupper( $args['order'] ), [ 'ASC', 'DESC' ], true ) ? strtoupper( $args['order'] ) : 'DESC';
+                $limit  = max( 0, (int) $args['limit'] );
+                $offset = max( 0, (int) $args['offset'] );
 
-		$sql = "SELECT * FROM $table_name $where_sql ORDER BY $order_by $order LIMIT %d OFFSET %d";
+                $sql = sprintf(
+                        'SELECT * FROM %s %s ORDER BY %s %s LIMIT %%d OFFSET %%d',
+                        $table_name,
+                        $where_sql,
+                        $order_by,
+                        $order_direction
+                );
 
-		$where_values[] = (int) $args['limit'];
-		$where_values[] = (int) $args['offset'];
+                $where_values[] = $limit;
+                $where_values[] = $offset;
 
-		if ( ! empty( $where_values ) ) {
-			$prepared_sql = $wpdb->prepare( $sql, ...$where_values );
-		} else {
-			$prepared_sql = $sql;
-		}
+                $prepared_sql = $wpdb->prepare( $sql, ...$where_values );
 
-		$results = $wpdb->get_results( $prepared_sql );
+                $results = $wpdb->get_results( $prepared_sql );
 
-		// Decode JSON meta for each result
-		foreach ( $results as $result ) {
+                // Decode JSON meta for each result
+                foreach ( $results as $result ) {
 			if ( ! empty( $result->meta ) ) {
 				$result->meta = json_decode( $result->meta, true );
 			}
@@ -272,12 +281,12 @@ class MetricsCache {
 	 * @param array $args Query arguments
 	 * @return int Number of records
 	 */
-	public static function count( array $args = [] ): int {
-		global $wpdb;
+        public static function count( array $args = [] ): int {
+                global $wpdb;
 
-		$table_name = MetricsCacheTable::get_table_name();
+                $table_name = MetricsCacheTable::get_table_name();
 
-		$defaults = [
+                $defaults = [
 		        'client_id' => null,
 		        'source'    => null,
 		        'metric'    => null,
@@ -294,18 +303,18 @@ class MetricsCache {
 
 		$where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
 
-		$sql = "SELECT COUNT(*) FROM $table_name $where_sql";
+                $sql = "SELECT COUNT(*) FROM $table_name $where_sql";
 
-		if ( ! empty( $where_values ) ) {
-		        $result = $wpdb->get_var( $wpdb->prepare( $sql, ...$where_values ) );
-		} else {
-		        $result = $wpdb->get_var( $sql );
-		}
+                if ( ! empty( $where_values ) ) {
+                        $result = $wpdb->get_var( $wpdb->prepare( $sql, ...$where_values ) );
+                } else {
+                        $result = $wpdb->get_var( $sql );
+                }
 
-		return (int) $result;
-	}
+                return (int) $result;
+        }
 
-	/**
+        /**
 	 * Add a sanitized filter clause to the WHERE portion of a query.
 	 *
 	 * @param string $column        Column name to filter.
@@ -314,17 +323,18 @@ class MetricsCache {
 	 * @param array  $where_values  Reference to the prepared value array.
 	 * @param bool   $is_numeric    Whether the column expects numeric values.
 	 */
-	private static function add_filter_clause( string $column, $value, array &$where_clauses, array &$where_values, bool $is_numeric = false ): void {
-		if ( is_null( $value ) ) {
-		        return;
-		}
+        private static function add_filter_clause( string $column, $value, array &$where_clauses, array &$where_values, bool $is_numeric = false ): void {
+                if ( is_null( $value ) ) {
+                        return;
+                }
 
-		$values = is_array( $value ) ? $value : [ $value ];
-		$sanitized_values = [];
+                $is_array_filter = is_array( $value );
+                $values          = $is_array_filter ? $value : [ $value ];
+                $sanitized_values = [];
 
-		foreach ( $values as $single_value ) {
-		        if ( is_null( $single_value ) ) {
-		                continue;
+                foreach ( $values as $single_value ) {
+                        if ( is_null( $single_value ) ) {
+                                continue;
 		        }
 
 		        $original_value = (string) $single_value;
@@ -350,17 +360,55 @@ class MetricsCache {
 		        return;
 		}
 
-		$placeholder = $is_numeric ? '%d' : '%s';
+                $placeholder = $is_numeric ? '%d' : '%s';
 
-		if ( count( $sanitized_values ) > 1 ) {
-		        $placeholders = implode( ', ', array_fill( 0, count( $sanitized_values ), $placeholder ) );
-		        $where_clauses[] = sprintf( '%s IN (%s)', $column, $placeholders );
-		} else {
-		        $where_clauses[] = sprintf( '%s = %s', $column, $placeholder );
-		}
+                if ( count( $sanitized_values ) > 1 || $is_array_filter ) {
+                        $placeholders = implode( ', ', array_fill( 0, count( $sanitized_values ), $placeholder ) );
+                        $where_clauses[] = sprintf( '%s IN (%s)', $column, $placeholders );
+                } else {
+                        $where_clauses[] = sprintf( '%s = %s', $column, $placeholder );
+                }
 
-		foreach ( $sanitized_values as $sanitized_value ) {
-		        $where_values[] = $sanitized_value;
-		}
-	}
+                foreach ( $sanitized_values as $sanitized_value ) {
+                        $where_values[] = $sanitized_value;
+                }
+        }
+
+        /**
+         * Sanitize ORDER BY parameters to ensure only whitelisted columns are used.
+         *
+         * @param string $order_by                Requested column.
+         * @param string $order_direction         Requested direction (ASC/DESC).
+         * @param string $default_order_by        Default column fallback.
+         * @param string $default_order_direction Default direction fallback.
+         *
+         * @return array{0:string,1:string}
+         */
+        private static function sanitize_order_parameters( string $order_by, string $order_direction, string $default_order_by, string $default_order_direction ): array {
+                $allowed_columns = self::ORDERABLE_COLUMNS;
+
+                $default_order_by = strtolower( $default_order_by );
+                if ( ! in_array( $default_order_by, $allowed_columns, true ) ) {
+                        $default_order_by = 'fetched_at';
+                }
+
+                $order_by = strtolower( trim( $order_by ) );
+                if ( ! in_array( $order_by, $allowed_columns, true ) ) {
+                        $order_by = $default_order_by;
+                }
+
+                $allowed_directions = [ 'ASC', 'DESC' ];
+
+                $default_order_direction = strtoupper( $default_order_direction );
+                if ( ! in_array( $default_order_direction, $allowed_directions, true ) ) {
+                        $default_order_direction = 'DESC';
+                }
+
+                $order_direction = strtoupper( trim( $order_direction ) );
+                if ( ! in_array( $order_direction, $allowed_directions, true ) ) {
+                        $order_direction = $default_order_direction;
+                }
+
+                return [ $order_by, $order_direction ];
+        }
 }

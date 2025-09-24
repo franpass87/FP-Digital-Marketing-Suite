@@ -116,11 +116,10 @@ class MetricsAggregator {
 	 */
 	private static function get_aggregated_metrics_uncached( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
 		try {
-			// Get raw metrics from cache
 			$criteria = [
-				'client_id' => $client_id,
+				'client_id'    => $client_id,
 				'period_start' => $period_start,
-				'period_end' => $period_end,
+				'period_end'   => $period_end,
 			];
 
 			if ( ! empty( $sources ) ) {
@@ -129,13 +128,11 @@ class MetricsAggregator {
 
 			$raw_metrics = MetricsCache::get_metrics( $criteria );
 
-			// Normalize and aggregate
 			$aggregated = [];
-			
+
 			foreach ( $raw_metrics as $metric ) {
 				$normalized_kpi = MetricsSchema::normalize_metric_name( $metric->source, $metric->metric );
-				
-				// Filter by requested KPIs if specified
+
 				if ( ! empty( $kpis ) && ! in_array( $normalized_kpi, $kpis, true ) ) {
 					continue;
 				}
@@ -150,38 +147,35 @@ class MetricsAggregator {
 					];
 				}
 
-			$value = is_numeric( $metric->value ) ? (float) $metric->value : 0;
-			$aggregated[ $normalized_kpi ]['values'][] = $value;
-			$aggregated[ $normalized_kpi ]['sources'][] = $metric->source;
-			$aggregated[ $normalized_kpi ]['count']++;
+				$value = is_numeric( $metric->value ) ? (float) $metric->value : 0.0;
+				$aggregated[ $normalized_kpi ]['values'][]  = $value;
+				$aggregated[ $normalized_kpi ]['sources'][] = $metric->source;
+				$aggregated[ $normalized_kpi ]['count']++;
+			}
 
-			// Apply aggregation method
-			$aggregation_method = MetricsSchema::get_aggregation_method( $normalized_kpi );
-			
-                        if ( $aggregation_method === 'sum' ) {
-                                $aggregated[ $normalized_kpi ]['total_value'] += $value;
-                        } elseif ( in_array( $aggregation_method, [ 'average', 'avg' ], true ) ) {
-                                if ( $aggregated[ $normalized_kpi ]['count'] > 0 ) {
-                                        $aggregated[ $normalized_kpi ]['total_value'] = array_sum( $aggregated[ $normalized_kpi ]['values'] ) / $aggregated[ $normalized_kpi ]['count'];
-                                }
-                        } elseif ( $aggregation_method === 'percentile_75' ) {
-                                $aggregated[ $normalized_kpi ]['total_value'] = self::calculate_percentile( $aggregated[ $normalized_kpi ]['values'], 0.75 );
-                        }
+			foreach ( $aggregated as $kpi => &$data ) {
+				$aggregation_method = MetricsSchema::get_aggregation_method( $kpi );
+
+				if ( in_array( $aggregation_method, [ 'average', 'avg' ], true ) ) {
+					$data['total_value'] = $data['count'] > 0 ? array_sum( $data['values'] ) / $data['count'] : 0.0;
+				} elseif ( 'percentile_75' === $aggregation_method ) {
+					$data['total_value'] = self::calculate_percentile( $data['values'], 0.75 );
+				} else {
+					$data['total_value'] = array_sum( $data['values'] );
+				}
+			}
+			unset( $data );
+
+			$aggregated = self::apply_fallbacks( $aggregated, $kpis );
+
+			return $aggregated;
+		} catch ( \Throwable $e ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing MetricsAggregator Uncached Error: ' . $e->getMessage() );
+			}
+
+			return self::apply_fallbacks( [], $kpis );
 		}
-
-		// Apply fallbacks for missing KPIs
-		$aggregated = self::apply_fallbacks( $aggregated, $kpis );
-
-		return $aggregated;
-	} catch ( \Throwable $e ) {
-		// Log error and return fallback data to prevent WSOD
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
-			error_log( 'FP Digital Marketing MetricsAggregator Uncached Error: ' . $e->getMessage() );
-		}
-		
-		// Return fallback data with default values
-		return self::apply_fallbacks( [], $kpis );
-	}
 }
 
 	/**
