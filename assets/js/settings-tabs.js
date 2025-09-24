@@ -13,25 +13,28 @@
         }
 
         init() {
+            this.restoreActiveTab();
             this.createTabInterface();
             this.bindEvents();
-            this.restoreActiveTab();
             this.initCollapsibles();
             this.initTooltips();
         }
 
         createTabInterface() {
-            const $form = $('.wrap form');
+            const $form = $('#fp-dms-settings-form');
             if (!$form.length) return;
 
-            // Get all sections
+            const $wrap = $form.closest('.wrap');
+            if ($wrap.find('.fp-dms-settings-tabs').length) {
+                return;
+            }
+
+            const $sectionsContainer = $form.find('.wp-settings-sections').first();
+            if (!$sectionsContainer.length) return;
+
             const sections = this.getSections();
             if (sections.length === 0) return;
 
-            const $sectionsContainer = $form.find('.wp-settings-sections');
-            if (!$sectionsContainer.length) return;
-
-            // Cache section elements before we reparent them into the tab panels
             const sectionElementsMap = {};
             const availableSections = [];
 
@@ -40,7 +43,7 @@
                     return;
                 }
 
-                const $heading = $sectionsContainer.find(`#${section.wpSectionId}`);
+                const $heading = $sectionsContainer.find(`h2#${section.wpSectionId}, h3#${section.wpSectionId}`);
                 if (!$heading.length) {
                     return;
                 }
@@ -54,7 +57,9 @@
                 availableSections.push(section);
             });
 
-            if (availableSections.length === 0) return;
+            if (!availableSections.length) {
+                return;
+            }
 
             this.sections = availableSections;
 
@@ -62,20 +67,14 @@
                 this.activeTab = availableSections[0].id;
             }
 
-            // Create tab navigation
             const $tabNav = this.createTabNavigation(availableSections);
-
-            // Create tab content wrapper
             const $tabContent = $('<div class="fp-dms-tab-content"></div>');
 
-            // Move each section to its own tab panel
             availableSections.forEach(section => {
                 const $panel = $(`<div class="fp-dms-tab-panel" data-tab="${section.id}"></div>`);
 
-                // Add section header
                 $panel.append(this.createSectionHeader(section));
 
-                // Move section content to panel
                 const $sectionElements = sectionElementsMap[section.id];
                 if ($sectionElements && $sectionElements.length) {
                     $panel.append($sectionElements);
@@ -84,14 +83,22 @@
                 $tabContent.append($panel);
             });
 
-            // Insert tabs before form content
-            $form.find('h1').after($tabNav);
-            $sectionsContainer.first().before($tabContent);
+            const $pageTitle = $wrap.find('> h1').first();
+            if ($pageTitle.length) {
+                $pageTitle.after($tabNav);
+            } else {
+                $form.before($tabNav);
+            }
 
-            // Hide original sections container
-            $('.wp-settings-sections').hide();
+            const $notices = $wrap.children('.notice, .settings-error');
+            $sectionsContainer.before($tabContent);
 
-            // Show first tab
+            if ($notices.length) {
+                $tabContent.before($notices);
+            }
+
+            $sectionsContainer.hide();
+
             this.showTab(this.activeTab);
         }
 

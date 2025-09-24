@@ -90,10 +90,14 @@ class OnboardingWizard {
 			return;
 		}
 
-		$screen = get_current_screen();
-		if ( ! $screen || $screen->id === 'toplevel_page_' . self::PAGE_SLUG ) {
-			return;
-		}
+                $screen = get_current_screen();
+                if ( ! $screen ) {
+                        return;
+                }
+
+                if ( strpos( (string) $screen->id, self::PAGE_SLUG ) !== false ) {
+                        return;
+                }
 
 		$wizard_url = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 		
@@ -281,8 +285,8 @@ class OnboardingWizard {
 		update_option( self::WIZARD_COMPLETED_OPTION, true );
 		delete_option( self::WIZARD_PROGRESS_OPTION );
 
-		// Redirect to main reports page
-		$url = admin_url( 'admin.php?page=fp-digital-marketing-reports' );
+                // Redirect to main dashboard page
+                $url = admin_url( 'admin.php?page=fp-digital-marketing-dashboard' );
 		wp_redirect( $url );
 		exit;
 	}
@@ -474,11 +478,10 @@ class OnboardingWizard {
 	 * @param string $hook Current admin page hook.
 	 * @return void
 	 */
-	public function enqueue_wizard_scripts( string $hook ): void {
-		$expected_hook = 'toplevel_page_' . self::PAGE_SLUG;
-		if ( $hook !== $expected_hook ) {
-			return;
-		}
+        public function enqueue_wizard_scripts( string $hook ): void {
+                if ( strpos( $hook, self::PAGE_SLUG ) === false ) {
+                        return;
+                }
 
 		wp_enqueue_script( 'jquery' );
 		
@@ -995,11 +998,11 @@ class OnboardingWizard {
 		echo '<div class="fp-wizard-navigation">';
 		
 		// Previous button
-		if ( $step > 1 && ! $is_welcome ) {
-			echo '<button type="submit" name="wizard_action" value="previous_step" class="button">' . esc_html__( 'Previous', 'fp-digital-marketing' ) . '</button>';
-		} else {
-			echo '<a href="' . esc_url( admin_url( 'admin.php?page=fp-digital-marketing-reports' ) ) . '" class="button">' . esc_html__( 'Skip Setup', 'fp-digital-marketing' ) . '</a>';
-		}
+                if ( $step > 1 && ! $is_welcome ) {
+                        echo '<button type="submit" name="wizard_action" value="previous_step" class="button">' . esc_html__( 'Previous', 'fp-digital-marketing' ) . '</button>';
+                } else {
+                        echo '<a href="' . esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ) . '" class="button">' . esc_html__( 'Skip Setup', 'fp-digital-marketing' ) . '</a>';
+                }
 		
 		// Next button
 		echo '<div>';
