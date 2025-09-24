@@ -55,9 +55,11 @@ class FAQSchema extends BaseSchema {
 		$enabled_post_types = $settings['faq_post_types'] ?? [ 'post', 'page' ];
 
 		// Check if current post type is enabled for FAQ
-		if ( ! in_array( $post->post_type, $enabled_post_types, true ) ) {
-			return false;
-		}
+                $post_type = $post->post_type ?? '';
+
+                if ( ! in_array( $post_type, $enabled_post_types, true ) ) {
+                        return false;
+                }
 
 		// Check if post has FAQ content
 		return self::has_faq_content( $post );
@@ -66,29 +68,31 @@ class FAQSchema extends BaseSchema {
 	/**
 	 * Check if post has FAQ content
 	 *
-	 * @param \WP_Post $post Post object
+         * @param object $post Post object
 	 * @return bool True if has FAQ content
 	 */
-	private static function has_faq_content( \WP_Post $post ): bool {
+        private static function has_faq_content( object $post ): bool {
 		// Check for FAQ blocks (Gutenberg)
-		if ( has_blocks( $post->post_content ) ) {
-			if ( self::has_faq_blocks( $post->post_content ) ) {
-				return true;
-			}
-		}
+                $content = isset( $post->post_content ) ? (string) $post->post_content : '';
 
-		// Check for FAQ shortcodes
-		if ( self::has_faq_shortcodes( $post->post_content ) ) {
-			return true;
-		}
+                if ( has_blocks( $content ) ) {
+                        if ( self::has_faq_blocks( $content ) ) {
+                                return true;
+                        }
+                }
 
-		// Check for FAQ patterns in content
-		if ( self::has_faq_patterns( $post->post_content ) ) {
-			return true;
-		}
+                // Check for FAQ shortcodes
+                if ( self::has_faq_shortcodes( $content ) ) {
+                        return true;
+                }
 
-		// Check for custom FAQ meta fields
-		$custom_faqs = get_post_meta( $post->ID, '_fp_faqs', true );
+                // Check for FAQ patterns in content
+                if ( self::has_faq_patterns( $content ) ) {
+                        return true;
+                }
+
+                // Check for custom FAQ meta fields
+                $custom_faqs = get_post_meta( isset( $post->ID ) ? (int) $post->ID : 0, '_fp_faqs', true );
 		if ( ! empty( $custom_faqs ) ) {
 			return true;
 		}
@@ -99,25 +103,27 @@ class FAQSchema extends BaseSchema {
 	/**
 	 * Get FAQ items from post content
 	 *
-	 * @param \WP_Post $post Post object
+         * @param object $post Post object
 	 * @return array FAQ items
 	 */
-	private static function get_faq_items( \WP_Post $post ): array {
-		$faq_items = [];
+        private static function get_faq_items( object $post ): array {
+                $faq_items = [];
 
-		// Get FAQ items from Gutenberg blocks
-		if ( has_blocks( $post->post_content ) ) {
-			$faq_items = array_merge( $faq_items, self::get_faq_from_blocks( $post->post_content ) );
-		}
+                // Get FAQ items from Gutenberg blocks
+                $content = isset( $post->post_content ) ? (string) $post->post_content : '';
 
-		// Get FAQ items from shortcodes
-		$faq_items = array_merge( $faq_items, self::get_faq_from_shortcodes( $post->post_content ) );
+                if ( has_blocks( $content ) ) {
+                        $faq_items = array_merge( $faq_items, self::get_faq_from_blocks( $content ) );
+                }
 
-		// Get FAQ items from content patterns
-		$faq_items = array_merge( $faq_items, self::get_faq_from_patterns( $post->post_content ) );
+                // Get FAQ items from shortcodes
+                $faq_items = array_merge( $faq_items, self::get_faq_from_shortcodes( $content ) );
 
-		// Get FAQ items from custom meta fields
-		$custom_faqs = get_post_meta( $post->ID, '_fp_faqs', true );
+                // Get FAQ items from content patterns
+                $faq_items = array_merge( $faq_items, self::get_faq_from_patterns( $content ) );
+
+                // Get FAQ items from custom meta fields
+                $custom_faqs = get_post_meta( isset( $post->ID ) ? (int) $post->ID : 0, '_fp_faqs', true );
 		if ( is_array( $custom_faqs ) ) {
 			$faq_items = array_merge( $faq_items, self::format_custom_faqs( $custom_faqs ) );
 		}

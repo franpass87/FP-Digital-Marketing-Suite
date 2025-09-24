@@ -93,9 +93,9 @@ class BreadcrumbListSchema extends BaseSchema {
 		$breadcrumbs = [];
 		$term = get_queried_object();
 
-		if ( ! $term instanceof \WP_Term ) {
-			return $breadcrumbs;
-		}
+                if ( ! ( $term instanceof \WP_Term ) && ! ( is_object( $term ) && isset( $term->term_id, $term->taxonomy ) ) ) {
+                        return $breadcrumbs;
+                }
 
 		// Add parent terms if any
 		if ( $term->parent ) {
@@ -136,9 +136,9 @@ class BreadcrumbListSchema extends BaseSchema {
 		$breadcrumbs = [];
 		$post = get_queried_object();
 
-		if ( ! $post instanceof \WP_Post ) {
-			return $breadcrumbs;
-		}
+                if ( ! is_object( $post ) || ! isset( $post->ID, $post->post_type ) ) {
+                        return $breadcrumbs;
+                }
 
 		// Add post type archive if applicable
 		$post_type_obj = get_post_type_object( $post->post_type );
@@ -186,9 +186,9 @@ class BreadcrumbListSchema extends BaseSchema {
 		$breadcrumbs = [];
 		$post = get_queried_object();
 
-		if ( ! $post instanceof \WP_Post ) {
-			return $breadcrumbs;
-		}
+                if ( ! is_object( $post ) || ! isset( $post->ID ) ) {
+                        return $breadcrumbs;
+                }
 
 		// Add parent pages
 		if ( $post->post_parent ) {
