@@ -1,12 +1,14 @@
 <?php
 /**
  * Installation and Setup Wizard
- * 
+ *
  * Handles first-time plugin setup and configuration
- * 
+ *
  * @package FP_Digital_Marketing_Suite
  * @since 1.0.0
  */
+
+declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Setup;
 
@@ -20,7 +22,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Installation Wizard class
  */
 class SetupWizard {
-    
+
+    /**
+     * Wizard admin page slug.
+     */
+    private const MENU_SLUG = 'fp-dms-setup';
+
+    /**
+     * Total number of wizard steps.
+     */
+    private const TOTAL_STEPS = 5;
+
     /**
      * Initialize the setup wizard
      */
@@ -34,44 +46,83 @@ class SetupWizard {
      * Redirect to setup wizard on first activation
      */
     public function setup_redirect() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        $needs_setup = ! $this->is_wizard_completed();
+
         // Only redirect on activation and if setup not completed
-        if ( get_transient( 'fp_dms_activation_redirect' ) && ! get_option( 'fp_dms_setup_completed' ) ) {
+        if ( get_transient( 'fp_dms_activation_redirect' ) && $needs_setup ) {
             delete_transient( 'fp_dms_activation_redirect' );
-            
+
             // Don't redirect if activating multiple plugins
             if ( isset( $_GET['activate-multi'] ) ) {
                 return;
             }
-            
-            wp_safe_redirect( admin_url( 'admin.php?page=fp-dms-setup' ) );
+
+            $redirect_url = add_query_arg(
+                array( 'page' => self::MENU_SLUG ),
+                admin_url( 'admin.php' )
+            );
+
+            wp_safe_redirect( $redirect_url );
             exit;
         }
     }
-    
+
     /**
      * Add setup wizard page to admin menu
      */
     public function add_setup_page() {
-        add_dashboard_page(
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        if ( $this->is_wizard_completed() && ! SettingsManager::is_wizard_menu_enabled() ) {
+            // Wizard finished and menu already hidden.
+            return;
+        }
+
+        $hook_suffix = add_dashboard_page(
             __( 'FP Digital Marketing Suite Setup', 'fp-digital-marketing' ),
             __( 'Setup Wizard', 'fp-digital-marketing' ),
             'manage_options',
-            'fp-dms-setup',
+            self::MENU_SLUG,
             array( $this, 'setup_wizard_page' )
         );
+
+        SettingsManager::enable_wizard_menu( self::MENU_SLUG );
+
+        add_action( 'load-' . $hook_suffix, array( $this, 'maybe_hide_completed_notice' ) );
+    }
+
+    /**
+     * Hide menu entry if wizard already completed.
+     *
+     * @return void
+     */
+    public function maybe_hide_completed_notice(): void {
+        if ( ! $this->is_wizard_completed() ) {
+            return;
+        }
+
+        SettingsManager::disable_wizard_menu( self::MENU_SLUG );
     }
     
     /**
      * Display the setup wizard page
      */
     public function setup_wizard_page() {
-        if ( get_option( 'fp_dms_setup_completed' ) ) {
+        if ( $this->is_wizard_completed() ) {
             $this->display_setup_completed();
             return;
         }
-        
+
         $current_step = isset( $_GET['step'] ) ? intval( $_GET['step'] ) : 1;
-        $current_step = max( 1, min( 5, $current_step ) );
+        $current_step = max( 1, min( self::TOTAL_STEPS, $current_step ) );
+
+        $this->mark_progress( $current_step );
         
         ?>
         <div class="wrap fp-dms-setup-wizard">
@@ -191,7 +242,7 @@ class SetupWizard {
      * Display progress bar
      */
     private function display_progress_bar( $current_step ) {
-        $progress = ( $current_step / 5 ) * 100;
+        $progress = ( $current_step / self::TOTAL_STEPS ) * 100;
         echo '<div class="progress-bar" style="width: ' . esc_attr( $progress ) . '%"></div>';
     }
     
@@ -332,9 +383,8 @@ class SetupWizard {
      */
     private function setup_step_complete() {
         // Mark setup as completed
-        update_option( 'fp_dms_setup_completed', true );
-        update_option( 'fp_dms_setup_completed_time', current_time( 'timestamp' ) );
-        
+        $this->mark_wizard_completed();
+
         ?>
         <h2><?php esc_html_e( 'Setup Complete!', 'fp-digital-marketing' ); ?></h2>
         
@@ -393,14 +443,27 @@ class SetupWizard {
      */
     public function handle_setup_step() {
         check_ajax_referer( 'fp_dms_setup', 'nonce' );
-        
+
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( __( 'Insufficient permissions', 'fp-digital-marketing' ) );
+            wp_send_json_error( __( 'Insufficient permissions', 'fp-digital-marketing' ) );
         }
-        
+
+        if ( empty( $_POST['step'] ) || empty( $_POST['data'] ) ) {
+            wp_send_json_error( __( 'Invalid request', 'fp-digital-marketing' ) );
+        }
+
         $step = intval( $_POST['step'] );
-        parse_str( $_POST['data'], $form_data );
-        
+
+        if ( $step < 2 || $step > self::TOTAL_STEPS ) {
+            wp_send_json_error( __( 'Unknown setup step.', 'fp-digital-marketing' ) );
+        }
+
+        parse_str( wp_unslash( (string) $_POST['data'] ), $form_data );
+
+        if ( ! is_array( $form_data ) ) {
+            wp_send_json_error( __( 'Invalid form data.', 'fp-digital-marketing' ) );
+        }
+
         switch ( $step ) {
             case 2:
                 $this->save_analytics_settings( $form_data );
@@ -411,43 +474,56 @@ class SetupWizard {
             case 4:
                 $this->save_performance_settings( $form_data );
                 break;
+            case self::TOTAL_STEPS:
+                $this->mark_wizard_completed();
+                break;
         }
-        
+
+        $this->mark_step_complete( $step );
+
         $next_step = $step + 1;
-        $redirect_url = admin_url( "admin.php?page=fp-dms-setup&step={$next_step}" );
-        
+        $next_step = min( self::TOTAL_STEPS, $next_step );
+
+        $redirect_url = add_query_arg(
+            array(
+                'page' => self::MENU_SLUG,
+                'step' => $next_step,
+            ),
+            admin_url( 'admin.php' )
+        );
+
         wp_send_json_success( array( 'redirect' => $redirect_url ) );
     }
-    
+
     /**
      * Save analytics settings
      */
-    private function save_analytics_settings( $data ) {
-        $api_keys = get_option( 'fp_digital_marketing_api_keys', array() );
+    private function save_analytics_settings( array $data ): void {
+        $api_keys = SettingsManager::get_option( SettingsManager::OPTION_API_KEYS, array() );
 
         if ( ! is_array( $api_keys ) ) {
             $api_keys = array();
         }
 
         if ( ! empty( $data['ga4_measurement_id'] ) ) {
-            $api_keys['ga4_property_id'] = sanitize_text_field( $data['ga4_measurement_id'] );
+            $api_keys['ga4_property_id'] = sanitize_text_field( (string) $data['ga4_measurement_id'] );
         }
 
         if ( ! empty( $data['google_ads_id'] ) ) {
-            $api_keys['google_ads_id'] = sanitize_text_field( $data['google_ads_id'] );
+            $api_keys['google_ads_id'] = sanitize_text_field( (string) $data['google_ads_id'] );
         }
 
         if ( ! empty( $data['clarity_project_id'] ) ) {
-            $api_keys['clarity_project_id'] = sanitize_text_field( $data['clarity_project_id'] );
+            $api_keys['clarity_project_id'] = sanitize_text_field( (string) $data['clarity_project_id'] );
         }
 
-        update_option( 'fp_digital_marketing_api_keys', $api_keys );
+        SettingsManager::update_option( SettingsManager::OPTION_API_KEYS, $api_keys );
     }
-    
+
     /**
      * Save SEO settings
      */
-    private function save_seo_settings( $data ) {
+    private function save_seo_settings( array $data ): void {
         $settings = array(
             'default_meta_description' => sanitize_textarea_field( $data['default_meta_description'] ?? '' ),
             'enable_xml_sitemap' => isset( $data['enable_xml_sitemap'] ),
@@ -466,7 +542,7 @@ class SetupWizard {
     /**
      * Save performance settings
      */
-    private function save_performance_settings( $data ) {
+    private function save_performance_settings( array $data ): void {
         $cache_settings = array(
             'enabled' => isset( $data['enable_caching'] ),
             'benchmark_enabled' => isset( $data['enable_core_web_vitals'] ),
@@ -483,5 +559,80 @@ class SetupWizard {
         $email_settings['alerts_enabled'] = isset( $data['enable_email_alerts'] );
 
         update_option( 'fp_digital_marketing_email_settings', $email_settings );
+    }
+
+    /**
+     * Persist wizard completion metadata.
+     *
+     * @return void
+     */
+    private function mark_wizard_completed(): void {
+        $completion_payload = array(
+            'completed' => true,
+            'completed_at' => current_time( 'timestamp' ),
+            'completed_by' => get_current_user_id(),
+        );
+
+        SettingsManager::update_option( SettingsManager::OPTION_WIZARD_COMPLETED, $completion_payload );
+        SettingsManager::disable_wizard_menu( self::MENU_SLUG );
+
+        // Maintain backwards compatibility with legacy option names.
+        update_option( 'fp_dms_setup_completed', true );
+        update_option( 'fp_dms_setup_completed_time', $completion_payload['completed_at'] );
+    }
+
+    /**
+     * Check if wizard is completed.
+     *
+     * @return bool
+     */
+    private function is_wizard_completed(): bool {
+        $state = SettingsManager::get_option( SettingsManager::OPTION_WIZARD_COMPLETED, null );
+
+        if ( is_array( $state ) ) {
+            return ! empty( $state['completed'] );
+        }
+
+        return (bool) get_option( 'fp_dms_setup_completed', false );
+    }
+
+    /**
+     * Track wizard progress.
+     *
+     * @param int $current_step Current step number.
+     * @return void
+     */
+    private function mark_progress( int $current_step ): void {
+        $progress = SettingsManager::get_option( SettingsManager::OPTION_WIZARD_PROGRESS, array() );
+
+        if ( ! is_array( $progress ) ) {
+            $progress = array();
+        }
+
+        $progress['current_step'] = $current_step;
+        $progress['updated_at'] = current_time( 'timestamp' );
+        $progress['user_id'] = get_current_user_id();
+
+        SettingsManager::update_option( SettingsManager::OPTION_WIZARD_PROGRESS, $progress );
+    }
+
+    /**
+     * Mark a step as complete.
+     *
+     * @param int $step Step number that has been completed.
+     * @return void
+     */
+    private function mark_step_complete( int $step ): void {
+        $progress = SettingsManager::get_option( SettingsManager::OPTION_WIZARD_PROGRESS, array() );
+
+        if ( ! is_array( $progress ) ) {
+            $progress = array();
+        }
+
+        $progress['last_completed_step'] = $step;
+        $progress['updated_at'] = current_time( 'timestamp' );
+        $progress['user_id'] = get_current_user_id();
+
+        SettingsManager::update_option( SettingsManager::OPTION_WIZARD_PROGRESS, $progress );
     }
 }
