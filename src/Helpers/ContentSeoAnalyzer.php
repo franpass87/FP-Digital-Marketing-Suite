@@ -51,11 +51,23 @@ class ContentSeoAnalyzer {
 	 * @param string $focus_keyword The focus keyword to analyze for.
 	 * @return array Analysis results.
 	 */
-	public static function analyze_content( $post, string $focus_keyword ): array {
-		$post = get_post( $post );
-		if ( ! $post ) {
-			return self::get_empty_analysis();
-		}
+        public static function analyze_content( $post, string $focus_keyword ): array {
+                // Allow callers to pass either a post ID or a full post object. Some
+                // of our PHPUnit fixtures provide a stdClass that mimics a WP_Post
+                // instance without relying on the global get_post() mock. To make
+                // the analyzer resilient we explicitly detect that case before
+                // falling back to the WordPress helper.
+                if ( is_object( $post ) && isset( $post->ID ) ) {
+                        $wp_post = $post;
+                } else {
+                        $wp_post = get_post( $post );
+                }
+
+                $post = $wp_post;
+
+                if ( ! $post ) {
+                        return self::get_empty_analysis();
+                }
 
 		if ( empty( trim( $focus_keyword ) ) ) {
 			return self::get_empty_analysis();
@@ -209,16 +221,33 @@ class ContentSeoAnalyzer {
 	 * @param \WP_Post $post Post object.
 	 * @return array Readability analysis results.
 	 */
-	private static function analyze_readability( $post ): array {
-		$content = wp_strip_all_tags( $post->post_content );
-		$content = preg_replace( '/\s+/', ' ', trim( $content ) );
-		
-		// Calculate Flesch Reading Ease Score
-		$flesch_score = self::calculate_flesch_score( $content );
-		
-		// Analyze paragraph lengths
-		$paragraphs = explode( "\n", $content );
-		$paragraph_analysis = self::analyze_paragraph_lengths( $paragraphs );
+        private static function analyze_readability( $post ): array {
+                $raw_content = is_object( $post ) && isset( $post->post_content ) ? (string) $post->post_content : '';
+
+                // Preserve paragraph boundaries by converting common block-level
+                // HTML tags into new line characters before stripping the markup.
+                $normalized_html = preg_replace(
+                        '/<(\/?(?:p|div|br|h[1-6]|li|ul|ol|blockquote))[^>]*>/i',
+                        "\n",
+                        $raw_content
+                );
+
+                $plain_text = wp_strip_all_tags( $normalized_html );
+                $plain_text = html_entity_decode( $plain_text, ENT_QUOTES | ENT_HTML5 );
+                $plain_text = str_replace( ["\r\n", "\r"], "\n", $plain_text );
+                $plain_text = preg_replace( '/\n{2,}/', "\n", trim( $plain_text ) );
+
+                // Keep a copy of paragraphs before collapsing whitespace for the
+                // readability sub-metrics.
+                $paragraphs = array_filter( array_map( 'trim', explode( "\n", $plain_text ) ) );
+
+                $normalized_content = preg_replace( '/\s+/', ' ', trim( $plain_text ) );
+
+                // Calculate Flesch Reading Ease Score
+                $flesch_score = self::calculate_flesch_score( $normalized_content );
+
+                // Analyze paragraph lengths using the preserved paragraph list
+                $paragraph_analysis = self::analyze_paragraph_lengths( $paragraphs );
 		
 		return [
 			'flesch_score' => $flesch_score,
@@ -252,13 +281,21 @@ class ContentSeoAnalyzer {
 		$syllable_count = self::estimate_syllables( $content );
 		
 		// Flesch Reading Ease formula (adapted for Italian/English)
-		$avg_sentence_length = $word_count / $sentence_count;
-		$avg_syllables_per_word = $syllable_count / $word_count;
-		
-		$flesch_score = 206.835 - ( 1.015 * $avg_sentence_length ) - ( 84.6 * $avg_syllables_per_word );
-		
-		return max( 0, min( 100, $flesch_score ) );
-	}
+                $avg_sentence_length = $word_count / $sentence_count;
+                $avg_syllables_per_word = $syllable_count / $word_count;
+
+                if ( $avg_syllables_per_word > 2.0 ) {
+                        // Use the Italian Flesch-Vacca adaptation when the text is
+                        // likely Italian (more syllables per word on average).
+                        $syllables_per_100_words = $avg_syllables_per_word * 100;
+                        $flesch_score = 206 - $avg_sentence_length - ( 0.65 * $syllables_per_100_words );
+                } else {
+                        // Default to the standard English Flesch Reading Ease.
+                        $flesch_score = 206.835 - ( 1.015 * $avg_sentence_length ) - ( 84.6 * $avg_syllables_per_word );
+                }
+
+                return max( 0, min( 100, $flesch_score ) );
+        }
 
 	/**
 	 * Estimate syllable count (simplified)
@@ -270,15 +307,37 @@ class ContentSeoAnalyzer {
 		$words = str_word_count( $content, 1 );
 		$total_syllables = 0;
 		
-		foreach ( $words as $word ) {
-			$word = strtolower( $word );
-			$syllables = preg_match_all( '/[aeiouàèìòù]/i', $word );
-			$syllables = max( 1, $syllables ); // Each word has at least 1 syllable
-			$total_syllables += $syllables;
-		}
-		
-		return $total_syllables;
-	}
+                foreach ( $words as $word ) {
+                        $total_syllables += self::count_syllables( $word );
+                }
+
+                return max( 1, $total_syllables );
+        }
+
+        /**
+         * Estimate syllables for a single word using a heuristic suitable for
+         * both Italian and English content.
+         *
+         * @param string $word Word to analyze.
+         * @return int Estimated syllable count.
+         */
+        private static function count_syllables( string $word ): int {
+                $word = strtolower( $word );
+                $word = preg_replace( '/[^a-zàèéìòù]/u', '', $word );
+
+                if ( '' === $word ) {
+                        return 0;
+                }
+
+                // Remove common silent endings (English specific but harmless for Italian).
+                $word = preg_replace( '/(?:es|ed)$/u', '', $word );
+                $word = preg_replace( '/e$/u', '', $word );
+
+                preg_match_all( '/[aeiouyàèéìòù]+/u', $word, $matches );
+                $syllables = count( $matches[0] );
+
+                return max( 1, $syllables );
+        }
 
 	/**
 	 * Analyze paragraph lengths
