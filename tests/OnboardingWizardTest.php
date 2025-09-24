@@ -7,6 +7,7 @@
 
 use PHPUnit\Framework\TestCase;
 use FP\DigitalMarketing\Admin\OnboardingWizard;
+use FP\DigitalMarketing\Setup\SettingsManager;
 
 /**
  * Test class for OnboardingWizard
@@ -29,7 +30,7 @@ class OnboardingWizardTest extends TestCase {
 		$this->assertFalse( OnboardingWizard::is_completed() );
 
 		// Simulate completion
-		update_option( 'fp_digital_marketing_wizard_completed', true );
+                update_option( SettingsManager::OPTION_WIZARD_COMPLETED, true );
 		$this->assertTrue( OnboardingWizard::is_completed() );
 
 		// Reset
@@ -49,9 +50,9 @@ class OnboardingWizardTest extends TestCase {
 			'services' => [ 'google_analytics_4' ],
 			'metrics' => [ 'sessions', 'pageviews' ],
 		];
-		update_option( 'fp_digital_marketing_wizard_progress', $progress );
+                update_option( SettingsManager::OPTION_WIZARD_PROGRESS, $progress );
 
-		$saved_progress = get_option( 'fp_digital_marketing_wizard_progress', [] );
+                $saved_progress = get_option( SettingsManager::OPTION_WIZARD_PROGRESS, [] );
 		$this->assertEquals( $progress['services'], $saved_progress['services'] );
 		$this->assertEquals( $progress['metrics'], $saved_progress['metrics'] );
 
@@ -64,15 +65,15 @@ class OnboardingWizardTest extends TestCase {
 	 */
 	public function test_wizard_reset(): void {
 		// Set some options
-		update_option( 'fp_digital_marketing_wizard_completed', true );
-		update_option( 'fp_digital_marketing_wizard_progress', [ 'test' => 'data' ] );
+                update_option( SettingsManager::OPTION_WIZARD_COMPLETED, true );
+                update_option( SettingsManager::OPTION_WIZARD_PROGRESS, [ 'test' => 'data' ] );
 
 		// Reset
 		OnboardingWizard::reset();
 
 		// Verify options are cleared
-		$this->assertFalse( get_option( 'fp_digital_marketing_wizard_completed', false ) );
-		$this->assertEquals( [], get_option( 'fp_digital_marketing_wizard_progress', [] ) );
+                $this->assertFalse( get_option( SettingsManager::OPTION_WIZARD_COMPLETED, false ) );
+                $this->assertEquals( [], get_option( SettingsManager::OPTION_WIZARD_PROGRESS, [] ) );
 	}
 
 	/**

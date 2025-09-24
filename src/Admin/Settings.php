@@ -20,6 +20,7 @@ use FP\DigitalMarketing\Helpers\PerformanceCache;
 use FP\DigitalMarketing\Helpers\XmlSitemap;
 use FP\DigitalMarketing\Helpers\SchemaGenerator;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Setup\SettingsManager;
 
 /**
  * Settings class for plugin administration
@@ -1045,7 +1046,7 @@ class Settings {
 
 			// Verify state parameter with enhanced security
 			$state = sanitize_text_field( wp_unslash( $_GET['state'] ?? '' ) );
-			$stored_state = get_option( 'fp_dms_oauth_state', '' );
+                        $stored_state = SettingsManager::get_option( SettingsManager::OPTION_OAUTH_STATE, '' );
 			
 			// Enhanced nonce verification
 			if ( ! wp_verify_nonce( $state, 'ga4_oauth_state' ) || $state !== $stored_state ) {
@@ -1066,7 +1067,7 @@ class Settings {
 			}
 
 			// Clean up state
-			delete_option( 'fp_dms_oauth_state' );
+                        SettingsManager::delete_option( SettingsManager::OPTION_OAUTH_STATE );
 
 			if ( isset( $_GET['code'] ) ) {
 				$oauth = new GoogleOAuth();
