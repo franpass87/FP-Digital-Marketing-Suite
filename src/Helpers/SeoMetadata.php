@@ -50,9 +50,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The SEO title.
 	 */
-	public static function get_title( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_title( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return '';
 		}
 
@@ -85,9 +85,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The SEO description.
 	 */
-	public static function get_description( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_description( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return '';
 		}
 
@@ -116,9 +116,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The robots directive.
 	 */
-	public static function get_robots( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_robots( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return 'index, follow';
 		}
 
@@ -147,9 +147,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The canonical URL.
 	 */
-	public static function get_canonical( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_canonical( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return '';
 		}
 
@@ -160,25 +160,33 @@ class SeoMetadata {
 		}
 
 		// Generate canonical URL without parameters.
-		$permalink = get_permalink( $post );
-		if ( ! $permalink ) {
-			return '';
-		}
+                $permalink = get_permalink( $post );
+                if ( ! $permalink ) {
+                        return '';
+                }
 
-		// Remove query parameters to avoid duplicate content.
-		$parsed_url = wp_parse_url( $permalink );
-		$canonical = $parsed_url['scheme'] . '://' . $parsed_url['host'];
-		
-		if ( isset( $parsed_url['port'] ) ) {
-			$canonical .= ':' . $parsed_url['port'];
-		}
-		
-		if ( isset( $parsed_url['path'] ) ) {
-			$canonical .= $parsed_url['path'];
-		}
+                // Remove query parameters to avoid duplicate content.
+                $parsed_url = wp_parse_url( $permalink );
 
-		return $canonical;
-	}
+                if ( empty( $parsed_url['host'] ) || empty( $parsed_url['scheme'] ) ) {
+                        return esc_url( $permalink );
+                }
+
+                $canonical = $parsed_url['scheme'] . '://' . $parsed_url['host'];
+
+                if ( isset( $parsed_url['port'] ) ) {
+                        $canonical .= ':' . $parsed_url['port'];
+                }
+
+                $path = $parsed_url['path'] ?? '/';
+                $canonical .= $path;
+
+                if ( substr( $canonical, -1 ) !== '/' && ! empty( $path ) ) {
+                        $canonical .= '/';
+                }
+
+                return esc_url( $canonical );
+        }
 
 	/**
 	 * Get Open Graph title
@@ -186,9 +194,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The OG title.
 	 */
-	public static function get_og_title( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_og_title( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return '';
 		}
 
@@ -209,9 +217,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The OG description.
 	 */
-	public static function get_og_description( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_og_description( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return '';
 		}
 
@@ -232,9 +240,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The OG image URL.
 	 */
-	public static function get_og_image( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_og_image( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return '';
 		}
 
@@ -245,7 +253,7 @@ class SeoMetadata {
 		}
 
 		// Fallback to featured image.
-		$featured_image_id = get_post_thumbnail_id( $post );
+                $featured_image_id = get_post_thumbnail_id( $post );
 		if ( $featured_image_id ) {
 			$image_url = wp_get_attachment_image_url( $featured_image_id, 'large' );
 			if ( $image_url ) {
@@ -268,9 +276,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The Twitter title.
 	 */
-	public static function get_twitter_title( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_twitter_title( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return '';
 		}
 
@@ -291,9 +299,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The Twitter description.
 	 */
-	public static function get_twitter_description( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_twitter_description( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return '';
 		}
 
@@ -314,9 +322,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return string The Twitter image URL.
 	 */
-	public static function get_twitter_image( $post ): string {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function get_twitter_image( $post ): string {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return '';
 		}
 
@@ -372,9 +380,9 @@ class SeoMetadata {
 	 * @param int|\WP_Post $post Post ID or post object.
 	 * @return array Array of meta tags.
 	 */
-	public static function generate_meta_tags( $post ): array {
-		$post = get_post( $post );
-		if ( ! $post ) {
+        public static function generate_meta_tags( $post ): array {
+                $post = self::resolve_post( $post );
+                if ( ! $post ) {
 			return [];
 		}
 
@@ -502,13 +510,47 @@ class SeoMetadata {
 	 * @param string $content The content to clean.
 	 * @return string Cleaned content.
 	 */
-	private static function clean_content( string $content ): string {
-		// Remove extra whitespace and line breaks.
-		$content = preg_replace( '/\s+/', ' ', $content );
-		
-		// Remove shortcodes.
-		$content = strip_shortcodes( $content );
-		
-		return trim( $content );
-	}
+        private static function clean_content( string $content ): string {
+                // Remove extra whitespace and line breaks.
+                $content = preg_replace( '/\s+/', ' ', $content );
+
+                // Remove shortcodes.
+                $content = strip_shortcodes( $content );
+
+                return trim( $content );
+        }
+
+        /**
+         * Resolve the incoming post reference to a WP_Post like object.
+         *
+         * WordPress' get_post() gracefully handles integers, objects and
+         * WP_Post instances. The lightweight test environment used in this
+         * project provides simplified shims which only accept an ID, so we
+         * need a defensive helper to keep the behaviour consistent across
+         * environments.
+         *
+         * @param mixed $post Post identifier or object.
+         * @return object|null Post object or null when it cannot be resolved.
+         */
+        private static function resolve_post( $post ): ?object {
+                if ( is_object( $post ) && isset( $post->ID ) ) {
+                        $resolved = get_post( $post->ID );
+
+                        if ( $resolved && is_object( $resolved ) ) {
+                                return $resolved;
+                        }
+
+                        return $post;
+                }
+
+                if ( is_numeric( $post ) || is_string( $post ) ) {
+                        $resolved = get_post( $post );
+
+                        if ( $resolved && is_object( $resolved ) ) {
+                                return $resolved;
+                        }
+                }
+
+                return null;
+        }
 }
