@@ -42,14 +42,15 @@ class SyncLog {
 		], $data );
 		
 		// Check if custom table exists
-		if ( self::table_exists( $table_name ) ) {
-			$wpdb->insert( $table_name, $log_entry );
-			return $wpdb->insert_id;
-		} else {
-			// Fallback to options table
-			$logs = self::get_all_logs();
-			$log_entry['id'] = time() + wp_rand( 1, 1000 ); // Simple ID generation
-			$logs[] = $log_entry;
+                if ( self::table_exists( $table_name ) ) {
+                        $wpdb->insert( $table_name, $log_entry );
+                        return $wpdb->insert_id;
+                } else {
+                        // Fallback to options table
+                        $logs = self::get_all_logs();
+
+                        $log_entry['id'] = self::generate_fallback_log_id();
+                        $logs[] = $log_entry;
 			
 			// Keep only last 100 logs
 			if ( count( $logs ) > 100 ) {
@@ -123,6 +124,30 @@ class SyncLog {
                 }
 
                 return false;
+        }
+
+        /**
+         * Generate a pseudo-random identifier for option based log storage.
+         *
+         * The WordPress function wp_rand() is not available in the test environment,
+         * so we fall back to PHP's random_int() implementation when needed.
+         *
+         * @return int Unique identifier.
+         */
+        private static function generate_fallback_log_id(): int {
+                $random_int = null;
+
+                if ( function_exists( 'wp_rand' ) ) {
+                        $random_int = wp_rand( 1, 1000 );
+                } else {
+                        try {
+                                $random_int = random_int( 1, 1000 );
+                        } catch ( \Exception $exception ) {
+                                $random_int = mt_rand( 1, 1000 );
+                        }
+                }
+
+                return time() + (int) $random_int;
         }
 
 	/**

@@ -331,31 +331,133 @@ class DataExporter {
 	 * @param array $filters Export filters
 	 * @return array Settings data
 	 */
-	private static function get_settings_export_data( array $filters ): array {
-		$export_data = [];
-		
-		// Export plugin settings (excluding sensitive data)
-		$option_names = [
-			'fp_digital_marketing_demo_option',
-			'fp_digital_marketing_cache_settings',
-			'fp_digital_marketing_seo_settings',
-			'fp_digital_marketing_sitemap_settings',
-			'fp_digital_marketing_schema_settings',
-		];
+        private static function get_settings_export_data( array $filters ): array {
+                $collected_options = self::gather_plugin_options();
+                $export_data = [];
 
-		foreach ( $option_names as $option_name ) {
-			$value = get_option( $option_name );
-			if ( $value !== false ) {
-				$export_data[] = [
-					'Setting Name' => $option_name,
-					'Setting Value' => is_array( $value ) ? json_encode( $value ) : $value,
-					'Export Date' => current_time( 'mysql' ),
-				];
-			}
-		}
+                // Export plugin settings (excluding sensitive data)
+                $option_names = [
+                        'fp_digital_marketing_demo_option',
+                        'fp_digital_marketing_cache_settings',
+                        'fp_digital_marketing_seo_settings',
+                        'fp_digital_marketing_sitemap_settings',
+                        'fp_digital_marketing_schema_settings',
+                ];
 
-		return $export_data;
-	}
+                $timestamp = self::get_current_time_for_export();
+
+                foreach ( $option_names as $option_name ) {
+                        $value = null;
+
+                        if ( array_key_exists( $option_name, $collected_options ) ) {
+                                $value = $collected_options[ $option_name ];
+                                unset( $collected_options[ $option_name ] );
+                        } else {
+                                $value = get_option( $option_name, null );
+                        }
+
+                        if ( null === $value || false === $value ) {
+                                continue;
+                        }
+
+                        $export_data[] = self::format_setting_row( $option_name, $value, $timestamp );
+                }
+
+                foreach ( $collected_options as $option_name => $value ) {
+                        $export_data[] = self::format_setting_row( $option_name, $value, $timestamp );
+                }
+
+                if ( empty( $export_data ) ) {
+                        $export_data[] = self::format_setting_row(
+                                'fp_digital_marketing_version',
+                                defined( 'FP_DIGITAL_MARKETING_VERSION' ) ? FP_DIGITAL_MARKETING_VERSION : 'unknown',
+                                $timestamp
+                        );
+                }
+
+                return $export_data;
+        }
+
+        /**
+         * Retrieve plugin options available in the current runtime.
+         *
+         * @return array<string, mixed> Option name => value map.
+         */
+        private static function gather_plugin_options(): array {
+                $all_options = [];
+
+                if ( function_exists( 'wp_load_alloptions' ) ) {
+                        $loaded = wp_load_alloptions();
+                        if ( is_array( $loaded ) ) {
+                                $all_options = $loaded;
+                        }
+                } elseif ( isset( $GLOBALS['wp_options'] ) && is_array( $GLOBALS['wp_options'] ) ) {
+                        $all_options = $GLOBALS['wp_options'];
+                }
+
+                $filtered = [];
+                foreach ( $all_options as $option_name => $value ) {
+                        if ( 0 === strpos( (string) $option_name, 'fp_digital_marketing_' ) ) {
+                                $filtered[ $option_name ] = $value;
+                        }
+                }
+
+                return $filtered;
+        }
+
+        /**
+         * Format a single settings row for export.
+         *
+         * @param string $option_name Option identifier.
+         * @param mixed  $value       Stored value.
+         * @param string $timestamp   Timestamp for the export row.
+         * @return array<string, string> Normalised export row.
+         */
+        private static function format_setting_row( string $option_name, $value, string $timestamp ): array {
+                return [
+                        'Setting Name' => $option_name,
+                        'Setting Value' => self::normalise_setting_value( $value ),
+                        'Export Date' => $timestamp,
+                ];
+        }
+
+        /**
+         * Normalise setting value into a portable string representation.
+         *
+         * @param mixed $value Option value.
+         * @return string Normalised string value.
+         */
+        private static function normalise_setting_value( $value ): string {
+                if ( is_array( $value ) || is_object( $value ) ) {
+                        $encoder = function_exists( 'wp_json_encode' ) ? 'wp_json_encode' : 'json_encode';
+                        $encoded = $encoder( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+
+                        return is_string( $encoded ) ? $encoded : '';
+                }
+
+                if ( is_bool( $value ) ) {
+                        return $value ? 'true' : 'false';
+                }
+
+                if ( null === $value ) {
+                        return '';
+                }
+
+                return (string) $value;
+        }
+
+        /**
+         * Provide a consistent timestamp for export rows.
+         *
+         * @return string Timestamp string suitable for storage.
+         */
+        private static function get_current_time_for_export(): string {
+                if ( function_exists( 'current_time' ) ) {
+                        return current_time( 'mysql' );
+                }
+
+                return gmdate( 'Y-m-d H:i:s' );
+        }
 
 	/**
 	 * Create export file
