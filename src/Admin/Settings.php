@@ -141,7 +141,9 @@ class Settings {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		}
 		add_action( 'admin_init', [ $this, 'handle_cache_actions' ] );
                 add_action( 'admin_init', [ $this, 'register_settings' ] );
                 add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );

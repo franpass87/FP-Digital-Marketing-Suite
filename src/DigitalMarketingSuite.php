@@ -322,6 +322,7 @@ class DigitalMarketingSuite {
 				'Settings' => $this->settings,
 				'PlatformConnections' => $this->platform_connections,
 				'UTMCampaignManager' => $this->utm_campaign_manager,
+				'ConversionEventsAdmin' => $this->conversion_events_admin,
 				'FunnelAnalysisAdmin' => $this->funnel_analysis_admin,
 				'SegmentationAdmin' => $this->segmentation_admin,
 				'AlertingAdmin' => $this->alerting_admin,

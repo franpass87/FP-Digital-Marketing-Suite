@@ -37,7 +37,9 @@ class AnomalyDetectionAdmin {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		}
 		add_action( 'admin_init', [ $this, 'handle_form_submission' ] );
 		add_action( 'admin_notices', [ $this, 'display_anomaly_notices' ] );
 		add_action( 'wp_ajax_dismiss_anomaly_notice', [ $this, 'dismiss_anomaly_notice' ] );

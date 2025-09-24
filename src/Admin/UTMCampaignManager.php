@@ -40,7 +40,9 @@ class UTMCampaignManager {
 	 * @return void
 	 */
 	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+		}
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
 		add_action( 'admin_init', [ $this, 'handle_form_submission' ] );
 		add_action( 'wp_ajax_fp_utm_generate_url', [ $this, 'handle_ajax_generate_url' ] );
@@ -67,7 +69,7 @@ class UTMCampaignManager {
 		add_submenu_page(
 			'fp-digital-marketing-dashboard',
 			__( 'Gestione Campagne UTM', 'fp-digital-marketing' ),
-			__( '🔗 Campagne UTM', 'fp-digital-marketing' ),
+			__( '🚀 Campagne UTM', 'fp-digital-marketing' ),
 			Capabilities::MANAGE_CAMPAIGNS,
 			self::PAGE_SLUG,
 			[ $this, 'render_page' ]
