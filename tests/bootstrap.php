@@ -25,7 +25,13 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 
         // Simple in-memory options store for option-related functions.
         global $wp_options;
-        $wp_options = [];
+        $wp_options = [
+                'fp_digital_marketing_cache_settings' => [
+                        'enabled' => false,
+                        'use_object_cache' => false,
+                        'use_transients' => false,
+                ],
+        ];
 
         // Mock WordPress functions for testing
 	if ( ! function_exists( 'wp_parse_args' ) ) {
@@ -74,11 +80,40 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
-	if ( ! function_exists( 'current_time' ) ) {
-		function current_time( $type ) {
-			return date( 'Y-m-d H:i:s' );
-		}
-	}
+        if ( ! function_exists( 'current_time' ) ) {
+                function current_time( $type, $gmt = 0 ) {
+                        $timestamp = time();
+
+                        if ( 'timestamp' === $type || 'U' === $type ) {
+                                return $timestamp;
+                        }
+
+                        $format = 'mysql' === $type || 'mysql_gmt' === $type ? 'Y-m-d H:i:s' : ( is_string( $type ) ? $type : 'Y-m-d H:i:s' );
+
+                        if ( 'mysql_gmt' === $type || 1 === (int) $gmt ) {
+                                return gmdate( $format, $timestamp );
+                        }
+
+                        return date( $format, $timestamp );
+                }
+        }
+
+        if ( ! defined( 'DAY_IN_SECONDS' ) ) {
+                define( 'DAY_IN_SECONDS', 86400 );
+        }
+
+        if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+                define( 'HOUR_IN_SECONDS', 3600 );
+        }
+
+        if ( ! function_exists( 'sanitize_key' ) ) {
+                function sanitize_key( $key ) {
+                        $key = strtolower( (string) $key );
+                        $key = preg_replace( '/[^a-z0-9_\-]/', '', $key ) ?? '';
+
+                        return (string) $key;
+                }
+        }
 
 	if ( ! function_exists( '__' ) ) {
 		function __( $text, $domain = 'default' ) {
@@ -98,11 +133,23 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
-	if ( ! function_exists( 'plugin_dir_url' ) ) {
-		function plugin_dir_url( $file ) {
-			return 'https://example.com/wp-content/plugins/' . basename( dirname( $file ) ) . '/';
-		}
-	}
+        if ( ! function_exists( 'plugin_dir_url' ) ) {
+                function plugin_dir_url( $file ) {
+                        return 'https://example.com/wp-content/plugins/' . basename( dirname( $file ) ) . '/';
+                }
+        }
+
+        if ( ! function_exists( 'admin_url' ) ) {
+                function admin_url( $path = '', $scheme = 'admin' ) {
+                        $base = 'https://example.com/wp-admin/';
+
+                        if ( '' === $path ) {
+                                return $base;
+                        }
+
+                        return $base . ltrim( $path, '/' );
+                }
+        }
 
 	if ( ! function_exists( 'add_action' ) ) {
 		function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
@@ -663,6 +710,13 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 
         // Mock global $wpdb for testing with minimal methods used across the test suite.
         class WPDB_Mock {
+                /**
+                 * Flag to help application code detect the mock connection.
+                 *
+                 * @var bool
+                 */
+                public bool $is_mock = true;
+
                 /**
                  * Table prefix.
                  *

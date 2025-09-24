@@ -43,6 +43,13 @@ class MetricsCache {
         private static ?bool $use_option_storage = null;
 
         /**
+         * Tracks the active database connection hash to detect environment changes.
+         *
+         * @var string|null
+         */
+        private static ?string $connection_hash = null;
+
+        /**
          * Save a metric record to the cache.
          *
          * @param int    $client_id    Client ID from the cliente post type.
@@ -68,7 +75,7 @@ class MetricsCache {
                                 'period_start' => sanitize_text_field( $period_start ),
                                 'period_end'   => sanitize_text_field( $period_end ),
                                 'value'        => (string) $value,
-                                'meta'         => ! empty( $meta ) ? wp_json_encode( $meta ) : null,
+                                'meta'         => self::encode_meta_for_storage( $meta ),
                                 'fetched_at'   => current_time( 'mysql' ),
                         ];
 
@@ -107,11 +114,7 @@ class MetricsCache {
                         );
 
                         if ( $result ) {
-                                if ( ! empty( $result->meta ) ) {
-                                        $result->meta = json_decode( $result->meta, true );
-                                }
-
-                                return $result;
+                                return self::normalise_record_object( $result );
                         }
                 }
 
@@ -196,11 +199,7 @@ class MetricsCache {
                         $prepared_sql = $wpdb->prepare( $sql, ...$where_values );
                         $results      = $wpdb->get_results( $prepared_sql ) ?: [];
 
-                        foreach ( $results as $result ) {
-                                if ( ! empty( $result->meta ) ) {
-                                        $result->meta = json_decode( $result->meta, true );
-                                }
-                        }
+                        $results = array_map( [ self::class, 'normalise_record_object' ], $results );
                 }
 
                 if ( empty( $results ) ) {
@@ -231,8 +230,8 @@ class MetricsCache {
 
                         foreach ( $data as $field => $value ) {
                                 if ( in_array( $field, $allowed_fields, true ) ) {
-                                        if ( 'meta' === $field && is_array( $value ) ) {
-                                                $update_data[ $field ] = wp_json_encode( $value );
+                                        if ( 'meta' === $field ) {
+                                                $update_data[ $field ] = self::encode_meta_for_storage( $value );
                                         } else {
                                                 $update_data[ $field ] = $value;
                                         }
@@ -476,6 +475,13 @@ class MetricsCache {
          * @return bool
          */
         private static function using_option_storage(): bool {
+                $current_hash = self::get_connection_hash();
+
+                if ( self::$connection_hash !== $current_hash ) {
+                        self::$use_option_storage = null;
+                        self::$connection_hash    = $current_hash;
+                }
+
                 if ( null === self::$use_option_storage ) {
                         self::$use_option_storage = self::is_database_available() ? false : true;
                 }
@@ -491,12 +497,32 @@ class MetricsCache {
         private static function is_database_available(): bool {
                 global $wpdb;
 
-                return isset( $wpdb )
-                        && is_object( $wpdb )
-                        && method_exists( $wpdb, 'insert' )
-                        && method_exists( $wpdb, 'prepare' )
+                if ( ! isset( $wpdb ) || ! is_object( $wpdb ) ) {
+                        return false;
+                }
+
+                if ( property_exists( $wpdb, 'is_mock' ) && true === $wpdb->is_mock ) {
+                        return false;
+                }
+
+                $has_prepare = method_exists( $wpdb, 'prepare' );
+                $has_read    = method_exists( $wpdb, 'get_results' )
+                        || method_exists( $wpdb, 'get_row' )
+                        || method_exists( $wpdb, 'get_var' );
+                $has_write   = method_exists( $wpdb, 'insert' )
                         && method_exists( $wpdb, 'delete' )
                         && method_exists( $wpdb, 'update' );
+
+                return $has_prepare && ( $has_write || $has_read );
+        }
+
+        /**
+         * Generate a hash for the current database connection, if any.
+         */
+        private static function get_connection_hash(): ?string {
+                global $wpdb;
+
+                return is_object( $wpdb ) ? spl_object_hash( $wpdb ) : null;
         }
 
         /**
@@ -540,7 +566,7 @@ class MetricsCache {
                         'period_start' => sanitize_text_field( $period_start ),
                         'period_end'   => sanitize_text_field( $period_end ),
                         'value'        => (string) $value,
-                        'meta'         => is_array( $meta ) ? $meta : [],
+                        'meta'         => self::encode_meta_for_storage( $meta ),
                         'fetched_at'   => current_time( 'mysql' ),
                 ];
 
@@ -555,6 +581,16 @@ class MetricsCache {
          * @param array<string, mixed> $record Record data.
          */
         private static function convert_record_to_object( array $record ): object {
+                $meta_string = self::normalize_meta_string( $record['meta'] ?? null );
+
+                $meta_array = [];
+                if ( '' !== $meta_string ) {
+                        $decoded = json_decode( $meta_string, true );
+                        if ( is_array( $decoded ) ) {
+                                $meta_array = $decoded;
+                        }
+                }
+
                 $normalized = [
                         'id'           => (int) ( $record['id'] ?? 0 ),
                         'client_id'    => (int) ( $record['client_id'] ?? 0 ),
@@ -563,11 +599,86 @@ class MetricsCache {
                         'period_start' => (string) ( $record['period_start'] ?? '' ),
                         'period_end'   => (string) ( $record['period_end'] ?? '' ),
                         'value'        => (string) ( $record['value'] ?? '0' ),
-                        'meta'         => is_array( $record['meta'] ?? null ) ? $record['meta'] : [],
+                        'meta'         => $meta_array,
+                        'metadata'     => $meta_string,
                         'fetched_at'   => (string) ( $record['fetched_at'] ?? '' ),
                 ];
 
                 return (object) $normalized;
+        }
+
+        /**
+         * Ensure database result objects expose consistent metadata fields.
+         */
+        private static function normalise_record_object( object $record ): object {
+                $meta_string = self::normalize_meta_string( $record->meta ?? null );
+
+                $meta_array = [];
+                if ( '' !== $meta_string ) {
+                        $decoded = json_decode( $meta_string, true );
+                        if ( is_array( $decoded ) ) {
+                                $meta_array = $decoded;
+                        }
+                }
+
+                $record->meta      = $meta_array;
+                $record->metadata  = $meta_string;
+
+                return $record;
+        }
+
+        /**
+         * Convert any metadata payload into a JSON string representation.
+         *
+         * @param mixed $meta Metadata payload.
+         */
+        private static function normalize_meta_string( $meta ): string {
+                if ( is_string( $meta ) ) {
+                        return $meta;
+                }
+
+                if ( null === $meta || false === $meta ) {
+                        return '';
+                }
+
+                if ( is_array( $meta ) || is_object( $meta ) ) {
+                        $encoded = wp_json_encode( $meta );
+
+                        return false !== $encoded ? $encoded : '';
+                }
+
+                if ( is_scalar( $meta ) ) {
+                        return (string) $meta;
+                }
+
+                return '';
+        }
+
+        /**
+         * Normalise metadata values before persisting them.
+         *
+         * @param mixed $meta Metadata payload.
+         */
+        private static function encode_meta_for_storage( $meta ): ?string {
+                if ( null === $meta ) {
+                        return null;
+                }
+
+                if ( is_string( $meta ) ) {
+                        return '' === trim( $meta ) ? null : $meta;
+                }
+
+                if ( is_array( $meta ) || is_object( $meta ) ) {
+                        $encoded = wp_json_encode( $meta );
+
+                        return false !== $encoded ? $encoded : null;
+                }
+
+                if ( is_scalar( $meta ) ) {
+                        return (string) $meta;
+                }
+
+                return null;
         }
 
         /**
@@ -693,7 +804,7 @@ class MetricsCache {
                         }
 
                         if ( array_key_exists( 'meta', $data ) ) {
-                                $records[ $index ]['meta'] = is_array( $data['meta'] ) ? $data['meta'] : [];
+                                $records[ $index ]['meta'] = self::encode_meta_for_storage( $data['meta'] );
                         }
 
                         if ( array_key_exists( 'fetched_at', $data ) ) {
