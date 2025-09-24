@@ -16,6 +16,7 @@ use FP\DigitalMarketing\DataSources\GoogleSearchConsole;
 use FP\DigitalMarketing\DataSources\MicrosoftClarity;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
+use FP\DigitalMarketing\Helpers\SecretsManager;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
 use FP\DigitalMarketing\Helpers\XmlSitemap;
 use FP\DigitalMarketing\Helpers\SchemaGenerator;
@@ -81,15 +82,6 @@ class Settings {
 	 * API Keys option name
 	 */
 	private const OPTION_API_KEYS = 'fp_digital_marketing_api_keys';
-
-	/**
-	 * Sensitive API keys stored encrypted.
-	 */
-	private const SENSITIVE_API_KEYS = [
-		'google_client_secret',
-		'api_token',
-		'secret_key',
-	];
 
 	/**
 	 * Sync settings option name
@@ -617,29 +609,26 @@ class Settings {
 	 * @return void
 	 */
 	public function render_api_keys_field(): void {
-		$api_keys = get_option( self::OPTION_API_KEYS, [] );
+               $api_keys = SecretsManager::get_api_keys();
+               $display_context = SecretsManager::prepare_for_display( $api_keys );
+               $display_api_keys = $display_context['values'];
+               $decryption_errors = $display_context['errors'];
 
-		if ( ! is_array( $api_keys ) ) {
-		        $api_keys = [];
-		}
+               $oauth = new GoogleOAuth();
+               $connection_status = $oauth->get_connection_status();
+               ?>
+               <div class="ga4-configuration">
+                       <h4><?php esc_html_e( 'Google Analytics 4', 'fp-digital-marketing' ); ?></h4>
 
-		$display_api_keys = $api_keys;
+                       <?php if ( ! empty( $decryption_errors ) ) : ?>
+                               <div class="notice notice-warning inline">
+                                       <p>
+                                               <?php esc_html_e( 'Impossibile decifrare alcune chiavi sensibili. Inserisci nuovamente i valori e salvali.', 'fp-digital-marketing' ); ?>
+                                       </p>
+                               </div>
+                       <?php endif; ?>
 
-		foreach ( self::SENSITIVE_API_KEYS as $sensitive_key ) {
-		        if ( isset( $api_keys[ $sensitive_key ] ) && is_string( $api_keys[ $sensitive_key ] ) && '' !== $api_keys[ $sensitive_key ] ) {
-		                $display_api_keys[ $sensitive_key ] = Security::decrypt_sensitive_data( $api_keys[ $sensitive_key ] );
-		        } else {
-		                $display_api_keys[ $sensitive_key ] = '';
-		        }
-		}
-
-		$oauth = new GoogleOAuth();
-		$connection_status = $oauth->get_connection_status();
-		?>
-		<div class="ga4-configuration">
-			<h4><?php esc_html_e( 'Google Analytics 4', 'fp-digital-marketing' ); ?></h4>
-			
-			<table class="form-table">
+                       <table class="form-table">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Client ID', 'fp-digital-marketing' ); ?></th>
 					<td>
@@ -896,38 +885,49 @@ class Settings {
 			wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 		}
 
-		$current_keys = get_option( self::OPTION_API_KEYS, [] );
-		$sanitized = [];
+               $current_keys = SecretsManager::get_api_keys();
+               $sanitized = [];
 
-		foreach ( $input as $key => $value ) {
-		        $sanitized_key = sanitize_key( $key );
-		        $sanitized_value = sanitize_text_field( $value );
+               foreach ( $input as $key => $value ) {
+                       $sanitized_key = sanitize_key( $key );
 
-		        // Encrypt sensitive API keys
-		        if ( in_array( $sanitized_key, self::SENSITIVE_API_KEYS, true ) && ! empty( $sanitized_value ) ) {
-				// Only encrypt if value has changed to avoid double encryption
-				if ( ! isset( $current_keys[ $sanitized_key ] ) || 
-					 Security::decrypt_sensitive_data( $current_keys[ $sanitized_key ] ) !== $sanitized_value ) {
-					$sanitized[ $sanitized_key ] = Security::encrypt_sensitive_data( $sanitized_value );
-					
-					// Log API key change
-					error_log( sprintf( 
-						'FP Digital Marketing: API key %s updated by user %d', 
-						$sanitized_key, 
-						get_current_user_id() 
-					) );
-				} else {
-					// Keep existing encrypted value
-					$sanitized[ $sanitized_key ] = $current_keys[ $sanitized_key ];
-				}
-			} else {
-				// Non-sensitive keys stored as-is (already sanitized)
-				$sanitized[ $sanitized_key ] = $sanitized_value;
-			}
-		}
+                       if ( '' === $sanitized_key ) {
+                               continue;
+                       }
 
-		return $sanitized;
-	}
+                       if ( is_array( $value ) ) {
+                               continue;
+                       }
+
+                       $scalar_value = is_scalar( $value ) ? (string) $value : '';
+                       $sanitized_value = sanitize_text_field( wp_unslash( $scalar_value ) );
+
+                       $sanitized[ $sanitized_key ] = $sanitized_value;
+               }
+
+               $prepared = SecretsManager::prepare_for_storage( $sanitized, $current_keys );
+
+               foreach ( $prepared['updated_sensitive_keys'] as $updated_key ) {
+                       if ( isset( $sanitized[ $updated_key ] ) && '' !== $sanitized[ $updated_key ] ) {
+                               error_log( sprintf(
+                                       'FP Digital Marketing: API key %s updated by user %d',
+                                       $updated_key,
+                                       get_current_user_id()
+                               ) );
+                       }
+               }
+
+               if ( ! empty( $prepared['errors'] ) ) {
+                       foreach ( $prepared['errors'] as $error_key ) {
+                               error_log( sprintf(
+                                       'FP Digital Marketing: unable to decrypt stored secret for %s during save. Re-encrypting with the provided value.',
+                                       $error_key
+                               ) );
+                       }
+               }
+
+               return $prepared['values'];
+        }
 
 	/**
 	 * Get demo option value
@@ -944,29 +944,9 @@ class Settings {
 	 * @param bool $decrypt_sensitive Whether to decrypt sensitive keys for display.
 	 * @return array The API keys array with sensitive values decrypted if requested.
 	 */
-	public function get_api_keys( bool $decrypt_sensitive = true ): array {
-		$api_keys = get_option( self::OPTION_API_KEYS, [] );
-
-		if ( ! is_array( $api_keys ) ) {
-		        $api_keys = [];
-		}
-
-		if ( ! $decrypt_sensitive ) {
-		        return $api_keys;
-		}
-
-		$decrypted_keys = [];
-
-		foreach ( $api_keys as $key => $value ) {
-		        if ( in_array( $key, self::SENSITIVE_API_KEYS, true ) && ! empty( $value ) ) {
-		                $decrypted_keys[ $key ] = Security::decrypt_sensitive_data( $value );
-		        } else {
-		                $decrypted_keys[ $key ] = $value;
-			}
-		}
-
-		return $decrypted_keys;
-	}
+        public function get_api_keys( bool $decrypt_sensitive = true ): array {
+                return SecretsManager::get_api_keys( $decrypt_sensitive );
+        }
 
 	/**
 	 * Handle cache actions triggered via GET requests.
