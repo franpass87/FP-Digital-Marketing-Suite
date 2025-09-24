@@ -152,16 +152,23 @@ class SchemaGenerator {
 	 * @return array Enabled schema type identifiers
 	 */
 	public static function get_enabled_schema_types(): array {
-		$settings = get_option( 'fp_digital_marketing_schema_settings', [] );
-		$enabled_types = $settings['enabled_types'] ?? [];
+                $settings = get_option( 'fp_digital_marketing_schema_settings', [] );
 
-		// Default to all types enabled if no settings exist
-		if ( empty( $enabled_types ) ) {
-			$enabled_types = array_keys( self::SCHEMA_TYPES );
-		}
+                if ( ! is_array( $settings ) ) {
+                        $settings = [];
+                }
 
-		return apply_filters( 'fp_dms_enabled_schema_types', $enabled_types );
-	}
+                if ( array_key_exists( 'enabled_types', $settings ) ) {
+                        $requested = is_array( $settings['enabled_types'] ) ? $settings['enabled_types'] : [];
+                        $requested = array_map( 'strval', $requested );
+                        $valid_types = array_keys( self::SCHEMA_TYPES );
+                        $enabled_types = array_values( array_intersect( $valid_types, $requested ) );
+                } else {
+                        $enabled_types = array_keys( self::SCHEMA_TYPES );
+                }
+
+                return apply_filters( 'fp_dms_enabled_schema_types', $enabled_types );
+        }
 
 	/**
 	 * Check if a schema type is enabled
@@ -182,19 +189,41 @@ class SchemaGenerator {
 	public static function sanitize_schema_data( array $data ): array {
 		$sanitized = [];
 
-		foreach ( $data as $key => $value ) {
-			if ( is_array( $value ) ) {
-				$sanitized[ $key ] = self::sanitize_schema_data( $value );
-			} elseif ( is_string( $value ) ) {
-				// Escape HTML but preserve structured data formatting
-				$sanitized[ $key ] = wp_strip_all_tags( $value );
-			} else {
-				$sanitized[ $key ] = $value;
-			}
-		}
+                foreach ( $data as $key => $value ) {
+                        if ( is_array( $value ) ) {
+                                $sanitized[ $key ] = self::sanitize_schema_data( $value );
+                                continue;
+                        }
 
-		return $sanitized;
-	}
+                        if ( ! is_string( $value ) ) {
+                                $sanitized[ $key ] = $value;
+                                continue;
+                        }
+
+                        $sanitized[ $key ] = self::sanitize_schema_string( $value );
+                }
+
+                return $sanitized;
+        }
+
+        /**
+         * Sanitize a string value for schema output.
+         *
+         * @param string $value Raw string value.
+         * @return string Sanitized string value.
+         */
+        private static function sanitize_schema_string( string $value ): string {
+                // Remove script/style blocks entirely to prevent executable payloads.
+                $value = (string) preg_replace( '#<\s*(script|style)[^>]*>.*?<\/\s*\1>#is', '', $value );
+
+                // Strip remaining HTML tags while preserving entities and quotes.
+                $value = wp_strip_all_tags( $value );
+
+                // Collapse consecutive whitespace characters into a single space.
+                $value = (string) preg_replace( '/\s+/u', ' ', $value );
+
+                return trim( $value );
+        }
 
 	/**
 	 * Validate schema data structure
