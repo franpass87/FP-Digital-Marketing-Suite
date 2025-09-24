@@ -291,17 +291,26 @@ class ConversionEventsTable {
 			$sql = $wpdb->prepare( $sql, $where_values );
 		}
 
-		$results = $wpdb->get_results( $sql, ARRAY_A );
+                $results = $wpdb->get_results( $sql, ARRAY_A );
 
-		// Unserialize attributes
-		foreach ( $results as &$result ) {
-			if ( ! empty( $result['event_attributes'] ) ) {
-				$result['event_attributes'] = json_decode( $result['event_attributes'], true );
-			}
-		}
+                if ( ! is_array( $results ) || empty( $results ) ) {
+                        return [];
+                }
 
-		return $results;
-	}
+                // Unserialize attributes
+                foreach ( $results as &$result ) {
+                        if ( ! empty( $result['event_attributes'] ) ) {
+                                $decoded_attributes = json_decode( $result['event_attributes'], true );
+
+                                if ( is_array( $decoded_attributes ) ) {
+                                        $result['event_attributes'] = $decoded_attributes;
+                                }
+                        }
+                }
+                unset( $result );
+
+                return $results;
+        }
 
 	/**
 	 * Get event count with filtering

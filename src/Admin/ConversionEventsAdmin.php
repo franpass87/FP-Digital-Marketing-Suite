@@ -16,6 +16,7 @@ use FP\DigitalMarketing\Database\ConversionEventsTable;
 use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Admin\MenuManager;
 use FP\DigitalMarketing\Tools\Exports\CsvExporter;
+use FP\DigitalMarketing\Tools\Exports\ConversionsExporter;
 
 /**
  * Conversion Events Admin class
@@ -873,49 +874,11 @@ class ConversionEventsAdmin {
 
 		fwrite( $handle, "\xEF\xBB\xBF" );
 
-		$headers = [
-			__( 'ID', 'fp-digital-marketing' ),
-			__( 'ID Evento', 'fp-digital-marketing' ),
-			__( 'Nome Evento', 'fp-digital-marketing' ),
-			__( 'Tipo', 'fp-digital-marketing' ),
-			__( 'Cliente ID', 'fp-digital-marketing' ),
-			__( 'Sorgente', 'fp-digital-marketing' ),
-			__( 'ID Evento Sorgente', 'fp-digital-marketing' ),
-			__( 'Valore Evento', 'fp-digital-marketing' ),
-			__( 'Valuta', 'fp-digital-marketing' ),
-			__( 'Duplicato', 'fp-digital-marketing' ),
-			__( 'Data Creazione', 'fp-digital-marketing' ),
-			__( 'Data Elaborazione', 'fp-digital-marketing' ),
-		];
+                CsvExporter::write_row( $handle, ConversionsExporter::get_headers() );
 
-		CsvExporter::write_row( $handle, $headers );
-
-		foreach ( $events as $event ) {
-			$is_duplicate = '';
-
-			if ( isset( $event['is_duplicate'] ) ) {
-				$is_duplicate = ( (int) $event['is_duplicate'] ) === 1
-					? __( 'Sì', 'fp-digital-marketing' )
-					: __( 'No', 'fp-digital-marketing' );
-			}
-
-			$row = [
-				$event['id'] ?? '',
-				$event['event_id'] ?? '',
-				$event['event_name'] ?? '',
-				$event['event_type'] ?? '',
-				$event['client_id'] ?? '',
-				$event['source'] ?? '',
-				$event['source_event_id'] ?? '',
-				$event['event_value'] ?? '',
-				$event['currency'] ?? '',
-				$is_duplicate,
-				$event['created_at'] ?? '',
-				$event['processed_at'] ?? '',
-			];
-
-			CsvExporter::write_row( $handle, $row );
-		}
+                foreach ( ConversionsExporter::build_rows( $events ) as $row ) {
+                        CsvExporter::write_row( $handle, $row );
+                }
 
 		rewind( $handle );
 		$content = stream_get_contents( $handle );

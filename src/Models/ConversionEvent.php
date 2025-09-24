@@ -566,13 +566,25 @@ class ConversionEvent {
                 $query = "SELECT
                         id,
                         event_id,
-                        event_name,
                         event_type,
+                        event_name,
                         client_id,
                         source,
                         source_event_id,
+                        user_id,
+                        session_id,
+                        utm_source,
+                        utm_medium,
+                        utm_campaign,
+                        utm_term,
+                        utm_content,
                         event_value,
                         currency,
+                        event_attributes,
+                        page_url,
+                        referrer_url,
+                        ip_address,
+                        user_agent,
                         is_duplicate,
                         created_at,
                         processed_at
@@ -587,12 +599,24 @@ class ConversionEvent {
 
                 $results = $wpdb->get_results( $query, ARRAY_A );
 
-                if ( empty( $results ) ) {
+                if ( ! is_array( $results ) || empty( $results ) ) {
                         return [];
                 }
 
                 return array_map(
                         static function ( array $event ): array {
+                                if ( isset( $event['event_attributes'] ) && is_array( $event['event_attributes'] ) ) {
+                                        return $event;
+                                }
+
+                                if ( isset( $event['event_attributes'] ) && is_string( $event['event_attributes'] ) && '' !== $event['event_attributes'] ) {
+                                        $decoded = json_decode( $event['event_attributes'], true );
+
+                                        if ( is_array( $decoded ) ) {
+                                                $event['event_attributes'] = $decoded;
+                                        }
+                                }
+
                                 $event['is_duplicate'] = isset( $event['is_duplicate'] ) ? (int) $event['is_duplicate'] : 0;
 
                                 return $event;
