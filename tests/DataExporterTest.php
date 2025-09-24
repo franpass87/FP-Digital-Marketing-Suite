@@ -137,28 +137,60 @@ class DataExporterTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function test_csv_content_generation(): void {
-		$reflection = new ReflectionClass( DataExporter::class );
-		$method = $reflection->getMethod( 'generate_csv_content' );
-		$method->setAccessible( true );
+        public function test_csv_content_generation(): void {
+                $reflection = new ReflectionClass( DataExporter::class );
+                $method = $reflection->getMethod( 'generate_csv_content' );
+                $method->setAccessible( true );
 
-		$test_data = [
-			[ 'name' => 'John', 'age' => 30, 'city' => 'New York' ],
-			[ 'name' => 'Jane', 'age' => 25, 'city' => 'London' ],
-		];
+                $test_data = [
+                        [ 'name' => 'John', 'age' => 30, 'city' => 'New York' ],
+                        [ 'name' => 'Jane', 'age' => 25, 'city' => 'London' ],
+                ];
 
-		$csv_content = $method->invoke( null, $test_data );
+                $csv_content = $method->invoke( null, $test_data );
 
-		// Should contain BOM for UTF-8
-		$this->assertStringStartsWith( "\xEF\xBB\xBF", $csv_content );
-		
+                // Should contain BOM for UTF-8
+                $this->assertStringStartsWith( "\xEF\xBB\xBF", $csv_content );
+
                 // Should contain headers
                 $this->assertStringContainsString( 'name,age,city', $csv_content );
 
                 // Should contain data
                 $this->assertStringContainsString( 'John,30,"New York"', $csv_content );
                 $this->assertStringContainsString( 'Jane,25,London', $csv_content );
-	}
+        }
+
+        /**
+         * Ensure CSV generation sanitizes malicious values to prevent CSV injection.
+         *
+         * @return void
+         */
+        public function test_csv_content_sanitizes_malicious_values(): void {
+                $reflection = new ReflectionClass( DataExporter::class );
+                $method = $reflection->getMethod( 'generate_csv_content' );
+                $method->setAccessible( true );
+
+                $test_data = [
+                        [
+                                'name' => '=2+2',
+                                'notes' => "Line\n<script>alert('x')</script>",
+                        ],
+                ];
+
+                $csv_content = $method->invoke( null, $test_data );
+
+                $this->assertStringStartsWith( "\xEF\xBB\xBF", $csv_content );
+
+                $trimmed = str_replace( "\xEF\xBB\xBF", '', $csv_content );
+                $lines = array_values( array_filter( explode( "\n", trim( $trimmed ) ) ) );
+
+                $this->assertCount( 2, $lines );
+
+                $row = str_getcsv( $lines[1] );
+
+                $this->assertSame( "'=2+2", $row[0] );
+                $this->assertSame( "Line alert('x')", $row[1] );
+        }
 
 	/**
 	 * Test JSON content generation

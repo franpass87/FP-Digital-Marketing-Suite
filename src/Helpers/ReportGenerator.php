@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Helpers;
 
+use FP\DigitalMarketing\Tools\Exports\CsvExporter;
+
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use FP\DigitalMarketing\Models\MetricsCache;
@@ -332,17 +334,23 @@ class ReportGenerator {
 	 */
 	private static function array_to_csv( array $data, string $separator = ',' ): string {
 		$output = fopen( 'php://temp', 'r+' );
-		
-		foreach ( $data as $row ) {
-			fputcsv( $output, $row, $separator );
+
+		if ( false === $output ) {
+			return '';
 		}
-		
+
+		fwrite( $output, "\xEF\xBB\xBF" );
+
+		foreach ( $data as $row ) {
+			$row_data = is_array( $row ) ? $row : (array) $row;
+			CsvExporter::write_row( $output, $row_data, $separator );
+		}
+
 		rewind( $output );
 		$csv_content = stream_get_contents( $output );
 		fclose( $output );
-		
-		// Ensure UTF-8 encoding
-		return "\xEF\xBB\xBF" . $csv_content; // Add BOM for UTF-8
+
+		return is_string( $csv_content ) ? $csv_content : '';
 	}
 
 	/**

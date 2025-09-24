@@ -429,26 +429,16 @@ class ConversionEventManager {
 	 * @return void
 	 */
         private static function clear_related_caches( int $client_id, string $event_type ): void {
-                $base_key = PerformanceCache::generate_metrics_key([
-                        'client_id' => $client_id,
-                ]);
-
-                $prefix_end = strrpos( $base_key, '_' );
-                $prefix = false === $prefix_end ? $base_key : substr( $base_key, 0, $prefix_end );
+                $client_component = $client_id > 0 ? (string) $client_id : 'global';
 
                 $patterns_by_group = [
-                        PerformanceCache::CACHE_GROUP_AGGREGATED => $prefix . '_*',
-                        PerformanceCache::CACHE_GROUP_REPORTS => 'report_*',
+                        PerformanceCache::CACHE_GROUP_METRICS => sprintf( 'metrics_client_%s_*', $client_component ),
+                        PerformanceCache::CACHE_GROUP_AGGREGATED => sprintf( 'metrics_client_%s_*', $client_component ),
+                        PerformanceCache::CACHE_GROUP_REPORTS => sprintf( 'report_client_%s_*', $client_component ),
                 ];
 
                 foreach ( $patterns_by_group as $cache_group => $pattern ) {
-                        $prefixed_pattern = sprintf(
-                                'fp_dms_%s_%s',
-                                $cache_group,
-                                $pattern
-                        );
-
-                        PerformanceCache::clear_cache_by_pattern( $prefixed_pattern, $cache_group );
+                        PerformanceCache::clear_cache_by_pattern( $pattern, $cache_group );
                 }
         }
 

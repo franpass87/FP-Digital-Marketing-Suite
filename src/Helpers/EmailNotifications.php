@@ -540,12 +540,17 @@ class EmailNotifications {
 	 * @return bool Whether email can be sent
 	 */
 	private static function check_rate_limit( string $recipient, string $type ): bool {
-		$cache_key = "email_rate_limit_{$recipient}_{$type}";
-		$count = PerformanceCache::get( $cache_key, 'email_limits' ) ?: 0;
-		
-		// Allow max 10 emails per hour per type per recipient
-		return $count < 10;
-	}
+                $cache_key = "email_rate_limit_{$recipient}_{$type}";
+                $count = PerformanceCache::get( $cache_key, 'email_limits' ) ?: 0;
+
+                if ( $count >= 10 ) {
+                        self::increment_rate_stat( 'blocked' );
+                        return false;
+                }
+
+                // Allow max 10 emails per hour per type per recipient
+                return true;
+        }
 
 	/**
 	 * Update rate limit counter
@@ -554,11 +559,51 @@ class EmailNotifications {
 	 * @param string $type Email type
 	 * @return void
 	 */
-	private static function update_rate_limit( string $recipient, string $type ): void {
-		$cache_key = "email_rate_limit_{$recipient}_{$type}";
-		$count = PerformanceCache::get( $cache_key, 'email_limits' ) ?: 0;
+        private static function update_rate_limit( string $recipient, string $type ): void {
+                $cache_key = "email_rate_limit_{$recipient}_{$type}";
+                $count = PerformanceCache::get( $cache_key, 'email_limits' ) ?: 0;
                 PerformanceCache::set( $cache_key, 'email_limits', $count + 1, HOUR_IN_SECONDS );
-	}
+                self::increment_rate_stat( 'sent' );
+        }
+
+        /**
+         * Increment rate limit statistics for daily digest reporting.
+         *
+         * @param string $stat Statistic key (sent or blocked).
+         * @param int    $ttl  Statistic lifetime in seconds.
+         * @return void
+         */
+        private static function increment_rate_stat( string $stat, int $ttl = DAY_IN_SECONDS ): void {
+                $key = "rate_stat_{$stat}";
+
+                $current = PerformanceCache::get_cache_by_pattern( $key, 'email_rate_stats' );
+
+                if ( is_array( $current ) ) {
+                        $current = $current[ $key ] ?? 0;
+                }
+
+                $current = is_numeric( $current ) ? (int) $current : 0;
+
+                PerformanceCache::set_cache_by_pattern( $key, 'email_rate_stats', $current + 1, $ttl );
+        }
+
+        /**
+         * Retrieve aggregated rate limit statistics.
+         *
+         * @return array{sent:int,blocked:int} Rate limit stats for the current period.
+         */
+        private static function get_rate_limit_stats(): array {
+                $stats = PerformanceCache::get_cache_by_pattern( 'rate_stat_*', 'email_rate_stats' );
+
+                if ( ! is_array( $stats ) ) {
+                        return [ 'sent' => 0, 'blocked' => 0 ];
+                }
+
+                return [
+                        'sent' => isset( $stats['rate_stat_sent'] ) ? (int) $stats['rate_stat_sent'] : 0,
+                        'blocked' => isset( $stats['rate_stat_blocked'] ) ? (int) $stats['rate_stat_blocked'] : 0,
+                ];
+        }
 
 	/**
 	 * Get alert recipients
@@ -653,23 +698,33 @@ class EmailNotifications {
 			return;
 		}
 
-		// Gather daily statistics
-		$cache_stats = PerformanceCache::get_cache_stats();
+                // Gather daily statistics
+                $cache_stats = PerformanceCache::get_cache_stats();
+                $email_stats = self::get_rate_limit_stats();
+                $total_attempts = $email_stats['sent'] + $email_stats['blocked'];
+                $email_hit_ratio = $total_attempts > 0
+                        ? round( ( $email_stats['sent'] / $total_attempts ) * 100, 2 )
+                        : 100.0;
 
-		$digest_data = [
-			'report_type' => 'daily_digest',
-			'date' => current_time( 'Y-m-d' ),
+                $digest_data = [
+                        'report_type' => 'daily_digest',
+                        'date' => current_time( 'Y-m-d' ),
 			'summary' => __( 'Here is your daily summary from FP Digital Marketing Suite.', 'fp-digital-marketing' ),
 			'metrics' => [
-				'Cache Performance' => [
-					'current' => $cache_stats['hit_ratio'] ?? 0,
-					'previous' => 'N/A',
-					'change' => 'N/A',
-				],
-				'Active Clients' => [
-					'current' => wp_count_posts( 'cliente' )->publish ?? 0,
-					'previous' => 'N/A',
-					'change' => 'N/A',
+                                'Cache Performance' => [
+                                        'current' => $cache_stats['hit_ratio'] ?? 0,
+                                        'previous' => 'N/A',
+                                        'change' => 'N/A',
+                                ],
+                                'Email Delivery' => [
+                                        'current' => $email_hit_ratio,
+                                        'previous' => 'N/A',
+                                        'change' => 'N/A',
+                                ],
+                                'Active Clients' => [
+                                        'current' => wp_count_posts( 'cliente' )->publish ?? 0,
+                                        'previous' => 'N/A',
+                                        'change' => 'N/A',
 				],
 				'Security Events' => [
 					'current' => count( Security::get_security_logs( 10 ) ),
@@ -679,7 +734,9 @@ class EmailNotifications {
 			]
 		];
 
-		$recipients = $settings['digest_recipients'] ?? [ get_option( 'admin_email' ) ];
-		self::send_report( 'daily_digest', $digest_data, $recipients );
-	}
+                $recipients = $settings['digest_recipients'] ?? [ get_option( 'admin_email' ) ];
+                self::send_report( 'daily_digest', $digest_data, $recipients );
+
+                PerformanceCache::clear_cache_by_pattern( 'rate_stat_*', 'email_rate_stats' );
+        }
 }

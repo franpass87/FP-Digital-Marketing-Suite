@@ -15,6 +15,7 @@ use FP\DigitalMarketing\Models\ConversionEvent;
 use FP\DigitalMarketing\Database\ConversionEventsTable;
 use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Admin\MenuManager;
+use FP\DigitalMarketing\Tools\Exports\CsvExporter;
 
 /**
  * Conversion Events Admin class
@@ -864,76 +865,63 @@ class ConversionEventsAdmin {
 	 * @return string CSV content
 	 */
 	private function generate_csv_content( array $events ): string {
-		$csv_lines = [];
-		
-		// CSV headers
-                $headers = [
-                        __( 'ID', 'fp-digital-marketing' ),
-                        __( 'ID Evento', 'fp-digital-marketing' ),
-                        __( 'Nome Evento', 'fp-digital-marketing' ),
-                        __( 'Tipo', 'fp-digital-marketing' ),
-                        __( 'Cliente ID', 'fp-digital-marketing' ),
-                        __( 'Sorgente', 'fp-digital-marketing' ),
-                        __( 'ID Evento Sorgente', 'fp-digital-marketing' ),
-                        __( 'Valore Evento', 'fp-digital-marketing' ),
-                        __( 'Valuta', 'fp-digital-marketing' ),
-                        __( 'Duplicato', 'fp-digital-marketing' ),
-                        __( 'Data Creazione', 'fp-digital-marketing' ),
-                        __( 'Data Elaborazione', 'fp-digital-marketing' ),
-                ];
+		$handle = fopen( 'php://temp', 'r+' );
 
-                $csv_lines[] = $this->array_to_csv_line( $headers );
+		if ( false === $handle ) {
+			return '';
+		}
 
-                // Add event data
-                foreach ( $events as $event ) {
-                        $is_duplicate = '';
+		fwrite( $handle, "\xEF\xBB\xBF" );
 
-                        if ( isset( $event['is_duplicate'] ) ) {
-                                $is_duplicate = ( (int) $event['is_duplicate'] ) === 1
-                                        ? __( 'Sì', 'fp-digital-marketing' )
-                                        : __( 'No', 'fp-digital-marketing' );
-                        }
+		$headers = [
+			__( 'ID', 'fp-digital-marketing' ),
+			__( 'ID Evento', 'fp-digital-marketing' ),
+			__( 'Nome Evento', 'fp-digital-marketing' ),
+			__( 'Tipo', 'fp-digital-marketing' ),
+			__( 'Cliente ID', 'fp-digital-marketing' ),
+			__( 'Sorgente', 'fp-digital-marketing' ),
+			__( 'ID Evento Sorgente', 'fp-digital-marketing' ),
+			__( 'Valore Evento', 'fp-digital-marketing' ),
+			__( 'Valuta', 'fp-digital-marketing' ),
+			__( 'Duplicato', 'fp-digital-marketing' ),
+			__( 'Data Creazione', 'fp-digital-marketing' ),
+			__( 'Data Elaborazione', 'fp-digital-marketing' ),
+		];
 
-                        $row = [
-                                $event['id'] ?? '',
-                                $event['event_id'] ?? '',
-                                $event['event_name'] ?? '',
-                                $event['event_type'] ?? '',
-                                $event['client_id'] ?? '',
-                                $event['source'] ?? '',
-                                $event['source_event_id'] ?? '',
-                                $event['event_value'] ?? '',
-                                $event['currency'] ?? '',
-                                $is_duplicate,
-                                $event['created_at'] ?? '',
-                                $event['processed_at'] ?? '',
-                        ];
+		CsvExporter::write_row( $handle, $headers );
 
-                        $csv_lines[] = $this->array_to_csv_line( $row );
-                }
-		
-		return implode( "\n", $csv_lines );
-	}
-	
-	/**
-	 * Convert array to CSV line
-	 *
-	 * @param array $data Data array
-	 * @return string CSV line
-	 */
-	private function array_to_csv_line( array $data ): string {
-                $escaped_data = array_map( function( $field ) {
-                        // Escape quotes and wrap in quotes if necessary
-                        $field = (string) $field;
-                        $quote = '"';
-                        $field = str_replace( $quote, $quote . $quote, $field );
-                        if ( strpos( $field, ',' ) !== false || strpos( $field, $quote ) !== false || strpos( $field, "\n" ) !== false ) {
-                                $field = $quote . $field . $quote;
-                        }
-                        return $field;
-                }, $data );
-		
-		return implode( ',', $escaped_data );
+		foreach ( $events as $event ) {
+			$is_duplicate = '';
+
+			if ( isset( $event['is_duplicate'] ) ) {
+				$is_duplicate = ( (int) $event['is_duplicate'] ) === 1
+					? __( 'Sì', 'fp-digital-marketing' )
+					: __( 'No', 'fp-digital-marketing' );
+			}
+
+			$row = [
+				$event['id'] ?? '',
+				$event['event_id'] ?? '',
+				$event['event_name'] ?? '',
+				$event['event_type'] ?? '',
+				$event['client_id'] ?? '',
+				$event['source'] ?? '',
+				$event['source_event_id'] ?? '',
+				$event['event_value'] ?? '',
+				$event['currency'] ?? '',
+				$is_duplicate,
+				$event['created_at'] ?? '',
+				$event['processed_at'] ?? '',
+			];
+
+			CsvExporter::write_row( $handle, $row );
+		}
+
+		rewind( $handle );
+		$content = stream_get_contents( $handle );
+		fclose( $handle );
+
+		return is_string( $content ) ? $content : '';
 	}
 	
 	/**

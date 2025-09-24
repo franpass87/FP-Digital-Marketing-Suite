@@ -635,13 +635,13 @@ class AlertingAdmin {
 			return;
 		}
 
-		wp_enqueue_script(
-			'fp-dms-alerts',
-			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/alerts-admin.js',
-			[ 'jquery' ],
-			FP_DIGITAL_MARKETING_VERSION,
-			true
-		);
+                wp_enqueue_script(
+                        'fp-dms-alerts',
+                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/alerts-admin.js',
+                        [ 'jquery', 'wp-util' ],
+                        FP_DIGITAL_MARKETING_VERSION,
+                        true
+                );
 
 		wp_localize_script( 'fp-dms-alerts', 'fpDmsAlerts', [
 			'ajaxUrl' => admin_url( 'admin-ajax.php' ),

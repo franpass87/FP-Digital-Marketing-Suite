@@ -12,6 +12,7 @@ namespace FP\DigitalMarketing\Helpers;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Helpers\MetricsAggregator;
+use FP\DigitalMarketing\Tools\Exports\CsvExporter;
 
 /**
  * Data Export utility class for exporting reports and data
@@ -462,23 +463,33 @@ class DataExporter {
 		}
 
 		$output = fopen( 'php://temp', 'r+' );
-		
-		// Add BOM for UTF-8
-		fwrite( $output, "\xEF\xBB\xBF" );
-		
-		// Add header
-		fputcsv( $output, array_keys( $data[0] ) );
-		
-		// Add data rows
-		foreach ( $data as $row ) {
-			fputcsv( $output, $row );
+
+		if ( false === $output ) {
+			return '';
 		}
-		
+
+		fwrite( $output, "\xEF\xBB\xBF" );
+
+		$first_row = (array) $data[0];
+		$headers = array_keys( $first_row );
+		CsvExporter::write_row( $output, $headers );
+
+		foreach ( $data as $row ) {
+			$row_array = (array) $row;
+			$ordered_values = [];
+
+			foreach ( $headers as $header ) {
+				$ordered_values[] = $row_array[ $header ] ?? '';
+			}
+
+			CsvExporter::write_row( $output, $ordered_values );
+		}
+
 		rewind( $output );
 		$content = stream_get_contents( $output );
 		fclose( $output );
-		
-		return $content;
+
+		return is_string( $content ) ? $content : '';
 	}
 
 	/**

@@ -12,6 +12,7 @@ namespace FP\DigitalMarketing\Helpers;
 use FP\DigitalMarketing\Models\MetricsCache;
 use FP\DigitalMarketing\Helpers\MetricsAggregator;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
+use FP\DigitalMarketing\Performance\BenchmarkMath;
 use Exception;
 
 /**
@@ -110,15 +111,13 @@ class CacheBenchmark {
 		PerformanceCache::update_cache_settings( [ 'enabled' => $cache_enabled ] );
 
 		// Calculate metrics
-		$without_cache_count = count( $results['without_cache'] );
-		$with_cache_count = count( $results['with_cache'] );
-		$avg_without_cache = $without_cache_count > 0 ? array_sum( $results['without_cache'] ) / $without_cache_count : 0;
-		$avg_with_cache = $with_cache_count > 0 ? array_sum( $results['with_cache'] ) / $with_cache_count : 0;
+		$avg_without_cache = BenchmarkMath::average( $results['without_cache'] );
+		$avg_with_cache = BenchmarkMath::average( $results['with_cache'] );
 
 		$results['avg_without_cache'] = $avg_without_cache;
 		$results['avg_with_cache'] = $avg_with_cache;
-		$results['performance_improvement'] = $avg_without_cache > 0 ? ( ( $avg_without_cache - $avg_with_cache ) / $avg_without_cache ) * 100 : 0.0;
-		$results['cache_hit_ratio'] = $iterations > 1 ? (float) ( ( $cache_hits / ( $iterations - 1 ) ) * 100 ) : 0.0;
+		$results['performance_improvement'] = BenchmarkMath::safe_percentage( $avg_without_cache - $avg_with_cache, $avg_without_cache );
+		$results['cache_hit_ratio'] = BenchmarkMath::safe_percentage( $cache_hits, max( $iterations - 1, 0 ) );
 
 		// Store results
 		self::store_benchmark_results( $results );
@@ -208,9 +207,7 @@ class CacheBenchmark {
 		$results['final_peak'] = memory_get_peak_usage( true );
 
 		// Calculate efficiency (lower is better)
-		if ( $results['test_data_size'] > 0 ) {
-			$results['memory_efficiency'] = (float) ( $results['cache_memory_usage'] / $results['test_data_size'] );
-		}
+		$results['memory_efficiency'] = BenchmarkMath::safe_divide( $results['cache_memory_usage'], $results['test_data_size'] );
 
 		// Clean up
 		for ( $i = 0; $i < 100; $i++ ) {
@@ -398,18 +395,13 @@ class CacheBenchmark {
 		$results['total_requests'] = count( $results['request_times'] );
 
 		if ( 0 === $results['total_requests'] ) {
-			$results['avg_response_time'] = 0.0;
-			$results['min_response_time'] = 0.0;
-			$results['max_response_time'] = 0.0;
-			$results['error_rate'] = 0.0;
-
 			return $results;
 		}
 
-		$results['avg_response_time'] = array_sum( $results['request_times'] ) / $results['total_requests'];
-		$results['min_response_time'] = min( $results['request_times'] );
-		$results['max_response_time'] = max( $results['request_times'] );
-		$results['error_rate'] = ( $results['errors'] / $results['total_requests'] ) * 100;
+		$results['avg_response_time'] = BenchmarkMath::average( $results['request_times'] );
+		$results['min_response_time'] = BenchmarkMath::min( $results['request_times'] );
+		$results['max_response_time'] = BenchmarkMath::max( $results['request_times'] );
+		$results['error_rate'] = BenchmarkMath::safe_percentage( $results['errors'], $results['total_requests'] );
 
 		return $results;
 	}
@@ -470,19 +462,14 @@ class CacheBenchmark {
 			return $default_stats;
 		}
 
-		$cache_lookups = $total_cache_hits + $total_cache_misses;
-		$cache_hit_ratio = 0.0;
-
-		if ( $cache_lookups > 0 ) {
-			$cache_hit_ratio = ( $total_cache_hits / $cache_lookups ) * 100;
-		}
+		$cache_hit_ratio = BenchmarkMath::safe_percentage( $total_cache_hits, $total_cache_hits + $total_cache_misses );
 
 		return [
 			'total_requests' => $total_requests,
-			'avg_response_time' => array_sum( $all_times ) / count( $all_times ),
-			'min_response_time' => min( $all_times ),
-			'max_response_time' => max( $all_times ),
-			'error_rate' => ( $total_errors / $total_requests ) * 100,
+			'avg_response_time' => BenchmarkMath::average( $all_times ),
+			'min_response_time' => BenchmarkMath::min( $all_times ),
+			'max_response_time' => BenchmarkMath::max( $all_times ),
+			'error_rate' => BenchmarkMath::safe_percentage( $total_errors, $total_requests ),
 			'cache_hit_ratio' => $cache_hit_ratio,
 		];
 	}

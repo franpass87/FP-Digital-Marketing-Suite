@@ -80,20 +80,54 @@ class ReportGeneratorTest extends TestCase {
 	/**
 	 * Test CSV report generation with custom separator
 	 */
-	public function test_generate_csv_report_custom_separator(): void {
-		$report_data = ReportGenerator::generate_demo_report_data( 1 );
-		$csv_content = ReportGenerator::generate_csv_report( $report_data, ';' );
+        public function test_generate_csv_report_custom_separator(): void {
+                $report_data = ReportGenerator::generate_demo_report_data( 1 );
+                $csv_content = ReportGenerator::generate_csv_report( $report_data, ';' );
 
-		$this->assertIsString( $csv_content );
-		$this->assertNotEmpty( $csv_content );
-		
-		// Check that semicolon is used as separator
-		$this->assertStringContainsString( ';', $csv_content );
-		
-		// Parse CSV to ensure it's valid
-		$lines = explode( "\n", trim( str_replace( "\xEF\xBB\xBF", '', $csv_content ) ) );
-		$this->assertGreaterThan( 5, count( $lines ) ); // Should have multiple lines
-	}
+                $this->assertIsString( $csv_content );
+                $this->assertNotEmpty( $csv_content );
+
+                // Check that semicolon is used as separator
+                $this->assertStringContainsString( ';', $csv_content );
+
+                // Parse CSV to ensure it's valid
+                $lines = explode( "\n", trim( str_replace( "\xEF\xBB\xBF", '', $csv_content ) ) );
+                $this->assertGreaterThan( 5, count( $lines ) ); // Should have multiple lines
+        }
+
+        /**
+         * Ensure generated CSV reports sanitize formula injections and markup.
+         */
+        public function test_generate_csv_report_sanitizes_values(): void {
+                $report_data = [
+                        'client_id' => 1,
+                        'period_start' => '2024-01-01',
+                        'period_end' => '2024-01-31',
+                        'generated_at' => '2024-01-01 12:00:00',
+                        'kpis' => [
+                                'sessions' => [
+                                        'value' => "=SUM(A1:A2)\n<script>alert('x')</script>",
+                                        'previous_value' => 100,
+                                        'change_percent' => 5,
+                                        'change_type' => 'increase',
+                                ],
+                        ],
+                        'channels' => [
+                                [
+                                        'name' => '<b>Direct</b>',
+                                        'sessions' => 200,
+                                        'revenue' => 300.5,
+                                ],
+                        ],
+                ];
+
+                $csv_content = ReportGenerator::generate_csv_report( $report_data );
+
+                $this->assertStringContainsString( "'=SUM(A1:A2) alert('x')", $csv_content );
+                $this->assertStringContainsString( 'Direct', $csv_content );
+                $this->assertStringNotContainsString( '<b>', $csv_content );
+                $this->assertStringNotContainsString( "=SUM(A1:A2)\n", $csv_content );
+        }
 
 	/**
 	 * Test report data validation
