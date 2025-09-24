@@ -235,7 +235,7 @@ class CustomReportsTable {
 
 		$where_sql = implode( ' AND ', $where_clauses );
                 $order_sql = sprintf( 'ORDER BY %s %s', $order_by, $order_direction );
-		$limit_sql = sprintf( 'LIMIT %d OFFSET %d', $args['limit'], $args['offset'] );
+                $limit_sql = sprintf( 'LIMIT %d OFFSET %d', max( 0, (int) $args['limit'] ), max( 0, (int) $args['offset'] ) );
 
 		$query = $wpdb->prepare(
 			"SELECT * FROM " . self::get_table_name() . " WHERE {$where_sql} {$order_sql} {$limit_sql}",
@@ -289,7 +289,7 @@ class CustomReportsTable {
 
 		$where_sql = empty( $where_clauses ) ? '' : 'WHERE ' . implode( ' AND ', $where_clauses );
                 $order_sql = sprintf( 'ORDER BY %s %s', $order_by, $order_direction );
-		$limit_sql = sprintf( 'LIMIT %d OFFSET %d', $args['limit'], $args['offset'] );
+                $limit_sql = sprintf( 'LIMIT %d OFFSET %d', max( 0, (int) $args['limit'] ), max( 0, (int) $args['offset'] ) );
 
 		$query = "SELECT * FROM " . self::get_table_name() . " {$where_sql} {$order_sql} {$limit_sql}";
 

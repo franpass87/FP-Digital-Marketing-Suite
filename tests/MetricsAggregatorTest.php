@@ -301,7 +301,7 @@ class MetricsAggregatorTest extends TestCase {
                         MetricsSchema::KPI_CLS,
                 ];
 
-                $aggregated = MetricsAggregator::get_aggregated_metrics( $client_id, $period_start, $period_end, $kpis );
+                $aggregated = MetricsAggregator::get_metrics( $client_id, $period_start, $period_end, $kpis );
 
                 $this->assertEqualsWithDelta( 3.0, $aggregated[ MetricsSchema::KPI_AVG_POSITION ]['total_value'], 0.0001 );
                 $this->assertEquals( 2, $aggregated[ MetricsSchema::KPI_AVG_POSITION ]['count'] );
