@@ -67,33 +67,45 @@ abstract class BaseSchema {
 	/**
 	 * Get current post data
 	 *
-	 * @return \WP_Post|null Current post or null
-	 */
-	protected static function get_current_post(): ?\WP_Post {
-		global $post;
-		
-		if ( is_singular() && $post instanceof \WP_Post ) {
-			return $post;
-		}
+         * @return object|null Current post or null
+         */
+        protected static function get_current_post(): ?object {
+                global $post;
 
-		return null;
-	}
+                if ( ! is_singular() ) {
+                        return null;
+                }
+
+                if ( $post instanceof \WP_Post ) {
+                        return $post;
+                }
+
+                if ( is_object( $post ) && isset( $post->ID ) ) {
+                        return $post;
+                }
+
+                return null;
+        }
 
 	/**
 	 * Get author information for a post
 	 *
-	 * @param \WP_Post $post Post object
-	 * @return array Author information
-	 */
-	protected static function get_author_info( \WP_Post $post ): array {
-		$author_id = $post->post_author;
-		$author = get_userdata( $author_id );
+         * @param object $post Post object
+         * @return array Author information
+         */
+        protected static function get_author_info( object $post ): array {
+                if ( ! isset( $post->post_author ) ) {
+                        return [];
+                }
 
-		if ( ! $author ) {
-			return [];
-		}
+                $author_id = (int) $post->post_author;
+                $author = get_userdata( $author_id );
 
-		return [
+                if ( ! $author ) {
+                        return [];
+                }
+
+                return [
 			'@type' => 'Person',
 			'name' => $author->display_name,
 			'url' => get_author_posts_url( $author_id )
@@ -135,17 +147,27 @@ abstract class BaseSchema {
 	 * @param string $date Date string
 	 * @return string ISO 8601 formatted date
 	 */
-	protected static function format_date( string $date ): string {
-		return date( 'c', strtotime( $date ) );
-	}
+        protected static function format_date( string $date ): string {
+                if ( empty( $date ) ) {
+                        return '';
+                }
 
-	/**
-	 * Get permalink for a post
-	 *
-	 * @param int|\WP_Post $post Post ID or object
-	 * @return string Post permalink
-	 */
-	protected static function get_permalink( $post ): string {
-		return get_permalink( $post ) ?: '';
-	}
+                $timestamp = strtotime( $date );
+
+                if ( false === $timestamp ) {
+                        return '';
+                }
+
+                return date( 'c', $timestamp );
+        }
+
+        /**
+         * Get permalink for a post
+         *
+         * @param int|object $post Post ID or object
+         * @return string Post permalink
+         */
+        protected static function get_permalink( $post ): string {
+                return get_permalink( $post ) ?: '';
+        }
 }
