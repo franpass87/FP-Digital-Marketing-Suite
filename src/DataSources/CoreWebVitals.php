@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\DataSources;
 
-use FP\DigitalMarketing\Models\MetricsCache;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
+use FP\DigitalMarketing\Models\CoreWebVitals as CoreWebVitalsModel;
 
 /**
  * Core Web Vitals data source integration class
@@ -107,20 +107,46 @@ class CoreWebVitals {
 		try {
 			if ( ! $this->is_connected() ) {
 				// Return demo data if not connected
-				$demo_data = $this->get_demo_metrics();
-				$this->store_metrics( $client_id, $demo_data, $start_date, $end_date );
-				return $demo_data;
-			}
+                                $demo_data = $this->get_demo_metrics();
+                                CoreWebVitalsModel::store_metrics(
+                                        $client_id,
+                                        $demo_data,
+                                        '28_days',
+                                        [
+                                                'period_start' => $start_date,
+                                                'period_end'   => $end_date,
+                                                'meta'         => [
+                                                        'origin_url'        => $this->origin_url,
+                                                        'percentile'        => 75,
+                                                        'collection_period' => '28_days',
+                                                ],
+                                        ]
+                                );
+                                return $demo_data;
+                        }
 
-			// Make actual CrUX API call
-			$metrics = $this->make_crux_api_request( $filters );
-			
-			if ( $metrics ) {
-				// Store in cache
-				PerformanceCache::set_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS, $metrics, 3600 ); // 1 hour cache
-				$this->store_metrics( $client_id, $metrics, $start_date, $end_date );
-				return $metrics;
-			}
+                        // Make actual CrUX API call
+                        $metrics = $this->make_crux_api_request( $filters );
+
+                        if ( $metrics ) {
+                                // Store in cache
+                                PerformanceCache::set_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS, $metrics, 3600 ); // 1 hour cache
+                                CoreWebVitalsModel::store_metrics(
+                                        $client_id,
+                                        $metrics,
+                                        '28_days',
+                                        [
+                                                'period_start' => $start_date,
+                                                'period_end'   => $end_date,
+                                                'meta'         => [
+                                                        'origin_url'        => $this->origin_url,
+                                                        'percentile'        => 75,
+                                                        'collection_period' => '28_days',
+                                                ],
+                                        ]
+                                );
+                                return $metrics;
+                        }
 
 			return false;
 
@@ -256,79 +282,6 @@ class CoreWebVitals {
 			'cls' => number_format( rand( 5, 30 ) / 100, 3 ), // 0.05 to 0.30
 		];
 	}
-
-	/**
-	 * Store metrics in the cache
-	 *
-	 * @param int    $client_id  Client ID
-	 * @param array  $metrics    Metrics data
-	 * @param string $start_date Start date
-	 * @param string $end_date   End date
-	 * @return void
-	 */
-        private function store_metrics( int $client_id, array $metrics, string $start_date, string $end_date ): void {
-                $period_start = $this->normalize_period_boundary( $start_date, true );
-                $period_end = $this->normalize_period_boundary( $end_date, false );
-
-                foreach ( $metrics as $metric_name => $value ) {
-                        MetricsCache::save(
-                                $client_id,
-                                self::SOURCE_ID,
-                                $metric_name,
-                                $period_start,
-                                $period_end,
-                                $value,
-                                [
-                                        'origin_url' => $this->origin_url,
-                                        'percentile' => 75,
-                                        'collection_period' => '28_days',
-                                ]
-                        );
-                }
-        }
-
-        /**
-         * Normalize incoming date or datetime strings to MySQL timestamps.
-         *
-         * Ensures the returned value is a valid YYYY-mm-dd HH:MM:SS string and
-         * clamps the time portion to the beginning or end of the day.
-         *
-         * @param string $date_string Raw date or datetime string.
-         * @param bool   $is_start    Whether this represents the period start.
-         * @return string Normalized MySQL-compatible timestamp.
-         */
-        private function normalize_period_boundary( string $date_string, bool $is_start ): string {
-                $timestamp = strtotime( $date_string );
-
-                if ( false === $timestamp && preg_match( '/^\d{4}-\d{2}-\d{2}/', $date_string, $matches ) ) {
-                        $timestamp = strtotime( $matches[0] );
-                }
-
-                if ( false === $timestamp ) {
-                        $timestamp = time();
-                }
-
-                if ( function_exists( 'wp_timezone' ) ) {
-                        $timezone = wp_timezone();
-                } else {
-                        try {
-                                $timezone = new \DateTimeZone( date_default_timezone_get() ?: 'UTC' );
-                        } catch ( \Exception $exception ) {
-                                $timezone = new \DateTimeZone( 'UTC' );
-                        }
-                }
-
-                $date_time = new \DateTime( '@' . $timestamp );
-                $date_time->setTimezone( $timezone );
-
-                if ( $is_start ) {
-                        $date_time->setTime( 0, 0, 0 );
-                } else {
-                        $date_time->setTime( 23, 59, 59 );
-                }
-
-                return $date_time->format( 'Y-m-d H:i:s' );
-        }
 
 	/**
 	 * Generate client-side beacon JavaScript for real-time metrics
