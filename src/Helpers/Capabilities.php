@@ -22,35 +22,27 @@ class Capabilities {
 	public const VIEW_DASHBOARD = 'fp_dms_view_dashboard';
 	public const MANAGE_DATA_SOURCES = 'fp_dms_manage_data_sources';
 	public const EXPORT_REPORTS = 'fp_dms_export_reports';
-	public const EXPORT_DATA = 'fp_dms_export_data';
-	public const MANAGE_ALERTS = 'fp_dms_manage_alerts';
-	public const MANAGE_SETTINGS = 'fp_dms_manage_settings';
-	public const MANAGE_CAMPAIGNS = 'fp_dms_manage_campaigns';
-	public const MANAGE_CONVERSIONS = 'fp_dms_manage_conversions';
-	public const VIEW_SEGMENTS = 'fp_dms_view_segments';
-	public const MANAGE_SEGMENTS = 'fp_dms_manage_segments';
-	public const FUNNEL_ANALYSIS = 'fp_dms_funnel_analysis';
-	public const VIEW_REPORTS = 'fp_dms_view_reports';
+        public const MANAGE_ALERTS = 'fp_dms_manage_alerts';
+        public const MANAGE_SETTINGS = 'fp_dms_manage_settings';
+        public const MANAGE_CAMPAIGNS = 'fp_dms_manage_campaigns';
+        public const MANAGE_CONVERSIONS = 'fp_dms_manage_conversions';
+        public const VIEW_SEGMENTS = 'fp_dms_view_segments';
+        public const MANAGE_SEGMENTS = 'fp_dms_manage_segments';
+        public const FUNNEL_ANALYSIS = 'fp_dms_funnel_analysis';
+        public const VIEW_REPORTS = 'fp_dms_view_reports';
 
 	/**
 	 * All custom capabilities
 	 *
 	 * @var array
 	 */
-	private static array $custom_capabilities = [
-		self::VIEW_DASHBOARD,
-		self::MANAGE_DATA_SOURCES,
-		self::EXPORT_REPORTS,
-		self::EXPORT_DATA,
-		self::MANAGE_ALERTS,
-		self::MANAGE_SETTINGS,
-		self::MANAGE_CAMPAIGNS,
-		self::MANAGE_CONVERSIONS,
-		self::VIEW_SEGMENTS,
-		self::MANAGE_SEGMENTS,
-		self::FUNNEL_ANALYSIS,
-		self::VIEW_REPORTS,
-	];
+        private static array $custom_capabilities = [
+                self::VIEW_DASHBOARD,
+                self::MANAGE_DATA_SOURCES,
+                self::EXPORT_REPORTS,
+                self::MANAGE_ALERTS,
+                self::MANAGE_SETTINGS,
+        ];
 
 	/**
 	 * Default role capabilities mapping
@@ -64,21 +56,10 @@ class Capabilities {
                         self::EXPORT_REPORTS,
                         self::MANAGE_ALERTS,
                         self::MANAGE_SETTINGS,
-                        self::MANAGE_CAMPAIGNS,
-                        self::MANAGE_CONVERSIONS,
-                        self::VIEW_SEGMENTS,
-                        self::VIEW_REPORTS,
-                        self::MANAGE_SEGMENTS,
-                        self::FUNNEL_ANALYSIS,
                 ],
                 'editor' => [
                         self::VIEW_DASHBOARD,
                         self::EXPORT_REPORTS,
-                        self::MANAGE_CAMPAIGNS,
-                        self::MANAGE_CONVERSIONS,
-                        self::VIEW_SEGMENTS,
-                        self::VIEW_REPORTS,
-                        self::FUNNEL_ANALYSIS,
                 ],
         ];
 
@@ -97,63 +78,75 @@ class Capabilities {
 	 * @return void
 	 */
 	public static function register_capabilities(): void {
-		$registered_data    = get_option( 'fp_dms_capabilities_registered', [] );
-		$serialized_mapping = wp_json_encode( self::$default_role_capabilities );
-		if ( false === $serialized_mapping ) {
-			$serialized_mapping = json_encode( self::$default_role_capabilities );
-		}
-		$expected_signature = md5( (string) $serialized_mapping );
-		$has_expected_state = is_array( $registered_data )
-			&& isset( $registered_data['signature'] )
-			&& is_string( $registered_data['signature'] )
-			&& hash_equals( $registered_data['signature'], $expected_signature );
+                $is_registered = (bool) get_option( 'fp_dms_capabilities_registered', false );
 
-		$needs_assignment = ! $has_expected_state;
+                if ( ! $is_registered ) {
+                        self::assign_default_capabilities();
+                        update_option( 'fp_dms_capabilities_registered', true );
 
-		if ( ! $needs_assignment ) {
-			foreach ( self::$default_role_capabilities as $role_name => $capabilities ) {
-				$role = get_role( $role_name );
-				if ( ! $role ) {
-					continue;
-				}
+                        Security::log_security_event( 'capabilities_registered', [
+                                'capabilities' => self::$custom_capabilities,
+                                'roles'        => array_keys( self::$default_role_capabilities ),
+                        ] );
+                        return;
+                }
 
-				foreach ( $capabilities as $capability ) {
-					if ( ! $role->has_cap( $capability ) ) {
-						$needs_assignment = true;
-						break 2;
-					}
-				}
-			}
-		}
+                if ( ! self::roles_have_expected_capabilities() ) {
+                        self::assign_default_capabilities();
+                }
+        }
 
-		if ( ! $needs_assignment ) {
-			return;
-		}
+        /**
+         * Ensure all default roles currently have the expected capabilities.
+         *
+         * @return bool
+         */
+        private static function roles_have_expected_capabilities(): bool {
+                foreach ( self::$default_role_capabilities as $role_name => $capabilities ) {
+                        $role = get_role( $role_name );
+                        if ( ! $role ) {
+                                continue;
+                        }
 
-		foreach ( self::$default_role_capabilities as $role_name => $capabilities ) {
-			$role = get_role( $role_name );
-			if ( ! $role ) {
-				continue;
-			}
+                        foreach ( $capabilities as $capability ) {
+                                $has_cap = false;
 
-			foreach ( $capabilities as $capability ) {
-				$role->add_cap( $capability, true );
-			}
-		}
+                                if ( method_exists( $role, 'has_cap' ) ) {
+                                        $has_cap = (bool) $role->has_cap( $capability );
+                                } elseif ( isset( $role->capabilities[ $capability ] ) ) {
+                                        $has_cap = (bool) $role->capabilities[ $capability ];
+                                }
 
-		$option_payload = [
-			'signature'  => $expected_signature,
-			'version'    => defined( 'FP_DIGITAL_MARKETING_VERSION' ) ? FP_DIGITAL_MARKETING_VERSION : '1.0.0',
-			'updated_at' => time(),
-		];
+                                if ( ! $has_cap ) {
+                                        return false;
+                                }
+                        }
+                }
 
-		update_option( 'fp_dms_capabilities_registered', $option_payload );
+                return true;
+        }
 
-		Security::log_security_event( 'capabilities_registered', [
-			'capabilities' => self::$custom_capabilities,
-			'roles' => array_keys( self::$default_role_capabilities ),
-		] );
-	}
+        /**
+         * Assign the default capabilities to the configured roles.
+         *
+         * @return void
+         */
+        private static function assign_default_capabilities(): void {
+                foreach ( self::$default_role_capabilities as $role_name => $capabilities ) {
+                        $role = get_role( $role_name );
+                        if ( ! $role ) {
+                                continue;
+                        }
+
+                        foreach ( $capabilities as $capability ) {
+                                if ( method_exists( $role, 'add_cap' ) ) {
+                                        $role->add_cap( $capability, true );
+                                } else {
+                                        $role->capabilities[ $capability ] = true;
+                                }
+                        }
+                }
+        }
 
 	/**
 	 * Remove custom capabilities from all roles
@@ -161,18 +154,23 @@ class Capabilities {
 	 * @return void
 	 */
 	public static function remove_capabilities(): void {
-		$roles = wp_roles()->roles;
+                $roles_object = wp_roles();
+                $roles        = is_object( $roles_object ) && isset( $roles_object->roles ) ? $roles_object->roles : [];
 
-		foreach ( $roles as $role_name => $role_info ) {
-			$role = get_role( $role_name );
-			if ( $role ) {
-				foreach ( self::$custom_capabilities as $capability ) {
-					$role->remove_cap( $capability );
-				}
-			}
-		}
+                foreach ( $roles as $role_name => $role_info ) {
+                        $role = get_role( $role_name );
+                        if ( $role ) {
+                                foreach ( self::$custom_capabilities as $capability ) {
+                                        if ( method_exists( $role, 'remove_cap' ) ) {
+                                                $role->remove_cap( $capability );
+                                        } elseif ( isset( $role->capabilities[ $capability ] ) ) {
+                                                unset( $role->capabilities[ $capability ] );
+                                        }
+                                }
+                        }
+                }
 
-		// Remove the registered flag
+                // Remove the registered flag
 		delete_option( 'fp_dms_capabilities_registered' );
 
 		// Log the capability removal
@@ -249,8 +247,20 @@ class Capabilities {
 			return [];
 		}
 
-		$role_caps = array_keys( array_filter( $role->capabilities ) );
-		return array_intersect( $role_caps, self::$custom_capabilities );
+                $capabilities = [];
+
+                if ( isset( $role->capabilities ) && is_array( $role->capabilities ) ) {
+                        $capabilities = array_keys( array_filter( $role->capabilities ) );
+                } elseif ( method_exists( $role, 'has_cap' ) ) {
+                        foreach ( self::$custom_capabilities as $custom_capability ) {
+                                if ( $role->has_cap( $custom_capability ) ) {
+                                        $capabilities[] = $custom_capability;
+                                }
+                        }
+                }
+
+                $role_caps = $capabilities;
+                return array_intersect( $role_caps, self::$custom_capabilities );
 	}
 
 	/**
@@ -265,12 +275,16 @@ class Capabilities {
 			return false;
 		}
 
-		$role = get_role( $role_name );
-		if ( ! $role ) {
-			return false;
-		}
+                $role = get_role( $role_name );
+                if ( ! $role ) {
+                        return false;
+                }
 
-		$role->add_cap( $capability, true );
+                if ( method_exists( $role, 'add_cap' ) ) {
+                        $role->add_cap( $capability, true );
+                } else {
+                        $role->capabilities[ $capability ] = true;
+                }
 
 		Security::log_security_event( 'capability_added_to_role', [
 			'role' => $role_name,
@@ -298,7 +312,11 @@ class Capabilities {
 			return false;
 		}
 
-		$role->remove_cap( $capability );
+                if ( method_exists( $role, 'remove_cap' ) ) {
+                        $role->remove_cap( $capability );
+                } elseif ( isset( $role->capabilities[ $capability ] ) ) {
+                        unset( $role->capabilities[ $capability ] );
+                }
 
 		Security::log_security_event( 'capability_removed_from_role', [
 			'role' => $role_name,
