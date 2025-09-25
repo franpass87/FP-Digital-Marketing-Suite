@@ -19,6 +19,7 @@ use FP\DigitalMarketing\Helpers\MetricsSchema;
 use FP\DigitalMarketing\Helpers\SyncEngine;
 use FP\DigitalMarketing\Helpers\Security;
 use FP\DigitalMarketing\Helpers\Capabilities;
+use FP\DigitalMarketing\Helpers\SecretsManager;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
 use FP\DigitalMarketing\Models\CustomReport;
 use FP\DigitalMarketing\Models\SocialSentiment;
@@ -167,12 +168,18 @@ class Reports {
 			$this->handle_sentiment_response();
 		}
 
-		// Handle generate sample sentiment data
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_sample_sentiment' && 
-			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
-			 Security::verify_nonce_with_logging( 'generate_sample_sentiment' ) ) {
-			$this->handle_generate_sample_sentiment();
-		}
+                // Handle generate sample sentiment data
+                if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_sample_sentiment' &&
+                         Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+                         Security::verify_nonce_with_logging( 'generate_sample_sentiment' ) ) {
+                        $this->handle_generate_sample_sentiment();
+                }
+
+                if ( isset( $_POST['action'] ) && $_POST['action'] === 'sync_google_reviews' &&
+                         Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+                         Security::verify_nonce_with_logging( 'sync_google_reviews' ) ) {
+                        $this->handle_sync_google_reviews();
+                }
 
 		// Handle manual report generation
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_reports' && 
@@ -391,11 +398,11 @@ class Reports {
 	 *
 	 * @return void
 	 */
-	private function handle_generate_sample_sentiment(): void {
-		$client_id = intval( $_POST['client_id'] ?? 0 );
-		$count = intval( $_POST['sample_count'] ?? 20 );
+        private function handle_generate_sample_sentiment(): void {
+                $client_id = intval( $_POST['client_id'] ?? 0 );
+                $count = intval( $_POST['sample_count'] ?? 20 );
 
-		if ( ! $client_id ) {
+                if ( ! $client_id ) {
 			add_action( 'admin_notices', function() {
 				echo '<div class="notice notice-error is-dismissible"><p>';
 				echo esc_html__( 'Seleziona un cliente', 'fp-digital-marketing' );
@@ -416,9 +423,85 @@ class Reports {
 				echo esc_html__( 'Errore nella generazione dei dati demo', 'fp-digital-marketing' );
 				echo '</p></div>';
 			} );
-		}
-	}
-	private function handle_custom_report_generation(): void {
+                }
+        }
+
+        /**
+         * Handle synchronization of Google Reviews for sentiment analysis.
+         */
+        private function handle_sync_google_reviews(): void {
+                $client_id = intval( $_POST['client_id'] ?? 0 );
+                $limit = intval( $_POST['review_limit'] ?? 10 );
+                $limit = max( 1, min( 50, $limit ) );
+
+                if ( ! $client_id ) {
+                        add_action( 'admin_notices', function() {
+                                echo '<div class="notice notice-error is-dismissible"><p>';
+                                echo esc_html__( 'Seleziona un cliente prima di sincronizzare le recensioni.', 'fp-digital-marketing' );
+                                echo '</p></div>';
+                        } );
+
+                        return;
+                }
+
+                $api_keys = SecretsManager::get_api_keys( true );
+                $api_key = $api_keys['google_reviews_api_key'] ?? '';
+
+                if ( empty( $api_key ) ) {
+                        add_action( 'admin_notices', function() {
+                                echo '<div class="notice notice-warning is-dismissible"><p>';
+                                echo esc_html__( "Configura prima l'API key di Google Places nella pagina Impostazioni.", 'fp-digital-marketing' );
+                                echo '</p></div>';
+                        } );
+
+                        return;
+                }
+
+                $place_id = get_post_meta( $client_id, ClienteMeta::META_GOOGLE_PLACE_ID, true );
+                if ( empty( $place_id ) ) {
+                        $place_id = $api_keys['google_reviews_place_id'] ?? '';
+                }
+
+                if ( empty( $place_id ) ) {
+                        add_action( 'admin_notices', function() {
+                                echo '<div class="notice notice-error is-dismissible"><p>';
+                                echo esc_html__( 'Nessun Google Place ID disponibile. Aggiungilo nelle impostazioni globali o nella scheda del cliente.', 'fp-digital-marketing' );
+                                echo '</p></div>';
+                        } );
+
+                        return;
+                }
+
+                $result = SocialSentimentTable::sync_google_reviews( $client_id, $place_id, $api_key, $limit );
+
+                if ( empty( $result['success'] ) ) {
+                        $error_message = isset( $result['error'] ) ? $result['error'] : __( 'Sincronizzazione non riuscita.', 'fp-digital-marketing' );
+                        add_action( 'admin_notices', function() use ( $error_message ) {
+                                echo '<div class="notice notice-error is-dismissible"><p>';
+                                echo esc_html( $error_message );
+                                echo '</p></div>';
+                        } );
+
+                        return;
+                }
+
+                $inserted = intval( $result['inserted'] ?? 0 );
+                $updated = intval( $result['updated'] ?? 0 );
+                $skipped = intval( $result['skipped'] ?? 0 );
+
+                add_action( 'admin_notices', function() use ( $inserted, $updated, $skipped ) {
+                        echo '<div class="notice notice-success is-dismissible"><p>';
+                        printf(
+                                esc_html__( 'Sincronizzazione completata: %1$d nuove recensioni, %2$d aggiornate, %3$d ignorate.', 'fp-digital-marketing' ),
+                                $inserted,
+                                $updated,
+                                $skipped
+                        );
+                        echo '</p></div>';
+                } );
+        }
+
+        private function handle_custom_report_generation(): void {
 		$client_id = intval( $_POST['client_id'] ?? 0 );
 		$format = sanitize_text_field( $_POST['format'] ?? 'pdf' );
 		$period_start = sanitize_text_field( $_POST['period_start'] ?? '' );
@@ -1013,10 +1096,62 @@ class Reports {
 			$top_issues = SocialSentimentTable::get_top_issues( $selected_client );
 		}
 
-		$platforms = SocialSentimentTable::get_available_platforms();
+                $platforms = SocialSentimentTable::get_available_platforms();
+                $api_keys = SecretsManager::get_api_keys( true );
+                $has_reviews_api_key = ! empty( $api_keys['google_reviews_api_key'] );
+                $default_place_id = $api_keys['google_reviews_place_id'] ?? '';
 
-		?>
-		<!-- Generate Sample Data Section -->
+                ?>
+                <!-- Google Reviews Sync Section -->
+                <div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <h2><?php esc_html_e( 'Sincronizza Recensioni Google', 'fp-digital-marketing' ); ?></h2>
+                        <p><?php esc_html_e( "Recupera recensioni reali da Google e calcola automaticamente il sentiment con l'AI integrata.", 'fp-digital-marketing' ); ?></p>
+
+                        <?php if ( ! $has_reviews_api_key ) : ?>
+                                <div class="notice notice-warning inline" style="margin-top: 10px;">
+                                        <p><?php esc_html_e( "Configura l'API key di Google Places nella pagina Impostazioni per poter sincronizzare le recensioni reali.", 'fp-digital-marketing' ); ?></p>
+                                </div>
+                        <?php endif; ?>
+
+                        <form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; align-items: end;">
+                                <?php wp_nonce_field( 'sync_google_reviews' ); ?>
+                                <input type="hidden" name="action" value="sync_google_reviews">
+
+                                <div>
+                                        <label for="sync_client"><strong><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></strong></label>
+                                        <select id="sync_client" name="client_id" required style="width: 100%; padding: 8px; margin-top: 5px;">
+                                                <option value=""><?php esc_html_e( 'Seleziona cliente...', 'fp-digital-marketing' ); ?></option>
+                                                <?php foreach ( $clientes as $cliente ) : ?>
+                                                        <option value="<?php echo esc_attr( $cliente->ID ); ?>"><?php echo esc_html( $cliente->post_title ); ?></option>
+                                                <?php endforeach; ?>
+                                        </select>
+                                </div>
+
+                                <div>
+                                        <label for="review_limit"><strong><?php esc_html_e( 'Numero di recensioni da importare', 'fp-digital-marketing' ); ?></strong></label>
+                                        <select id="review_limit" name="review_limit" style="width: 100%; padding: 8px; margin-top: 5px;">
+                                                <option value="5">5</option>
+                                                <option value="10" selected>10</option>
+                                                <option value="20">20</option>
+                                        </select>
+                                </div>
+
+                                <div>
+                                        <button type="submit" class="button button-primary" style="padding: 10px 20px;" <?php disabled( ! $has_reviews_api_key ); ?>>
+                                                <?php esc_html_e( 'Sincronizza Recensioni', 'fp-digital-marketing' ); ?>
+                                        </button>
+                                        <?php if ( ! empty( $default_place_id ) ) : ?>
+                                                <p class="description" style="margin-top: 8px;">&raquo; <?php esc_html_e( 'Se un cliente non ha un Place ID assegnato verrà utilizzato il fallback globale dalle impostazioni.', 'fp-digital-marketing' ); ?></p>
+                                        <?php endif; ?>
+                                </div>
+                        </form>
+
+                        <p class="description" style="margin-top: 15px;">
+                                <?php esc_html_e( 'Suggerimento: assegna il Google Place ID specifico a ciascun cliente dalla scheda "Informazioni Cliente" per ottenere risultati accurati.', 'fp-digital-marketing' ); ?>
+                        </p>
+                </div>
+
+                <!-- Generate Sample Data Section -->
 		<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
 			<h2><?php esc_html_e( 'Genera Dati Demo per l\'Analisi Sentiment', 'fp-digital-marketing' ); ?></h2>
 			<p><?php esc_html_e( 'Genera dati di esempio per testare il sistema di analisi del sentiment sociale.', 'fp-digital-marketing' ); ?></p>
