@@ -75,51 +75,114 @@ class SiteHealth {
                 $missing_tables = [];
 
                 $table_checks = [
-                        'metrics_cache' => static function(): bool {
-                                return class_exists( MetricsCacheTable::class ) && MetricsCacheTable::table_exists();
-                        },
-                        'conversion_events' => static function(): bool {
-                                return class_exists( ConversionEventsTable::class ) && ConversionEventsTable::table_exists();
-                        },
-                        'audience_segments' => static function(): bool {
-                                return class_exists( AudienceSegmentTable::class ) && AudienceSegmentTable::segments_table_exists();
-                        },
-                        'audience_membership' => static function(): bool {
-                                return class_exists( AudienceSegmentTable::class ) && AudienceSegmentTable::membership_table_exists();
-                        },
-                        'utm_campaigns' => static function(): bool {
-                                return class_exists( UTMCampaignsTable::class ) && UTMCampaignsTable::table_exists();
-                        },
-                        'funnels' => static function(): bool {
-                                return class_exists( FunnelTable::class ) && FunnelTable::table_exists() && FunnelTable::stages_table_exists();
-                        },
-                        'customer_journeys' => static function(): bool {
-                                return class_exists( CustomerJourneyTable::class ) && CustomerJourneyTable::table_exists() && CustomerJourneyTable::sessions_table_exists();
-                        },
-                        'custom_reports' => static function(): bool {
-                                return class_exists( CustomReportsTable::class ) && CustomReportsTable::table_exists();
-                        },
-                        'social_sentiment' => static function(): bool {
-                                return class_exists( SocialSentimentTable::class ) && SocialSentimentTable::table_exists();
-                        },
-                        'alert_rules' => static function(): bool {
-                                return class_exists( AlertRulesTable::class ) && AlertRulesTable::table_exists();
-                        },
-                        'anomaly_rules' => static function(): bool {
-                                return class_exists( AnomalyRulesTable::class ) && AnomalyRulesTable::table_exists();
-                        },
-                        'detected_anomalies' => static function(): bool {
-                                return class_exists( DetectedAnomaliesTable::class ) && DetectedAnomaliesTable::table_exists();
-                        },
+                        [
+                                'identifier' => class_exists( MetricsCacheTable::class ) ? MetricsCacheTable::get_table_name() : 'fp_metrics_cache',
+                                'callback'   => static function(): bool {
+                                        return class_exists( MetricsCacheTable::class ) && MetricsCacheTable::table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( ConversionEventsTable::class ) ? ConversionEventsTable::get_storage_identifier() : 'fp_conversion_events',
+                                'callback'   => static function(): bool {
+                                        if ( ! class_exists( ConversionEventsTable::class ) ) {
+                                                return false;
+                                        }
+
+                                        if ( ConversionEventsTable::is_using_option_storage() ) {
+                                                return ConversionEventsTable::database_table_exists();
+                                        }
+
+                                        return ConversionEventsTable::table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( AudienceSegmentTable::class ) ? AudienceSegmentTable::get_segments_table_name() : 'fp_audience_segments',
+                                'callback'   => static function(): bool {
+                                        return class_exists( AudienceSegmentTable::class ) && AudienceSegmentTable::segments_table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( AudienceSegmentTable::class ) ? AudienceSegmentTable::get_membership_table_name() : 'fp_segment_membership',
+                                'callback'   => static function(): bool {
+                                        return class_exists( AudienceSegmentTable::class ) && AudienceSegmentTable::membership_table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( UTMCampaignsTable::class ) ? UTMCampaignsTable::get_table_name() : 'fp_utm_campaigns',
+                                'callback'   => static function(): bool {
+                                        return class_exists( UTMCampaignsTable::class ) && UTMCampaignsTable::table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( FunnelTable::class ) ? FunnelTable::get_table_name() : 'fp_dms_funnels',
+                                'callback'   => static function(): bool {
+                                        return class_exists( FunnelTable::class ) && FunnelTable::table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( FunnelTable::class ) ? FunnelTable::get_stages_table_name() : 'fp_dms_funnel_stages',
+                                'callback'   => static function(): bool {
+                                        return class_exists( FunnelTable::class ) && FunnelTable::stages_table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( CustomerJourneyTable::class ) ? CustomerJourneyTable::get_table_name() : 'fp_dms_customer_journeys',
+                                'callback'   => static function(): bool {
+                                        return class_exists( CustomerJourneyTable::class ) && CustomerJourneyTable::table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( CustomerJourneyTable::class ) ? CustomerJourneyTable::get_sessions_table_name() : 'fp_dms_journey_sessions',
+                                'callback'   => static function(): bool {
+                                        return class_exists( CustomerJourneyTable::class ) && CustomerJourneyTable::sessions_table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( CustomReportsTable::class ) ? CustomReportsTable::get_table_name() : 'fp_dms_custom_reports',
+                                'callback'   => static function(): bool {
+                                        return class_exists( CustomReportsTable::class ) && CustomReportsTable::table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( SocialSentimentTable::class ) ? SocialSentimentTable::get_table_name() : 'fp_dms_social_sentiment',
+                                'callback'   => static function(): bool {
+                                        return class_exists( SocialSentimentTable::class ) && SocialSentimentTable::table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( AlertRulesTable::class ) ? AlertRulesTable::get_table_name() : 'fp_alert_rules',
+                                'callback'   => static function(): bool {
+                                        return class_exists( AlertRulesTable::class ) && AlertRulesTable::table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( AnomalyRulesTable::class ) ? AnomalyRulesTable::get_table_name() : 'fp_anomaly_rules',
+                                'callback'   => static function(): bool {
+                                        return class_exists( AnomalyRulesTable::class ) && AnomalyRulesTable::table_exists();
+                                },
+                        ],
+                        [
+                                'identifier' => class_exists( DetectedAnomaliesTable::class ) ? DetectedAnomaliesTable::get_table_name() : 'fp_detected_anomalies',
+                                'callback'   => static function(): bool {
+                                        return class_exists( DetectedAnomaliesTable::class ) && DetectedAnomaliesTable::table_exists();
+                                },
+                        ],
                 ];
 
-                foreach ( $table_checks as $name => $callback ) {
+                foreach ( $table_checks as $table_check ) {
+                        $identifier = (string) ( $table_check['identifier'] ?? '' );
+                        $callback   = $table_check['callback'] ?? null;
+
+                        if ( '' === $identifier || ! is_callable( $callback ) ) {
+                                continue;
+                        }
+
                         try {
                                 if ( ! $callback() ) {
-                                        $missing_tables[] = $name;
+                                        $missing_tables[] = $identifier;
                                 }
                         } catch ( \Throwable $error ) {
-                                $missing_tables[] = $name;
+                                $missing_tables[] = $identifier;
                         }
                 }
 

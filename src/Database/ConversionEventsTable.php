@@ -61,7 +61,13 @@ class ConversionEventsTable {
 	 */
         public static function create_table(): bool {
                 if ( self::using_option_storage() ) {
-                        update_option( self::OPTION_KEY, [], false );
+                        // Ensure the option storage bucket exists so that site health checks
+                        // can verify the "table" availability even before any conversion
+                        // has been recorded.
+                        if ( null === get_option( self::OPTION_KEY, null ) ) {
+                                update_option( self::OPTION_KEY, [], false );
+                        }
+
                         return true;
                 }
 
@@ -117,18 +123,65 @@ class ConversionEventsTable {
         public static function table_exists(): bool {
                 if ( self::using_option_storage() ) {
                         $records = get_option( self::OPTION_KEY, null );
+
+                        if ( null === $records ) {
+                                update_option( self::OPTION_KEY, [], false );
+                                $records = [];
+                        }
+
                         return is_array( $records );
                 }
 
-		global $wpdb;
-		$table_name = self::get_table_name();
+                global $wpdb;
+                $table_name = self::get_table_name();
 
-		if ( ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
-			return false;
-		}
+                if ( ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
+                        return false;
+                }
 
-		$result = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
-		return $result === $table_name;
+                $result = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+                return $result === $table_name;
+        }
+
+        /**
+         * Determine if the physical database table exists regardless of fallback mode.
+         *
+         * The plugin can fall back to option storage in limited environments, but the
+         * Site Health checks should still verify the original database table so that
+         * administrators can address missing schema issues.
+         *
+         * @return bool True when the physical table is present.
+         */
+        public static function database_table_exists(): bool {
+                global $wpdb;
+
+                if ( ! is_object( $wpdb ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
+                        return false;
+                }
+
+                $table_name = self::get_table_name();
+                $result     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+
+                return $result === $table_name;
+        }
+
+        /**
+         * Provide a human readable storage identifier for health checks and diagnostics.
+         *
+         * When the plugin cannot rely on a proper wpdb instance it stores conversion
+         * events inside the options table. Site health checks need to reference the
+         * correct storage backend to avoid reporting false positives.
+         *
+         * @return string Storage identifier (table name or option key).
+         */
+        public static function get_storage_identifier(): string {
+                $table_name = self::get_table_name();
+
+                if ( self::using_option_storage() ) {
+                        return $table_name . ' (option storage)';
+                }
+
+                return $table_name;
         }
 
 	/**
