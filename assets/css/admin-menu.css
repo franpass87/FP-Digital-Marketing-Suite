@@ -78,6 +78,27 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.fp-dms-page-header,
+.fp-dms-page-header h1,
+.fp-dms-page-header h2,
+.fp-dms-page-header h3,
+.fp-dms-page-header p,
+.fp-dms-page-header .description,
+.fp-dms-page-header a,
+.fp-dms-page-header .dashicons {
+    color: #ffffff !important;
+}
+
+.fp-dms-page-header .description {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.fp-dms-page-header a:hover,
+.fp-dms-page-header a:focus {
+    color: #ffe082 !important;
+    text-decoration: none;
+}
+
 .fp-dms-page-header h1 {
     color: white;
     margin: 0;

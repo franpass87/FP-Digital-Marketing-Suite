@@ -737,8 +737,8 @@ class Settings {
 			</style>
 		</div>
 
-		<div class="gsc-configuration">
-			<h4><?php esc_html_e( 'Google Search Console', 'fp-digital-marketing' ); ?></h4>
+                <div class="gsc-configuration">
+                        <h4><?php esc_html_e( 'Google Search Console', 'fp-digital-marketing' ); ?></h4>
 			
 			<table class="form-table">
 				<tr>
@@ -781,9 +781,49 @@ class Settings {
 					</p>
 				<?php endif; ?>
 			</div>
-		</div>
+                </div>
 
-		<div class="clarity-configuration">
+                <div class="google-reviews-configuration">
+                        <h4><?php esc_html_e( 'Google Reviews', 'fp-digital-marketing' ); ?></h4>
+
+                        <table class="form-table">
+                                <tr>
+                                        <th scope="row"><?php esc_html_e( 'API Key', 'fp-digital-marketing' ); ?></th>
+                                        <td>
+                                                <input
+                                                        type="password"
+                                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_reviews_api_key]"
+                                                        value="<?php echo esc_attr( $display_api_keys['google_reviews_api_key'] ?? '' ); ?>"
+                                                        class="regular-text"
+                                                        placeholder="<?php esc_attr_e( 'Google Places API Key', 'fp-digital-marketing' ); ?>"
+                                                />
+                                                <p class="description">
+                                                        <?php esc_html_e( 'Chiave API di Google Places utilizzata per scaricare le recensioni reali dei clienti.', 'fp-digital-marketing' ); ?>
+                                                </p>
+                                        </td>
+                                </tr>
+                                <tr>
+                                        <th scope="row"><?php esc_html_e( 'Place ID predefinito', 'fp-digital-marketing' ); ?></th>
+                                        <td>
+                                                <input
+                                                        type="text"
+                                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_reviews_place_id]"
+                                                        value="<?php echo esc_attr( $display_api_keys['google_reviews_place_id'] ?? '' ); ?>"
+                                                        class="regular-text"
+                                                        placeholder="<?php esc_attr_e( 'es: ChIJN1t_tDeuEmsRUsoyG83frY4', 'fp-digital-marketing' ); ?>"
+                                                />
+                                                <p class="description">
+                                                        <?php esc_html_e( 'Utilizzato come fallback quando un cliente non ha un Place ID specificato nella propria scheda.', 'fp-digital-marketing' ); ?>
+                                                </p>
+                                                <p class="description">
+                                                        <?php esc_html_e( 'Ogni cliente può definire un Place ID personalizzato nella sezione "Informazioni Cliente".', 'fp-digital-marketing' ); ?>
+                                                </p>
+                                        </td>
+                                </tr>
+                        </table>
+                </div>
+
+                <div class="clarity-configuration">
 			<h4><?php esc_html_e( 'Microsoft Clarity', 'fp-digital-marketing' ); ?></h4>
 			
 			<div class="notice notice-info inline">
@@ -879,63 +919,80 @@ class Settings {
 	 * @param mixed $input The input data.
 	 * @return array Sanitized and encrypted API keys array.
 	 */
-	public function sanitize_api_keys( $input ): array {
-		if ( ! is_array( $input ) ) {
-			return [];
-		}
+        public function sanitize_api_keys( $input ): array {
+                if ( ! is_array( $input ) ) {
+                        return [];
+                }
 
-		// Verify nonce for API key changes
-		if ( ! Security::verify_nonce_with_logging( self::NONCE_ACTION, '_wpnonce_settings' ) ) {
-			wp_die( esc_html__( 'Errore di sicurezza: token non valido', 'fp-digital-marketing' ) );
-		}
+                $current_keys = SecretsManager::get_api_keys();
 
-		// Verify user capability
-		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ) {
-			wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
-		}
+                if ( ! isset( $_REQUEST['_wpnonce_settings'] ) ) {
+                        return $current_keys;
+                }
 
-               $current_keys = SecretsManager::get_api_keys();
-               $sanitized = [];
+                if ( ! Security::verify_nonce_with_logging( self::NONCE_ACTION, '_wpnonce_settings' ) ) {
+                        add_settings_error(
+                                self::OPTION_API_KEYS,
+                                'invalid_nonce',
+                                __( 'Impossibile verificare la richiesta. Riprova.', 'fp-digital-marketing' ),
+                                'error'
+                        );
 
-               foreach ( $input as $key => $value ) {
-                       $sanitized_key = sanitize_key( $key );
+                        return $current_keys;
+                }
 
-                       if ( '' === $sanitized_key ) {
-                               continue;
-                       }
+                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ) {
+                        add_settings_error(
+                                self::OPTION_API_KEYS,
+                                'insufficient_permissions',
+                                __( 'Non sei autorizzato a modificare queste impostazioni.', 'fp-digital-marketing' ),
+                                'error'
+                        );
 
-                       if ( is_array( $value ) ) {
-                               continue;
-                       }
+                        return $current_keys;
+                }
 
-                       $scalar_value = is_scalar( $value ) ? (string) $value : '';
-                       $sanitized_value = sanitize_text_field( wp_unslash( $scalar_value ) );
+                $sanitized = [];
 
-                       $sanitized[ $sanitized_key ] = $sanitized_value;
-               }
+                foreach ( $input as $key => $value ) {
+                        $sanitized_key = sanitize_key( $key );
 
-               $prepared = SecretsManager::prepare_for_storage( $sanitized, $current_keys );
+                        if ( '' === $sanitized_key ) {
+                                continue;
+                        }
 
-               foreach ( $prepared['updated_sensitive_keys'] as $updated_key ) {
-                       if ( isset( $sanitized[ $updated_key ] ) && '' !== $sanitized[ $updated_key ] ) {
-                               error_log( sprintf(
-                                       'FP Digital Marketing: API key %s updated by user %d',
-                                       $updated_key,
-                                       get_current_user_id()
-                               ) );
-                       }
-               }
+                        if ( is_array( $value ) ) {
+                                continue;
+                        }
 
-               if ( ! empty( $prepared['errors'] ) ) {
-                       foreach ( $prepared['errors'] as $error_key ) {
-                               error_log( sprintf(
-                                       'FP Digital Marketing: unable to decrypt stored secret for %s during save. Re-encrypting with the provided value.',
-                                       $error_key
-                               ) );
-                       }
-               }
+                        $scalar_value    = is_scalar( $value ) ? (string) $value : '';
+                        $sanitized_value = sanitize_text_field( wp_unslash( $scalar_value ) );
 
-               return $prepared['values'];
+                        $sanitized[ $sanitized_key ] = $sanitized_value;
+                }
+
+                $prepared = SecretsManager::prepare_for_storage( $sanitized, $current_keys );
+
+                foreach ( $prepared['updated_sensitive_keys'] as $updated_key ) {
+                        if ( isset( $sanitized[ $updated_key ] ) && '' !== $sanitized[ $updated_key ] ) {
+                                error_log( sprintf(
+                                        'FP Digital Marketing: API key %s updated by user %d',
+                                        $updated_key,
+                                        get_current_user_id()
+                                ) );
+                        }
+                }
+
+                if ( ! empty( $prepared['errors'] ) ) {
+                        foreach ( $prepared['errors'] as $error_key ) {
+                                error_log( sprintf(
+                                        'FP Digital Marketing: unable to decrypt stored secret for %s during save. Re-encrypting with the provided value.',
+                                        $error_key
+                                ) );
+                        }
+                }
+
+                return $prepared['values'];
         }
 
 	/**
