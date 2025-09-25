@@ -52,6 +52,7 @@ use FP\DigitalMarketing\Helpers\DashboardWidgets;
 use FP\DigitalMarketing\Helpers\DataExporter;
 use FP\DigitalMarketing\Helpers\EmailNotifications;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
+use FP\DigitalMarketing\Helpers\URLShortener;
 use FP\DigitalMarketing\Helpers\SiteHealth;
 
 /**
@@ -510,16 +511,25 @@ class DigitalMarketingSuite {
 			$this->log_initialization_error( 'FunnelAnalysisAdmin->init()', $e );
 		}
 
-		try {
-			if ( $this->platform_connections !== null ) {
-				$this->platform_connections->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'PlatformConnections->init()', $e );
-		}
+                try {
+                        if ( $this->platform_connections !== null ) {
+                                $this->platform_connections->init();
+                        }
+                } catch ( \Throwable $e ) {
+                        $this->log_initialization_error( 'PlatformConnections->init()', $e );
+                }
 
-		// Initialize centralized menu manager
-		try {
+                // Bootstrap helpers that need early front-end hooks.
+                try {
+                        if ( class_exists( URLShortener::class ) ) {
+                                URLShortener::bootstrap();
+                        }
+                } catch ( \Throwable $e ) {
+                        $this->log_initialization_error( 'URLShortener::bootstrap()', $e );
+                }
+
+                // Initialize centralized menu manager
+                try {
 			if ( $this->menu_manager !== null ) {
 				$this->menu_manager->init();
 			}
