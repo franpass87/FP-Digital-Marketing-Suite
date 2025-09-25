@@ -30,6 +30,16 @@ class SettingsManager {
         public const OPTION_WIZARD_MENU_STATE = 'fp_digital_marketing_menu_state';
 
         /**
+         * Legacy wizard completion flag option.
+         */
+        private const LEGACY_OPTION_WIZARD_COMPLETED = 'fp_dms_setup_completed';
+
+        /**
+         * Legacy wizard completion timestamp option.
+         */
+        private const LEGACY_OPTION_WIZARD_COMPLETED_TIME = 'fp_dms_setup_completed_time';
+
+        /**
          * API keys option.
          */
         public const OPTION_API_KEYS = 'fp_digital_marketing_api_keys';
@@ -84,6 +94,20 @@ class SettingsManager {
                 self::OPTION_GOOGLE_OAUTH_TOKENS => [ 'fp_dms_google_oauth_tokens' ],
                 self::OPTION_GOOGLE_OAUTH_SETTINGS => [ 'fp_dms_google_oauth_settings' ],
         ];
+
+        /**
+         * Migrate legacy option names into the canonical configuration keys.
+         *
+         * @return void
+         */
+        public static function migrate_legacy_options(): void {
+                if ( ! function_exists( 'get_option' ) || ! function_exists( 'update_option' ) ) {
+                        return;
+                }
+
+                self::migrate_option_fallbacks_to_primary();
+                self::migrate_wizard_completion_state();
+        }
 
         /**
          * Get an option value with fallback support.
@@ -151,6 +175,21 @@ class SettingsManager {
                 }
 
                 return true;
+        }
+
+        /**
+         * Determine whether the onboarding wizard has been completed.
+         *
+         * @return bool
+         */
+        public static function is_wizard_completed(): bool {
+                $state = self::get_option( self::OPTION_WIZARD_COMPLETED, null );
+
+                if ( is_array( $state ) ) {
+                        return ! empty( $state['completed'] );
+                }
+
+                return (bool) get_option( self::LEGACY_OPTION_WIZARD_COMPLETED, false );
         }
 
         /**
@@ -277,6 +316,74 @@ class SettingsManager {
                 }
 
                 return $state;
+        }
+
+        /**
+         * Migrate legacy fallback options into their canonical counterparts.
+         *
+         * @return void
+         */
+        private static function migrate_option_fallbacks_to_primary(): void {
+                $sentinel = new \stdClass();
+
+                foreach ( self::OPTION_FALLBACKS as $primary => $fallbacks ) {
+                        $current = get_option( $primary, $sentinel );
+
+                        if ( $current !== $sentinel ) {
+                                continue;
+                        }
+
+                        foreach ( $fallbacks as $legacy_option ) {
+                                $legacy_value = get_option( $legacy_option, $sentinel );
+
+                                if ( $legacy_value === $sentinel ) {
+                                        continue;
+                                }
+
+                                update_option( $primary, $legacy_value, false );
+                                delete_option( $legacy_option );
+                                break;
+                        }
+                }
+        }
+
+        /**
+         * Normalize the wizard completion option when legacy metadata is detected.
+         *
+         * @return void
+         */
+        private static function migrate_wizard_completion_state(): void {
+                $sentinel = new \stdClass();
+                $current  = get_option( self::OPTION_WIZARD_COMPLETED, $sentinel );
+
+                if ( is_array( $current ) && array_key_exists( 'completed', $current ) ) {
+                        return;
+                }
+
+                $legacy_completed = get_option( self::LEGACY_OPTION_WIZARD_COMPLETED, $sentinel );
+
+                if ( $legacy_completed === $sentinel ) {
+                        return;
+                }
+
+                $timestamp = function_exists( 'current_time' ) ? (int) current_time( 'timestamp' ) : time();
+                $payload   = is_array( $current ) ? $current : [];
+
+                $payload['completed'] = (bool) $legacy_completed;
+
+                $legacy_time = get_option( self::LEGACY_OPTION_WIZARD_COMPLETED_TIME, $sentinel );
+
+                if ( $legacy_time !== $sentinel && is_numeric( $legacy_time ) ) {
+                        $payload['completed_at'] = (int) $legacy_time;
+                } elseif ( ! isset( $payload['completed_at'] ) ) {
+                        $payload['completed_at'] = $timestamp;
+                }
+
+                if ( ! isset( $payload['migrated_at'] ) ) {
+                        $payload['migrated_at'] = $timestamp;
+                }
+
+                update_option( self::OPTION_WIZARD_COMPLETED, $payload, false );
         }
 
         /**
