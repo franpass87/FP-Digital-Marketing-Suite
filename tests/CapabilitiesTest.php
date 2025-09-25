@@ -74,6 +74,7 @@ class CapabilitiesTest extends TestCase {
                                         $editor_caps = [
                                                 Capabilities::VIEW_DASHBOARD,
                                                 Capabilities::EXPORT_REPORTS,
+                                                Capabilities::EXPORT_DATA,
                                                 Capabilities::VIEW_REPORTS,
                                                 Capabilities::VIEW_SEGMENTS,
                                                 Capabilities::FUNNEL_ANALYSIS,
@@ -125,7 +126,8 @@ class CapabilitiesTest extends TestCase {
 		$this->assertEquals( 'fp_dms_view_dashboard', Capabilities::VIEW_DASHBOARD );
 		$this->assertEquals( 'fp_dms_manage_data_sources', Capabilities::MANAGE_DATA_SOURCES );
 		$this->assertEquals( 'fp_dms_export_reports', Capabilities::EXPORT_REPORTS );
-		$this->assertEquals( 'fp_dms_manage_alerts', Capabilities::MANAGE_ALERTS );
+                $this->assertEquals( 'fp_dms_export_data', Capabilities::EXPORT_DATA );
+                $this->assertEquals( 'fp_dms_manage_alerts', Capabilities::MANAGE_ALERTS );
                 $this->assertEquals( 'fp_dms_manage_settings', Capabilities::MANAGE_SETTINGS );
                 $this->assertEquals( 'fp_dms_manage_campaigns', Capabilities::MANAGE_CAMPAIGNS );
                 $this->assertEquals( 'fp_dms_manage_conversions', Capabilities::MANAGE_CONVERSIONS );
@@ -139,10 +141,11 @@ class CapabilitiesTest extends TestCase {
                 $capabilities = Capabilities::get_custom_capabilities();
 
                 $this->assertIsArray( $capabilities );
-                $this->assertCount( 11, $capabilities );
+                $this->assertCount( 12, $capabilities );
                 $this->assertContains( Capabilities::VIEW_DASHBOARD, $capabilities );
                 $this->assertContains( Capabilities::MANAGE_DATA_SOURCES, $capabilities );
                 $this->assertContains( Capabilities::EXPORT_REPORTS, $capabilities );
+                $this->assertContains( Capabilities::EXPORT_DATA, $capabilities );
                 $this->assertContains( Capabilities::MANAGE_ALERTS, $capabilities );
                 $this->assertContains( Capabilities::MANAGE_SETTINGS, $capabilities );
                 $this->assertContains( Capabilities::MANAGE_CAMPAIGNS, $capabilities );
@@ -163,10 +166,11 @@ class CapabilitiesTest extends TestCase {
 
                 // Administrator should have all capabilities
                 $admin_caps = $role_capabilities['administrator'];
-                $this->assertCount( 11, $admin_caps );
+                $this->assertCount( 12, $admin_caps );
                 $this->assertContains( Capabilities::VIEW_DASHBOARD, $admin_caps );
                 $this->assertContains( Capabilities::MANAGE_DATA_SOURCES, $admin_caps );
                 $this->assertContains( Capabilities::EXPORT_REPORTS, $admin_caps );
+                $this->assertContains( Capabilities::EXPORT_DATA, $admin_caps );
                 $this->assertContains( Capabilities::MANAGE_ALERTS, $admin_caps );
                 $this->assertContains( Capabilities::MANAGE_SETTINGS, $admin_caps );
                 $this->assertContains( Capabilities::MANAGE_CAMPAIGNS, $admin_caps );
@@ -178,9 +182,10 @@ class CapabilitiesTest extends TestCase {
 
                 // Editor should have limited capabilities
                 $editor_caps = $role_capabilities['editor'];
-                $this->assertCount( 5, $editor_caps );
+                $this->assertCount( 6, $editor_caps );
                 $this->assertContains( Capabilities::VIEW_DASHBOARD, $editor_caps );
                 $this->assertContains( Capabilities::EXPORT_REPORTS, $editor_caps );
+                $this->assertContains( Capabilities::EXPORT_DATA, $editor_caps );
                 $this->assertContains( Capabilities::VIEW_REPORTS, $editor_caps );
                 $this->assertContains( Capabilities::VIEW_SEGMENTS, $editor_caps );
                 $this->assertContains( Capabilities::FUNNEL_ANALYSIS, $editor_caps );
@@ -197,6 +202,7 @@ class CapabilitiesTest extends TestCase {
                 $this->assertTrue( Capabilities::user_can( Capabilities::VIEW_DASHBOARD, 0, 1 ) );
                 $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_DATA_SOURCES, 0, 1 ) );
                 $this->assertTrue( Capabilities::user_can( Capabilities::EXPORT_REPORTS, 0, 1 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::EXPORT_DATA, 0, 1 ) );
                 $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_ALERTS, 0, 1 ) );
                 $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_SETTINGS, 0, 1 ) );
                 $this->assertTrue( Capabilities::user_can( Capabilities::MANAGE_CAMPAIGNS, 0, 1 ) );
@@ -210,6 +216,7 @@ class CapabilitiesTest extends TestCase {
                 $this->assertTrue( Capabilities::user_can( Capabilities::VIEW_DASHBOARD, 0, 2 ) );
                 $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_DATA_SOURCES, 0, 2 ) );
                 $this->assertTrue( Capabilities::user_can( Capabilities::EXPORT_REPORTS, 0, 2 ) );
+                $this->assertTrue( Capabilities::user_can( Capabilities::EXPORT_DATA, 0, 2 ) );
                 $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_ALERTS, 0, 2 ) );
                 $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_SETTINGS, 0, 2 ) );
                 $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_CAMPAIGNS, 0, 2 ) );
@@ -223,6 +230,7 @@ class CapabilitiesTest extends TestCase {
                 $this->assertFalse( Capabilities::user_can( Capabilities::VIEW_DASHBOARD, 0, 3 ) );
                 $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_DATA_SOURCES, 0, 3 ) );
                 $this->assertFalse( Capabilities::user_can( Capabilities::EXPORT_REPORTS, 0, 3 ) );
+                $this->assertFalse( Capabilities::user_can( Capabilities::EXPORT_DATA, 0, 3 ) );
                 $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_ALERTS, 0, 3 ) );
                 $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_SETTINGS, 0, 3 ) );
                 $this->assertFalse( Capabilities::user_can( Capabilities::MANAGE_CAMPAIGNS, 0, 3 ) );
@@ -238,6 +246,7 @@ class CapabilitiesTest extends TestCase {
                 $this->assertTrue( Capabilities::current_user_can( Capabilities::VIEW_DASHBOARD ) );
                 $this->assertTrue( Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) );
                 $this->assertTrue( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) );
+                $this->assertTrue( Capabilities::current_user_can( Capabilities::EXPORT_DATA ) );
                 $this->assertTrue( Capabilities::current_user_can( Capabilities::MANAGE_ALERTS ) );
                 $this->assertTrue( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) );
                 $this->assertTrue( Capabilities::current_user_can( Capabilities::VIEW_REPORTS ) );
@@ -294,6 +303,7 @@ class CapabilitiesTest extends TestCase {
 		$this->assertEquals( 'View Dashboard', Capabilities::get_capability_label( Capabilities::VIEW_DASHBOARD ) );
                 $this->assertEquals( 'Manage Data Sources', Capabilities::get_capability_label( Capabilities::MANAGE_DATA_SOURCES ) );
                 $this->assertEquals( 'Export Reports', Capabilities::get_capability_label( Capabilities::EXPORT_REPORTS ) );
+                $this->assertEquals( 'Export Data', Capabilities::get_capability_label( Capabilities::EXPORT_DATA ) );
                 $this->assertEquals( 'Manage Alerts', Capabilities::get_capability_label( Capabilities::MANAGE_ALERTS ) );
                 $this->assertEquals( 'Manage Settings', Capabilities::get_capability_label( Capabilities::MANAGE_SETTINGS ) );
                 $this->assertEquals( 'Manage Campaigns', Capabilities::get_capability_label( Capabilities::MANAGE_CAMPAIGNS ) );
@@ -316,6 +326,9 @@ class CapabilitiesTest extends TestCase {
 
                 $reports_desc = Capabilities::get_capability_description( Capabilities::EXPORT_REPORTS );
                 $this->assertStringContainsString( 'report', strtolower( $reports_desc ) );
+
+                $data_desc = Capabilities::get_capability_description( Capabilities::EXPORT_DATA );
+                $this->assertStringContainsString( 'export', strtolower( $data_desc ) );
 
                 $alerts_desc = Capabilities::get_capability_description( Capabilities::MANAGE_ALERTS );
                 $this->assertStringContainsString( 'alert', strtolower( $alerts_desc ) );
