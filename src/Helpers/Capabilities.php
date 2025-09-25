@@ -21,7 +21,8 @@ class Capabilities {
 	 */
 	public const VIEW_DASHBOARD = 'fp_dms_view_dashboard';
 	public const MANAGE_DATA_SOURCES = 'fp_dms_manage_data_sources';
-	public const EXPORT_REPORTS = 'fp_dms_export_reports';
+        public const EXPORT_REPORTS = 'fp_dms_export_reports';
+        public const EXPORT_DATA = 'fp_dms_export_data';
         public const MANAGE_ALERTS = 'fp_dms_manage_alerts';
         public const MANAGE_SETTINGS = 'fp_dms_manage_settings';
         public const MANAGE_CAMPAIGNS = 'fp_dms_manage_campaigns';
@@ -40,6 +41,7 @@ class Capabilities {
                 self::VIEW_DASHBOARD,
                 self::MANAGE_DATA_SOURCES,
                 self::EXPORT_REPORTS,
+                self::EXPORT_DATA,
                 self::MANAGE_ALERTS,
                 self::MANAGE_SETTINGS,
                 self::MANAGE_CAMPAIGNS,
@@ -60,6 +62,7 @@ class Capabilities {
                         self::VIEW_DASHBOARD,
                         self::MANAGE_DATA_SOURCES,
                         self::EXPORT_REPORTS,
+                        self::EXPORT_DATA,
                         self::MANAGE_ALERTS,
                         self::MANAGE_SETTINGS,
                         self::MANAGE_CAMPAIGNS,
@@ -72,6 +75,7 @@ class Capabilities {
                 'editor' => [
                         self::VIEW_DASHBOARD,
                         self::EXPORT_REPORTS,
+                        self::EXPORT_DATA,
                         self::VIEW_REPORTS,
                         self::VIEW_SEGMENTS,
                         self::FUNNEL_ANALYSIS,
@@ -357,6 +361,7 @@ class Capabilities {
                         self::VIEW_DASHBOARD => __( 'View Dashboard', 'fp-digital-marketing' ),
                         self::MANAGE_DATA_SOURCES => __( 'Manage Data Sources', 'fp-digital-marketing' ),
                         self::EXPORT_REPORTS => __( 'Export Reports', 'fp-digital-marketing' ),
+                        self::EXPORT_DATA => __( 'Export Data', 'fp-digital-marketing' ),
                         self::MANAGE_ALERTS => __( 'Manage Alerts', 'fp-digital-marketing' ),
                         self::MANAGE_SETTINGS => __( 'Manage Settings', 'fp-digital-marketing' ),
                         self::MANAGE_CAMPAIGNS => __( 'Manage Campaigns', 'fp-digital-marketing' ),
@@ -381,6 +386,7 @@ class Capabilities {
                         self::VIEW_DASHBOARD => __( 'Access to view dashboard and metrics overview', 'fp-digital-marketing' ),
                         self::MANAGE_DATA_SOURCES => __( 'Configure and manage data source connections (GA4, GSC, etc.)', 'fp-digital-marketing' ),
                         self::EXPORT_REPORTS => __( 'Export reports and data in various formats', 'fp-digital-marketing' ),
+                        self::EXPORT_DATA => __( 'Export marketing data sets and configuration backups', 'fp-digital-marketing' ),
                         self::MANAGE_ALERTS => __( 'Create, modify and manage alert rules and notifications', 'fp-digital-marketing' ),
                         self::MANAGE_SETTINGS => __( 'Access plugin settings and configuration options', 'fp-digital-marketing' ),
                         self::MANAGE_CAMPAIGNS => __( 'Create and manage UTM marketing campaigns', 'fp-digital-marketing' ),
