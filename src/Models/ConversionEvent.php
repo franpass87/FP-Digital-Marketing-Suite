@@ -232,10 +232,27 @@ class ConversionEvent {
 	 * @return self|null ConversionEvent instance or null if not found
 	 */
         public static function load_by_event_id( string $event_id, string $source ): ?self {
+                if ( ConversionEventsTable::is_using_option_storage() ) {
+                        $events = ConversionEventsTable::get_events(
+                                [
+                                        'event_id' => $event_id,
+                                        'source'   => $source,
+                                ],
+                                1,
+                                0
+                        );
+
+                        if ( ! empty( $events ) ) {
+                                return new self( $events[0] );
+                        }
+
+                        return null;
+                }
+
                 global $wpdb;
 
                 $table_name = ConversionEventsTable::get_table_name();
-                $sql = $wpdb->prepare(
+                $sql        = $wpdb->prepare(
                         "SELECT * FROM $table_name WHERE event_id = %s AND source = %s LIMIT 1",
                         $event_id,
                         $source
@@ -258,16 +275,33 @@ class ConversionEvent {
          * @return self|null ConversionEvent instance or null if not found
          */
         public static function load_by_source_event_id( string $source_event_id, string $source ): ?self {
-                global $wpdb;
-
                 $source_event_id = trim( $source_event_id );
 
                 if ( '' === $source_event_id ) {
                         return null;
                 }
 
+                if ( ConversionEventsTable::is_using_option_storage() ) {
+                        $events = ConversionEventsTable::get_events(
+                                [
+                                        'source_event_id' => $source_event_id,
+                                        'source'          => $source,
+                                ],
+                                1,
+                                0
+                        );
+
+                        if ( ! empty( $events ) ) {
+                                return new self( $events[0] );
+                        }
+
+                        return null;
+                }
+
+                global $wpdb;
+
                 $table_name = ConversionEventsTable::get_table_name();
-                $sql = $wpdb->prepare(
+                $sql        = $wpdb->prepare(
                         "SELECT * FROM $table_name WHERE source_event_id = %s AND source = %s LIMIT 1",
                         $source_event_id,
                         $source
