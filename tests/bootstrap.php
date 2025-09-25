@@ -57,11 +57,98 @@ if ( file_exists( '/tmp/wordpress-tests-lib/includes/bootstrap.php' ) ) {
 		}
 	}
 
-	if ( ! function_exists( 'sanitize_text_field' ) ) {
-		function sanitize_text_field( $str ) {
-			return trim( strip_tags( $str ) );
-		}
-	}
+        if ( ! function_exists( 'sanitize_text_field' ) ) {
+                function sanitize_text_field( $str ) {
+                        return trim( strip_tags( $str ) );
+                }
+        }
+
+        if ( ! function_exists( 'absint' ) ) {
+                function absint( $maybeint ) {
+                        return (int) max( 0, (int) $maybeint );
+                }
+        }
+
+        if ( ! class_exists( 'WP_Error' ) ) {
+                class WP_Error {
+                        /**
+                         * Collected error codes and messages.
+                         *
+                         * @var array<string, array<int, string>>
+                         */
+                        public $errors = [];
+
+                        /**
+                         * Optional error data keyed by code.
+                         *
+                         * @var array<string, mixed>
+                         */
+                        public $error_data = [];
+
+                        public function __construct( $code = '', $message = '', $data = '' ) {
+                                if ( '' !== $code ) {
+                                        $this->add( $code, $message, $data );
+                                }
+                        }
+
+                        public function add( $code, $message, $data = '' ) {
+                                if ( ! isset( $this->errors[ $code ] ) ) {
+                                        $this->errors[ $code ] = [];
+                                }
+
+                                $this->errors[ $code ][] = $message;
+
+                                if ( '' !== $data ) {
+                                        $this->error_data[ $code ] = $data;
+                                }
+                        }
+
+                        public function get_error_codes() {
+                                return array_keys( $this->errors );
+                        }
+
+                        public function get_error_code() {
+                                $codes = $this->get_error_codes();
+                                return $codes ? $codes[0] : '';
+                        }
+
+                        public function get_error_messages( $code = '' ) {
+                                if ( '' !== $code ) {
+                                        return $this->errors[ $code ] ?? [];
+                                }
+
+                                return array_reduce(
+                                        $this->errors,
+                                        static function ( array $carry, array $messages ) {
+                                                return array_merge( $carry, $messages );
+                                        },
+                                        []
+                                );
+                        }
+
+                        public function get_error_message( $code = '' ) {
+                                $messages = $this->get_error_messages( $code );
+                                return $messages ? $messages[0] : '';
+                        }
+
+                        public function get_error_data( $code = '' ) {
+                                if ( '' !== $code ) {
+                                        return $this->error_data[ $code ] ?? null;
+                                }
+
+                                if ( empty( $this->error_data ) ) {
+                                        return null;
+                                }
+
+                                $first_code = array_key_first( $this->error_data );
+                                return $this->error_data[ $first_code ] ?? null;
+                        }
+
+                        public function has_errors() {
+                                return ! empty( $this->errors );
+                        }
+                }
+        }
 
 	if ( ! function_exists( 'sanitize_sql_orderby' ) ) {
 		function sanitize_sql_orderby( $orderby ) {
