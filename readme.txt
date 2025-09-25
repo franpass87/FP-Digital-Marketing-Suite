@@ -1,76 +1,61 @@
 === FP Digital Marketing Suite ===
-Contributors: franpass87
+Contributors: francescopasseri
 Tags: digital marketing, analytics, google analytics, seo, marketing automation
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
-A comprehensive digital marketing toolkit with advanced client metadata management, analytics integration, and marketing automation features.
+A comprehensive digital marketing toolkit with advanced client intelligence, omni-channel analytics and marketing automation.
 
 == Description ==
 
-FP Digital Marketing Suite is a powerful WordPress plugin that provides a complete digital marketing toolkit for agencies and businesses. It offers comprehensive client management, advanced analytics integration, SEO optimization, and marketing automation features.
+FP Digital Marketing Suite delivers a unified operating system for agencies and growth teams. Manage client relationships, orchestrate campaigns, connect analytics sources and automate reporting from a single WordPress plugin maintained by Francesco Passeri.
 
-= Key Features =
+= Key Features in 1.1.0 =
 
-**Client Management**
-* Custom Cliente post type for comprehensive client data
-* Advanced metadata management
-* Client-specific analytics and reporting
-* Relationship tracking and history
+**Client Intelligence Hub**
+* Enhanced Cliente post type with lifecycle tagging, attachments and relationship history
+* Capability-driven access control for analysts, editors and account managers
 
-**Analytics & Integrations**
-* Google Analytics 4 integration
-* Google Ads integration
-* Google Search Console integration
-* Microsoft Clarity integration
-* Core Web Vitals monitoring
+**Unified Analytics & Integrations**
+* Google Analytics 4, Google Ads, Google Search Console and Microsoft Clarity connectors
+* Core Web Vitals insights and a normalization pipeline across analytics sources
 
-**Marketing Automation**
-* UTM campaign tracking and management
-* Conversion event tracking
-* Audience segmentation
-* Automated email notifications
-* Alert and anomaly detection system
+**Marketing Automation & Alerts**
+* Multi-step funnel automation, UTM campaign management and conversion orchestration
+* Proactive alerting engine with anomaly detection, SLA tracking and acknowledgement workflow
 
-**SEO Features**
-* Advanced SEO metadata management
-* XML sitemap generation
-* Schema markup implementation
-* Content optimization tools
-* FAQ blocks with structured data
+**Reporting Workspace**
+* PDF/CSV scheduled reports, collaborative dashboards and historical trending library
+* Extensible metrics query API for internal tools and client portals
 
-**Performance & Security**
-* Advanced caching system
-* Performance monitoring
-* Security enhancements
-* GDPR compliance framework
-* Admin interface optimizations
+**Performance & Compliance**
+* Layered caching, batched aggregations and admin UI optimizations for large portfolios
+* GDPR-ready data governance with consent, retention and export tooling
 
-**Reporting & Analytics**
-* Comprehensive dashboard widgets
-* Advanced metrics aggregation
-* Automated report generation
-* Trend analysis and forecasting
-* Data export capabilities
+= Release Timeline =
+
+* **1.1.0** – Reporting workspace, alert center, documentation refresh and new author branding
+* **1.0.1** – Metrics aggregation pipeline, onboarding wizard and performance optimizations
+* **1.0.0** – Initial public release with client management, analytics integrations and SEO suite
 
 = Who Is This For? =
 
-* **Digital Marketing Agencies** - Manage multiple clients with comprehensive analytics
-* **Business Owners** - Track and optimize your digital marketing efforts
-* **SEO Professionals** - Advanced SEO tools and performance monitoring
-* **Developers** - Extensible architecture with comprehensive APIs
+* **Digital Marketing Agencies** – Operate multiple client projects with reliable data governance
+* **Business Owners** – Monitor conversions, performance and marketing ROI from one dashboard
+* **SEO Professionals** – Access structured metadata tools, Core Web Vitals insights and schema automation
+* **Developers** – Extend a modern, well-tested architecture with hooks, APIs and documentation
 
-= Technical Features =
+= Technical Overview =
 
-* **Modern PHP Architecture** - Built with PHP 7.4+ and modern coding standards
-* **WordPress Standards Compliant** - Follows all WordPress development best practices
-* **Database Optimization** - Efficient caching and query optimization
-* **Security First** - Comprehensive security measures and GDPR compliance
-* **Extensible Design** - Well-documented APIs for custom extensions
+* **Modern PHP Architecture** – Built with PHP 7.4+, namespaces and strict typing
+* **WordPress Standards Compliant** – PHPCS + PHPStan enforced via CI pipelines
+* **Database Optimization** – Efficient caching, batched aggregations and asynchronous processing
+* **Security First** – Capability checks, nonce validation and GDPR-friendly workflows
+* **Extensible Design** – Modular services, REST APIs and filterable data providers
 
 == Installation ==
 
@@ -92,9 +77,9 @@ FP Digital Marketing Suite is a powerful WordPress plugin that provides a comple
 = After Installation =
 
 1. Navigate to Settings → FP Digital Marketing to configure the plugin
-2. Set up your API integrations (Google Analytics, Google Ads, etc.)
-3. Configure client management settings
-4. Review the dashboard for new widgets and features
+2. Connect analytics sources (Google Analytics, Google Ads, Search Console, Microsoft Clarity)
+3. Review onboarding wizard guidance and automation defaults
+4. Explore dashboards, reports and alert policies
 
 == Frequently Asked Questions ==
 
@@ -108,12 +93,12 @@ FP Digital Marketing Suite is a powerful WordPress plugin that provides a comple
 = Do I need API keys for external services? =
 
 Some features require API keys for external services:
-* Google Analytics 4 - for analytics data
-* Google Ads - for advertising metrics
-* Google Search Console - for SEO data
-* Microsoft Clarity - for user behavior analytics
+* Google Analytics 4 – analytics data
+* Google Ads – advertising metrics
+* Google Search Console – SEO insights
+* Microsoft Clarity – user behavior analytics
 
-These integrations are optional, and many features work without them.
+Integrations are optional and many tools (client management, SEO, automation rules) work without them.
 
 = Is the plugin GDPR compliant? =
 
@@ -127,60 +112,58 @@ Yes, the plugin includes a comprehensive GDPR compliance framework with:
 
 Absolutely! The plugin is built with extensibility in mind:
 * Comprehensive action and filter hooks
-* Well-documented APIs
+* Well-documented REST and internal APIs
 * Modular architecture
-* Developer-friendly codebase
+* Developer-friendly codebase with tests
 
 = Is there documentation available? =
 
 Yes, extensive documentation is included:
-* Installation and configuration guides
-* API documentation
-* Developer guides
-* Feature-specific documentation
+* Installation and deployment guides
+* API documentation and data model references
+* Developer onboarding playbooks
+* Feature-specific implementation manuals
 
 == Screenshots ==
 
-1. **Dashboard Overview** - Comprehensive analytics dashboard with key metrics
-2. **Client Management** - Advanced client data management interface  
-3. **Settings Page** - Easy-to-use configuration interface
-4. **Analytics Integration** - Google Analytics 4 integration setup
-5. **SEO Tools** - Advanced SEO metadata management
-6. **Campaign Tracking** - UTM campaign management interface
+1. **Dashboard Overview** – Comprehensive analytics dashboard with key metrics
+2. **Client Management** – Advanced client data management interface
+3. **Settings Page** – Easy-to-use configuration interface
+4. **Analytics Integration** – Google Analytics 4 integration setup
+5. **SEO Tools** – Advanced SEO metadata management
+6. **Campaign Tracking** – UTM campaign management interface
 
 == Changelog ==
 
+= 1.1.0 =
+* Added advanced reporting workspace with scheduled exports and shared dashboards
+* Introduced Alert Center for anomaly detection, SLA tracking and acknowledgement logging
+* Refreshed documentation with consolidated release overview and author branding
+* Updated support channels to francescopasseri.com and info@francescopasseri.com
+
+= 1.0.1 =
+* Implemented metrics aggregation pipeline and caching layer for faster insights
+* Delivered onboarding wizard and contextual help cards for quicker adoption
+* Optimized admin UI performance and accessibility across dashboards
+* Hardened background processing and data source fallbacks
+
 = 1.0.0 =
-* Initial release
-* Complete client management system
-* Google Analytics 4 integration
-* Google Ads integration
-* Google Search Console integration
-* Microsoft Clarity integration
-* Core Web Vitals monitoring
-* UTM campaign tracking
-* Conversion event tracking
-* Audience segmentation
-* Anomaly detection system
-* Alert management
-* SEO metadata management
-* XML sitemap generation
-* Schema markup implementation
-* Advanced caching system
-* Performance monitoring
-* Security enhancements
-* GDPR compliance framework
-* Comprehensive dashboard
-* Admin interface optimizations
-* Email notification system
-* Data export capabilities
-* Automated reporting
-* Multi-language support (English, Italian)
+* Initial release of FP Digital Marketing Suite
+* Client management system with advanced metadata
+* Google Analytics 4, Google Ads and Google Search Console integrations
+* Microsoft Clarity, Core Web Vitals and marketing automation framework
+* SEO suite, caching, security enhancements and multilingual support
 
 == Upgrade Notice ==
 
+= 1.1.0 =
+Documentation refresh and alerting/reporting enhancements. Review new automation toggles after updating.
+
+= 1.0.1 =
+Performance and onboarding improvements. Revisit caching settings if you customized cron schedules.
+
 = 1.0.0 =
-Initial release of FP Digital Marketing Suite. No upgrade needed.
+Initial release of FP Digital Marketing Suite.
 
 == Developer Information ==
 
@@ -188,37 +171,38 @@ Initial release of FP Digital Marketing Suite. No upgrade needed.
 
 The plugin provides numerous hooks and filters for customization:
 
-* `fp_dms_before_client_save` - Fired before saving client data
-* `fp_dms_after_client_save` - Fired after saving client data
-* `fp_dms_dashboard_widgets` - Filter dashboard widgets
-* `fp_dms_metric_aggregation` - Filter metric aggregation
-* `fp_dms_export_data` - Filter export data
+* `fp_dms_before_client_save` – Fired before saving client data
+* `fp_dms_after_client_save` – Fired after saving client data
+* `fp_dms_dashboard_widgets` – Filter dashboard widgets
+* `fp_dms_metric_aggregation` – Filter metric aggregation
+* `fp_dms_export_data` – Filter export data
 
 = API Endpoints =
 
 RESTful API endpoints for integration:
 
-* `/wp-json/fp-dms/v1/clients` - Client management
-* `/wp-json/fp-dms/v1/metrics` - Metrics data
-* `/wp-json/fp-dms/v1/campaigns` - Campaign data
+* `/wp-json/fp-dms/v1/clients` – Client management
+* `/wp-json/fp-dms/v1/metrics` – Metrics data
+* `/wp-json/fp-dms/v1/campaigns` – Campaign data
 
 = Database Tables =
 
 The plugin creates the following custom tables:
 
-* `wp_fp_metrics_cache` - Cached metrics data
-* `wp_fp_anomaly_rules` - Anomaly detection rules
-* `wp_fp_detected_anomalies` - Detected anomalies
-* `wp_fp_alert_rules` - Alert configurations
-* `wp_fp_utm_campaigns` - UTM campaign data
-* `wp_fp_conversion_events` - Conversion tracking
-* `wp_fp_audience_segments` - Audience segments
+* `wp_fp_metrics_cache` – Cached metrics data
+* `wp_fp_anomaly_rules` – Anomaly detection rules
+* `wp_fp_detected_anomalies` – Detected anomalies
+* `wp_fp_alert_rules` – Alert configurations
+* `wp_fp_utm_campaigns` – UTM campaign data
+* `wp_fp_conversion_events` – Conversion tracking
+* `wp_fp_audience_segments` – Audience segments
 
 = Support =
 
 For support and documentation:
 * GitHub Repository: [FP-Digital-Marketing-Suite](https://github.com/franpass87/FP-Digital-Marketing-Suite)
-* Documentation: Included in plugin directory
+* Website: [https://francescopasseri.com](https://francescopasseri.com)
+* Email: info@francescopasseri.com
 * Issues: GitHub Issues tracker
 
 == Privacy Policy ==

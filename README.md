@@ -1,15 +1,14 @@
-# FP-Digital-Marketing-Suite
+# FP Digital Marketing Suite
 
-A comprehensive digital marketing toolkit built with PHP, following WordPress coding standards and best practices.
+The FP Digital Marketing Suite is a comprehensive WordPress toolkit for agencies and growth teams that need dependable client intelligence, actionable analytics and automated marketing workflows. Version 1.1.0 introduces an expanded reporting layer, proactive alerting and a refreshed knowledge base to make onboarding and day-to-day operations faster than ever.
 
-## Features
+## Highlights
 
-- WordPress Coding Standards compliance
-- Static analysis with PHPStan
-- Automated CI/CD pipeline
-- Security vulnerability scanning
-- **Settings Page**: Admin interface for plugin configuration
-- **Cliente Management**: Custom post type for client management
+- **Unified Marketing Intelligence** – Track campaigns, SEO and paid media from a single dashboard.
+- **Client Relationship Hub** – Organize client records with enriched metadata and permissions-aware workflows.
+- **Automations & Alerts** – Trigger notifications and follow-ups based on conversion trends, anomalies or SLA thresholds.
+- **Performance First** – Smart caching, batched aggregations and Core Web Vitals insights keep sites fast.
+- **Enterprise-Grade Tooling** – Static analysis, coding standards and a reproducible CI/CD pipeline guarantee maintainability.
 
 ## Requirements
 
@@ -30,25 +29,25 @@ A comprehensive digital marketing toolkit built with PHP, following WordPress co
    composer install
    ```
 
-## Usage
+## Usage Overview
 
-### Settings Page
+### Settings & Configuration
 
-After plugin activation, the settings page is available in the WordPress admin:
+After activation the suite adds a **Settings → FP Digital Marketing** entry that centralizes plugin-wide configuration.
 
-1. **Access Settings**: Navigate to `Settings` > `FP Digital Marketing` in your WordPress admin
-2. **General Settings**: Configure basic plugin options including the demo field for testing
-3. **API Keys Section**: Placeholder section for future API integrations (Google Analytics, Facebook/Meta Business, Google Ads, etc.)
+- **General Controls** – Manage organization details, dashboard defaults and automation toggles.
+- **Integrations** – Store credentials for Google Analytics 4, Google Ads, Search Console, Microsoft Clarity and custom data sources.
+- **Permissions** – Map the bundled capabilities to WordPress roles to tailor editorial and analyst access.
 
-**For Developers:**
-- Settings are saved using WordPress Settings API with proper nonce protection
-- All inputs are sanitized and validated before saving
-- Settings can be accessed programmatically via the `Settings` class methods
+Settings rely on the WordPress Settings API, enforce nonce validation and sanitize every field before persisting.
 
-**For Users:**
-- The settings page provides a user-friendly interface for plugin configuration
-- All settings are automatically saved when you click "Save Settings"
-- Input validation ensures data integrity
+### Operational Modules
+
+- **Client Hub** – Custom post type for customer records, contact intelligence, lifecycle history and contextual attachments.
+- **Analytics Aggregator** – Streams metrics from connected APIs, applies transformation rules and caches normalized data.
+- **Marketing Automation** – Tracks UTM campaigns, conversion events and funnel steps while triggering SLA-driven follow-ups.
+- **Reporting Workspace** – Generate scheduled or on-demand PDF/CSV reports, share dashboards and surface historical trends.
+- **Alert Center** – Configure anomaly thresholds, deliver notifications via email/webhooks and audit alert acknowledgements.
 
 ## Development Tooling
 
@@ -79,18 +78,11 @@ composer run phpstan
 
 ### Continuous Integration
 
-Our CI/CD pipeline includes:
+Our CI/CD pipelines ensure every release is production ready:
 
-**Code Quality Pipeline** (runs automatically on push/PR):
-- **Code Quality Checks**: PHPCS and PHPStan across multiple PHP versions (7.4, 8.0, 8.1, 8.2)
-- **Security Scanning**: Composer audit for dependency vulnerabilities
-- **Validation**: Composer configuration validation
-
-**Build Pipeline** (creates WordPress-ready ZIP artifacts):
-- Automatic builds on push to `main` or `develop` branches
-- Manual builds via GitHub Actions
-- Production-ready WordPress plugin packages
-- See [Builder Workflow Documentation](docs/BUILDER_WORKFLOW.md) for details
+- **Code Quality Pipeline** – Runs PHPCS, PHPStan (PHP 7.4 → 8.2) and Composer validation on every push or pull request.
+- **Security Scanning** – Executes `composer audit` to surface dependency vulnerabilities before deployment.
+- **Release Builder** – Packages signed ZIP archives for WordPress deployments and can be triggered manually or on tag creation. See [Builder Workflow Documentation](docs/BUILDER_WORKFLOW.md) for details.
 
 ### Available Commands
 
@@ -355,6 +347,22 @@ foreach ($trends as $kpi => $data) {
 - **Email**: Email marketing platforms
 
 For complete API documentation, see [METRICS_QUERY_API.md](METRICS_QUERY_API.md).
+
+## Release Timeline
+
+| Version | Date       | Highlights |
+|---------|------------|------------|
+| **1.1.0** | 2024-04-30 | Advanced reporting workspace, proactive alert center, full documentation refresh, updated author branding. |
+| **1.0.1** | 2024-03-12 | Performance caching layer, unified data aggregation pipeline, onboarding wizard, admin UI optimizations. |
+| **1.0.0** | 2024-01-18 | Initial public release with client management, analytics integrations, marketing automation and SEO tooling. |
+
+## Support & Contact
+
+- **Website**: [https://francescopasseri.com](https://francescopasseri.com)
+- **Email**: [info@francescopasseri.com](mailto:info@francescopasseri.com)
+- **GitHub Issues**: [https://github.com/franpass87/FP-Digital-Marketing-Suite/issues](https://github.com/franpass87/FP-Digital-Marketing-Suite/issues)
+
+For enterprise onboarding or bespoke integrations, please contact Francesco Passeri through the channels above.
 
 ## Contributing
 

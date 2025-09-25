@@ -453,7 +453,8 @@ class FP_DMS_SystemChecker {
         
         echo "\n🔗 For support and documentation:\n";
         echo "• GitHub: https://github.com/franpass87/FP-Digital-Marketing-Suite\n";
-        echo "• Email: franpass87@example.com\n";
+        echo "• Website: https://francescopasseri.com\n";
+        echo "• Email: info@francescopasseri.com\n";
     }
 }
 

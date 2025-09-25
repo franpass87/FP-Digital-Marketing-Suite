@@ -630,7 +630,7 @@ add_action('woocommerce_order_completed', function($order_id) {
 For technical support and questions:
 
 - **GitHub Issues**: [Report bugs and feature requests](https://github.com/franpass87/FP-Digital-Marketing-Suite/issues)
-- **Email**: franpass87@example.com
+- **Email**: info@francescopasseri.com
 - **Documentation**: Check the plugin's documentation files
 
 ## Version Compatibility

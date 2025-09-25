@@ -5,7 +5,36 @@ All notable changes to the FP Digital Marketing Suite will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2024-01-XX
+## [1.1.0] - 2024-04-30
+
+### Added
+- **Reporting Workspace** with scheduled PDF/CSV exports, dashboard sharing and trend library.
+- **Alert Center** supporting anomaly detection, SLA tracking and acknowledgement audit trails.
+- **Documentation Refresh** aligning README, WordPress readme and knowledge base articles with historical release notes.
+- **Author Branding Update** to Francesco Passeri with new website and support email.
+
+### Improved
+- Extended metrics query API examples for custom tooling and integrations.
+- Clarified onboarding guidance and default automation toggles for new installations.
+
+### Fixed
+- Harmonized version references across plugin headers, constants and distribution artifacts.
+
+## [1.0.1] - 2024-03-12
+
+### Added
+- **Metrics Aggregation Pipeline** with batched ingestion and cross-source normalization rules.
+- **Onboarding Wizard** providing setup checklists, contextual help cards and capability recommendations.
+
+### Changed
+- Optimized admin UI rendering, list tables and dashboard widgets for large client portfolios.
+- Introduced caching layer for computed KPIs to reduce external API calls and improve load times.
+
+### Fixed
+- Hardened background processing with retry logic when external data sources temporarily fail.
+- Addressed edge cases in conversion tracking when multiple webhooks fire simultaneously.
+
+## [1.0.0] - 2024-01-18
 
 ### Added
 - **Initial Release** - Complete FP Digital Marketing Suite platform
@@ -61,29 +90,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Code quality tools integration
 - Continuous integration pipeline
 
-## [Unreleased]
-
-### Security
-- Added nonce validation for audience segment deletion to prevent unauthorized requests.
-
-### Planned
-- WordPress.org plugin directory submission
-- Additional translation languages
-- Advanced reporting features
-- Enhanced mobile analytics
-- Additional third-party integrations
-
 ---
 
 ## Version Support
 
-- **Current Version**: 1.0.0
+- **Current Version**: 1.1.0
 - **Minimum WordPress**: 5.0
 - **Minimum PHP**: 7.4
 - **Tested up to WordPress**: 6.4
 - **Tested PHP versions**: 7.4, 8.0, 8.1, 8.2
 
 ## Upgrade Path
+
+### From 1.0.1 to 1.1.0
+Review the new alerting policies and reporting schedules introduced in 1.1.0. Existing automation rules remain intact, but administrators should validate thresholds and notification recipients after updating.
+
+### From 1.0.0 to 1.0.1
+The 1.0.1 performance update installs automatically. Validate caching settings and cron schedules if they were previously customized.
 
 ### From Pre-Release to 1.0.0
 This is the initial stable release. Clean installation recommended.
@@ -97,5 +120,7 @@ This is the initial stable release. Clean installation recommended.
 
 For technical support and feature requests:
 - GitHub Issues: [https://github.com/franpass87/FP-Digital-Marketing-Suite/issues](https://github.com/franpass87/FP-Digital-Marketing-Suite/issues)
+- Website: [https://francescopasseri.com](https://francescopasseri.com)
+- Email: [info@francescopasseri.com](mailto:info@francescopasseri.com)
 - Documentation: See DEPLOYMENT_GUIDE.md and readme.txt
-- Verification: Run verify-deployment.php after installation
+- Verification: Run `verify-deployment.php` after installation
