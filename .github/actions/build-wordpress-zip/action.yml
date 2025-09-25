@@ -1,0 +1,100 @@
+name: 'Build WordPress ZIP'
+description: 'Creates a distributable WordPress plugin ZIP and checksum'
+author: 'Automation'
+inputs:
+  plugin-name:
+    description: 'Plugin slug used for build directories'
+    required: false
+    default: 'fp-digital-marketing-suite'
+  version:
+    description: 'Plugin version to embed in the artifact name (optional)'
+    required: false
+outputs:
+  version:
+    description: 'Version determined for the build artifacts'
+    value: ${{ steps.determine-version.outputs.version }}
+  zip-path:
+    description: 'Relative path to the generated ZIP file'
+    value: ${{ steps.package.outputs.zip-path }}
+  checksum-path:
+    description: 'Relative path to the generated checksum file'
+    value: ${{ steps.package.outputs.checksum-path }}
+runs:
+  using: 'composite'
+  steps:
+    - id: determine-version
+      name: Determine plugin version
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ -n "${{ inputs.version }}" ]; then
+          VERSION="${{ inputs.version }}"
+        else
+          VERSION=$(grep "Version:" fp-digital-marketing-suite.php | head -1 | sed 's/.*Version:\s*//' | tr -d ' \r')
+        fi
+        if [ -z "${VERSION}" ]; then
+          echo "Unable to determine plugin version" >&2
+          exit 1
+        fi
+        echo "Using version ${VERSION}"
+        echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+    - id: package
+      name: Build plugin ZIP
+      shell: bash
+      env:
+        PLUGIN_NAME: ${{ inputs.plugin-name }}
+        VERSION: ${{ steps.determine-version.outputs.version }}
+      run: |
+        set -euo pipefail
+        BUILD_DIR="build"
+        DIST_DIR="dist"
+
+        echo "Cleaning previous build directories"
+        rm -rf "${BUILD_DIR}" "${DIST_DIR}"
+        mkdir -p "${BUILD_DIR}" "${DIST_DIR}"
+
+        echo "Copying plugin files"
+        rsync -av \
+          --exclude='.git*' \
+          --exclude='node_modules/' \
+          --exclude='vendor/' \
+          --exclude='build/' \
+          --exclude='dist/' \
+          --exclude='tests/' \
+          --exclude='demo/' \
+          --exclude='.php*' \
+          --exclude='composer.lock' \
+          --exclude='phpunit.*' \
+          --exclude='*.md' \
+          --exclude='verify-deployment.php' \
+          --exclude='build.sh' \
+          . "${BUILD_DIR}/${PLUGIN_NAME}/"
+
+        echo "Copying release documentation"
+        cp README.md "${BUILD_DIR}/${PLUGIN_NAME}/" || true
+        cp CHANGELOG.md "${BUILD_DIR}/${PLUGIN_NAME}/" || true
+        cp DEPLOYMENT_GUIDE.md "${BUILD_DIR}/${PLUGIN_NAME}/" || true
+
+        echo "Installing production dependencies"
+        if [ -f composer.json ]; then
+          (cd "${BUILD_DIR}/${PLUGIN_NAME}" && composer install --no-dev --optimize-autoloader --no-interaction)
+        fi
+
+        echo "Removing temporary files"
+        find "${BUILD_DIR}/${PLUGIN_NAME}" -name ".DS_Store" -delete 2>/dev/null || true
+        find "${BUILD_DIR}/${PLUGIN_NAME}" -name "Thumbs.db" -delete 2>/dev/null || true
+        find "${BUILD_DIR}/${PLUGIN_NAME}" -name "*.log" -delete 2>/dev/null || true
+
+        ZIP_FILE="${DIST_DIR}/${PLUGIN_NAME}-${VERSION}.zip"
+        CHECKSUM_FILE="${DIST_DIR}/${PLUGIN_NAME}-${VERSION}.zip.sha256"
+
+        echo "Creating plugin archive ${ZIP_FILE}"
+        (cd "${BUILD_DIR}" && zip -r "../${ZIP_FILE}" "${PLUGIN_NAME}/")
+
+        echo "Generating checksum"
+        (cd "${DIST_DIR}" && sha256sum "${PLUGIN_NAME}-${VERSION}.zip" > "${PLUGIN_NAME}-${VERSION}.zip.sha256")
+
+        echo "zip-path=${ZIP_FILE}" >> "$GITHUB_OUTPUT"
+        echo "checksum-path=${CHECKSUM_FILE}" >> "$GITHUB_OUTPUT"
+
+        echo "Build completed: ${ZIP_FILE}"
