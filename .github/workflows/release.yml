@@ -50,42 +50,11 @@ jobs:
         composer run-script phpcs
         composer run-script phpstan
     
-    - name: Create release package
-      run: |
-        VERSION="${{ steps.version.outputs.version }}"
-        PLUGIN_NAME="fp-digital-marketing-suite"
-        
-        # Create build directory
-        mkdir -p build/${PLUGIN_NAME}
-        
-        # Copy plugin files (exclude development files)
-        rsync -av \
-          --exclude='.git*' \
-          --exclude='node_modules/' \
-          --exclude='vendor/' \
-          --exclude='build/' \
-          --exclude='dist/' \
-          --exclude='tests/' \
-          --exclude='demo/' \
-          --exclude='.php*' \
-          --exclude='composer.lock' \
-          --exclude='phpunit.*' \
-          --exclude='build.sh' \
-          --exclude='verify-deployment.php' \
-          . build/${PLUGIN_NAME}/
-        
-        # Install production dependencies in build
-        cd build/${PLUGIN_NAME}
-        composer install --no-dev --optimize-autoloader --no-interaction
-        cd ../..
-        
-        # Create ZIP package
-        cd build
-        zip -r ../${PLUGIN_NAME}-${VERSION}.zip ${PLUGIN_NAME}/
-        cd ..
-        
-        # Create checksum
-        sha256sum ${PLUGIN_NAME}-${VERSION}.zip > ${PLUGIN_NAME}-${VERSION}.zip.sha256
+    - name: Build WordPress plugin package
+      id: build_zip
+      uses: ./.github/actions/build-wordpress-zip
+      with:
+        version: ${{ steps.version.outputs.version }}
     
     - name: Generate changelog for release
       id: changelog
@@ -109,8 +78,8 @@ jobs:
         name: FP Digital Marketing Suite v${{ steps.version.outputs.version }}
         body_path: release-notes.md
         files: |
-          fp-digital-marketing-suite-${{ steps.version.outputs.version }}.zip
-          fp-digital-marketing-suite-${{ steps.version.outputs.version }}.zip.sha256
+          ${{ steps.build_zip.outputs.zip-path }}
+          ${{ steps.build_zip.outputs.checksum-path }}
         draft: false
         prerelease: false
       env:
@@ -143,7 +112,7 @@ jobs:
       with:
         name: release-package-${{ steps.version.outputs.version }}
         path: |
-          fp-digital-marketing-suite-${{ steps.version.outputs.version }}.zip
-          fp-digital-marketing-suite-${{ steps.version.outputs.version }}.zip.sha256
+          ${{ steps.build_zip.outputs.zip-path }}
+          ${{ steps.build_zip.outputs.checksum-path }}
           wordpress-deployment.md
         retention-days: 90
