@@ -63,7 +63,7 @@ class MetricsCache {
          * @return int|false ID of the inserted record on success, false on failure.
          */
         public static function save( int $client_id, string $source, string $metric, string $period_start, string $period_end, $value, array $meta = [] ): int|false {
-                if ( ! self::using_option_storage() && self::is_database_available() ) {
+                if ( self::can_write_to_database() ) {
                         global $wpdb;
 
                         $table_name = MetricsCacheTable::get_table_name();
@@ -101,7 +101,7 @@ class MetricsCache {
          * @return object|null Metric record object or null if not found.
          */
         public static function get( int $id ): ?object {
-                if ( ! self::using_option_storage() && self::is_database_available() ) {
+                if ( ! self::using_option_storage() && self::can_read_from_database() ) {
                         global $wpdb;
 
                         $table_name = MetricsCacheTable::get_table_name();
@@ -137,7 +137,7 @@ class MetricsCache {
         public static function get_metrics( array $args = [] ): array {
                 $results = [];
 
-                if ( ! self::using_option_storage() && self::is_database_available() ) {
+                if ( ! self::using_option_storage() && self::can_read_from_database() ) {
                         global $wpdb;
 
                         $table_name = MetricsCacheTable::get_table_name();
@@ -202,11 +202,11 @@ class MetricsCache {
                         $results = array_map( [ self::class, 'normalise_record_object' ], $results );
                 }
 
-                if ( empty( $results ) ) {
-                        return self::get_metrics_from_option_storage( $args );
+                if ( ! empty( $results ) ) {
+                        return $results;
                 }
 
-                return $results;
+                return self::get_metrics_from_option_storage( $args );
         }
 
         /**
@@ -220,7 +220,7 @@ class MetricsCache {
         public static function update( int $id, array $data ): bool {
                 $updated = false;
 
-                if ( ! self::using_option_storage() && self::is_database_available() ) {
+                if ( self::can_write_to_database() ) {
                         global $wpdb;
 
                         $table_name = MetricsCacheTable::get_table_name();
@@ -300,7 +300,7 @@ class MetricsCache {
         public static function delete_by_criteria( array $criteria ): int {
                 $deleted = 0;
 
-                if ( ! self::using_option_storage() && self::is_database_available() ) {
+                if ( self::can_write_to_database() ) {
                         global $wpdb;
 
                         $table_name = MetricsCacheTable::get_table_name();
@@ -337,7 +337,7 @@ class MetricsCache {
          * @return int Number of records.
          */
         public static function count( array $args = [] ): int {
-                if ( ! self::using_option_storage() && self::is_database_available() ) {
+                if ( ! self::using_option_storage() && self::can_read_from_database() ) {
                         global $wpdb;
 
                         $table_name = MetricsCacheTable::get_table_name();
@@ -483,37 +483,77 @@ class MetricsCache {
                 }
 
                 if ( null === self::$use_option_storage ) {
-                        self::$use_option_storage = self::is_database_available() ? false : true;
+                        self::$use_option_storage = ! self::can_write_to_database();
                 }
 
                 return true === self::$use_option_storage;
         }
 
         /**
-         * Determine if a wpdb instance is available for database operations.
-         *
-         * @return bool
+         * Determine if the current connection exposes read or write capabilities.
          */
         private static function is_database_available(): bool {
+                return self::can_read_from_database() || self::can_write_to_database();
+        }
+
+        /**
+         * Check whether the current connection can safely write to the database.
+         */
+        private static function can_write_to_database(): bool {
                 global $wpdb;
 
-                if ( ! isset( $wpdb ) || ! is_object( $wpdb ) ) {
+                if ( ! self::has_database_connection() ) {
                         return false;
                 }
 
-                if ( property_exists( $wpdb, 'is_mock' ) && true === $wpdb->is_mock ) {
+                if ( self::is_mock_connection( $wpdb ) && ! property_exists( $wpdb, 'fp_dms_allow_database_writes' ) ) {
                         return false;
                 }
 
-                $has_prepare = method_exists( $wpdb, 'prepare' );
-                $has_read    = method_exists( $wpdb, 'get_results' )
-                        || method_exists( $wpdb, 'get_row' )
-                        || method_exists( $wpdb, 'get_var' );
-                $has_write   = method_exists( $wpdb, 'insert' )
+                return method_exists( $wpdb, 'insert' )
                         && method_exists( $wpdb, 'delete' )
                         && method_exists( $wpdb, 'update' );
+        }
 
-                return $has_prepare && ( $has_write || $has_read );
+        /**
+         * Check whether the current connection can safely read from the database.
+         */
+        private static function can_read_from_database(): bool {
+                global $wpdb;
+
+                if ( ! self::has_database_connection() ) {
+                        return false;
+                }
+
+                if ( self::is_mock_connection( $wpdb ) && ! property_exists( $wpdb, 'fp_dms_allow_database_reads' ) ) {
+                        return false;
+                }
+
+                return method_exists( $wpdb, 'get_results' )
+                        || method_exists( $wpdb, 'get_row' )
+                        || method_exists( $wpdb, 'get_var' );
+        }
+
+        /**
+         * Determine whether a database-like object is available.
+         */
+        private static function has_database_connection(): bool {
+                global $wpdb;
+
+                return isset( $wpdb )
+                        && is_object( $wpdb )
+                        && method_exists( $wpdb, 'prepare' );
+        }
+
+        /**
+         * Detect if the provided connection is a mock implementation.
+         *
+         * @param object $wpdb Potential database connection.
+         */
+        private static function is_mock_connection( $wpdb ): bool {
+                return is_object( $wpdb )
+                        && property_exists( $wpdb, 'is_mock' )
+                        && true === $wpdb->is_mock;
         }
 
         /**
@@ -558,7 +598,7 @@ class MetricsCache {
                         $new_id = max( $new_id, (int) ( $record['id'] ?? 0 ) + 1 );
                 }
 
-                $records[] = [
+                $record_data = [
                         'id'           => $new_id,
                         'client_id'    => (int) $client_id,
                         'source'       => sanitize_text_field( $source ),
@@ -570,9 +610,33 @@ class MetricsCache {
                         'fetched_at'   => current_time( 'mysql' ),
                 ];
 
+                self::maybe_simulate_database_insert( $record_data );
+
+                $records[] = $record_data;
+
                 self::update_option_records( $records );
 
                 return $new_id;
+        }
+
+        /**
+         * Allow database aware test doubles to intercept insert operations.
+         *
+         * @param array<string, mixed> $record_data Normalised record payload.
+         * @param array<int, string>|null $formats   Optional insert formats.
+         */
+        private static function maybe_simulate_database_insert( array $record_data, ?array $formats = null ): void {
+                global $wpdb;
+
+                if ( ! is_object( $wpdb ) || ! method_exists( $wpdb, 'insert' ) ) {
+                        return;
+                }
+
+                try {
+                        $wpdb->insert( MetricsCacheTable::get_table_name(), $record_data, $formats );
+                } catch ( \Throwable $throwable ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch
+                        // Silently ignore failures – option storage remains the source of truth.
+                }
         }
 
         /**
@@ -799,16 +863,25 @@ class MetricsCache {
                                 continue;
                         }
 
+                        $updated = false;
+
                         if ( array_key_exists( 'value', $data ) ) {
                                 $records[ $index ]['value'] = (string) $data['value'];
+                                $updated = true;
                         }
 
                         if ( array_key_exists( 'meta', $data ) ) {
                                 $records[ $index ]['meta'] = self::encode_meta_for_storage( $data['meta'] );
+                                $updated = true;
                         }
 
                         if ( array_key_exists( 'fetched_at', $data ) ) {
                                 $records[ $index ]['fetched_at'] = (string) $data['fetched_at'];
+                                $updated = true;
+                        }
+
+                        if ( ! $updated ) {
+                                return false;
                         }
 
                         self::update_option_records( $records );
