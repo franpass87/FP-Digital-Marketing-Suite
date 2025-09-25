@@ -50,7 +50,7 @@ class SetupWizard {
             return;
         }
 
-        $needs_setup = ! $this->is_wizard_completed();
+        $needs_setup = ! SettingsManager::is_wizard_completed();
 
         // Only redirect on activation and if setup not completed
         if ( get_transient( 'fp_dms_activation_redirect' ) && $needs_setup ) {
@@ -79,7 +79,7 @@ class SetupWizard {
             return;
         }
 
-        if ( $this->is_wizard_completed() && ! SettingsManager::is_wizard_menu_enabled() ) {
+        if ( SettingsManager::is_wizard_completed() && ! SettingsManager::is_wizard_menu_enabled() ) {
             // Wizard finished and menu already hidden.
             return;
         }
@@ -103,7 +103,7 @@ class SetupWizard {
      * @return void
      */
     public function maybe_hide_completed_notice(): void {
-        if ( ! $this->is_wizard_completed() ) {
+        if ( ! SettingsManager::is_wizard_completed() ) {
             return;
         }
 
@@ -114,7 +114,7 @@ class SetupWizard {
      * Display the setup wizard page
      */
     public function setup_wizard_page() {
-        if ( $this->is_wizard_completed() ) {
+        if ( SettingsManager::is_wizard_completed() ) {
             $this->display_setup_completed();
             return;
         }
@@ -579,21 +579,6 @@ class SetupWizard {
         // Maintain backwards compatibility with legacy option names.
         update_option( 'fp_dms_setup_completed', true );
         update_option( 'fp_dms_setup_completed_time', $completion_payload['completed_at'] );
-    }
-
-    /**
-     * Check if wizard is completed.
-     *
-     * @return bool
-     */
-    private function is_wizard_completed(): bool {
-        $state = SettingsManager::get_option( SettingsManager::OPTION_WIZARD_COMPLETED, null );
-
-        if ( is_array( $state ) ) {
-            return ! empty( $state['completed'] );
-        }
-
-        return (bool) get_option( 'fp_dms_setup_completed', false );
     }
 
     /**

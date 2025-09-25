@@ -54,296 +54,782 @@ use FP\DigitalMarketing\Helpers\EmailNotifications;
 use FP\DigitalMarketing\Helpers\PerformanceCache;
 use FP\DigitalMarketing\Helpers\URLShortener;
 use FP\DigitalMarketing\Helpers\SiteHealth;
+use FP\DigitalMarketing\Setup\SetupWizard;
+use FP\DigitalMarketing\Setup\SettingsManager;
 
 /**
  * Main application class
  */
 class DigitalMarketingSuite {
 
-	/**
-	 * Application version
-	 *
-	 * @var string
-	 */
-	private string $version = '1.0.0';
+        /**
+         * Option name used to persist the installed plugin version.
+         */
+        private const VERSION_OPTION = 'fp_digital_marketing_version';
 
-	/**
-	 * Cliente Post Type instance
-	 *
-	 * @var ClientePostType|null
-	 */
-	private ?ClientePostType $cliente_post_type = null;
+        /**
+         * Default plugin version used as a fallback when constants are missing.
+         */
+        private const PLUGIN_VERSION = '1.1.0';
 
-	/**
-	 * Cliente Meta instance
-	 *
-	 * @var ClienteMeta|null
-	 */
-	private ?ClienteMeta $cliente_meta = null;
+        /**
+         * Registry key used for the admin menu manager component.
+         */
+        private const MENU_MANAGER_KEY = 'menu_manager';
 
-	/**
-	 * SEO Meta instance
-	 *
-	 * @var SeoMeta|null
-	 */
-	private ?SeoMeta $seo_meta = null;
+        /**
+         * Supported execution context identifiers.
+         */
+        private const CONTEXT_ADMIN = 'admin';
+        private const CONTEXT_FRONTEND = 'frontend';
+        private const CONTEXT_CLI = 'cli';
+        private const CONTEXT_CRON = 'cron';
+        private const CONTEXT_ANY = 'any';
 
-	/**
-	 * Settings instance
-	 *
-	 * @var Settings|null
-	 */
-	private ?Settings $settings = null;
+        /**
+         * Default priority assigned to lifecycle definitions when none is provided.
+         */
+        private const DEFAULT_PRIORITY = 10;
 
-	/**
-	 * Reports instance
-	 *
-	 * @var Reports|null
-	 */
-	private ?Reports $reports = null;
+        /**
+         * Map of version-specific upgrade routines executed when the plugin updates.
+         *
+         * Each array key represents the target version and maps to a list of routine definitions.
+         * Supported keys:
+         * - callback: Callable that receives the previous and current version strings.
+         * - label: Optional human readable label for logging.
+         *
+         * @var array<string, array<int, array<string, mixed>>>
+         */
+        private const UPGRADE_DEFINITIONS = [
+                '1.1.0' => [
+                        [
+                                'callback' => [ SettingsManager::class, 'migrate_legacy_options' ],
+                                'label'    => 'SettingsManager::migrate_legacy_options()',
+                        ],
+                ],
+        ];
 
-	/**
-	 * Dashboard instance
-	 *
-	 * @var Dashboard|null
-	 */
-	private ?Dashboard $dashboard = null;
+        /**
+         * Singleton instance reference.
+         *
+         * @var self|null
+         */
+        private static ?self $instance = null;
 
-	/**
-	 * Security Admin instance
-	 *
-	 * @var SecurityAdmin|null
-	 */
-	private ?SecurityAdmin $security_admin = null;
+        /**
+         * Application version
+         *
+         * @var string
+         */
+        private string $version = '0.0.0';
 
-	/**
-	 * Cache Performance instance
-	 *
-	 * @var CachePerformance|null
-	 */
-	private ?CachePerformance $cache_performance = null;
+        /**
+         * Indicates whether WordPress hooks were already registered.
+         *
+         * @var bool
+         */
+        private bool $hooks_registered = false;
 
-	/**
-	 * Onboarding Wizard instance
-	 *
-	 * @var OnboardingWizard|null
-	 */
-	private ?OnboardingWizard $onboarding_wizard = null;
+        /**
+         * Loaded component instances keyed by their registry name.
+         *
+         * @var array<string, object|null>
+         */
+        private array $components = [];
 
-	/**
-	 * Alerting Admin instance
-	 *
-	 * @var AlertingAdmin|null
-	 */
-	private ?AlertingAdmin $alerting_admin = null;
+        /**
+         * Cached component definitions.
+         *
+         * @var array<string, array<string, mixed>|class-string>|null
+         */
+        private ?array $component_definition_cache = null;
 
-	/**
-	 * Anomaly Detection Admin instance
-	 *
-	 * @var AnomalyDetectionAdmin|null
-	 */
-	private ?AnomalyDetectionAdmin $anomaly_detection_admin = null;
+        /**
+         * Cached static initializer definitions.
+         *
+         * @var array<int, array<string, string|null|int>>|null
+         */
+        private static ?array $static_initializer_cache = null;
 
-	/**
-	 * Anomaly Radar instance
-	 *
-	 * @var AnomalyRadar|null
-	 */
-	private ?AnomalyRadar $anomaly_radar = null;
+        /**
+         * Cached database table definitions.
+         *
+         * @var array<class-string, array<int, array<string, string|int>>>|null
+         */
+        private static ?array $table_definition_cache = null;
 
-	/**
-	 * UTM Campaign Manager instance
-	 *
-	 * @var UTMCampaignManager|null
-	 */
-	private ?UTMCampaignManager $utm_campaign_manager = null;
+        /**
+         * Cached upgrade definition map.
+         *
+         * @var array<string, array<int, array<string, mixed>>>|null
+         */
+        private static ?array $upgrade_definition_cache = null;
 
-	/**
-	 * Conversion Events Admin instance
-	 *
-	 * @var ConversionEventsAdmin|null
-	 */
-	private ?ConversionEventsAdmin $conversion_events_admin = null;
+        /**
+         * Indicates whether component instantiation has already occurred.
+         *
+         * @var bool
+         */
+        private bool $components_instantiated = false;
 
-	/**
-	 * Segmentation Admin instance
-	 *
-	 * @var SegmentationAdmin|null
-	 */
-	private ?SegmentationAdmin $segmentation_admin = null;
+        /**
+         * Tracks if the setup wizard has already been bootstrapped.
+         *
+         * @var bool
+         */
+        private bool $setup_wizard_bootstrapped = false;
 
-	/**
-	 * Funnel Analysis Admin instance
-	 *
-	 * @var FunnelAnalysisAdmin|null
-	 */
-	private ?FunnelAnalysisAdmin $funnel_analysis_admin = null;
+        /**
+         * Cached execution context flags keyed by context name.
+         *
+         * @var array<string, bool>
+         */
+        private array $context_flags = [
+                self::CONTEXT_ADMIN    => false,
+                self::CONTEXT_FRONTEND => false,
+                self::CONTEXT_CLI      => false,
+                self::CONTEXT_CRON     => false,
+        ];
 
-	/**
-	 * Menu Manager instance
-	 *
-	 * @var MenuManager|null
-	 */
-	private ?MenuManager $menu_manager = null;
+    /**
+     * Map of component properties to their class definitions and metadata.
+     *
+     * Supported keys:
+     * - class: Fully qualified class name of the component.
+     * - menu_label: Optional label exposed in the admin menu builder.
+     * - init: Optional instance method invoked during init. Defaults to "init". Use null to skip.
+     * - contexts: Optional string or list of contexts where the component should boot.
+     *             Supported values: "admin", "frontend", "cli", "cron", "any".
+     * - priority: Optional integer priority that controls instantiation order. Lower values run earlier.
+     *
+     * @var array<string, array<string, mixed>|class-string>
+     */
+    private const COMPONENT_DEFINITIONS = [
+        'cliente_post_type' => [ 'class' => ClientePostType::class ],
+        'cliente_meta' => [ 'class' => ClienteMeta::class, 'contexts' => self::CONTEXT_ADMIN ],
+        'seo_meta' => [ 'class' => SeoMeta::class, 'contexts' => self::CONTEXT_ADMIN ],
+        'settings' => [ 'class' => Settings::class, 'menu_label' => 'Settings', 'contexts' => self::CONTEXT_ADMIN ],
+        'reports' => [ 'class' => Reports::class, 'menu_label' => 'Reports', 'contexts' => self::CONTEXT_ADMIN ],
+        'dashboard' => [ 'class' => Dashboard::class, 'menu_label' => 'Dashboard', 'contexts' => self::CONTEXT_ADMIN ],
+        'security_admin' => [ 'class' => SecurityAdmin::class, 'menu_label' => 'SecurityAdmin', 'contexts' => self::CONTEXT_ADMIN ],
+        'cache_performance' => [ 'class' => CachePerformance::class, 'menu_label' => 'CachePerformance', 'contexts' => self::CONTEXT_ADMIN ],
+        'onboarding_wizard' => [ 'class' => OnboardingWizard::class, 'menu_label' => 'OnboardingWizard', 'contexts' => self::CONTEXT_ADMIN ],
+        'alerting_admin' => [ 'class' => AlertingAdmin::class, 'menu_label' => 'AlertingAdmin', 'contexts' => self::CONTEXT_ADMIN ],
+        'anomaly_detection_admin' => [ 'class' => AnomalyDetectionAdmin::class, 'menu_label' => 'AnomalyDetectionAdmin', 'contexts' => self::CONTEXT_ADMIN ],
+        'anomaly_radar' => [ 'class' => AnomalyRadar::class, 'contexts' => self::CONTEXT_ADMIN ],
+        'utm_campaign_manager' => [ 'class' => UTMCampaignManager::class, 'menu_label' => 'UTMCampaignManager', 'contexts' => self::CONTEXT_ADMIN ],
+        'conversion_events_admin' => [ 'class' => ConversionEventsAdmin::class, 'menu_label' => 'ConversionEventsAdmin', 'contexts' => self::CONTEXT_ADMIN ],
+        'segmentation_admin' => [ 'class' => SegmentationAdmin::class, 'menu_label' => 'SegmentationAdmin', 'contexts' => self::CONTEXT_ADMIN ],
+        'funnel_analysis_admin' => [ 'class' => FunnelAnalysisAdmin::class, 'menu_label' => 'FunnelAnalysisAdmin', 'contexts' => self::CONTEXT_ADMIN ],
+        'platform_connections' => [ 'class' => PlatformConnections::class, 'menu_label' => 'PlatformConnections', 'contexts' => self::CONTEXT_ADMIN ],
+    ];
 
-	/**
-	 * Platform Connections instance
-	 *
-	 * @var PlatformConnections|null
-	 */
-	private ?PlatformConnections $platform_connections = null;
+    /**
+     * Static initializers executed during bootstrap.
+     *
+     * Supported keys:
+     * - class: Fully qualified class name owning the static method.
+     * - method: Static method name to call.
+     * - label: Optional label for logging context.
+     * - priority: Optional integer that controls execution order. Lower values run earlier.
+     *
+     * @var array<int, array<string, string|null|int>>
+     */
+    private const STATIC_INITIALIZERS = [
+        [ 'class' => URLShortener::class, 'method' => 'bootstrap', 'label' => 'URLShortener::bootstrap()' ],
+        [ 'class' => Capabilities::class, 'method' => 'init' ],
+        [ 'class' => ReportScheduler::class, 'method' => 'init' ],
+        [ 'class' => SyncEngine::class, 'method' => 'init' ],
+        [ 'class' => SegmentationEngine::class, 'method' => 'init' ],
+        [ 'class' => SegmentationAPI::class, 'method' => 'init' ],
+        [ 'class' => SeoFrontendOutput::class, 'method' => 'init' ],
+        [ 'class' => FrontendTracking::class, 'method' => 'init' ],
+        [ 'class' => SchemaGenerator::class, 'method' => 'init' ],
+        [ 'class' => FAQBlock::class, 'method' => 'init' ],
+        [ 'class' => XmlSitemap::class, 'method' => 'init' ],
+        [ 'class' => XmlSitemap::class, 'method' => 'init_robots_txt', 'label' => 'XmlSitemap::init_robots_txt()' ],
+        [ 'class' => DashboardWidgets::class, 'method' => 'init' ],
+        [ 'class' => DataExporter::class, 'method' => 'init' ],
+        [ 'class' => EmailNotifications::class, 'method' => 'init' ],
+        [ 'class' => PerformanceCache::class, 'method' => 'schedule_cache_warmup', 'label' => 'PerformanceCache::schedule_cache_warmup()' ],
+        [ 'class' => SiteHealth::class, 'method' => 'init' ],
+    ];
 
-	/**
-	 * Constructor with error handling
-	 */
-	public function __construct() {
-		if ( defined( 'FP_DIGITAL_MARKETING_VERSION' ) ) {
-			$this->version = FP_DIGITAL_MARKETING_VERSION;
-		}
-		// Initialize components with error handling to prevent WSOD
-		try {
-			$this->cliente_post_type = new ClientePostType();
-		} catch ( \Throwable $e ) {
-			$this->cliente_post_type = null;
-			$this->log_initialization_error( 'ClientePostType', $e );
-		}
+    /**
+     * Database table definitions for setup and verification.
+     *
+     * Supported keys for each operation:
+     * - check: Optional method that verifies table existence.
+     * - create: Method that provisions the table when missing.
+     * - label: Optional label for logging context.
+     * - priority: Optional integer that controls execution order. Lower values run earlier.
+     *
+     * @var array<class-string, array<int, array<string, string|int>>>
+     */
+    private const TABLE_DEFINITIONS = [
+        MetricsCacheTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+        ],
+        AlertRulesTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+        ],
+        AnomalyRulesTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+        ],
+        DetectedAnomaliesTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+        ],
+        UTMCampaignsTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+        ],
+        ConversionEventsTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+        ],
+        AudienceSegmentTable::class => [
+            [ 'check' => 'segments_table_exists', 'create' => 'create_segments_table', 'label' => 'AudienceSegmentTable::create_segments_table()' ],
+            [ 'check' => 'membership_table_exists', 'create' => 'create_membership_table', 'label' => 'AudienceSegmentTable::create_membership_table()' ],
+        ],
+        FunnelTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+            [ 'check' => 'stages_table_exists', 'create' => 'create_stages_table', 'label' => 'FunnelTable::create_stages_table()' ],
+        ],
+        CustomerJourneyTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+            [ 'check' => 'sessions_table_exists', 'create' => 'create_sessions_table', 'label' => 'CustomerJourneyTable::create_sessions_table()' ],
+        ],
+        CustomReportsTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+        ],
+        SocialSentimentTable::class => [
+            [ 'check' => 'table_exists', 'create' => 'create_table' ],
+        ],
+    ];
 
-		try {
-			$this->cliente_meta = new ClienteMeta();
-		} catch ( \Throwable $e ) {
-			$this->cliente_meta = null;
-			$this->log_initialization_error( 'ClienteMeta', $e );
-		}
+        /**
+         * Constructor with error handling
+         */
+        public function __construct() {
+                $this->detect_execution_context();
+                $this->version = self::get_current_version_string();
+        }
 
-		try {
-			$this->seo_meta = new SeoMeta();
-		} catch ( \Throwable $e ) {
-			$this->seo_meta = null;
-			$this->log_initialization_error( 'SeoMeta', $e );
-		}
+        /**
+         * Retrieve the shared plugin instance.
+         *
+         * @return self
+         */
+        public static function instance(): self {
+                if ( null === self::$instance ) {
+                        self::$instance = new self();
+                }
 
-		try {
-			$this->settings = new Settings();
-		} catch ( \Throwable $e ) {
-			$this->settings = null;
-			$this->log_initialization_error( 'Settings', $e );
-		}
+                return self::$instance;
+        }
 
-		try {
-			$this->reports = new Reports();
-		} catch ( \Throwable $e ) {
-			$this->reports = null;
-			$this->log_initialization_error( 'Reports', $e );
-		}
+        /**
+         * Register WordPress lifecycle hooks once.
+         *
+         * @return void
+         */
+        public function register_hooks(): void {
+                if ( $this->hooks_registered || ! function_exists( 'add_action' ) ) {
+                        return;
+                }
 
-		try {
-			$this->dashboard = new Dashboard();
-		} catch ( \Throwable $e ) {
-			$this->dashboard = null;
-			$this->log_initialization_error( 'Dashboard', $e );
-		}
+                add_action( 'plugins_loaded', [ $this, 'on_plugins_loaded' ] );
+                $this->hooks_registered = true;
+        }
 
-		try {
-			$this->security_admin = new SecurityAdmin();
-		} catch ( \Throwable $e ) {
-			$this->security_admin = null;
-			$this->log_initialization_error( 'SecurityAdmin', $e );
-		}
+        /**
+         * Detect and cache the current execution context flags.
+         *
+         * @return void
+         */
+        private function detect_execution_context(): void {
+                $is_cli   = defined( 'WP_CLI' ) && WP_CLI;
+                $is_cron  = function_exists( 'wp_doing_cron' ) ? wp_doing_cron() : false;
+                $is_admin = function_exists( 'is_admin' ) ? is_admin() : false;
 
-		try {
-			$this->cache_performance = new CachePerformance();
-		} catch ( \Throwable $e ) {
-			$this->cache_performance = null;
-			$this->log_initialization_error( 'CachePerformance', $e );
-		}
+                $this->context_flags = [
+                        self::CONTEXT_CLI      => $is_cli,
+                        self::CONTEXT_CRON     => $is_cron,
+                        self::CONTEXT_ADMIN    => $is_admin && ! $is_cli,
+                        self::CONTEXT_FRONTEND => ! $is_admin && ! $is_cli && ! $is_cron,
+                ];
+        }
 
-		try {
-			$this->onboarding_wizard = new OnboardingWizard();
-		} catch ( \Throwable $e ) {
-			$this->onboarding_wizard = null;
-			$this->log_initialization_error( 'OnboardingWizard', $e );
-		}
+        /**
+         * Check whether the current request matches a given execution context.
+         *
+         * @param string $context Context name (admin, frontend, cli, cron, any).
+         *
+         * @return bool
+         */
+        public function is_context( string $context ): bool {
+                $normalized = strtolower( $context );
 
-		try {
-			$this->alerting_admin = new AlertingAdmin();
-		} catch ( \Throwable $e ) {
-			$this->alerting_admin = null;
-			$this->log_initialization_error( 'AlertingAdmin', $e );
-		}
+                if ( self::CONTEXT_ANY === $normalized ) {
+                        return true;
+                }
 
-		try {
-			$this->anomaly_detection_admin = new AnomalyDetectionAdmin();
-		} catch ( \Throwable $e ) {
-			$this->anomaly_detection_admin = null;
-			$this->log_initialization_error( 'AnomalyDetectionAdmin', $e );
-		}
+                return $this->context_flags[ $normalized ] ?? false;
+        }
 
-		try {
-			$this->anomaly_radar = new AnomalyRadar();
-		} catch ( \Throwable $e ) {
-			$this->anomaly_radar = null;
-			$this->log_initialization_error( 'AnomalyRadar', $e );
-		}
+        /**
+         * Refresh the cached execution context flags.
+         *
+         * @return void
+         */
+        public function refresh_execution_context(): void {
+                $this->detect_execution_context();
+        }
 
-		try {
-			$this->utm_campaign_manager = new UTMCampaignManager();
-		} catch ( \Throwable $e ) {
-			$this->utm_campaign_manager = null;
-			$this->log_initialization_error( 'UTMCampaignManager', $e );
-		}
+        /**
+         * Retrieve the cached execution context flags.
+         *
+         * @return array<string, bool>
+         */
+        public function get_context_flags(): array {
+                return $this->context_flags;
+        }
 
-		try {
-			$this->conversion_events_admin = new ConversionEventsAdmin();
-		} catch ( \Throwable $e ) {
-			$this->conversion_events_admin = null;
-			$this->log_initialization_error( 'ConversionEventsAdmin', $e );
-		}
+        /**
+         * Reset cached definition maps so late filters can take effect.
+         *
+         * @return void
+         */
+        public function reset_definition_cache(): void {
+                $this->component_definition_cache = null;
+                self::$static_initializer_cache   = null;
+                self::$table_definition_cache     = null;
+                self::$upgrade_definition_cache   = null;
+        }
 
-		try {
-			$this->segmentation_admin = new SegmentationAdmin();
-		} catch ( \Throwable $e ) {
-			$this->segmentation_admin = null;
-			$this->log_initialization_error( 'SegmentationAdmin', $e );
-		}
+        /**
+         * Rebuild the component registry using the latest definition maps.
+         *
+         * @param bool $reinitialize Optional. Whether to rerun component initializers after rebuilding.
+         *                           Defaults to false.
+         *
+         * @return void
+         */
+        public function rebuild_component_registry( bool $reinitialize = false ): void {
+                $this->reset_definition_cache();
+                $this->components               = [];
+                $this->components_instantiated  = false;
 
-		try {
-			$this->funnel_analysis_admin = new FunnelAnalysisAdmin();
-		} catch ( \Throwable $e ) {
-			$this->funnel_analysis_admin = null;
-			$this->log_initialization_error( 'FunnelAnalysisAdmin', $e );
-		}
+                $this->instantiate_components();
 
-		try {
-			$this->platform_connections = new PlatformConnections();
-		} catch ( \Throwable $e ) {
-			$this->platform_connections = null;
-			$this->log_initialization_error( 'PlatformConnections', $e );
-		}
+                if ( $reinitialize ) {
+                        $this->initialize_components();
+                }
+        }
 
-		try {
-			// Create MenuManager with pre-instantiated admin classes
-			$admin_instances = [
-				'Dashboard' => $this->dashboard,
-				'Reports' => $this->reports,
-				'Settings' => $this->settings,
-				'PlatformConnections' => $this->platform_connections,
-				'UTMCampaignManager' => $this->utm_campaign_manager,
-				'ConversionEventsAdmin' => $this->conversion_events_admin,
-				'FunnelAnalysisAdmin' => $this->funnel_analysis_admin,
-				'SegmentationAdmin' => $this->segmentation_admin,
-				'AlertingAdmin' => $this->alerting_admin,
-				'AnomalyDetectionAdmin' => $this->anomaly_detection_admin,
-				'CachePerformance' => $this->cache_performance,
-				'SecurityAdmin' => $this->security_admin,
-				'OnboardingWizard' => $this->onboarding_wizard
-			];
-			
-			$this->menu_manager = new MenuManager( array_filter( $admin_instances ) );
-		} catch ( \Throwable $e ) {
-			$this->menu_manager = null;
-			$this->log_initialization_error( 'MenuManager', $e );
-		}
-	}
+    /**
+     * Instantiate and wire plugin components safely.
+     *
+     * @return void
+     */
+    private function instantiate_components(): void {
+        if ( $this->components_instantiated ) {
+            return;
+        }
+
+        foreach ( $this->get_component_definitions() as $property => $definition ) {
+            if ( ! $this->should_boot_component( $definition ) ) {
+                continue;
+            }
+
+            $class = is_array( $definition ) ? ( $definition['class'] ?? null ) : $definition;
+
+            if ( ! is_string( $class ) ) {
+                continue;
+            }
+
+            $this->instantiate_component( $property, $class );
+        }
+
+        $this->boot_menu_manager();
+        $this->components_instantiated = true;
+    }
+
+    /**
+     * Instantiate a single component and capture initialization errors.
+     *
+     * @param string $property Property name to populate.
+     * @param string $class    Class to instantiate.
+     *
+     * @return void
+     */
+    private function instantiate_component( string $property, string $class ): void {
+        if ( ! class_exists( $class ) ) {
+            return;
+        }
+
+        try {
+            $this->set_component_instance( $property, new $class() );
+        } catch ( \Throwable $e ) {
+            $this->set_component_instance( $property, null );
+            self::log_initialization_error( self::get_component_label( $class ), $e );
+        }
+    }
+
+    /**
+     * Persist a component instance reference.
+     *
+     * @param string     $property Registry key.
+     * @param object|null $instance Component instance to store.
+     *
+     * @return void
+     */
+    private function set_component_instance( string $property, ?object $instance ): void {
+        if ( null === $instance ) {
+            unset( $this->components[ $property ] );
+
+            return;
+        }
+
+        $this->components[ $property ] = $instance;
+    }
+
+    /**
+     * Retrieve a component instance by its registry key.
+     *
+     * @param string $property Registry key.
+     *
+     * @return object|null
+     */
+    private function get_component_instance( string $property ): ?object {
+        $instance = $this->components[ $property ] ?? null;
+
+        return is_object( $instance ) ? $instance : null;
+    }
+
+    /**
+     * Expose a component instance from the registry.
+     *
+     * @param string $property Registry key.
+     *
+     * @return object|null
+     */
+    public function get_component( string $property ): ?object {
+        return $this->get_component_instance( $property );
+    }
+
+    /**
+     * Build the admin menu manager from the available admin modules.
+     *
+     * @return void
+     */
+    private function boot_menu_manager(): void {
+        if ( ! $this->is_context( self::CONTEXT_ADMIN ) ) {
+            return;
+        }
+
+        $admin_instances = [];
+
+        foreach ( $this->get_component_definitions() as $property => $definition ) {
+            $label = is_array( $definition ) ? ( $definition['menu_label'] ?? null ) : null;
+
+            if ( ! $label ) {
+                continue;
+            }
+
+            $instance = $this->get_component_instance( $property );
+
+            if ( null !== $instance ) {
+                $admin_instances[ $label ] = $instance;
+            }
+        }
+
+        if ( empty( $admin_instances ) ) {
+            $this->set_component_instance( self::MENU_MANAGER_KEY, null );
+
+            return;
+        }
+
+        try {
+            $this->set_component_instance( self::MENU_MANAGER_KEY, new MenuManager( $admin_instances ) );
+        } catch ( \Throwable $e ) {
+            $this->set_component_instance( self::MENU_MANAGER_KEY, null );
+            self::log_initialization_error( self::get_component_label( MenuManager::class ), $e );
+        }
+    }
+
+    /**
+     * Determine if the component should boot in the current execution context.
+     *
+     * @param array<string, mixed>|string $definition Component definition metadata.
+     *
+     * @return bool
+     */
+    private function should_boot_component( $definition ): bool {
+        if ( ! is_array( $definition ) ) {
+            return true;
+        }
+
+        if ( empty( $definition['contexts'] ) ) {
+            return true;
+        }
+
+        $contexts = (array) $definition['contexts'];
+
+        foreach ( $contexts as $context ) {
+            if ( $this->is_context( (string) $context ) ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Retrieve component definitions with filters applied.
+     *
+     * @return array<string, array<string, mixed>|class-string>
+     */
+    private function get_component_definitions(): array {
+        if ( null === $this->component_definition_cache ) {
+            $definitions = self::apply_filters_to_definitions(
+                'fp_dms_component_definitions',
+                self::COMPONENT_DEFINITIONS
+            );
+
+            $this->component_definition_cache = self::sort_definition_map_by_priority( $definitions );
+        }
+
+        return $this->component_definition_cache;
+    }
+
+    /**
+     * Retrieve static initializer definitions with filters applied.
+     *
+     * @return array<int, array<string, string|null|int>>
+     */
+    private static function get_static_initializers_config(): array {
+        if ( null === self::$static_initializer_cache ) {
+            $initializers = self::apply_filters_to_definitions(
+                'fp_dms_static_initializers',
+                self::STATIC_INITIALIZERS
+            );
+
+            self::$static_initializer_cache = self::sort_definition_list_by_priority( $initializers );
+        }
+
+        return self::$static_initializer_cache;
+    }
+
+    /**
+     * Retrieve table definitions with filters applied.
+     *
+     * @return array<class-string, array<int, array<string, string|int>>>
+     */
+        private static function get_table_definitions_config(): array {
+                if ( null === self::$table_definition_cache ) {
+                        $definitions = self::apply_filters_to_definitions(
+                                'fp_dms_table_definitions',
+                                self::TABLE_DEFINITIONS
+                        );
+
+                        foreach ( $definitions as $class => $operations ) {
+                                if ( is_array( $operations ) ) {
+                                        $definitions[ $class ] = self::sort_definition_list_by_priority( $operations );
+                                }
+                        }
+
+                        self::$table_definition_cache = $definitions;
+                }
+
+                return self::$table_definition_cache;
+        }
+
+        /**
+         * Retrieve upgrade definitions with filters applied and sorted by version.
+         *
+         * @return array<string, array<int, array<string, mixed>>>
+         */
+        private static function get_upgrade_definitions(): array {
+                if ( null === self::$upgrade_definition_cache ) {
+                        $definitions = self::apply_filters_to_definitions(
+                                'fp_dms_upgrade_definitions',
+                                self::UPGRADE_DEFINITIONS
+                        );
+
+                        if ( ! is_array( $definitions ) ) {
+                                $definitions = [];
+                        }
+
+                        uksort(
+                                $definitions,
+                                static function ( $a, $b ): int {
+                                        return version_compare( (string) $a, (string) $b );
+                                }
+                        );
+
+                        self::$upgrade_definition_cache = $definitions;
+                }
+
+                return self::$upgrade_definition_cache;
+        }
+
+        /**
+         * Apply WordPress filters to a definitions array when available.
+         *
+         * @param string $hook        Filter hook name.
+         * @param array  $definitions Definitions to filter.
+     *
+     * @return array
+     */
+    private static function apply_filters_to_definitions( string $hook, array $definitions ): array {
+        if ( function_exists( 'apply_filters' ) ) {
+            $filtered = apply_filters( $hook, $definitions );
+
+            if ( is_array( $filtered ) ) {
+                return $filtered;
+            }
+        }
+
+        return $definitions;
+    }
+
+    /**
+     * Sort an associative definitions map by priority while preserving keys.
+     *
+     * @param array<string, mixed> $definitions Definitions keyed by identifier.
+     *
+     * @return array<string, mixed>
+     */
+    private static function sort_definition_map_by_priority( array $definitions ): array {
+        $indexed = [];
+        $position = 0;
+
+        foreach ( $definitions as $key => $definition ) {
+            $indexed[] = [
+                'key'        => $key,
+                'definition' => $definition,
+                'priority'   => self::extract_priority( $definition ),
+                'position'   => $position++,
+            ];
+        }
+
+        usort(
+            $indexed,
+            static function ( array $a, array $b ): int {
+                if ( $a['priority'] === $b['priority'] ) {
+                    return $a['position'] <=> $b['position'];
+                }
+
+                return $a['priority'] <=> $b['priority'];
+            }
+        );
+
+        $sorted = [];
+
+        foreach ( $indexed as $item ) {
+            $sorted[ $item['key'] ] = $item['definition'];
+        }
+
+        return $sorted;
+    }
+
+    /**
+     * Sort a list of definitions by priority while preserving order for ties.
+     *
+     * @param array<int, mixed> $definitions Indexed definitions array.
+     *
+     * @return array<int, mixed>
+     */
+    private static function sort_definition_list_by_priority( array $definitions ): array {
+        $indexed = [];
+
+        foreach ( $definitions as $index => $definition ) {
+            $indexed[] = [
+                'definition' => $definition,
+                'priority'   => self::extract_priority( $definition ),
+                'position'   => $index,
+            ];
+        }
+
+        usort(
+            $indexed,
+            static function ( array $a, array $b ): int {
+                if ( $a['priority'] === $b['priority'] ) {
+                    return $a['position'] <=> $b['position'];
+                }
+
+                return $a['priority'] <=> $b['priority'];
+            }
+        );
+
+        return array_map(
+            static fn ( array $item ) => $item['definition'],
+            $indexed
+        );
+    }
+
+    /**
+     * Extract the numeric priority from a definition.
+     *
+     * @param mixed $definition Definition entry that may include a priority.
+     *
+     * @return int
+     */
+    private static function extract_priority( $definition ): int {
+        if ( ! is_array( $definition ) || ! array_key_exists( 'priority', $definition ) ) {
+            return self::DEFAULT_PRIORITY;
+        }
+
+        $value = $definition['priority'];
+
+        if ( is_numeric( $value ) ) {
+            return (int) $value;
+        }
+
+        return self::DEFAULT_PRIORITY;
+    }
+
+        /**
+         * Provide a human readable component name for logging.
+         *
+         * @param string $class Fully qualified class name.
+         *
+         * @return string
+         */
+        private static function get_component_label( string $class ): string {
+                $parts = explode( '\\', $class );
+
+                return (string) array_pop( $parts );
+        }
+
+        /**
+         * Provide a human readable label for an arbitrary callback definition.
+         *
+         * @param mixed $callback Callback definition to describe.
+         *
+         * @return string
+         */
+        private static function describe_callback( $callback ): string {
+                if ( is_string( $callback ) ) {
+                        return $callback;
+                }
+
+                if ( is_array( $callback ) ) {
+                        $target = $callback[0] ?? null;
+                        $method = $callback[1] ?? '';
+
+                        if ( is_object( $target ) ) {
+                                $target = get_class( $target );
+                        }
+
+                        $target = is_string( $target ) ? $target : 'callback';
+                        $method = is_string( $method ) && '' !== $method ? $method : 'call';
+
+                        return sprintf( '%s::%s()', $target, $method );
+                }
+
+                return 'callback';
+        }
 
 	/**
 	 * Log initialization errors
@@ -352,331 +838,267 @@ class DigitalMarketingSuite {
 	 * @param \Throwable $error Error object
 	 * @return void
 	 */
-	private function log_initialization_error( string $component, \Throwable $error ): void {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
-			error_log( sprintf(
-				'FP Digital Marketing: Failed to initialize %s - %s in %s:%d',
-				$component,
-				$error->getMessage(),
-				$error->getFile(),
-				$error->getLine()
-			) );
-		}
-	}
+        private static function log_initialization_error( string $component, \Throwable $error ): void {
+                if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
+                        error_log( sprintf(
+                                'FP Digital Marketing: Failed to initialize %s - %s in %s:%d',
+                                $component,
+                                $error->getMessage(),
+                                $error->getFile(),
+                                $error->getLine()
+                        ) );
+                }
+        }
 
-	/**
-	 * Get application version
-	 *
-	 * @return string The application version.
-	 */
-	public function get_version(): string {
-		return $this->version;
-	}
+        /**
+         * Get application version
+         *
+         * @return string The application version.
+         */
+        public function get_version(): string {
+                return $this->version;
+        }
 
-	/**
-	 * Initialize the application with error handling
-	 *
-	 * @return void
-	 */
-	public function init(): void {
-		// Load text domain for internationalization.
-		$this->load_textdomain();
-
-		// Initialize components safely - check for null objects
-		try {
-			if ( $this->cliente_post_type !== null ) {
-				$this->cliente_post_type->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'ClientePostType->init()', $e );
-		}
-
-		try {
-			if ( $this->cliente_meta !== null ) {
-				$this->cliente_meta->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'ClienteMeta->init()', $e );
-		}
-
-		try {
-			if ( $this->seo_meta !== null ) {
-				$this->seo_meta->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'SeoMeta->init()', $e );
-		}
-
-		try {
-			if ( $this->settings !== null ) {
-				$this->settings->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'Settings->init()', $e );
-		}
-
-		try {
-			if ( $this->reports !== null ) {
-				$this->reports->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'Reports->init()', $e );
-		}
-
-		try {
-			if ( $this->dashboard !== null ) {
-				$this->dashboard->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'Dashboard->init()', $e );
-		}
-
-		try {
-			if ( $this->security_admin !== null ) {
-				$this->security_admin->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'SecurityAdmin->init()', $e );
-		}
-
-		try {
-			if ( $this->cache_performance !== null ) {
-				$this->cache_performance->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'CachePerformance->init()', $e );
-		}
-
-		try {
-			if ( $this->onboarding_wizard !== null ) {
-				$this->onboarding_wizard->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'OnboardingWizard->init()', $e );
-		}
-
-		try {
-			if ( $this->alerting_admin !== null ) {
-				$this->alerting_admin->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'AlertingAdmin->init()', $e );
-		}
-
-		try {
-			if ( $this->anomaly_detection_admin !== null ) {
-				$this->anomaly_detection_admin->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'AnomalyDetectionAdmin->init()', $e );
-		}
-
-		try {
-			if ( $this->anomaly_radar !== null ) {
-				$this->anomaly_radar->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'AnomalyRadar->init()', $e );
-		}
-
-		try {
-			if ( $this->utm_campaign_manager !== null ) {
-				$this->utm_campaign_manager->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'UTMCampaignManager->init()', $e );
-		}
-
-		try {
-			if ( $this->conversion_events_admin !== null ) {
-				$this->conversion_events_admin->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'ConversionEventsAdmin->init()', $e );
-		}
-
-		try {
-			if ( $this->segmentation_admin !== null ) {
-				$this->segmentation_admin->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'SegmentationAdmin->init()', $e );
-		}
-
-		try {
-			if ( $this->funnel_analysis_admin !== null ) {
-				$this->funnel_analysis_admin->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'FunnelAnalysisAdmin->init()', $e );
-		}
-
-                try {
-                        if ( $this->platform_connections !== null ) {
-                                $this->platform_connections->init();
-                        }
-                } catch ( \Throwable $e ) {
-                        $this->log_initialization_error( 'PlatformConnections->init()', $e );
+        /**
+         * Determine the plugin version string using the public constant when available.
+         *
+         * @return string
+         */
+        private static function get_current_version_string(): string {
+                if ( defined( 'FP_DIGITAL_MARKETING_VERSION' ) ) {
+                        return (string) FP_DIGITAL_MARKETING_VERSION;
                 }
 
-                // Bootstrap helpers that need early front-end hooks.
-                try {
-                        if ( class_exists( URLShortener::class ) ) {
-                                URLShortener::bootstrap();
-                        }
-                } catch ( \Throwable $e ) {
-                        $this->log_initialization_error( 'URLShortener::bootstrap()', $e );
+                return self::PLUGIN_VERSION;
+        }
+
+        /**
+         * Handle the plugins_loaded lifecycle.
+         *
+         * @return void
+         */
+        public function on_plugins_loaded(): void {
+                $this->detect_execution_context();
+
+                if ( ! $this->is_wordpress_supported() ) {
+                        $this->add_admin_error_notice( __( 'FP Digital Marketing Suite requires WordPress 5.0 or higher.', 'fp-digital-marketing' ) );
+                        return;
                 }
 
-                // Initialize centralized menu manager
+                if ( ! $this->is_php_supported() ) {
+                        $this->add_admin_error_notice( __( 'FP Digital Marketing Suite requires PHP 7.4 or higher.', 'fp-digital-marketing' ) );
+                        return;
+                }
+
                 try {
-			if ( $this->menu_manager !== null ) {
-				$this->menu_manager->init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'MenuManager->init()', $e );
-		}
+                        $this->instantiate_components();
+                        $this->maybe_run_upgrade_routines();
+                        $this->init();
+                        $this->bootstrap_setup_wizard();
+                } catch ( \Throwable $e ) {
+                        if ( function_exists( 'error_log' ) ) {
+                                error_log( 'FP Digital Marketing: Initialization error - ' . $e->getMessage() );
+                        }
 
-		// Initialize static helper classes with error handling
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\Capabilities' ) ) {
-				Capabilities::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'Capabilities::init()', $e );
-		}
+                        $this->add_admin_error_notice( __( 'FP Digital Marketing Suite failed to initialize. Check error logs for details.', 'fp-digital-marketing' ) );
+                }
+        }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\ReportScheduler' ) ) {
-				ReportScheduler::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'ReportScheduler::init()', $e );
-		}
+        /**
+         * Check if the current WordPress version is supported.
+         *
+         * @return bool
+         */
+        private function is_wordpress_supported(): bool {
+                return version_compare( get_bloginfo( 'version' ), '5.0', '>=' );
+        }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\SyncEngine' ) ) {
-				SyncEngine::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'SyncEngine::init()', $e );
-		}
+        /**
+         * Check if the current PHP version is supported.
+         *
+         * @return bool
+         */
+        private function is_php_supported(): bool {
+                return version_compare( PHP_VERSION, '7.4', '>=' );
+        }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\SegmentationEngine' ) ) {
-				SegmentationEngine::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'SegmentationEngine::init()', $e );
-		}
+        /**
+         * Display an error notice in the WordPress admin area.
+         *
+         * @param string $message Notice message.
+         *
+         * @return void
+         */
+        private function add_admin_error_notice( string $message ): void {
+                add_action(
+                        'admin_notices',
+                        static function () use ( $message ) {
+                                if ( ! current_user_can( 'manage_options' ) ) {
+                                        return;
+                                }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\API\SegmentationAPI' ) ) {
-				SegmentationAPI::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'SegmentationAPI::init()', $e );
-		}
+                                echo '<div class="notice notice-error"><p>' . esc_html( $message ) . '</p></div>';
+                        }
+                );
+        }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\SeoFrontendOutput' ) ) {
-				SeoFrontendOutput::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'SeoFrontendOutput::init()', $e );
-		}
+        /**
+         * Initialize the setup wizard once.
+         *
+         * @return void
+         */
+        private function bootstrap_setup_wizard(): void {
+                if ( $this->setup_wizard_bootstrapped || ! $this->is_context( self::CONTEXT_ADMIN ) ) {
+                        return;
+                }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\FrontendTracking' ) ) {
-				FrontendTracking::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'FrontendTracking::init()', $e );
-		}
+                if ( ! class_exists( SetupWizard::class ) ) {
+                        return;
+                }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\SchemaGenerator' ) ) {
-				SchemaGenerator::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'SchemaGenerator::init()', $e );
-		}
+                $has_activation_redirect = (bool) get_transient( 'fp_dms_activation_redirect' );
+                $should_bootstrap = $has_activation_redirect;
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\FAQBlock' ) ) {
-				FAQBlock::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'FAQBlock::init()', $e );
-		}
+                if ( class_exists( SettingsManager::class ) ) {
+                        $should_bootstrap = $should_bootstrap
+                                || ! SettingsManager::is_wizard_completed()
+                                || SettingsManager::is_wizard_menu_enabled();
+                } else {
+                        $should_bootstrap = true;
+                }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\XmlSitemap' ) ) {
-				XmlSitemap::init();
-				XmlSitemap::init_robots_txt();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'XmlSitemap::init()', $e );
-		}
+                if ( ! $should_bootstrap ) {
+                        return;
+                }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\DashboardWidgets' ) ) {
-				DashboardWidgets::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'DashboardWidgets::init()', $e );
-		}
+                $this->setup_wizard_bootstrapped = true;
+                new SetupWizard();
+        }
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\DataExporter' ) ) {
-				DataExporter::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'DataExporter::init()', $e );
-		}
+        /**
+         * Initialize the application with error handling
+         *
+         * @return void
+         */
+        public function init(): void {
+                // Load text domain for internationalization.
+                $this->load_textdomain();
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\EmailNotifications' ) ) {
-				EmailNotifications::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'EmailNotifications::init()', $e );
-		}
+                $this->initialize_components();
+                $this->run_static_initializers();
 
-		// Ensure recurring helper events are scheduled
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\PerformanceCache' ) ) {
-				PerformanceCache::schedule_cache_warmup();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'PerformanceCache::schedule_cache_warmup()', $e );
-		}
+                $this->execute_safely( fn () => $this->schedule_cleanup_tasks(), 'schedule_cleanup_tasks()' );
 
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Helpers\SiteHealth' ) ) {
-				SiteHealth::init();
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'SiteHealth::init()', $e );
-		}
+                $this->ensure_database_tables();
 
-		// Schedule cleanup tasks with error handling
-		try {
-			$this->schedule_cleanup_tasks();
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'schedule_cleanup_tasks()', $e );
-		}
+                $this->execute_safely( static fn () => do_action( 'fp_digital_marketing_suite_init' ), 'fp_digital_marketing_suite_init action' );
+        }
 
-		// Ensure database tables exist with comprehensive error handling
-		$this->ensure_database_tables();
+        /**
+         * Execute version-specific upgrade routines when the plugin version changes.
+         *
+         * @return void
+         */
+        private function maybe_run_upgrade_routines(): void {
+                if ( ! function_exists( 'get_option' ) || ! function_exists( 'update_option' ) ) {
+                        return;
+                }
 
-		// Hook for extensibility with error handling
-		try {
-			do_action( 'fp_digital_marketing_suite_init' );
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'fp_digital_marketing_suite_init action', $e );
-		}
-	}
+                $stored_version = get_option( self::VERSION_OPTION, null );
+                $previous_version = is_string( $stored_version ) && '' !== $stored_version ? $stored_version : '0.0.0';
+                $current_version  = $this->get_version();
+
+                if ( version_compare( $current_version, $previous_version, '=' ) ) {
+                        return;
+                }
+
+                foreach ( self::get_upgrade_definitions() as $version => $routines ) {
+                        if ( ! is_array( $routines ) ) {
+                                continue;
+                        }
+
+                        if ( version_compare( (string) $version, $previous_version, '<=' ) ) {
+                                continue;
+                        }
+
+                        if ( version_compare( (string) $version, $current_version, '>' ) ) {
+                                continue;
+                        }
+
+                        foreach ( $routines as $routine ) {
+                                $callback = $routine['callback'] ?? null;
+
+                                if ( ! is_callable( $callback ) ) {
+                                        continue;
+                                }
+
+                                $label = is_string( $routine['label'] ?? null )
+                                        ? $routine['label']
+                                        : self::describe_callback( $callback );
+
+                                $this->execute_safely(
+                                        static function () use ( $callback, $previous_version, $current_version ): void {
+                                                call_user_func( $callback, $previous_version, $current_version );
+                                        },
+                                        $label
+                                );
+                        }
+                }
+
+                self::execute_callback_safely(
+                        static function () use ( $current_version ): void {
+                                update_option( self::VERSION_OPTION, $current_version, false );
+                        },
+                        sprintf( 'update_option(%s)', self::VERSION_OPTION )
+                );
+
+                if ( function_exists( 'do_action' ) ) {
+                        $this->execute_safely(
+                                static function () use ( $previous_version, $current_version ): void {
+                                        do_action( 'fp_dms_after_upgrade', $previous_version, $current_version );
+                                },
+                                'fp_dms_after_upgrade action'
+                        );
+                }
+        }
+
+        /**
+         * Invoke component initializers and the menu manager lifecycle hook.
+         *
+         * @return void
+         */
+        private function initialize_components(): void {
+                foreach ( $this->get_component_definitions() as $property => $definition ) {
+                        $method = 'init';
+
+                        if ( is_array( $definition ) ) {
+                                $method = $definition['init'] ?? 'init';
+                        }
+
+                        if ( null === $method ) {
+                                continue;
+                        }
+
+                        $this->invoke_component_method( $property, $method );
+                }
+
+                $this->invoke_component_method( self::MENU_MANAGER_KEY, 'init' );
+        }
+
+        /**
+         * Execute static lifecycle initializers in a safe, centralized loop.
+         *
+         * @return void
+         */
+        private function run_static_initializers(): void {
+                foreach ( self::get_static_initializers_config() as $initializer ) {
+                        $this->invoke_static_method(
+                                $initializer['class'],
+                                $initializer['method'],
+                                $initializer['label'] ?? null
+                        );
+                }
+        }
 
 	/**
 	 * Load plugin text domain for internationalization
@@ -697,212 +1119,276 @@ class DigitalMarketingSuite {
 	 * @return void
 	 */
 	private function ensure_database_tables(): void {
-		$tables = [
-			'MetricsCacheTable' => '\FP\DigitalMarketing\Database\MetricsCacheTable',
-			'AlertRulesTable' => '\FP\DigitalMarketing\Database\AlertRulesTable',
-			'AnomalyRulesTable' => '\FP\DigitalMarketing\Database\AnomalyRulesTable',
-			'DetectedAnomaliesTable' => '\FP\DigitalMarketing\Database\DetectedAnomaliesTable',
-			'UTMCampaignsTable' => '\FP\DigitalMarketing\Database\UTMCampaignsTable',
-			'ConversionEventsTable' => '\FP\DigitalMarketing\Database\ConversionEventsTable',
-			'AudienceSegmentTable' => '\FP\DigitalMarketing\Database\AudienceSegmentTable',
-			'FunnelTable' => '\FP\DigitalMarketing\Database\FunnelTable',
-			'CustomerJourneyTable' => '\FP\DigitalMarketing\Database\CustomerJourneyTable',
-			'CustomReportsTable' => '\FP\DigitalMarketing\Database\CustomReportsTable',
-			'SocialSentimentTable' => '\FP\DigitalMarketing\Database\SocialSentimentTable'
-		];
+        if (
+            ! $this->is_context( self::CONTEXT_ADMIN )
+            && ! $this->is_context( self::CONTEXT_CLI )
+            && ! $this->is_context( self::CONTEXT_CRON )
+        ) {
+            return;
+        }
 
-		foreach ( $tables as $name => $class ) {
-			try {
-				if ( class_exists( $class ) ) {
-					if ( $name === 'AudienceSegmentTable' ) {
-						// Special handling for AudienceSegmentTable which has multiple tables
-						if ( method_exists( $class, 'segments_table_exists' ) && ! $class::segments_table_exists() ) {
-							$class::create_segments_table();
-						}
-						if ( method_exists( $class, 'membership_table_exists' ) && ! $class::membership_table_exists() ) {
-							$class::create_membership_table();
-						}
-					} elseif ( $name === 'FunnelTable' ) {
-						// Special handling for FunnelTable which has multiple tables
-						if ( method_exists( $class, 'table_exists' ) && ! $class::table_exists() ) {
-							$class::create_table();
-						}
-						if ( method_exists( $class, 'stages_table_exists' ) && ! $class::stages_table_exists() ) {
-							$class::create_stages_table();
-						}
-					} elseif ( $name === 'CustomerJourneyTable' ) {
-						// Special handling for CustomerJourneyTable which has multiple tables
-						if ( method_exists( $class, 'table_exists' ) && ! $class::table_exists() ) {
-							$class::create_table();
-						}
-						if ( method_exists( $class, 'sessions_table_exists' ) && ! $class::sessions_table_exists() ) {
-							$class::create_sessions_table();
-						}
-					} else {
-						// Standard table creation
-						if ( method_exists( $class, 'table_exists' ) && ! $class::table_exists() ) {
-							$class::create_table();
-						} elseif ( method_exists( $class, 'create_table' ) ) {
-							// Fallback if table_exists doesn't exist
-							$class::create_table();
-						}
-					}
+        foreach ( self::get_table_definitions_config() as $class => $operations ) {
+            if ( ! class_exists( $class ) ) {
+                continue;
+            }
+
+            foreach ( $operations as $operation ) {
+				$check = $operation['check'] ?? null;
+				$create = $operation['create'] ?? null;
+
+				if ( null === $create || ! method_exists( $class, $create ) ) {
+					continue;
 				}
-			} catch ( \Throwable $e ) {
-				$this->log_initialization_error( "Database table creation for {$name}", $e );
+
+				$should_create = true;
+
+				if ( $check && method_exists( $class, $check ) ) {
+					$should_create = ! $class::$check();
+				}
+
+				if ( ! $should_create ) {
+					continue;
+				}
+
+                                $label = $operation['label'] ?? sprintf(
+                                        '%s::%s()',
+                                        self::get_component_label( $class ),
+                                        $create
+                                );
+
+				$this->execute_safely(
+					static fn () => $class::$create(),
+					$label
+				);
 			}
 		}
 	}
 
 	/**
-	 * Ensure metrics cache table exists
+	 * Execute a component instance method safely.
+	 *
+	 * @param string $property Property that holds the instance.
+	 * @param string $method   Method name to execute.
 	 *
 	 * @return void
 	 */
-	private function ensure_metrics_cache_table(): void {
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Database\MetricsCacheTable' ) ) {
-				if ( ! MetricsCacheTable::table_exists() ) {
-					MetricsCacheTable::create_table();
-				}
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'MetricsCacheTable creation', $e );
-		}
-	}
+        private function invoke_component_method( string $property, string $method ): void {
+                $component = $this->get_component_instance( $property );
+
+                if ( ! $component || ! method_exists( $component, $method ) ) {
+                        return;
+                }
+
+                $label = sprintf(
+                        '%s->%s()',
+                        self::get_component_label( get_class( $component ) ),
+                        $method
+                );
+
+                $this->execute_safely(
+                        static fn () => $component->{$method}(),
+                        $label
+                );
+        }
 
 	/**
-	 * Ensure alert rules table exists
+	 * Execute a static class method safely.
+	 *
+	 * @param string      $class  Fully qualified class name.
+	 * @param string      $method Method to execute.
+	 * @param string|null $label  Optional label for logging.
 	 *
 	 * @return void
 	 */
-	private function ensure_alert_rules_table(): void {
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Database\AlertRulesTable' ) ) {
-				if ( ! AlertRulesTable::table_exists() ) {
-					AlertRulesTable::create_table();
-				}
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'AlertRulesTable creation', $e );
+	private function invoke_static_method( string $class, string $method, ?string $label = null ): void {
+		if ( ! class_exists( $class ) || ! method_exists( $class, $method ) ) {
+			return;
 		}
-	}
+
+                $context = $label ?? sprintf(
+                        '%s::%s()',
+                        self::get_component_label( $class ),
+                        $method
+                );
+
+                $this->execute_safely(
+                        static fn () => $class::$method(),
+                        $context
+                );
+        }
 
 	/**
-	 * Ensure anomaly rules table exists
+	 * Execute a callback while logging unexpected errors.
+	 *
+	 * @param callable $callback Callback to execute.
+	 * @param string   $context  Context label for logging.
 	 *
 	 * @return void
 	 */
-	private function ensure_anomaly_rules_table(): void {
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Database\AnomalyRulesTable' ) ) {
-				if ( ! AnomalyRulesTable::table_exists() ) {
-					AnomalyRulesTable::create_table();
-				}
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'AnomalyRulesTable creation', $e );
-		}
-	}
+        private function execute_safely( callable $callback, string $context ): void {
+                self::execute_callback_safely( $callback, $context );
+        }
 
-	/**
-	 * Ensure detected anomalies table exists
-	 *
-	 * @return void
-	 */
-	private function ensure_detected_anomalies_table(): void {
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Database\DetectedAnomaliesTable' ) ) {
-				if ( ! DetectedAnomaliesTable::table_exists() ) {
-					DetectedAnomaliesTable::create_table();
-				}
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'DetectedAnomaliesTable creation', $e );
-		}
-	}
+        /**
+         * Execute a callback safely from static contexts.
+         *
+         * @param callable $callback Callback to execute.
+         * @param string   $context  Context label for logging.
+         *
+         * @return void
+         */
+        private static function execute_callback_safely( callable $callback, string $context ): void {
+                try {
+                        $callback();
+                } catch ( \Throwable $e ) {
+                        self::log_initialization_error( $context, $e );
+                }
+        }
 
-	/**
-	 * Ensure UTM campaigns table exists
-	 *
-	 * @return void
-	 */
-	private function ensure_utm_campaigns_table(): void {
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Database\UTMCampaignsTable' ) ) {
-				if ( ! UTMCampaignsTable::table_exists() ) {
-					UTMCampaignsTable::create_table();
-				}
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'UTMCampaignsTable creation', $e );
-		}
-	}
+        /**
+         * Schedule cleanup tasks with error handling
+         *
+         * @return void
+         */
+        private function schedule_cleanup_tasks(): void {
+                if ( ! function_exists( 'wp_next_scheduled' ) || ! function_exists( 'wp_schedule_event' ) ) {
+                        return;
+                }
 
-	/**
-	 * Ensure conversion events table exists
-	 *
-	 * @return void
-	 */
-	private function ensure_conversion_events_table(): void {
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Database\ConversionEventsTable' ) ) {
-				if ( ! ConversionEventsTable::table_exists() ) {
-					ConversionEventsTable::create_table();
-				}
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'ConversionEventsTable creation', $e );
-		}
-	}
+                // Schedule daily cleanup of export files.
+                if ( ! wp_next_scheduled( 'fp_dms_cleanup_exports' ) ) {
+                        wp_schedule_event( time(), 'daily', 'fp_dms_cleanup_exports' );
+                }
 
-	/**
-	 * Ensure audience segment tables exist
-	 *
-	 * @return void
-	 */
-	private function ensure_audience_segment_tables(): void {
-		try {
-			if ( class_exists( '\FP\DigitalMarketing\Database\AudienceSegmentTable' ) ) {
-				if ( ! AudienceSegmentTable::segments_table_exists() ) {
-					AudienceSegmentTable::create_segments_table();
-				}
-				
-				if ( ! AudienceSegmentTable::membership_table_exists() ) {
-					AudienceSegmentTable::create_membership_table();
-				}
-			}
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'AudienceSegmentTable creation', $e );
-		}
-	}
+                // Hook cleanup actions with error handling.
+                add_action( 'fp_dms_cleanup_exports', static function (): void {
+                        if ( ! class_exists( DataExporter::class ) ) {
+                                return;
+                        }
 
-	/**
-	 * Schedule cleanup tasks with error handling
-	 *
-	 * @return void
-	 */
-	private function schedule_cleanup_tasks(): void {
-		try {
-			// Schedule daily cleanup of export files
-			if ( ! wp_next_scheduled( 'fp_dms_cleanup_exports' ) ) {
-				wp_schedule_event( time(), 'daily', 'fp_dms_cleanup_exports' );
-			}
+                        self::execute_callback_safely(
+                                static fn () => DataExporter::cleanup_old_exports(),
+                                'DataExporter::cleanup_old_exports()'
+                        );
+                } );
+        }
 
-			// Hook cleanup actions with error handling
-			add_action( 'fp_dms_cleanup_exports', function() {
-				try {
-					if ( class_exists( '\FP\DigitalMarketing\Helpers\DataExporter' ) ) {
-						DataExporter::cleanup_old_exports();
-					}
-				} catch ( \Throwable $e ) {
-					if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
-						error_log( 'FP Digital Marketing: Cleanup error - ' . $e->getMessage() );
-					}
-				}
-			} );
-		} catch ( \Throwable $e ) {
-			$this->log_initialization_error( 'schedule_cleanup_tasks', $e );
-		}
-	}
+        /**
+         * Tasks executed on plugin activation.
+         *
+         * @return void
+         */
+        public static function activate(): void {
+                self::execute_callback_safely(
+                        static function (): void {
+                                if ( ! function_exists( 'dbDelta' ) && defined( 'ABSPATH' ) ) {
+                                        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+                                }
+                        },
+                        'load WordPress upgrade helpers'
+                );
+
+        foreach ( self::get_table_definitions_config() as $class => $operations ) {
+            if ( ! class_exists( $class ) ) {
+                continue;
+            }
+
+            foreach ( $operations as $operation ) {
+                $method = $operation['create'] ?? null;
+
+                if ( ! $method || ! method_exists( $class, $method ) ) {
+                    continue;
+                }
+
+                $label = $operation['label'] ?? sprintf(
+                    '%s::%s()',
+                    self::get_component_label( $class ),
+                    $method
+                );
+
+                self::execute_callback_safely(
+                    static fn () => $class::$method(),
+                    $label
+                );
+            }
+        }
+
+                if ( class_exists( Capabilities::class ) && method_exists( Capabilities::class, 'register_capabilities' ) ) {
+                        self::execute_callback_safely(
+                                static fn () => Capabilities::register_capabilities(),
+                                'Capabilities::register_capabilities()'
+                        );
+                }
+
+                if ( function_exists( 'flush_rewrite_rules' ) ) {
+                        self::execute_callback_safely(
+                                static fn () => flush_rewrite_rules(),
+                                'flush_rewrite_rules()'
+                        );
+                }
+
+                if ( function_exists( 'set_transient' ) ) {
+                        self::execute_callback_safely(
+                                static fn () => set_transient( 'fp_dms_activation_redirect', true, 30 ),
+                                'set_transient(fp_dms_activation_redirect)'
+                        );
+                }
+
+                $version = self::get_current_version_string();
+
+                self::execute_callback_safely(
+                        static function () use ( $version ): void {
+                                if ( function_exists( 'update_option' ) ) {
+                                        update_option( self::VERSION_OPTION, $version, false );
+                                }
+                        },
+                        sprintf( 'update_option(%s)', self::VERSION_OPTION )
+                );
+        }
+
+        /**
+         * Tasks executed on plugin deactivation.
+         *
+         * @return void
+         */
+        public static function deactivate(): void {
+                $deactivation_callbacks = [
+                        Capabilities::class => 'remove_capabilities',
+                        SyncEngine::class => 'unschedule_sync',
+                        ReportScheduler::class => 'unschedule_reports',
+                        PerformanceCache::class => 'unschedule_cache_warmup',
+                        SegmentationEngine::class => 'unschedule_full_evaluation',
+                        EmailNotifications::class => 'unschedule_daily_digest',
+                ];
+
+                foreach ( $deactivation_callbacks as $class => $method ) {
+                        if ( ! class_exists( $class ) || ! method_exists( $class, $method ) ) {
+                                continue;
+                        }
+
+                        self::execute_callback_safely(
+                                static fn () => $class::$method(),
+                                sprintf( '%s::%s()', self::get_component_label( $class ), $method )
+                        );
+                }
+
+                if ( function_exists( 'wp_clear_scheduled_hook' ) ) {
+                        self::execute_callback_safely(
+                                static fn () => wp_clear_scheduled_hook( 'fp_dms_cleanup_exports' ),
+                                'wp_clear_scheduled_hook(fp_dms_cleanup_exports)'
+                        );
+
+                        self::execute_callback_safely(
+                                static fn () => wp_clear_scheduled_hook( 'fp_dms_cleanup_export_file' ),
+                                'wp_clear_scheduled_hook(fp_dms_cleanup_export_file)'
+                        );
+                }
+
+                if ( function_exists( 'flush_rewrite_rules' ) ) {
+                        self::execute_callback_safely(
+                                static fn () => flush_rewrite_rules(),
+                                'flush_rewrite_rules()'
+                        );
+                }
+        }
 }

@@ -21,6 +21,11 @@
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
         "phpunit/phpunit": "^9.6"
     },
+    "autoload": {
+        "psr-4": {
+            "FP\\DigitalMarketing\\": "src/"
+        }
+    },
     "config": {
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
