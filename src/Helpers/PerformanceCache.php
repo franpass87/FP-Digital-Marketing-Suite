@@ -1165,18 +1165,56 @@ class PerformanceCache {
 	 *
 	 * @return int Number of transients
 	 */
-	private static function count_plugin_transients(): int {
-		global $wpdb;
-		
-		$count = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s",
-				'_transient_fp_dms_%'
-			)
-		);
+        private static function count_plugin_transients(): int {
+                global $wpdb;
 
-		return (int) $count;
-	}
+                $table_name = '';
+
+                if ( isset( $wpdb ) && is_object( $wpdb ) ) {
+                        if ( property_exists( $wpdb, 'options' ) ) {
+                                $table_name = (string) $wpdb->options;
+                        } elseif ( property_exists( $wpdb, 'prefix' ) ) {
+                                $table_name = $wpdb->prefix . 'options';
+                        }
+                }
+
+                if ( '' !== $table_name && isset( $wpdb ) && is_object( $wpdb ) && method_exists( $wpdb, 'prepare' ) && method_exists( $wpdb, 'get_var' ) ) {
+                        $query = $wpdb->prepare(
+                                "SELECT COUNT(*) FROM {$table_name} WHERE option_name LIKE %s",
+                                '_transient_fp_dms_%'
+                        );
+
+                        $count = $wpdb->get_var( $query );
+
+                        if ( null !== $count ) {
+                                return (int) $count;
+                        }
+                }
+
+                return self::count_plugin_transients_fallback();
+        }
+
+        /**
+         * Count plugin transients when direct database access is not available.
+         *
+         * @return int
+         */
+        private static function count_plugin_transients_fallback(): int {
+                if ( isset( $GLOBALS['wp_options'] ) && is_array( $GLOBALS['wp_options'] ) ) {
+                        $keys = array_keys( $GLOBALS['wp_options'] );
+
+                        $matches = array_filter(
+                                $keys,
+                                static function ( string $option_name ): bool {
+                                        return strpos( $option_name, '_transient_fp_dms_' ) === 0;
+                                }
+                        );
+
+                        return count( $matches );
+                }
+
+                return 0;
+        }
 
 	/**
 	 * Schedule automatic cache warmup

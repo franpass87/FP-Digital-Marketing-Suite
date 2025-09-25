@@ -27,14 +27,11 @@ class SyncLog {
 	 * @param array $data Log data
 	 * @return int Log ID
 	 */
-	public static function create( array $data ): int {
-		global $wpdb;
-		
-		// Try to use custom table if it exists, otherwise fall back to options
-		$table_name = $wpdb->prefix . 'fp_dms_sync_logs';
-		
-		$log_entry = array_merge( [
-			'sync_type' => 'automatic',
+        public static function create( array $data ): int {
+                $table_name = self::get_table_name();
+
+                $log_entry = array_merge( [
+                        'sync_type' => 'automatic',
 			'status' => 'running',
 			'message' => '',
 			'started_at' => current_time( 'mysql' ),
@@ -42,7 +39,8 @@ class SyncLog {
 		], $data );
 		
 		// Check if custom table exists
-                if ( self::table_exists( $table_name ) ) {
+                if ( $table_name && self::table_exists( $table_name ) ) {
+                        global $wpdb;
                         $wpdb->insert( $table_name, $log_entry );
                         return $wpdb->insert_id;
                 } else {
@@ -71,11 +69,10 @@ class SyncLog {
 	 * @return bool Success status
 	 */
         public static function update( int $id, array $data ): bool {
-                global $wpdb;
-
-                $table_name = isset( $wpdb ) ? $wpdb->prefix . 'fp_dms_sync_logs' : '';
+                $table_name = self::get_table_name();
 
                 if ( $table_name && self::table_exists( $table_name ) ) {
+                        global $wpdb;
                         $columns = self::get_sync_log_table_columns( $table_name );
 
                         if ( empty( $columns ) ) {
@@ -157,11 +154,10 @@ class SyncLog {
 	 * @return array Array of log entries
 	 */
         public static function get_all_logs( int $limit = 50 ): array {
-                global $wpdb;
-
-                $table_name = isset( $wpdb ) ? $wpdb->prefix . 'fp_dms_sync_logs' : '';
+                $table_name = self::get_table_name();
 
                 if ( $table_name && self::table_exists( $table_name ) ) {
+                        global $wpdb;
                         $limit = max( 1, $limit );
 
                         $logs = $wpdb->get_results(
@@ -223,14 +219,33 @@ class SyncLog {
 	 * @return bool True if table exists
 	 */
         private static function table_exists( string $table_name ): bool {
+                if ( '' === $table_name ) {
+                        return false;
+                }
+
                 global $wpdb;
 
-                if ( ! isset( $wpdb ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
+                if ( ! isset( $wpdb ) || ! is_object( $wpdb ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
                         return false;
                 }
 
                 $query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name );
                 return $wpdb->get_var( $query ) === $table_name;
+        }
+
+        /**
+         * Resolve the sync logs table name when the database layer is available.
+         *
+         * @return string
+         */
+        private static function get_table_name(): string {
+                global $wpdb;
+
+                if ( isset( $wpdb ) && is_object( $wpdb ) && property_exists( $wpdb, 'prefix' ) ) {
+                        return (string) $wpdb->prefix . 'fp_dms_sync_logs';
+                }
+
+                return '';
         }
 
         /**
@@ -386,35 +401,38 @@ class SyncLog {
 	 * @param int $days Keep logs from last N days
 	 * @return int Number of logs removed
 	 */
-	public static function cleanup_old_logs( int $days = 30 ): int {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'fp_dms_sync_logs';
-		
-		if ( self::table_exists( $table_name ) ) {
-			// Use custom table
-			$cutoff_date = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
-			$deleted = $wpdb->query( 
+        public static function cleanup_old_logs( int $days = 30 ): int {
+                $table_name = self::get_table_name();
+
+                if ( $table_name && self::table_exists( $table_name ) ) {
+                        global $wpdb;
+                        // Use custom table
+                        $cutoff_date = gmdate( 'Y-m-d H:i:s', strtotime( "-{$days} days" ) );
+                        $deleted = $wpdb->query(
 				$wpdb->prepare( 
 					"DELETE FROM {$table_name} WHERE started_at < %s", 
 					$cutoff_date 
 				) 
 			);
 			return $deleted ?: 0;
-		} else {
-			// Use options table fallback
-			$logs = self::get_all_logs();
-			$cutoff_time = strtotime( "-{$days} days" );
-			$original_count = count( $logs );
-			
-			$logs = array_filter( $logs, function( $log ) use ( $cutoff_time ) {
-				return strtotime( $log['started_at'] ) > $cutoff_time;
-			} );
-			
-			update_option( 'fp_dms_sync_logs', array_values( $logs ) );
-			
-			return $original_count - count( $logs );
-		}
-	}
+                } else {
+                        // Use options table fallback
+                        $logs = get_option( 'fp_dms_sync_logs', [] );
+                        $cutoff_time = strtotime( "-{$days} days" );
+                        $original_count = count( $logs );
+
+                        $logs = array_filter( $logs, static function ( $log ) use ( $cutoff_time ) {
+                                $started_at = $log['started_at'] ?? null;
+                                $timestamp = $started_at ? strtotime( (string) $started_at ) : 0;
+
+                                return $timestamp > $cutoff_time;
+                        } );
+
+                        update_option( 'fp_dms_sync_logs', array_values( $logs ) );
+
+                        return $original_count - count( $logs );
+                }
+        }
 
 	/**
 	 * Get sync statistics
