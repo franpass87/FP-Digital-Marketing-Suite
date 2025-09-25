@@ -8,7 +8,7 @@ We take the security of FP Digital Marketing Suite seriously. If you discover a 
 
 **DO NOT** create a public GitHub issue for security vulnerabilities. Instead, please report security issues privately by:
 
-1. **Email**: Send details to `franpass87@example.com` with the subject line "SECURITY: [Brief Description]"
+1. **Email**: Send details to `info@francescopasseri.com` with the subject line "SECURITY: [Brief Description]"
 2. **Include the following information**:
    - Description of the vulnerability
    - Steps to reproduce the issue

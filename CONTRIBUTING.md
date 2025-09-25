@@ -272,7 +272,7 @@ For feature requests, include:
 **DO NOT** report security vulnerabilities through public GitHub issues.
 
 Instead, please report them privately:
-- **Email**: franpass87@example.com
+- **Email**: info@francescopasseri.com
 - **Subject**: SECURITY: [Brief Description]
 
 See our [Security Policy](SECURITY.md) for more details.
@@ -301,7 +301,7 @@ See our [Security Policy](SECURITY.md) for more details.
 
 - **GitHub Issues**: Bug reports and feature requests
 - **GitHub Discussions**: General questions and community discussion
-- **Email**: franpass87@example.com for direct contact
+- **Email**: info@francescopasseri.com for direct contact
 
 ### Recognition
 
@@ -350,6 +350,6 @@ If you have questions about contributing:
 
 1. Check existing [GitHub Issues](https://github.com/franpass87/FP-Digital-Marketing-Suite/issues)
 2. Create a new issue with the `question` label
-3. Email the maintainers: franpass87@example.com
+3. Email the maintainers: info@francescopasseri.com
 
 Thank you for contributing to FP Digital Marketing Suite! 🚀
