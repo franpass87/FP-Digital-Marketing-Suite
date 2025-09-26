@@ -1,6 +1,6 @@
 # FP Digital Marketing Suite
 
-The FP Digital Marketing Suite is a comprehensive WordPress toolkit for agencies and growth teams that need dependable client intelligence, actionable analytics and automated marketing workflows. Version 1.2.0 hardens the upgrade pipeline with multisite-aware migrations, normalized caches and automated runtime flushes so analytics stay trustworthy immediately after updates.
+The FP Digital Marketing Suite is a comprehensive WordPress toolkit for agencies and growth teams that need dependable client intelligence, actionable analytics and automated marketing workflows. Version 1.3.0 refreshes the entire WordPress admin experience with accessible design tokens, reusable interface components, centralized menu management and hardened validation so teams can move faster with confidence.
 
 ## Highlights
 
@@ -20,7 +20,7 @@ The FP Digital Marketing Suite is a comprehensive WordPress toolkit for agencies
 
 ### Using the packaged release (recommended)
 
-1. Download the latest `fp-digital-marketing-suite-1.2.0.zip` archive from the [`dist/`](dist/) directory or the GitHub release.
+1. Download the latest `fp-digital-marketing-suite-1.3.0.zip` archive from the GitHub Releases page.
 2. Upload the ZIP via **Plugins → Add New → Upload Plugin** inside WordPress or extract it into `wp-content/plugins/`.
 3. Activate **FP Digital Marketing Suite** from the plugins list.
 4. Run the included [`verify-deployment.php`](verify-deployment.php) script from wp-admin or WP-CLI to confirm server compatibility.
@@ -38,6 +38,20 @@ The FP Digital Marketing Suite is a comprehensive WordPress toolkit for agencies
    composer install
    ```
 
+### Build assets
+
+Compiled CSS and packaged ZIP files are generated on demand and are not tracked in version control.
+
+```bash
+# Build admin styles (outputs to assets/dist/)
+composer run build:admin-styles
+
+# Create the distributable ZIP in dist/
+./build.sh
+```
+
+If you skip these steps the repository will not contain the compiled assets referenced by the plugin enqueue logic.
+
 ## Usage Overview
 
 ### Settings & Configuration
@@ -50,13 +64,13 @@ After activation the suite adds a **Settings → FP Digital Marketing** entry th
 
 ### Release Artifacts & Verification
 
-- **Distribution Package** – `dist/fp-digital-marketing-suite-1.2.0.zip`
-- **Checksum** – `dist/fp-digital-marketing-suite-1.2.0.zip.sha256`
+- **Distribution Package** – Generate with `./build.sh` (written to `dist/`)
+- **Checksum** – Generated alongside the ZIP via the build script
 - **Automated Tests** – Run `php phpunit.phar --configuration phpunit.xml`
 - **Static Analysis** – Execute `vendor/bin/phpstan analyse --memory-limit=1G`
 - **Coding Standards** – Execute `vendor/bin/phpcs --report=summary`
 
-See [`docs/audit/release.md`](docs/audit/release.md) for the full release checklist, manual verification steps, and QA outcomes for version 1.2.0.
+See [`docs/audit/release.md`](docs/audit/release.md) for the full release checklist, manual verification steps, and QA outcomes for version 1.3.0.
 
 Settings rely on the WordPress Settings API, enforce nonce validation and sanitize every field before persisting.
 
@@ -371,6 +385,7 @@ For complete API documentation, see [METRICS_QUERY_API.md](METRICS_QUERY_API.md)
 
 | Version | Date       | Highlights |
 |---------|------------|------------|
+| **1.3.0** | 2025-10-10 | Comprehensive admin UI revamp with refreshed IA, reusable components, accessible design tokens and list-table enhancements. |
 | **1.2.0** | 2025-09-26 | Hardened upgrade engine with cache schema migrations, automated runtime cache purges and network-aware version tracking. |
 | **1.1.0** | 2024-04-30 | Advanced reporting workspace, proactive alert center, full documentation refresh, updated author branding. |
 | **1.0.1** | 2024-03-12 | Performance caching layer, unified data aggregation pipeline, onboarding wizard, admin UI optimizations. |
@@ -400,8 +415,13 @@ All pull requests must pass the CI pipeline before being merged.
 
 This project is licensed under the MIT License.
 
+### Admin UI assets
+
+- Source CSS lives in `assets/src/admin/` and is copied to `assets/dist/admin/` for distribution.
+- Run `composer run build:admin-styles` whenever tokens or base styles change to regenerate the distributable files.
+
 ## Build & Release (CI)
-- Build artifacts (zip) are not tracked in the repository.
-- Pull Request builds generate the plugin zip via CI and expose it as an artifact.
+- Release commits publish signed ZIP archives and SHA-256 checksums in `dist/`.
+- Pull Request builds can generate the plugin zip via CI and expose it as an artifact for verification.
 - Tagging a commit with `v*` triggers a release workflow that attaches the zip and its checksum to the GitHub Release.
-- Local build: `bash scripts/build-plugin-zip.sh` → output in `dist/`.
+- Local build: `./build.sh` → output in `dist/`.

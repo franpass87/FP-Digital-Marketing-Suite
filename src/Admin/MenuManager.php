@@ -53,6 +53,8 @@ class MenuManager
         }
 
         add_action('admin_menu', [$this, 'register_menus'], 5);
+        add_action('admin_menu', [$this, 'remove_legacy_menus'], 999);
+        add_action('admin_init', [$this, 'handle_legacy_redirects']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('admin_notices', [$this, 'show_rationalization_notice']);
         add_action('wp_ajax_fp_dms_dismiss_menu_notice', [$this, 'handle_dismiss_notice']);
@@ -189,10 +191,10 @@ class MenuManager
 
         echo '<div style="margin-top: 20px;">';
         echo '<a href="' . esc_url(admin_url('admin.php?page=' . self::MAIN_MENU_SLUG)) . '" class="button button-primary">';
-        echo esc_html__('Vai alla Dashboard', 'fp-digital-marketing');
+        echo esc_html__('Vai alla panoramica', 'fp-digital-marketing');
         echo '</a> ';
         echo '<a href="' . esc_url(admin_url('admin.php?page=fp-digital-marketing-settings')) . '" class="button">';
-        echo esc_html__('Impostazioni Plugin', 'fp-digital-marketing');
+        echo esc_html__('Apri impostazioni', 'fp-digital-marketing');
         echo '</a>';
         echo '</div>';
 
@@ -207,24 +209,24 @@ class MenuManager
 
         $cards = [
             [
-                'title' => __('📊 Dashboard Principale', 'fp-digital-marketing'),
-                'description' => __('Visualizza panoramica completa delle metriche e KPI.', 'fp-digital-marketing'),
+                'title' => __('Panoramica performance', 'fp-digital-marketing'),
+                'description' => __('Visualizza la dashboard con KPI e stato delle integrazioni.', 'fp-digital-marketing'),
                 'url' => admin_url('admin.php?page=' . self::MAIN_MENU_SLUG),
-                'label' => __('Vai alla Dashboard', 'fp-digital-marketing'),
+                'label' => __('Vai alla panoramica', 'fp-digital-marketing'),
                 'primary' => true,
             ],
             [
-                'title' => __('⚙️ Configurazione', 'fp-digital-marketing'),
-                'description' => __('Configura le impostazioni del plugin e le connessioni.', 'fp-digital-marketing'),
+                'title' => __('Impostazioni generali', 'fp-digital-marketing'),
+                'description' => __('Configura le connessioni e le preferenze del plugin.', 'fp-digital-marketing'),
                 'url' => admin_url('admin.php?page=fp-digital-marketing-settings'),
-                'label' => __('Impostazioni', 'fp-digital-marketing'),
+                'label' => __('Apri impostazioni', 'fp-digital-marketing'),
                 'primary' => false,
             ],
             [
-                'title' => __('🛠️ Setup Guidato', 'fp-digital-marketing'),
-                'description' => __('Configura il plugin passo-passo con la procedura guidata.', 'fp-digital-marketing'),
+                'title' => __('Configurazione guidata', 'fp-digital-marketing'),
+                'description' => __('Avvia il percorso passo-passo per completare il setup.', 'fp-digital-marketing'),
                 'url' => admin_url('admin.php?page=' . self::WIZARD_MENU_SLUG),
-                'label' => __('Avvia Setup', 'fp-digital-marketing'),
+                'label' => __('Apri configurazione guidata', 'fp-digital-marketing'),
                 'primary' => false,
             ],
         ];
@@ -247,22 +249,27 @@ class MenuManager
     private function get_page_name_from_slug(string $slug): string
     {
         $page_names = [
-            self::MAIN_MENU_SLUG => __('Dashboard', 'fp-digital-marketing'),
-            'fp-digital-marketing-reports' => __('Reports & Analytics', 'fp-digital-marketing'),
-            'fp-conversion-events' => __('Eventi Conversione', 'fp-digital-marketing'),
-            'fp-utm-campaign-manager' => __('Gestione Campagne UTM', 'fp-digital-marketing'),
-            'fp-digital-marketing-funnel-analysis' => __('Funnel Analysis', 'fp-digital-marketing'),
-            'fp-audience-segments' => __('Segmentazione Audience', 'fp-digital-marketing'),
-            'fp-digital-marketing-alerts' => __('Alert e Notifiche', 'fp-digital-marketing'),
-            'fp-digital-marketing-anomalies' => __('Rilevazione Anomalie', 'fp-digital-marketing'),
-            'fp-digital-marketing-cache-performance' => __('Cache Performance', 'fp-digital-marketing'),
-            'fp-digital-marketing-security' => __('Security Settings', 'fp-digital-marketing'),
-            'fp-platform-connections' => __('Connessioni Piattaforme', 'fp-digital-marketing'),
-            'fp-digital-marketing-settings' => __('FP Digital Marketing Settings', 'fp-digital-marketing'),
-            self::WIZARD_MENU_SLUG => __('Setup Wizard', 'fp-digital-marketing'),
+            self::MAIN_MENU_SLUG => __('Panoramica performance', 'fp-digital-marketing'),
+            'fp-digital-marketing-reports' => __('Report performance', 'fp-digital-marketing'),
+            'fp-digital-marketing-funnel-analysis' => __('Analisi funnel', 'fp-digital-marketing'),
+            'fp-audience-segments' => __('Segmenti audience', 'fp-digital-marketing'),
+            'fp-utm-campaign-manager' => __('Generatore campagne UTM', 'fp-digital-marketing'),
+            'fp-conversion-events' => __('Gestisci conversioni', 'fp-digital-marketing'),
+            'fp-digital-marketing-alerts' => __('Monitoraggio alert', 'fp-digital-marketing'),
+            'fp-digital-marketing-anomalies' => __('Anomalie e regole', 'fp-digital-marketing'),
+            'fp-digital-marketing-cache-performance' => __('Ottimizzazione prestazioni', 'fp-digital-marketing'),
+            'fp-platform-connections' => __('Connessioni piattaforme', 'fp-digital-marketing'),
+            'fp-digital-marketing-security' => __('Sicurezza dati', 'fp-digital-marketing'),
+            'fp-digital-marketing-settings' => __('Impostazioni generali', 'fp-digital-marketing'),
+            self::WIZARD_MENU_SLUG => __('Configurazione guidata', 'fp-digital-marketing'),
+            'fp-digital-marketing-utm-campaigns' => __('Generatore campagne UTM', 'fp-digital-marketing'),
+            'fp-digital-marketing-conversion-events' => __('Gestisci conversioni', 'fp-digital-marketing'),
+            'fp-digital-marketing-segments-old' => __('Segmenti audience', 'fp-digital-marketing'),
+            'fp-digital-marketing-cache' => __('Ottimizzazione prestazioni', 'fp-digital-marketing'),
+            'fp-digital-marketing-security-old' => __('Sicurezza dati', 'fp-digital-marketing'),
         ];
 
-        return $page_names[$slug] ?? __('FP Digital Marketing', 'fp-digital-marketing');
+        return $page_names[$slug] ?? __('FP Marketing Suite', 'fp-digital-marketing');
     }
 
     public function enqueue_admin_assets(): void
@@ -280,6 +287,7 @@ class MenuManager
         return [
             'main' => $this->registry->get_main_menu(),
             'submenus' => $this->registry->get_submenus(),
+            'legacy_redirects' => $this->registry->get_legacy_redirects(),
         ];
     }
 
@@ -370,6 +378,57 @@ class MenuManager
         $instance->registry->enable_wizard_menu();
     }
 
+    public function handle_legacy_redirects(): void
+    {
+        if (wp_doing_ajax() || !is_admin()) {
+            return;
+        }
+
+        if (!isset($_GET['page'])) {
+            return;
+        }
+
+        $legacy_slug = sanitize_key(wp_unslash((string) $_GET['page']));
+        $redirects = $this->registry->get_legacy_redirects();
+
+        if (!isset($redirects[$legacy_slug])) {
+            return;
+        }
+
+        $target_slug = $redirects[$legacy_slug];
+
+        if ($target_slug === '') {
+            return;
+        }
+
+        if (headers_sent()) {
+            return;
+        }
+
+        $params = [];
+
+        foreach ($_GET as $key => $value) {
+            $key = (string) $key;
+
+            if ($key === 'page') {
+                $params[$key] = $target_slug;
+                continue;
+            }
+
+            if (is_scalar($value)) {
+                $params[$key] = wp_unslash((string) $value);
+            }
+        }
+
+        $redirect_url = add_query_arg($params, admin_url('admin.php'));
+        $status = 'POST' === strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? '')) ? 307 : 302;
+
+        do_action('fp_dms_admin_menu_legacy_redirect', $legacy_slug, $target_slug, $redirect_url);
+
+        wp_safe_redirect($redirect_url, $status);
+        exit;
+    }
+
     private static function remove_wizard_from_global_submenu(): void
     {
         global $submenu;
@@ -389,20 +448,12 @@ class MenuManager
 
     public function remove_legacy_menus(): void
     {
-        $legacy_slugs = [
-            'fp-digital-marketing-reports',
-            'fp-digital-marketing-alerts',
-            'fp-digital-marketing-anomalies',
-            'fp-digital-marketing-utm-campaigns',
-            'fp-digital-marketing-conversion-events',
-            'fp-conversion-events',
-            'fp-digital-marketing-segments-old',
-            'fp-digital-marketing-cache',
-            'fp-digital-marketing-security-old',
-        ];
+        foreach ($this->registry->get_legacy_redirects() as $legacy_slug => $target_slug) {
+            if ($legacy_slug === $target_slug) {
+                continue;
+            }
 
-        foreach ($legacy_slugs as $slug) {
-            remove_submenu_page(self::MAIN_MENU_SLUG, $slug);
+            remove_submenu_page(self::MAIN_MENU_SLUG, $legacy_slug);
         }
     }
 }

@@ -20,6 +20,9 @@ echo "🚀 Building FP Digital Marketing Suite v${VERSION}"
 rm -rf "${BUILD_DIR}" "${DIST_DIR}"
 mkdir -p "${BUILD_DIR}" "${DIST_DIR}"
 
+echo "🎨 Building admin UI styles..."
+php scripts/build-admin-styles.php
+
 echo "📦 Copying plugin files..."
 
 # Copy plugin files (exclude development files)

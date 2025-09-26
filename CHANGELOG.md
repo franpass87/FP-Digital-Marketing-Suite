@@ -5,6 +5,31 @@ All notable changes to the FP Digital Marketing Suite will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- _Nothing yet._
+
+## [1.3.0] - 2025-10-10
+
+### Added
+- Skip-link navigation and landmark roles across UTM campaign admin pages
+  to streamline keyboard access and screen-reader announcements.
+- Reusable admin components, contextual help, and screen options that
+  modernize campaign management workflows and reinforce accessibility.
+
+### Changed
+- Upgraded admin focus outlines, status pill contrast, and design tokens
+  to meet WCAG AA targets in both light and dark color schemes.
+- Reorganized the admin menu structure with centralized registration and
+  legacy slug redirects to keep navigation consistent.
+
+### Packaging
+- Published `dist/fp-digital-marketing-suite-1.3.0.zip` with a matching
+  SHA-256 checksum for integrity verification.
+- Documented the admin UI revamp, release verification steps, and upgrade
+  guidance across the README, changelog, and admin UI playbook notes.
+
 ## [1.2.0] - 2025-09-26
 
 ### Added
@@ -111,13 +136,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version Support
 
-- **Current Version**: 1.2.0
+- **Current Version**: 1.3.0
 - **Minimum WordPress**: 5.0
 - **Minimum PHP**: 7.4
 - **Tested up to WordPress**: 6.4
 - **Tested PHP versions**: 7.4, 8.0, 8.1, 8.2
 
 ## Upgrade Path
+
+### From 1.2.0 to 1.3.0
+The admin navigation, settings screens and campaign tables were refactored with new components and slugs. Existing URLs redirect automatically, but clear any cached admin pages to load the refreshed IA. Re-run accessibility smoke tests if you maintain custom menu integrations.
 
 ### From 1.1.0 to 1.2.0
 Ensure scheduled upgrades run during low-traffic windows so cache purges can complete. The new upgrade registry will migrate wizard menu state and cache settings automatically; review custom TTL overrides to confirm they still meet your retention goals.

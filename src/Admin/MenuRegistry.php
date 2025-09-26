@@ -38,6 +38,13 @@ class MenuRegistry
      */
     private array $menu_structure;
 
+    /**
+     * Legacy slug redirect map keyed by deprecated slug.
+     *
+     * @var array<string, string>
+     */
+    private array $legacy_redirects = [];
+
     public function __construct()
     {
         $this->menu_structure = $this->build_default_structure();
@@ -47,6 +54,7 @@ class MenuRegistry
         }
 
         $this->persist_menu_slugs();
+        $this->legacy_redirects = $this->build_legacy_redirect_map();
     }
 
     /**
@@ -70,6 +78,16 @@ class MenuRegistry
     }
 
     /**
+     * Returns the legacy redirect mapping for slug back-compatibility.
+     *
+     * @return array<string, string>
+     */
+    public function get_legacy_redirects(): array
+    {
+        return $this->legacy_redirects;
+    }
+
+    /**
      * Group submenus by the provided key (defaults to functional grouping).
      *
      * @param string $key
@@ -84,7 +102,16 @@ class MenuRegistry
             $grouped[$group][] = $submenu;
         }
 
-        $ordered_groups = ['overview', 'analytics', 'campaigns', 'monitoring', 'administration', 'other'];
+        $ordered_groups = [
+            'overview',
+            'analysis',
+            'activation',
+            'monitoring',
+            'optimization',
+            'configuration',
+            'support',
+            'other',
+        ];
         $result = [];
 
         foreach ($ordered_groups as $group) {
@@ -189,8 +216,8 @@ class MenuRegistry
     {
         return [
             'main' => [
-                'page_title' => __('FP Digital Marketing Suite', 'fp-digital-marketing'),
-                'menu_title' => __('FP Digital Marketing', 'fp-digital-marketing'),
+                'page_title' => __('FP Marketing Suite', 'fp-digital-marketing'),
+                'menu_title' => __('FP Marketing Suite', 'fp-digital-marketing'),
                 'capability' => Capabilities::VIEW_DASHBOARD,
                 'menu_slug' => self::MAIN_MENU_SLUG,
                 'callback' => 'Dashboard::render_dashboard_page',
@@ -200,8 +227,8 @@ class MenuRegistry
             'submenus' => [
                 [
                     'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Dashboard', 'fp-digital-marketing'),
-                    'menu_title' => __('🏠 Dashboard', 'fp-digital-marketing'),
+                    'page_title' => __('Panoramica performance', 'fp-digital-marketing'),
+                    'menu_title' => __('Panoramica performance', 'fp-digital-marketing'),
                     'capability' => Capabilities::VIEW_DASHBOARD,
                     'menu_slug' => self::MAIN_MENU_SLUG,
                     'callback' => 'Dashboard::render_dashboard_page',
@@ -209,53 +236,53 @@ class MenuRegistry
                 ],
                 [
                     'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Reports & Analytics', 'fp-digital-marketing'),
-                    'menu_title' => __('📊 Reports', 'fp-digital-marketing'),
-                    'capability' => Capabilities::EXPORT_REPORTS,
+                    'page_title' => __('Report performance', 'fp-digital-marketing'),
+                    'menu_title' => __('Report performance', 'fp-digital-marketing'),
+                    'capability' => Capabilities::VIEW_DASHBOARD,
                     'menu_slug' => 'fp-digital-marketing-reports',
                     'callback' => 'Reports::render_reports_page',
-                    'group' => 'analytics',
+                    'group' => 'analysis',
                 ],
                 [
                     'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Eventi Conversione', 'fp-digital-marketing'),
-                    'menu_title' => __('🎯 Eventi Conversione', 'fp-digital-marketing'),
-                    'capability' => Capabilities::MANAGE_CONVERSIONS,
-                    'menu_slug' => 'fp-conversion-events',
-                    'callback' => 'ConversionEventsAdmin::render_admin_page',
-                    'group' => 'analytics',
-                ],
-                [
-                    'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Gestione Campagne UTM', 'fp-digital-marketing'),
-                    'menu_title' => __('🚀 Campagne UTM', 'fp-digital-marketing'),
-                    'capability' => Capabilities::MANAGE_CAMPAIGNS,
-                    'menu_slug' => 'fp-utm-campaign-manager',
-                    'callback' => 'UTMCampaignManager::render_page',
-                    'group' => 'campaigns',
-                ],
-                [
-                    'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Funnel Analysis', 'fp-digital-marketing'),
-                    'menu_title' => __('📈 Funnel Analysis', 'fp-digital-marketing'),
+                    'page_title' => __('Analisi funnel', 'fp-digital-marketing'),
+                    'menu_title' => __('Analisi funnel', 'fp-digital-marketing'),
                     'capability' => Capabilities::FUNNEL_ANALYSIS,
                     'menu_slug' => 'fp-digital-marketing-funnel-analysis',
                     'callback' => 'FunnelAnalysisAdmin::render_admin_page',
-                    'group' => 'campaigns',
+                    'group' => 'analysis',
                 ],
                 [
                     'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Segmentazione Audience', 'fp-digital-marketing'),
-                    'menu_title' => __('👥 Segmentazione', 'fp-digital-marketing'),
+                    'page_title' => __('Segmenti audience', 'fp-digital-marketing'),
+                    'menu_title' => __('Segmenti audience', 'fp-digital-marketing'),
                     'capability' => Capabilities::MANAGE_SEGMENTS,
                     'menu_slug' => 'fp-audience-segments',
                     'callback' => 'SegmentationAdmin::render_segmentation_page',
-                    'group' => 'campaigns',
+                    'group' => 'analysis',
                 ],
                 [
                     'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Alert e Notifiche', 'fp-digital-marketing'),
-                    'menu_title' => __('🔔 Alert e Notifiche', 'fp-digital-marketing'),
+                    'page_title' => __('Generatore campagne UTM', 'fp-digital-marketing'),
+                    'menu_title' => __('Generatore campagne UTM', 'fp-digital-marketing'),
+                    'capability' => Capabilities::MANAGE_CAMPAIGNS,
+                    'menu_slug' => 'fp-utm-campaign-manager',
+                    'callback' => 'UTMCampaignManager::render_page',
+                    'group' => 'activation',
+                ],
+                [
+                    'parent_slug' => self::MAIN_MENU_SLUG,
+                    'page_title' => __('Gestisci conversioni', 'fp-digital-marketing'),
+                    'menu_title' => __('Gestisci conversioni', 'fp-digital-marketing'),
+                    'capability' => Capabilities::MANAGE_CONVERSIONS,
+                    'menu_slug' => 'fp-conversion-events',
+                    'callback' => 'ConversionEventsAdmin::render_admin_page',
+                    'group' => 'activation',
+                ],
+                [
+                    'parent_slug' => self::MAIN_MENU_SLUG,
+                    'page_title' => __('Monitoraggio alert', 'fp-digital-marketing'),
+                    'menu_title' => __('Monitoraggio alert', 'fp-digital-marketing'),
                     'capability' => Capabilities::MANAGE_ALERTS,
                     'menu_slug' => 'fp-digital-marketing-alerts',
                     'callback' => 'AlertingAdmin::display_admin_page',
@@ -263,8 +290,8 @@ class MenuRegistry
                 ],
                 [
                     'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Rilevazione Anomalie', 'fp-digital-marketing'),
-                    'menu_title' => __('🔍 Rilevazione Anomalie', 'fp-digital-marketing'),
+                    'page_title' => __('Anomalie e regole', 'fp-digital-marketing'),
+                    'menu_title' => __('Anomalie e regole', 'fp-digital-marketing'),
                     'capability' => Capabilities::MANAGE_ALERTS,
                     'menu_slug' => 'fp-digital-marketing-anomalies',
                     'callback' => 'AnomalyDetectionAdmin::display_admin_page',
@@ -272,39 +299,39 @@ class MenuRegistry
                 ],
                 [
                     'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Cache Performance', 'fp-digital-marketing'),
-                    'menu_title' => __('⚡ Cache Performance', 'fp-digital-marketing'),
+                    'page_title' => __('Ottimizzazione prestazioni', 'fp-digital-marketing'),
+                    'menu_title' => __('Ottimizzazione prestazioni', 'fp-digital-marketing'),
                     'capability' => Capabilities::MANAGE_SETTINGS,
                     'menu_slug' => 'fp-digital-marketing-cache-performance',
                     'callback' => 'CachePerformance::render_performance_page',
-                    'group' => 'monitoring',
+                    'group' => 'optimization',
                 ],
                 [
                     'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Security Settings', 'fp-digital-marketing'),
-                    'menu_title' => __('🔒 Security', 'fp-digital-marketing'),
-                    'capability' => Capabilities::MANAGE_SETTINGS,
-                    'menu_slug' => 'fp-digital-marketing-security',
-                    'callback' => 'SecurityAdmin::render_security_page',
-                    'group' => 'administration',
-                ],
-                [
-                    'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('Connessioni Piattaforme', 'fp-digital-marketing'),
-                    'menu_title' => __('🔗 Connessioni', 'fp-digital-marketing'),
+                    'page_title' => __('Connessioni piattaforme', 'fp-digital-marketing'),
+                    'menu_title' => __('Connessioni piattaforme', 'fp-digital-marketing'),
                     'capability' => Capabilities::MANAGE_SETTINGS,
                     'menu_slug' => 'fp-platform-connections',
                     'callback' => 'PlatformConnections::render_connections_page',
-                    'group' => 'administration',
+                    'group' => 'configuration',
                 ],
                 [
                     'parent_slug' => self::MAIN_MENU_SLUG,
-                    'page_title' => __('FP Digital Marketing Settings', 'fp-digital-marketing'),
-                    'menu_title' => __('⚙️ Settings', 'fp-digital-marketing'),
+                    'page_title' => __('Sicurezza dati', 'fp-digital-marketing'),
+                    'menu_title' => __('Sicurezza dati', 'fp-digital-marketing'),
+                    'capability' => Capabilities::MANAGE_SETTINGS,
+                    'menu_slug' => 'fp-digital-marketing-security',
+                    'callback' => 'SecurityAdmin::render_security_page',
+                    'group' => 'configuration',
+                ],
+                [
+                    'parent_slug' => self::MAIN_MENU_SLUG,
+                    'page_title' => __('Impostazioni generali', 'fp-digital-marketing'),
+                    'menu_title' => __('Impostazioni generali', 'fp-digital-marketing'),
                     'capability' => Capabilities::MANAGE_SETTINGS,
                     'menu_slug' => 'fp-digital-marketing-settings',
                     'callback' => 'Settings::render_settings_page',
-                    'group' => 'administration',
+                    'group' => 'configuration',
                 ],
             ],
         ];
@@ -322,11 +349,11 @@ class MenuRegistry
         $this->menu_structure['submenus'][] = [
             'parent_slug' => self::MAIN_MENU_SLUG,
             'page_title' => __('Setup Wizard', 'fp-digital-marketing'),
-            'menu_title' => __('🚀 Setup Wizard', 'fp-digital-marketing'),
+            'menu_title' => __('Configurazione guidata', 'fp-digital-marketing'),
             'capability' => Capabilities::MANAGE_SETTINGS,
             'menu_slug' => self::WIZARD_MENU_SLUG,
             'callback' => 'OnboardingWizard::render_wizard_page',
-            'group' => 'administration',
+            'group' => 'support',
         ];
     }
 
@@ -341,6 +368,68 @@ class MenuRegistry
                 static fn(array $submenu): bool => ($submenu['menu_slug'] ?? '') !== self::WIZARD_MENU_SLUG
             )
         );
+    }
+
+    /**
+     * Build the redirect map for legacy menu slugs.
+     *
+     * @return array<string, string>
+     */
+    private function build_legacy_redirect_map(): array
+    {
+        $map = [
+            'fp-digital-marketing-utm-campaigns' => 'fp-utm-campaign-manager',
+            'fp-digital-marketing-conversion-events' => 'fp-conversion-events',
+            'fp-digital-marketing-segments-old' => 'fp-audience-segments',
+            'fp-digital-marketing-cache' => 'fp-digital-marketing-cache-performance',
+            'fp-digital-marketing-security-old' => 'fp-digital-marketing-security',
+        ];
+
+        if (function_exists('apply_filters')) {
+            $filtered = apply_filters('fp_dms_admin_menu_legacy_redirects', $map);
+
+            if (is_array($filtered)) {
+                $map = $filtered;
+            }
+        }
+
+        return $this->sanitize_redirect_map($map);
+    }
+
+    /**
+     * Normalize redirect map entries to safe slug pairs.
+     *
+     * @param array<string, mixed> $map Raw redirect map.
+     * @return array<string, string>
+     */
+    private function sanitize_redirect_map(array $map): array
+    {
+        $normalized = [];
+
+        foreach ($map as $legacy => $target) {
+            $legacy_slug = $this->sanitize_slug((string) $legacy);
+            $target_slug = $this->sanitize_slug((string) $target);
+
+            if ($legacy_slug === '' || $target_slug === '' || $legacy_slug === $target_slug) {
+                continue;
+            }
+
+            $normalized[$legacy_slug] = $target_slug;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Provides a WordPress-compatible slug sanitization helper.
+     */
+    private function sanitize_slug(string $slug): string
+    {
+        if (function_exists('sanitize_key')) {
+            return sanitize_key($slug);
+        }
+
+        return strtolower(preg_replace('/[^a-z0-9_\-]/', '', $slug));
     }
 }
 

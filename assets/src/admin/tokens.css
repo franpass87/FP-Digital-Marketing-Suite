@@ -1,0 +1,182 @@
+/*
+ * FP Digital Marketing Suite – Admin Design Tokens
+ * ------------------------------------------------------------------
+ * These CSS custom properties define the foundational typography,
+ * spacing, colors, shadows, and animation rhythm used across the
+ * refreshed admin experience. The tokens are namespaced to avoid
+ * collisions with WordPress core variables and can be consumed by
+ * both CSS and JavaScript.
+ */
+
+:root {
+    /* Typography */
+    --fp-dms-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+    --fp-dms-font-family-monospace: 'Fira Mono', 'SFMono-Regular', Consolas,
+        'Liberation Mono', Menlo, Courier, monospace;
+    --fp-dms-font-size-xs: 11px;
+    --fp-dms-font-size-sm: 13px;
+    --fp-dms-font-size-md: 14px;
+    --fp-dms-font-size-lg: 16px;
+    --fp-dms-font-size-xl: 18px;
+    --fp-dms-font-size-2xl: 24px;
+
+    /* Line heights */
+    --fp-dms-line-height-tight: 1.2;
+    --fp-dms-line-height-default: 1.5;
+    --fp-dms-line-height-relaxed: 1.75;
+
+    /* Spacing scale */
+    --fp-dms-space-0: 0;
+    --fp-dms-space-1: 4px;
+    --fp-dms-space-2: 8px;
+    --fp-dms-space-3: 12px;
+    --fp-dms-space-4: 16px;
+    --fp-dms-space-5: 20px;
+    --fp-dms-space-6: 24px;
+    --fp-dms-space-7: 32px;
+    --fp-dms-space-8: 40px;
+
+    /* Border radius */
+    --fp-dms-radius-none: 0;
+    --fp-dms-radius-sm: 2px;
+    --fp-dms-radius-md: 4px;
+    --fp-dms-radius-lg: 8px;
+    --fp-dms-radius-pill: 999px;
+
+    /* Elevation */
+    --fp-dms-shadow-none: none;
+    --fp-dms-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+    --fp-dms-shadow-md: 0 12px 24px rgba(0, 0, 0, 0.12);
+    --fp-dms-shadow-focus: 0 0 0 3px var(--fp-dms-color-focus-ring-contrast);
+
+    /* Layout */
+    --fp-dms-max-content-width: 1280px;
+    --fp-dms-content-padding-x: var(--fp-dms-space-6);
+    --fp-dms-content-padding-y: var(--fp-dms-space-6);
+    --fp-dms-grid-gap: var(--fp-dms-space-5);
+
+    /* Colors – light mode defaults */
+    --fp-dms-color-bg-surface: #ffffff;
+    --fp-dms-color-bg-subtle: #f6f7f7;
+    --fp-dms-color-border: #dcdcde;
+    --fp-dms-color-border-strong: #a7aaad;
+    --fp-dms-color-text: #1d2327;
+    --fp-dms-color-text-subtle: #50575e;
+    --fp-dms-color-text-inverse: #ffffff;
+    --fp-dms-color-primary: #0073aa;
+    --fp-dms-color-primary-hover: #005177;
+    --fp-dms-color-accent: #11a0d9;
+    --fp-dms-color-success: #2b7a2b;
+    --fp-dms-color-warning: #8a5b00;
+    --fp-dms-color-danger: #b02121;
+    --fp-dms-color-info: #0b5ea7;
+    --fp-dms-color-focus-ring: #1a73e8;
+    --fp-dms-color-focus-ring-contrast: rgba(26, 115, 232, 0.3);
+    --fp-dms-color-skip-link-bg: #0b5ea7;
+    --fp-dms-color-skip-link-text: #ffffff;
+    --fp-dms-status-surface: #f1f5f9;
+    --fp-dms-status-border: #c7d2e5;
+    --fp-dms-status-dot-active: var(--fp-dms-color-info);
+    --fp-dms-status-dot-paused: #b96b06;
+    --fp-dms-status-dot-completed: #1f7f3f;
+    --fp-dms-status-dot-success: var(--fp-dms-color-success);
+    --fp-dms-status-dot-warning: var(--fp-dms-color-warning);
+    --fp-dms-status-dot-error: var(--fp-dms-color-danger);
+
+    /* Data visualization palette */
+    --fp-dms-chart-1: #0073aa;
+    --fp-dms-chart-2: #46b450;
+    --fp-dms-chart-3: #ffb900;
+    --fp-dms-chart-4: #dc3232;
+    --fp-dms-chart-5: #826eb4;
+    --fp-dms-chart-6: #11a0d9;
+
+    /* Motion */
+    --fp-dms-transition-fast: 120ms;
+    --fp-dms-transition-base: 200ms;
+    --fp-dms-transition-slow: 320ms;
+    --fp-dms-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+    --fp-dms-ease-emphasized: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Dark mode overrides leverage the WP 6.2+ data attribute */
+:root[data-color-scheme='dark'] {
+    --fp-dms-color-bg-surface: #1d2327;
+    --fp-dms-color-bg-subtle: #2c3338;
+    --fp-dms-color-border: #3c434a;
+    --fp-dms-color-border-strong: #646970;
+    --fp-dms-color-text: #f0f0f1;
+    --fp-dms-color-text-subtle: #c3c4c7;
+    --fp-dms-color-primary: #58aeee;
+    --fp-dms-color-primary-hover: #1d99f3;
+    --fp-dms-color-accent: #3cc0ff;
+    --fp-dms-color-success: #64dd8a;
+    --fp-dms-color-warning: #ffd866;
+    --fp-dms-color-danger: #ff6f6f;
+    --fp-dms-color-info: #6ba7ff;
+    --fp-dms-color-focus-ring: #9bc8ff;
+    --fp-dms-color-focus-ring-contrast: rgba(155, 200, 255, 0.45);
+    --fp-dms-color-skip-link-bg: #1d99f3;
+    --fp-dms-color-skip-link-text: #041728;
+    --fp-dms-status-surface: #283038;
+    --fp-dms-status-border: #3e4a56;
+    --fp-dms-status-dot-active: #6ba7ff;
+    --fp-dms-status-dot-paused: #f7b955;
+    --fp-dms-status-dot-completed: #64dd8a;
+    --fp-dms-status-dot-success: #64dd8a;
+    --fp-dms-status-dot-warning: #ffd866;
+    --fp-dms-status-dot-error: #ff6f6f;
+}
+
+/* Utility classes -------------------------------------------------------- */
+.fp-dms-u-text-subtle {
+    color: var(--fp-dms-color-text-subtle);
+}
+
+.fp-dms-u-sr-only {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.fp-dms-u-grid {
+    display: grid;
+    gap: var(--fp-dms-grid-gap);
+}
+
+.fp-dms-u-flex {
+    display: flex;
+    gap: var(--fp-dms-space-3);
+}
+
+.fp-dms-u-flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--fp-dms-space-3);
+}
+
+.fp-dms-u-card-shadow {
+    box-shadow: var(--fp-dms-shadow-sm);
+}
+
+.fp-dms-u-pill {
+    border-radius: var(--fp-dms-radius-pill);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

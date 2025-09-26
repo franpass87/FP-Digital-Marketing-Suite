@@ -9,10 +9,28 @@ declare(strict_types=1);
 
 namespace FP\DigitalMarketing\Admin;
 
+use FP\DigitalMarketing\Admin\ListTables\UTMCampaignsListTable;
 use FP\DigitalMarketing\Admin\MenuManager;
+use FP\DigitalMarketing\Admin\UI\Components;
 use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Helpers\UTMGenerator;
 use FP\DigitalMarketing\Models\UTMCampaign;
+use WP_Screen;
+
+use function add_query_arg;
+use function add_screen_option;
+use function admin_url;
+use function esc_attr;
+use function esc_html;
+use function esc_html__;
+use function esc_html_e;
+use function esc_url;
+use function get_current_screen;
+use function number_format_i18n;
+use function sanitize_key;
+use function sanitize_text_field;
+use function wp_unique_id;
+use function wp_unslash;
 
 /**
  * UTM Campaign Manager class for admin interface
@@ -29,10 +47,20 @@ class UTMCampaignManager {
 	 */
 	private const OPTION_GROUP = 'fp_utm_campaign_settings';
 
-	/**
-	 * Nonce action for UTM forms
-	 */
-	private const NONCE_ACTION = 'fp_utm_campaign_nonce';
+        /**
+         * Nonce action for UTM forms
+         */
+        private const NONCE_ACTION = 'fp_utm_campaign_nonce';
+
+        /**
+         * Screen option key for list pagination.
+         */
+        private const SCREEN_OPTION = 'fp_dms_campaigns_per_page';
+
+        /**
+         * Lazily instantiated list table instance.
+         */
+        private ?UTMCampaignsListTable $list_table = null;
 
 	/**
 	 * Initialize the UTM campaign manager
@@ -40,15 +68,17 @@ class UTMCampaignManager {
 	 * @return void
 	 */
 	public function init(): void {
-		if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
-			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
-		}
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
-		add_action( 'admin_init', [ $this, 'handle_form_submission' ] );
-		add_action( 'wp_ajax_fp_utm_generate_url', [ $this, 'handle_ajax_generate_url' ] );
-		add_action( 'wp_ajax_fp_utm_load_preset', [ $this, 'handle_ajax_load_preset' ] );
-		add_action( 'wp_ajax_fp_utm_delete_campaign', [ $this, 'handle_ajax_delete_campaign' ] );
-	}
+                if ( ! ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) ) {
+                        add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+                }
+                add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+                add_action( 'admin_init', [ $this, 'handle_form_submission' ] );
+                add_filter( 'set-screen-option', [ $this, 'set_screen_option' ], 10, 3 );
+                add_action( 'current_screen', [ $this, 'register_screen_elements' ] );
+                add_action( 'wp_ajax_fp_utm_generate_url', [ $this, 'handle_ajax_generate_url' ] );
+                add_action( 'wp_ajax_fp_utm_load_preset', [ $this, 'handle_ajax_load_preset' ] );
+                add_action( 'wp_ajax_fp_utm_delete_campaign', [ $this, 'handle_ajax_delete_campaign' ] );
+        }
 
 	/**
 	 * Add admin menu page
@@ -304,14 +334,132 @@ class UTMCampaignManager {
 		} else {
 			wp_send_json_error( [ 'message' => __( 'Errore nell\'eliminare la campagna.', 'fp-digital-marketing' ) ] );
 		}
-	}
+        }
 
-	/**
-	 * Render the main page
-	 *
-	 * @return void
-	 */
-	public function render_page(): void {
+        /**
+         * Persist custom screen options when saved via the Screen Options tab.
+         *
+         * @param mixed  $status Default status.
+         * @param string $option Option name being saved.
+         * @param int    $value  Submitted value.
+         * @return mixed
+         */
+        public function set_screen_option( $status, string $option, $value ) {
+                if ( self::SCREEN_OPTION === $option ) {
+                        return max( 5, (int) $value );
+                }
+
+                return $status;
+        }
+
+        /**
+         * Register screen options and contextual help for the campaigns table.
+         *
+         * @param WP_Screen $screen Current admin screen.
+         * @return void
+         */
+        public function register_screen_elements( WP_Screen $screen ): void {
+                if ( ! $this->is_campaign_screen( $screen ) ) {
+                        return;
+                }
+
+                add_screen_option(
+                        'per_page',
+                        [
+                                'label'   => __( 'Campagne per pagina', 'fp-digital-marketing' ),
+                                'default' => 20,
+                                'option'  => self::SCREEN_OPTION,
+                        ]
+                );
+
+                $screen->add_help_tab(
+                        [
+                                'id'      => 'fp-dms-utm-campaigns-overview',
+                                'title'   => __( 'Panoramica', 'fp-digital-marketing' ),
+                                'content' => '<p>' . esc_html__( 'Utilizza questa schermata per monitorare le campagne UTM, filtrare per stato e gestire azioni di massa.', 'fp-digital-marketing' ) . '</p>'
+                                        . '<ol>'
+                                        . '<li>' . esc_html__( 'Usa i link di visualizzazione per passare rapidamente tra stati attivi, in pausa o completati.', 'fp-digital-marketing' ) . '</li>'
+                                        . '<li>' . esc_html__( 'Personalizza le colonne visibili tramite le Opzioni schermo e imposta il numero di righe per pagina.', 'fp-digital-marketing' ) . '</li>'
+                                        . '<li>' . esc_html__( 'Seleziona più campagne per applicare azioni di massa come eliminazione o cambio di stato.', 'fp-digital-marketing' ) . '</li>'
+                                        . '</ol>',
+                        ]
+                );
+
+                $screen->set_help_sidebar(
+                        '<p><strong>' . esc_html__( 'Suggerimenti rapidi', 'fp-digital-marketing' ) . '</strong></p>'
+                        . '<p>' . esc_html__( 'Assicurati che ogni URL generato mantenga parametri coerenti per report accurati.', 'fp-digital-marketing' ) . '</p>'
+                        . '<p>' . esc_html__( 'Le azioni in blocco rispettano le autorizzazioni utente e registrano eventuali errori.', 'fp-digital-marketing' ) . '</p>'
+                );
+        }
+
+        /**
+         * Determine whether the provided screen matches the campaign manager page.
+         *
+         * @param WP_Screen $screen Current admin screen.
+         * @return bool
+         */
+        private function is_campaign_screen( WP_Screen $screen ): bool {
+                return false !== strpos( $screen->id ?? '', self::PAGE_SLUG );
+        }
+
+        /**
+         * Lazily instantiate the campaigns list table with current filters.
+         *
+         * @return UTMCampaignsListTable
+         */
+        private function get_campaigns_list_table(): UTMCampaignsListTable {
+                if ( $this->list_table instanceof UTMCampaignsListTable ) {
+                        return $this->list_table;
+                }
+
+                $status = '';
+                if ( isset( $_REQUEST['status'] ) ) {
+                        $status = sanitize_key( wp_unslash( (string) $_REQUEST['status'] ) );
+                }
+
+                $search = '';
+                if ( isset( $_REQUEST['s'] ) ) {
+                        $search = sanitize_text_field( wp_unslash( (string) $_REQUEST['s'] ) );
+                }
+
+                $screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+
+                $this->list_table = new UTMCampaignsListTable(
+                        [
+                                'status' => $status,
+                                'search' => $search,
+                                'screen' => $screen,
+                        ]
+                );
+
+                return $this->list_table;
+        }
+
+        /**
+         * Render admin notices collected during list table actions.
+         *
+         * @param array<int,array<string,string>> $notices Notices to render.
+         * @return void
+         */
+        private function render_list_table_notices( array $notices ): void {
+                foreach ( $notices as $notice ) {
+                        $type    = esc_attr( $notice['type'] ?? 'success' );
+                        $message = esc_html( $notice['message'] ?? '' );
+
+                        if ( '' === $message ) {
+                                continue;
+                        }
+
+                        printf( '<div class="notice notice-%1$s is-dismissible"><p>%2$s</p></div>', $type, $message );
+                }
+        }
+
+        /**
+         * Render the main page
+         *
+         * @return void
+         */
+        public function render_page(): void {
 		// Check user capabilities.
 		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_CAMPAIGNS ) ) {
 			wp_die( __( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
@@ -341,181 +489,67 @@ class UTMCampaignManager {
 	 *
 	 * @return void
 	 */
-	private function render_campaigns_list(): void {
-		// Get filters.
-		$filters = [
-			'status'     => sanitize_text_field( $_GET['status'] ?? '' ),
-			'utm_source' => sanitize_text_field( $_GET['utm_source'] ?? '' ),
-			'utm_medium' => sanitize_text_field( $_GET['utm_medium'] ?? '' ),
-			'search'     => sanitize_text_field( $_GET['search'] ?? '' ),
-		];
+        private function render_campaigns_list(): void {
+                $list_table = $this->get_campaigns_list_table();
+                $list_table->prepare_items();
 
-		// Remove empty filters.
-		$filters = array_filter( $filters );
+                $total_items = (int) $list_table->get_pagination_arg( 'total_items' );
+                $header_meta = [];
 
-		// Pagination.
-		$per_page     = 20;
-		$current_page = max( 1, (int) ( $_GET['paged'] ?? 1 ) );
-		$offset       = ( $current_page - 1 ) * $per_page;
+                if ( $total_items >= 0 ) {
+                        $header_meta[] = [
+                                'label' => __( 'Campagne totali', 'fp-digital-marketing' ),
+                                'value' => number_format_i18n( $total_items ),
+                        ];
+                }
 
-		// Get campaigns.
-		$campaigns       = UTMCampaign::get_campaigns( $filters, $per_page, $offset );
-		$total_campaigns = UTMCampaign::get_campaigns_count( $filters );
-		$total_pages     = ceil( $total_campaigns / $per_page );
+                $add_campaign_url = add_query_arg(
+                        [
+                                'page'   => self::PAGE_SLUG,
+                                'action' => 'new',
+                        ],
+                        admin_url( 'admin.php' )
+                );
 
-		?>
-		<div class="wrap">
-			<h1 class="wp-heading-inline">
-				<?php esc_html_e( 'Gestione Campagne UTM', 'fp-digital-marketing' ); ?>
-			</h1>
-			<a href="
-			<?php
-			echo esc_url(
-				add_query_arg(
-					[
-						'page'   => self::PAGE_SLUG,
-						'action' => 'new',
-					],
-					admin_url( 'admin.php' )
-				)
-			);
-			?>
-						" class="page-title-action">
-				<?php esc_html_e( 'Aggiungi Nuova Campagna', 'fp-digital-marketing' ); ?>
-			</a>
+                $main_id = 'fp-dms-main-' . wp_unique_id( '' );
+                ?>
+                <div class="wrap fp-dms-admin-screen">
+                        <a class="fp-dms-skip-link" href="#<?php echo esc_attr( $main_id ); ?>">
+                                <?php esc_html_e( 'Salta al contenuto principale', 'fp-digital-marketing' ); ?>
+                        </a>
 
-			<hr class="wp-header-end">
+                        <main id="<?php echo esc_attr( $main_id ); ?>" class="fp-dms-admin-screen__main" tabindex="-1" role="main">
+                                <?php
+                                echo Components::page_header(
+                                        [
+                                                'title'    => __( 'Gestione Campagne UTM', 'fp-digital-marketing' ),
+                                                'subtitle' => __( 'Monitora gli URL tracciati, aggiorna lo stato delle campagne e genera velocemente nuovi link UTM.', 'fp-digital-marketing' ),
+                                                'meta'     => $header_meta,
+                                                'actions'  => [
+                                                        [
+                                                                'label'   => __( 'Aggiungi nuova campagna', 'fp-digital-marketing' ),
+                                                                'url'     => esc_url( $add_campaign_url ),
+                                                                'variant' => 'primary',
+                                                        ],
+                                                ],
+                                        ]
+                                );
 
-			<!-- Filters -->
-			<div class="utm-filters">
-				<form method="get" action="">
-					<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
-					
-					<p class="search-box">
-						<label class="screen-reader-text" for="campaign-search-input"><?php esc_html_e( 'Cerca campagne:', 'fp-digital-marketing' ); ?></label>
-						<input type="search" id="campaign-search-input" name="search" value="<?php echo esc_attr( $_GET['search'] ?? '' ); ?>" placeholder="<?php esc_attr_e( 'Cerca campagne...', 'fp-digital-marketing' ); ?>">
-						
-						<select name="status">
-							<option value=""><?php esc_html_e( 'Tutti gli stati', 'fp-digital-marketing' ); ?></option>
-							<option value="active" <?php selected( $_GET['status'] ?? '', 'active' ); ?>><?php esc_html_e( 'Attive', 'fp-digital-marketing' ); ?></option>
-							<option value="paused" <?php selected( $_GET['status'] ?? '', 'paused' ); ?>><?php esc_html_e( 'In pausa', 'fp-digital-marketing' ); ?></option>
-							<option value="completed" <?php selected( $_GET['status'] ?? '', 'completed' ); ?>><?php esc_html_e( 'Completate', 'fp-digital-marketing' ); ?></option>
-						</select>
-						
-						<input type="submit" id="search-submit" class="button" value="<?php esc_attr_e( 'Filtra', 'fp-digital-marketing' ); ?>">
-					</p>
-				</form>
-			</div>
+                                $this->render_list_table_notices( $list_table->get_admin_notices() );
+                                ?>
 
-			<!-- Campaigns Table -->
-			<table class="wp-list-table widefat fixed striped utm-campaigns-table">
-				<thead>
-					<tr>
-						<th scope="col"><?php esc_html_e( 'Nome Campagna', 'fp-digital-marketing' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Source/Medium', 'fp-digital-marketing' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Campaign', 'fp-digital-marketing' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Click', 'fp-digital-marketing' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Conversioni', 'fp-digital-marketing' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Stato', 'fp-digital-marketing' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Data Creazione', 'fp-digital-marketing' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Azioni', 'fp-digital-marketing' ); ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php if ( empty( $campaigns ) ) : ?>
-						<tr>
-							<td colspan="8" class="text-center">
-								<?php esc_html_e( 'Nessuna campagna trovata.', 'fp-digital-marketing' ); ?>
-							</td>
-						</tr>
-					<?php else : ?>
-						<?php foreach ( $campaigns as $campaign ) : ?>
-							<tr>
-								<td>
-									<strong>
-										<a href="
-										<?php
-										echo esc_url(
-											add_query_arg(
-												[
-													'page' => self::PAGE_SLUG,
-													'action' => 'view',
-													'campaign_id' => $campaign->get_id(),
-												],
-												admin_url( 'admin.php' )
-											)
-										);
-										?>
-													">
-											<?php echo esc_html( $campaign->get_campaign_name() ); ?>
-										</a>
-									</strong>
-								</td>
-								<td><?php echo esc_html( $campaign->to_array()['utm_source'] . ' / ' . $campaign->to_array()['utm_medium'] ); ?></td>
-								<td><?php echo esc_html( $campaign->to_array()['utm_campaign'] ); ?></td>
-								<td><?php echo esc_html( number_format( $campaign->get_clicks() ) ); ?></td>
-								<td><?php echo esc_html( number_format( $campaign->get_conversions() ) ); ?></td>
-								<td>
-									<span class="utm-status utm-status-<?php echo esc_attr( $campaign->get_status() ); ?>">
-										<?php
-										$statuses = [
-											'active'    => __( 'Attiva', 'fp-digital-marketing' ),
-											'paused'    => __( 'In pausa', 'fp-digital-marketing' ),
-											'completed' => __( 'Completata', 'fp-digital-marketing' ),
-										];
-										echo esc_html( $statuses[ $campaign->get_status() ] ?? $campaign->get_status() );
-										?>
-									</span>
-								</td>
-								<td><?php echo esc_html( mysql2date( 'd/m/Y H:i', $campaign->to_array()['created_at'] ) ); ?></td>
-								<td>
-									<a href="
-									<?php
-									echo esc_url(
-										add_query_arg(
-											[
-												'page'   => self::PAGE_SLUG,
-												'action' => 'edit',
-												'campaign_id' => $campaign->get_id(),
-											],
-											admin_url( 'admin.php' )
-										)
-									);
-									?>
-												" class="button button-small">
-										<?php esc_html_e( 'Modifica', 'fp-digital-marketing' ); ?>
-									</a>
-									<button type="button" class="button button-small button-delete-campaign" data-campaign-id="<?php echo esc_attr( $campaign->get_id() ); ?>">
-										<?php esc_html_e( 'Elimina', 'fp-digital-marketing' ); ?>
-									</button>
-								</td>
-							</tr>
-						<?php endforeach; ?>
-					<?php endif; ?>
-				</tbody>
-			</table>
-
-			<!-- Pagination -->
-			<?php if ( $total_pages > 1 ) : ?>
-				<div class="tablenav bottom">
-					<div class="tablenav-pages">
-						<?php
-						$pagination_args = [
-							'base'      => add_query_arg( 'paged', '%#%' ),
-							'format'    => '',
-							'prev_text' => __( '&laquo;', 'fp-digital-marketing' ),
-							'next_text' => __( '&raquo;', 'fp-digital-marketing' ),
-							'total'     => $total_pages,
-							'current'   => $current_page,
-						];
-						echo wp_kses_post( paginate_links( $pagination_args ) );
-						?>
-					</div>
-				</div>
-			<?php endif; ?>
-		</div>
-		<?php
-	}
+                                <form method="get" role="search" aria-label="<?php echo esc_attr( __( 'Filtra e cerca campagne', 'fp-digital-marketing' ) ); ?>">
+                                        <input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE_SLUG ); ?>">
+                                        <?php
+                                        $list_table->views();
+                                        $list_table->search_box( __( 'Cerca campagne', 'fp-digital-marketing' ), 'fp-dms-utm-campaign-search' );
+                                        $list_table->display();
+                                        ?>
+                                </form>
+                        </main>
+                </div>
+                <?php
+        }
 
 	/**
 	 * Render campaign form (new/edit)
@@ -536,13 +570,23 @@ class UTMCampaignManager {
 		}
 
 		$presets = UTMGenerator::get_presets();
-		?>
-		<div class="wrap">
-			<h1>
-				<?php echo $is_edit ? esc_html__( 'Modifica Campagna UTM', 'fp-digital-marketing' ) : esc_html__( 'Nuova Campagna UTM', 'fp-digital-marketing' ); ?>
-			</h1>
+                $main_id = 'fp-dms-main-' . wp_unique_id( '' );
+                ?>
+                <div class="wrap fp-dms-admin-screen">
+                        <a class="fp-dms-skip-link" href="#<?php echo esc_attr( $main_id ); ?>">
+                                <?php esc_html_e( 'Salta al contenuto principale', 'fp-digital-marketing' ); ?>
+                        </a>
 
-			<form method="post" action="" class="utm-campaign-form">
+                        <main id="<?php echo esc_attr( $main_id ); ?>" class="fp-dms-admin-screen__main" tabindex="-1" role="main">
+                                <h1>
+                                        <?php echo $is_edit ? esc_html__( 'Modifica Campagna UTM', 'fp-digital-marketing' ) : esc_html__( 'Nuova Campagna UTM', 'fp-digital-marketing' ); ?>
+                                </h1>
+
+                                <p id="fp-dms-campaign-form-help" class="fp-dms-u-sr-only">
+                                        <?php esc_html_e( 'Compila i parametri UTM obbligatori e opzionali per creare un link tracciato accessibile.', 'fp-digital-marketing' ); ?>
+                                </p>
+
+                                <form method="post" action="" class="utm-campaign-form" aria-describedby="fp-dms-campaign-form-help">
 				<?php wp_nonce_field( self::NONCE_ACTION ); ?>
 				<input type="hidden" name="fp_utm_action" value="<?php echo $is_edit ? 'update_campaign' : 'save_campaign'; ?>">
 				<?php if ( $is_edit ) : ?>
@@ -690,10 +734,11 @@ class UTMCampaignManager {
 						<?php esc_html_e( 'Annulla', 'fp-digital-marketing' ); ?>
 					</a>
 				</p>
-			</form>
-		</div>
-		<?php
-	}
+                        </form>
+                        </main>
+                </div>
+                <?php
+        }
 
 	/**
 	 * Render campaign view page
@@ -708,11 +753,23 @@ class UTMCampaignManager {
 		}
 
 		$campaign_data = $campaign->to_array();
-		?>
-		<div class="wrap">
-			<h1><?php echo esc_html( $campaign->get_campaign_name() ); ?></h1>
+                $main_id   = 'fp-dms-main-' . wp_unique_id( '' );
+                $title_id  = 'fp-dms-campaign-title-' . wp_unique_id( '' );
+                $summary_id = $title_id . '-summary';
+                ?>
+                <div class="wrap fp-dms-admin-screen">
+                        <a class="fp-dms-skip-link" href="#<?php echo esc_attr( $main_id ); ?>">
+                                <?php esc_html_e( 'Salta al contenuto principale', 'fp-digital-marketing' ); ?>
+                        </a>
 
-			<div class="utm-campaign-details">
+                        <main id="<?php echo esc_attr( $main_id ); ?>" class="fp-dms-admin-screen__main" tabindex="-1" role="main" aria-labelledby="<?php echo esc_attr( $title_id ); ?>" aria-describedby="<?php echo esc_attr( $summary_id ); ?>">
+                                <h1 id="<?php echo esc_attr( $title_id ); ?>"><?php echo esc_html( $campaign->get_campaign_name() ); ?></h1>
+
+                                <p id="<?php echo esc_attr( $summary_id ); ?>" class="fp-dms-u-sr-only">
+                                        <?php esc_html_e( 'Dettagli e statistiche principali della campagna UTM selezionata.', 'fp-digital-marketing' ); ?>
+                                </p>
+
+                                <div class="utm-campaign-details">
 				<div class="utm-campaign-info">
 					<h2><?php esc_html_e( 'Dettagli Campagna', 'fp-digital-marketing' ); ?></h2>
 					
@@ -814,12 +871,12 @@ class UTMCampaignManager {
 				</div>
 			</div>
 
-			<p class="utm-campaign-actions">
-				<a href="
-				<?php
-				echo esc_url(
-					add_query_arg(
-						[
+                        <p class="utm-campaign-actions">
+                                <a href="
+                                <?php
+                                echo esc_url(
+                                        add_query_arg(
+                                                [
 							'page'        => self::PAGE_SLUG,
 							'action'      => 'edit',
 							'campaign_id' => $campaign->get_id(),
@@ -833,11 +890,12 @@ class UTMCampaignManager {
 				</a>
 				<a href="<?php echo esc_url( add_query_arg( [ 'page' => self::PAGE_SLUG ], admin_url( 'admin.php' ) ) ); ?>" class="button button-secondary">
 					<?php esc_html_e( 'Torna alla Lista', 'fp-digital-marketing' ); ?>
-				</a>
-			</p>
-		</div>
-		<?php
-	}
+                                </a>
+                        </p>
+                        </main>
+                </div>
+                <?php
+        }
 
 	/**
 	 * Sanitize campaign data from form
@@ -949,16 +1007,6 @@ class UTMCampaignManager {
 			.utm-url-display input {
 				flex: 1;
 			}
-			.utm-filters {
-				margin: 15px 0;
-			}
-			.utm-filters .search-box {
-				float: right;
-				margin: 0;
-			}
-			.utm-filters select {
-				margin-left: 5px;
-			}
 			@media (max-width: 768px) {
 				.utm-campaign-details {
 					grid-template-columns: 1fr;
@@ -1051,8 +1099,15 @@ class UTMCampaignManager {
 					}
 				});
 
-				// Delete campaign functionality
-				$(".button-delete-campaign").on("click", function() {
+                                // Confirm for list-table delete links
+                                $(document).on("click", "a.submitdelete[data-confirm]", function(event) {
+                                        if (!window.confirm($(this).data("confirm"))) {
+                                                event.preventDefault();
+                                        }
+                                });
+
+                                // Delete campaign functionality via AJAX buttons
+                                $(".button-delete-campaign").on("click", function() {
 					if (!confirm(fpUtmAjax.strings.confirm_delete)) return;
 					
 					var campaignId = $(this).data("campaign-id");
