@@ -21,9 +21,11 @@ class GoogleAnalytics4IntegrationTest extends TestCase {
 	 */
 	protected function tearDown(): void {
 		// Clean up any test data
-		MetricsCache::delete_by_criteria([
-			'source' => GoogleAnalytics4::SOURCE_ID,
-		]);
+		MetricsCache::delete_by_criteria(
+			[
+				'source' => GoogleAnalytics4::SOURCE_ID,
+			]
+		);
 	}
 
 	/**
@@ -34,15 +36,15 @@ class GoogleAnalytics4IntegrationTest extends TestCase {
 		$ga4 = new GoogleAnalytics4( '123456789' );
 
 		// Manually store some test metrics to verify the structure
-		$client_id = 999;
+		$client_id  = 999;
 		$start_date = '2024-01-01';
-		$end_date = '2024-01-31';
-		
+		$end_date   = '2024-01-31';
+
 		$test_metrics = [
-			'sessions' => '2500',
-			'users' => '2000',
+			'sessions'    => '2500',
+			'users'       => '2000',
 			'conversions' => '50',
-			'revenue' => '5000',
+			'revenue'     => '5000',
 		];
 
 		// Simulate storing metrics (since actual fetch would require OAuth)
@@ -56,19 +58,21 @@ class GoogleAnalytics4IntegrationTest extends TestCase {
 				$value,
 				[
 					'property_id' => '123456789',
-					'test_data' => true,
+					'test_data'   => true,
 				]
 			);
-			
+
 			$this->assertIsInt( $id );
 			$this->assertGreaterThan( 0, $id );
 		}
 
 		// Verify metrics were stored
-		$stored_metrics = MetricsCache::get_metrics([
-			'client_id' => $client_id,
-			'source' => GoogleAnalytics4::SOURCE_ID,
-		]);
+		$stored_metrics = MetricsCache::get_metrics(
+			[
+				'client_id' => $client_id,
+				'source'    => GoogleAnalytics4::SOURCE_ID,
+			]
+		);
 
 		$this->assertCount( 4, $stored_metrics );
 
@@ -94,7 +98,7 @@ class GoogleAnalytics4IntegrationTest extends TestCase {
 	 */
 	public function test_ga4_metrics_retrieval_by_source(): void {
 		$client_id = 888;
-		
+
 		// Store some GA4 metrics
 		MetricsCache::save(
 			$client_id,
@@ -118,17 +122,19 @@ class GoogleAnalytics4IntegrationTest extends TestCase {
 		);
 
 		// Retrieve only GA4 metrics
-		$ga4_metrics = MetricsCache::get_metrics([
-			'client_id' => $client_id,
-			'source' => GoogleAnalytics4::SOURCE_ID,
-		]);
+		$ga4_metrics = MetricsCache::get_metrics(
+			[
+				'client_id' => $client_id,
+				'source'    => GoogleAnalytics4::SOURCE_ID,
+			]
+		);
 
 		$this->assertCount( 1, $ga4_metrics );
 		$this->assertEquals( GoogleAnalytics4::SOURCE_ID, $ga4_metrics[0]->source );
 		$this->assertEquals( 'sessions', $ga4_metrics[0]->metric );
 
 		// Clean up
-		MetricsCache::delete_by_criteria([ 'client_id' => $client_id ]);
+		MetricsCache::delete_by_criteria( [ 'client_id' => $client_id ] );
 	}
 
 	/**
@@ -136,10 +142,10 @@ class GoogleAnalytics4IntegrationTest extends TestCase {
 	 */
 	public function test_ga4_source_identifier(): void {
 		$this->assertEquals( 'google_analytics_4', GoogleAnalytics4::SOURCE_ID );
-		
+
 		// Verify this matches the DataSources registry
 		$data_sources = fp_dms_get_data_sources();
 		$this->assertArrayHasKey( GoogleAnalytics4::SOURCE_ID, $data_sources );
-		$this->assertEquals( 'available', $data_sources[GoogleAnalytics4::SOURCE_ID]['status'] );
+		$this->assertEquals( 'available', $data_sources[ GoogleAnalytics4::SOURCE_ID ]['status'] );
 	}
 }

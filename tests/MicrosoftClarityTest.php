@@ -20,8 +20,8 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_construction_with_valid_project_id() {
 		$project_id = 'test123';
-		$clarity = new MicrosoftClarity( $project_id );
-		
+		$clarity    = new MicrosoftClarity( $project_id );
+
 		$this->assertInstanceOf( MicrosoftClarity::class, $clarity );
 		$this->assertTrue( $clarity->is_connected() );
 	}
@@ -31,7 +31,7 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_construction_with_empty_project_id() {
 		$clarity = new MicrosoftClarity( '' );
-		
+
 		$this->assertInstanceOf( MicrosoftClarity::class, $clarity );
 		$this->assertFalse( $clarity->is_connected() );
 	}
@@ -44,7 +44,7 @@ class MicrosoftClarityTest extends TestCase {
 		$this->assertTrue( MicrosoftClarity::validate_project_id( 'abc123def456' ) );
 		$this->assertTrue( MicrosoftClarity::validate_project_id( 'TEST123' ) );
 		$this->assertTrue( MicrosoftClarity::validate_project_id( '123456' ) );
-		
+
 		// Invalid project IDs
 		$this->assertFalse( MicrosoftClarity::validate_project_id( '' ) );
 		$this->assertFalse( MicrosoftClarity::validate_project_id( 'test-123' ) );
@@ -57,10 +57,10 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_tracking_script_generation() {
 		$project_id = 'testproject123';
-		$clarity = new MicrosoftClarity( $project_id );
-		
+		$clarity    = new MicrosoftClarity( $project_id );
+
 		$script = $clarity->get_tracking_script();
-		
+
 		$this->assertStringContainsString( $project_id, $script );
 		$this->assertStringContainsString( '<script type="text/javascript">', $script );
 		$this->assertStringContainsString( 'clarity.ms/tag/', $script );
@@ -72,8 +72,8 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_tracking_script_empty_project_id() {
 		$clarity = new MicrosoftClarity( '' );
-		$script = $clarity->get_tracking_script();
-		
+		$script  = $clarity->get_tracking_script();
+
 		$this->assertEmpty( $script );
 	}
 
@@ -82,14 +82,14 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_fetch_metrics_with_valid_configuration() {
 		$project_id = 'testproject123';
-		$clarity = new MicrosoftClarity( $project_id );
-		
-		$client_id = 1;
+		$clarity    = new MicrosoftClarity( $project_id );
+
+		$client_id  = 1;
 		$start_date = '2024-01-01';
-		$end_date = '2024-01-31';
-		
+		$end_date   = '2024-01-31';
+
 		$metrics = $clarity->fetch_metrics( $client_id, $start_date, $end_date );
-		
+
 		$this->assertIsArray( $metrics );
 		$this->assertArrayHasKey( 'sessions', $metrics );
 		$this->assertArrayHasKey( 'page_views', $metrics );
@@ -108,13 +108,13 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_fetch_metrics_empty_project_id() {
 		$clarity = new MicrosoftClarity( '' );
-		
-		$client_id = 1;
+
+		$client_id  = 1;
 		$start_date = '2024-01-01';
-		$end_date = '2024-01-31';
-		
+		$end_date   = '2024-01-31';
+
 		$metrics = $clarity->fetch_metrics( $client_id, $start_date, $end_date );
-		
+
 		$this->assertFalse( $metrics );
 	}
 
@@ -123,14 +123,14 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_metrics_data_types_and_ranges() {
 		$project_id = 'testproject123';
-		$clarity = new MicrosoftClarity( $project_id );
-		
-		$client_id = 1;
+		$clarity    = new MicrosoftClarity( $project_id );
+
+		$client_id  = 1;
 		$start_date = '2024-01-01';
-		$end_date = '2024-01-07';
-		
+		$end_date   = '2024-01-07';
+
 		$metrics = $clarity->fetch_metrics( $client_id, $start_date, $end_date );
-		
+
 		// Test data types
 		$this->assertIsInt( $metrics['sessions'] );
 		$this->assertIsInt( $metrics['page_views'] );
@@ -141,7 +141,7 @@ class MicrosoftClarityTest extends TestCase {
 		$this->assertIsInt( $metrics['scroll_depth_avg'] );
 		$this->assertIsInt( $metrics['time_to_click_avg'] );
 		$this->assertIsInt( $metrics['javascript_errors'] );
-		
+
 		// Test reasonable ranges for demo data
 		$this->assertGreaterThanOrEqual( 0, $metrics['sessions'] );
 		$this->assertGreaterThanOrEqual( 0, $metrics['page_views'] );
@@ -155,10 +155,10 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_project_status_configured() {
 		$project_id = 'testproject123';
-		$clarity = new MicrosoftClarity( $project_id );
-		
+		$clarity    = new MicrosoftClarity( $project_id );
+
 		$status = $clarity->get_project_status();
-		
+
 		$this->assertIsArray( $status );
 		$this->assertTrue( $status['connected'] );
 		$this->assertEquals( 'connected', $status['class'] );
@@ -171,9 +171,9 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_project_status_not_configured() {
 		$clarity = new MicrosoftClarity( '' );
-		
+
 		$status = $clarity->get_project_status();
-		
+
 		$this->assertIsArray( $status );
 		$this->assertFalse( $status['connected'] );
 		$this->assertEquals( 'disconnected', $status['class'] );
@@ -193,14 +193,14 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_period_calculation() {
 		$project_id = 'testproject123';
-		$clarity = new MicrosoftClarity( $project_id );
-		
-		$client_id = 1;
+		$clarity    = new MicrosoftClarity( $project_id );
+
+		$client_id  = 1;
 		$start_date = '2024-01-01';
-		$end_date = '2024-01-15';
-		
+		$end_date   = '2024-01-15';
+
 		$metrics = $clarity->fetch_metrics( $client_id, $start_date, $end_date );
-		
+
 		$this->assertArrayHasKey( 'period', $metrics );
 		$this->assertEquals( $start_date, $metrics['period']['start'] );
 		$this->assertEquals( $end_date, $metrics['period']['end'] );
@@ -212,13 +212,13 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_single_day_period() {
 		$project_id = 'testproject123';
-		$clarity = new MicrosoftClarity( $project_id );
-		
+		$clarity    = new MicrosoftClarity( $project_id );
+
 		$client_id = 1;
-		$date = '2024-01-01';
-		
+		$date      = '2024-01-01';
+
 		$metrics = $clarity->fetch_metrics( $client_id, $date, $date );
-		
+
 		$this->assertArrayHasKey( 'period', $metrics );
 		$this->assertEquals( 1, $metrics['period']['days'] );
 	}
@@ -227,9 +227,9 @@ class MicrosoftClarityTest extends TestCase {
 	 * Test getting client project ID when not set
 	 */
 	public function test_get_client_project_id_empty() {
-		$client_id = 999; // Non-existent client ID
+		$client_id  = 999; // Non-existent client ID
 		$project_id = MicrosoftClarity::get_client_project_id( $client_id );
-		
+
 		$this->assertIsString( $project_id );
 		$this->assertEmpty( $project_id );
 	}
@@ -239,8 +239,8 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_for_client_without_project_id() {
 		$client_id = 999; // Non-existent client ID
-		$clarity = MicrosoftClarity::for_client( $client_id );
-		
+		$clarity   = MicrosoftClarity::for_client( $client_id );
+
 		$this->assertNull( $clarity );
 	}
 
@@ -249,14 +249,14 @@ class MicrosoftClarityTest extends TestCase {
 	 */
 	public function test_for_client_with_project_id() {
 		$client_id = 1;
-		
+
 		// Mock the meta value by setting it temporarily
 		// In a real test environment, this would be set up properly
 		// For this test, we'll test the method structure without database dependency
-		
+
 		// Test the method exists and returns proper type
 		$clarity = MicrosoftClarity::for_client( $client_id );
-		
+
 		// Since we don't have a real client with Project ID set, this should return null
 		$this->assertNull( $clarity );
 	}
@@ -264,87 +264,87 @@ class MicrosoftClarityTest extends TestCase {
 	/**
 	 * Test client-focused approach documentation
 	 */
-        public function test_client_focused_approach() {
-                // Verify that the class supports client-focused methods
-                $this->assertTrue( method_exists( MicrosoftClarity::class, 'get_client_project_id' ) );
-                $this->assertTrue( method_exists( MicrosoftClarity::class, 'for_client' ) );
+	public function test_client_focused_approach() {
+			// Verify that the class supports client-focused methods
+			$this->assertTrue( method_exists( MicrosoftClarity::class, 'get_client_project_id' ) );
+			$this->assertTrue( method_exists( MicrosoftClarity::class, 'for_client' ) );
 
-                // Verify static methods return expected types
-                $project_id = MicrosoftClarity::get_client_project_id( 999 );
-                $this->assertIsString( $project_id );
+			// Verify static methods return expected types
+			$project_id = MicrosoftClarity::get_client_project_id( 999 );
+			$this->assertIsString( $project_id );
 
-                $clarity_instance = MicrosoftClarity::for_client( 999 );
-                $this->assertTrue( is_null( $clarity_instance ) || $clarity_instance instanceof MicrosoftClarity );
-        }
+			$clarity_instance = MicrosoftClarity::for_client( 999 );
+			$this->assertTrue( is_null( $clarity_instance ) || $clarity_instance instanceof MicrosoftClarity );
+	}
 
-        /**
-         * Test that metrics are stored through MetricsCache::save without errors.
-         */
-        public function test_fetch_metrics_saves_into_metrics_cache(): void {
-                $project_id = 'testproject123';
-                $clarity = new MicrosoftClarity( $project_id );
+		/**
+		 * Test that metrics are stored through MetricsCache::save without errors.
+		 */
+	public function test_fetch_metrics_saves_into_metrics_cache(): void {
+			$project_id = 'testproject123';
+			$clarity    = new MicrosoftClarity( $project_id );
 
-                $client_id = 42;
-                $start_date = '2024-02-01';
-                $end_date = '2024-02-07';
+			$client_id  = 42;
+			$start_date = '2024-02-01';
+			$end_date   = '2024-02-07';
 
-                global $wpdb;
-                $original_wpdb = $wpdb;
+			global $wpdb;
+			$original_wpdb = $wpdb;
 
-                $wpdb_mock = new class extends WPDB_Mock {
-                        /**
-                         * Track insert operations performed during the test.
-                         *
-                         * @var array
-                         */
-                        public $records = [];
+			$wpdb_mock = new class() extends WPDB_Mock {
+					/**
+					 * Track insert operations performed during the test.
+					 *
+					 * @var array
+					 */
+					public $records = [];
 
-                        /**
-                         * Number of insert calls executed.
-                         *
-                         * @var int
-                         */
-                        public $insert_calls = 0;
+					/**
+					 * Number of insert calls executed.
+					 *
+					 * @var int
+					 */
+					public $insert_calls = 0;
 
-                        /**
-                         * Capture insert invocations for later assertions.
-                         *
-                         * @param string     $table  Table name.
-                         * @param array      $data   Row data.
-                         * @param array|null $format Column formats.
-                         * @return int Insert result.
-                         */
-                        public function insert( $table, $data, $format = null ) { // phpcs:ignore WordPress.DB
-                                $this->insert_calls++;
-                                $this->records[] = [
-                                        'table'  => $table,
-                                        'data'   => $data,
-                                        'format' => $format,
-                                ];
+					/**
+					 * Capture insert invocations for later assertions.
+					 *
+					 * @param string     $table  Table name.
+					 * @param array      $data   Row data.
+					 * @param array|null $format Column formats.
+					 * @return int Insert result.
+					 */
+				public function insert( $table, $data, $format = null ) { // phpcs:ignore WordPress.DB
+						++$this->insert_calls;
+						$this->records[] = [
+							'table'  => $table,
+							'data'   => $data,
+							'format' => $format,
+						];
 
-                                return parent::insert( $table, $data, $format );
-                        }
-                };
+						return parent::insert( $table, $data, $format );
+				}
+			};
 
-                $wpdb = $wpdb_mock;
+			$wpdb = $wpdb_mock;
 
-                $metrics = $clarity->fetch_metrics( $client_id, $start_date, $end_date );
+			$metrics = $clarity->fetch_metrics( $client_id, $start_date, $end_date );
 
-                $wpdb = $original_wpdb;
+			$wpdb = $original_wpdb;
 
-                $this->assertIsArray( $metrics );
-                $this->assertGreaterThan( 0, $wpdb_mock->insert_calls );
+			$this->assertIsArray( $metrics );
+			$this->assertGreaterThan( 0, $wpdb_mock->insert_calls );
 
-                foreach ( $wpdb_mock->records as $record ) {
-                        $this->assertEquals( 'wp_fp_metrics_cache', $record['table'] );
-                        $this->assertEquals( $client_id, (int) $record['data']['client_id'] );
-                        $this->assertEquals( MicrosoftClarity::SOURCE_ID, $record['data']['source'] );
-                        $this->assertEquals( $start_date . ' 00:00:00', $record['data']['period_start'] );
-                        $this->assertEquals( $end_date . ' 23:59:59', $record['data']['period_end'] );
+		foreach ( $wpdb_mock->records as $record ) {
+				$this->assertEquals( 'wp_fp_metrics_cache', $record['table'] );
+				$this->assertEquals( $client_id, (int) $record['data']['client_id'] );
+				$this->assertEquals( MicrosoftClarity::SOURCE_ID, $record['data']['source'] );
+				$this->assertEquals( $start_date . ' 00:00:00', $record['data']['period_start'] );
+				$this->assertEquals( $end_date . ' 23:59:59', $record['data']['period_end'] );
 
-                        $meta = json_decode( (string) $record['data']['meta'], true );
-                        $this->assertIsArray( $meta );
-                        $this->assertArrayHasKey( 'period_days', $meta );
-                }
-        }
+				$meta = json_decode( (string) $record['data']['meta'], true );
+				$this->assertIsArray( $meta );
+				$this->assertArrayHasKey( 'period_days', $meta );
+		}
+	}
 }

@@ -83,11 +83,14 @@ class XmlSitemap {
 		);
 
 		// Add query vars
-		add_filter( 'query_vars', function( $vars ) {
-			$vars[] = 'fp_sitemap';
-			$vars[] = 'fp_sitemap_page';
-			return $vars;
-		} );
+		add_filter(
+			'query_vars',
+			function ( $vars ) {
+				$vars[] = 'fp_sitemap';
+				$vars[] = 'fp_sitemap_page';
+				return $vars;
+			}
+		);
 	}
 
 	/**
@@ -122,11 +125,11 @@ class XmlSitemap {
 	 * @return string XML content for sitemap index
 	 */
 	public static function generate_sitemap_index(): string {
-		$cache_key = 'sitemap_index';
+		$cache_key      = 'sitemap_index';
 		$cached_content = PerformanceCache::get_cached(
 			$cache_key,
 			self::CACHE_GROUP,
-			function() {
+			function () {
 				return self::build_sitemap_index();
 			},
 			self::CACHE_TTL
@@ -143,11 +146,11 @@ class XmlSitemap {
 	 * @return string XML content for sitemap
 	 */
 	public static function generate_sitemap( string $type, int $page = 1 ): string {
-		$cache_key = "sitemap_{$type}_page_{$page}";
+		$cache_key      = "sitemap_{$type}_page_{$page}";
 		$cached_content = PerformanceCache::get_cached(
 			$cache_key,
 			self::CACHE_GROUP,
-			function() use ( $type, $page ) {
+			function () use ( $type, $page ) {
 				return self::build_sitemap( $type, $page );
 			},
 			self::CACHE_TTL
@@ -173,16 +176,16 @@ class XmlSitemap {
 				continue;
 			}
 
-			$url_count = self::get_post_type_url_count( $post_type );
+			$url_count    = self::get_post_type_url_count( $post_type );
 			$pages_needed = max( 1, ceil( $url_count / self::MAX_URLS_PER_SITEMAP ) );
 
 			for ( $page = 1; $page <= $pages_needed; $page++ ) {
-				$sitemap_url = $pages_needed > 1 
+				$sitemap_url = $pages_needed > 1
 					? home_url( "/sitemap-{$post_type}-{$page}.xml" )
 					: home_url( "/sitemap-{$post_type}.xml" );
 
 				$sitemaps[] = [
-					'loc' => $sitemap_url,
+					'loc'     => $sitemap_url,
 					'lastmod' => self::get_post_type_lastmod( $post_type ),
 				];
 			}
@@ -203,7 +206,7 @@ class XmlSitemap {
 			return self::build_empty_sitemap();
 		}
 
-		$settings = self::get_settings();
+		$settings           = self::get_settings();
 		$enabled_post_types = $settings['enabled_post_types'] ?? [ 'post', 'page' ];
 
 		if ( ! in_array( $type, $enabled_post_types, true ) ) {
@@ -223,27 +226,29 @@ class XmlSitemap {
 	 */
 	private static function get_sitemap_urls( string $post_type, int $page ): array {
 		$offset = ( $page - 1 ) * self::MAX_URLS_PER_SITEMAP;
-		
-		$posts = get_posts( [
-			'post_type' => $post_type,
-			'post_status' => 'publish',
-			'numberposts' => self::MAX_URLS_PER_SITEMAP,
-			'offset' => $offset,
-			'orderby' => 'modified',
-			'order' => 'DESC',
-			'meta_query' => [
-				'relation' => 'OR',
-				[
-					'key' => SeoMetadata::META_ROBOTS,
-					'value' => 'noindex',
-					'compare' => 'NOT LIKE',
+
+		$posts = get_posts(
+			[
+				'post_type'   => $post_type,
+				'post_status' => 'publish',
+				'numberposts' => self::MAX_URLS_PER_SITEMAP,
+				'offset'      => $offset,
+				'orderby'     => 'modified',
+				'order'       => 'DESC',
+				'meta_query'  => [
+					'relation' => 'OR',
+					[
+						'key'     => SeoMetadata::META_ROBOTS,
+						'value'   => 'noindex',
+						'compare' => 'NOT LIKE',
+					],
+					[
+						'key'     => SeoMetadata::META_ROBOTS,
+						'compare' => 'NOT EXISTS',
+					],
 				],
-				[
-					'key' => SeoMetadata::META_ROBOTS,
-					'compare' => 'NOT EXISTS',
-				],
-			],
-		] );
+			]
+		);
 
 		$urls = [];
 		foreach ( $posts as $post ) {
@@ -259,10 +264,10 @@ class XmlSitemap {
 			}
 
 			$urls[] = [
-				'loc' => $permalink,
-				'lastmod' => get_post_modified_time( 'c', true, $post ),
+				'loc'        => $permalink,
+				'lastmod'    => get_post_modified_time( 'c', true, $post ),
 				'changefreq' => self::get_change_frequency( $post_type ),
-				'priority' => self::get_priority( $post_type, $post ),
+				'priority'   => self::get_priority( $post_type, $post ),
 			];
 		}
 
@@ -278,45 +283,45 @@ class XmlSitemap {
 	 */
 	private static function build_xml_content( string $root_element, array $items ): string {
 		$xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-		
+
 		if ( $root_element === 'urlset' ) {
 			$xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-			
+
 			foreach ( $items as $url ) {
 				$xml .= "\t<url>\n";
 				$xml .= "\t\t<loc>" . esc_url( $url['loc'] ) . "</loc>\n";
-				
+
 				if ( isset( $url['lastmod'] ) ) {
 					$xml .= "\t\t<lastmod>" . esc_xml( $url['lastmod'] ) . "</lastmod>\n";
 				}
-				
+
 				if ( isset( $url['changefreq'] ) ) {
 					$xml .= "\t\t<changefreq>" . esc_xml( $url['changefreq'] ) . "</changefreq>\n";
 				}
-				
+
 				if ( isset( $url['priority'] ) ) {
 					$xml .= "\t\t<priority>" . esc_xml( $url['priority'] ) . "</priority>\n";
 				}
-				
+
 				$xml .= "\t</url>\n";
 			}
 		} else {
 			$xml .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-			
+
 			foreach ( $items as $sitemap ) {
 				$xml .= "\t<sitemap>\n";
 				$xml .= "\t\t<loc>" . esc_url( $sitemap['loc'] ) . "</loc>\n";
-				
+
 				if ( isset( $sitemap['lastmod'] ) ) {
 					$xml .= "\t\t<lastmod>" . esc_xml( $sitemap['lastmod'] ) . "</lastmod>\n";
 				}
-				
+
 				$xml .= "\t</sitemap>\n";
 			}
 		}
-		
+
 		$xml .= "</{$root_element}>\n";
-		
+
 		return $xml;
 	}
 
@@ -358,13 +363,15 @@ class XmlSitemap {
 	 * @return string ISO 8601 date
 	 */
 	private static function get_post_type_lastmod( string $post_type ): string {
-		$posts = get_posts( [
-			'post_type' => $post_type,
-			'post_status' => 'publish',
-			'numberposts' => 1,
-			'orderby' => 'modified',
-			'order' => 'DESC',
-		] );
+		$posts = get_posts(
+			[
+				'post_type'   => $post_type,
+				'post_status' => 'publish',
+				'numberposts' => 1,
+				'orderby'     => 'modified',
+				'order'       => 'DESC',
+			]
+		);
 
 		if ( empty( $posts ) ) {
 			return gmdate( 'c' );
@@ -381,8 +388,8 @@ class XmlSitemap {
 	 */
 	private static function get_change_frequency( string $post_type ): string {
 		$frequencies = [
-			'post' => 'weekly',
-			'page' => 'monthly',
+			'post'    => 'weekly',
+			'page'    => 'monthly',
 			'product' => 'weekly',
 		];
 
@@ -404,8 +411,8 @@ class XmlSitemap {
 
 		// Default priorities by post type
 		$priorities = [
-			'page' => '0.8',
-			'post' => '0.6',
+			'page'    => '0.8',
+			'post'    => '0.6',
 			'product' => '0.7',
 		];
 
@@ -420,7 +427,7 @@ class XmlSitemap {
 	 */
 	public static function invalidate_sitemap_cache( int $post_id = 0 ): void {
 		PerformanceCache::invalidate_group( self::CACHE_GROUP );
-		
+
 		// Ping search engines if enabled
 		$settings = self::get_settings();
 		if ( $settings['ping_search_engines'] ?? true ) {
@@ -435,17 +442,20 @@ class XmlSitemap {
 	 */
 	public static function ping_search_engines(): void {
 		$sitemap_url = home_url( 'sitemap.xml' );
-		
+
 		$ping_urls = [
 			'google' => 'https://www.google.com/ping?sitemap=' . urlencode( $sitemap_url ),
-			'bing' => 'https://www.bing.com/ping?sitemap=' . urlencode( $sitemap_url ),
+			'bing'   => 'https://www.bing.com/ping?sitemap=' . urlencode( $sitemap_url ),
 		];
 
 		foreach ( $ping_urls as $engine => $ping_url ) {
-			wp_remote_get( $ping_url, [
-				'timeout' => 10,
-				'blocking' => false, // Non-blocking request
-			] );
+			wp_remote_get(
+				$ping_url,
+				[
+					'timeout'  => 10,
+					'blocking' => false, // Non-blocking request
+				]
+			);
 		}
 	}
 
@@ -456,9 +466,9 @@ class XmlSitemap {
 	 */
 	private static function get_settings(): array {
 		$defaults = [
-			'enabled_post_types' => [ 'post', 'page' ],
+			'enabled_post_types'  => [ 'post', 'page' ],
 			'ping_search_engines' => true,
-			'exclude_noindex' => true,
+			'exclude_noindex'     => true,
 		];
 
 		$settings = get_option( self::SETTINGS_OPTION, [] );
@@ -473,15 +483,15 @@ class XmlSitemap {
 	 */
 	public static function update_settings( array $settings ): bool {
 		$current_settings = self::get_settings();
-		$new_settings = wp_parse_args( $settings, $current_settings );
-		
+		$new_settings     = wp_parse_args( $settings, $current_settings );
+
 		$result = update_option( self::SETTINGS_OPTION, $new_settings );
-		
+
 		// Invalidate cache when settings change
 		if ( $result ) {
 			self::invalidate_sitemap_cache();
 		}
-		
+
 		return $result;
 	}
 
@@ -492,10 +502,10 @@ class XmlSitemap {
 	 */
 	public static function get_available_post_types(): array {
 		$post_types = get_post_types( [ 'public' => true ], 'objects' );
-		
+
 		// Remove attachment post type
 		unset( $post_types['attachment'] );
-		
+
 		return $post_types;
 	}
 
@@ -521,8 +531,8 @@ class XmlSitemap {
 		}
 
 		$sitemap_url = home_url( '/sitemap.xml' );
-		$output .= "\nSitemap: {$sitemap_url}\n";
-		
+		$output     .= "\nSitemap: {$sitemap_url}\n";
+
 		return $output;
 	}
 }

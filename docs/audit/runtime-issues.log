@@ -1,0 +1,5 @@
+# Runtime logging validation (Phase 3)
+- 2025-09-26 14:44 UTC — Executed `/tmp/test-runtime-logger.php` harness with `WP_DEBUG` enabled to simulate a WordPress runtime.
+  - Triggered an `E_USER_WARNING` to ensure `RuntimeLogger::handle_error()` captured the notice.
+  - Confirmed log output written to the uploads shim at `"/tmp/fp-dms-logs/runtime.log"` with timestamped entries.
+- WordPress admin/frontend rendering not exercised in this container; manual verification required on a real site to view the runtime banner and admin notice.

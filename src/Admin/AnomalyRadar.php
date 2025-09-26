@@ -58,8 +58,8 @@ class AnomalyRadar {
 	 * @return void
 	 */
 	public function display_radar_page(): void {
-                $client_id = (int) ( $_GET['client_id'] ?? 0 );
-                $action = sanitize_key( $_GET['action'] ?? 'overview' );
+				$client_id = (int) ( $_GET['client_id'] ?? 0 );
+				$action    = sanitize_key( $_GET['action'] ?? 'overview' );
 
 		echo '<div class="wrap">';
 		echo '<h1>' . esc_html__( 'Anomaly Radar (KPI Watchdog)', 'fp-digital-marketing' ) . '</h1>';
@@ -93,30 +93,32 @@ class AnomalyRadar {
 	 * @return void
 	 */
 	private function render_client_selector( int $selected_client_id ): void {
-		$clients = get_posts( [
-			'post_type'      => ClientePostType::POST_TYPE,
-			'posts_per_page' => -1,
-			'post_status'    => 'publish',
-			'orderby'        => 'title',
-			'order'          => 'ASC'
-		] );
+		$clients = get_posts(
+			[
+				'post_type'      => ClientePostType::POST_TYPE,
+				'posts_per_page' => -1,
+				'post_status'    => 'publish',
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			]
+		);
 
 		echo '<div class="tablenav top">';
 		echo '<div class="alignleft actions">';
 		echo '<form method="get">';
 		echo '<input type="hidden" name="post_type" value="' . esc_attr( ClientePostType::POST_TYPE ) . '">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( self::PAGE_SLUG ) . '">';
-		
+
 		echo '<select name="client_id" onchange="this.form.submit();">';
 		echo '<option value="">' . esc_html__( 'Seleziona Cliente...', 'fp-digital-marketing' ) . '</option>';
-		
+
 		foreach ( $clients as $client ) {
 			$selected = $client->ID === $selected_client_id ? 'selected' : '';
 			echo '<option value="' . esc_attr( $client->ID ) . '" ' . $selected . '>';
 			echo esc_html( $client->post_title );
 			echo '</option>';
 		}
-		
+
 		echo '</select>';
 		echo '</form>';
 		echo '</div>';
@@ -131,49 +133,53 @@ class AnomalyRadar {
 	 */
 	private function display_client_overview( int $client_id ): void {
 		$client_title = get_the_title( $client_id );
-		
-		echo '<h2>' . sprintf( 
-			esc_html__( 'KPI Watchdog per %s', 'fp-digital-marketing' ), 
-			esc_html( $client_title ) 
+
+		echo '<h2>' . sprintf(
+			esc_html__( 'KPI Watchdog per %s', 'fp-digital-marketing' ),
+			esc_html( $client_title )
 		) . '</h2>';
 
 		// Navigation tabs
 		$this->render_navigation_tabs( $client_id, 'overview' );
 
 		// Get recent anomalies for this client
-		$recent_anomalies = DetectedAnomaly::get_anomalies( [
-			'client_id' => $client_id,
-			'days_back' => 7,
-			'limit' => 10
-		] );
+		$recent_anomalies = DetectedAnomaly::get_anomalies(
+			[
+				'client_id' => $client_id,
+				'days_back' => 7,
+				'limit'     => 10,
+			]
+		);
 
 		// Get client statistics
-		$stats = DetectedAnomaly::get_statistics( [
-			'client_id' => $client_id,
-			'days_back' => 30
-		] );
+		$stats = DetectedAnomaly::get_statistics(
+			[
+				'client_id' => $client_id,
+				'days_back' => 30,
+			]
+		);
 
 		// Display overview cards
 		echo '<div class="fp-anomaly-radar-overview">';
-		
+
 		// Stats cards
 		echo '<div class="fp-stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 20px 0;">';
-		
-		$this->render_stat_card( 
-			__( 'Anomalie Totali (30g)', 'fp-digital-marketing' ), 
+
+		$this->render_stat_card(
+			__( 'Anomalie Totali (30g)', 'fp-digital-marketing' ),
 			$stats['total_count'] ?? 0,
 			'dashicons-chart-line'
 		);
-		
-		$this->render_stat_card( 
-			__( 'Non Riconosciute', 'fp-digital-marketing' ), 
+
+		$this->render_stat_card(
+			__( 'Non Riconosciute', 'fp-digital-marketing' ),
 			$stats['unacknowledged_count'] ?? 0,
 			'dashicons-warning',
 			$stats['unacknowledged_count'] > 0 ? '#d63638' : '#007cba'
 		);
-		
-		$this->render_stat_card( 
-			__( 'Metriche Monitorate', 'fp-digital-marketing' ), 
+
+		$this->render_stat_card(
+			__( 'Metriche Monitorate', 'fp-digital-marketing' ),
 			$stats['affected_metrics'] ?? 0,
 			'dashicons-visibility'
 		);
@@ -201,17 +207,17 @@ class AnomalyRadar {
 	 */
 	private function display_anomaly_history( int $client_id ): void {
 		$client_title = get_the_title( $client_id );
-		
-		echo '<h2>' . sprintf( 
-			esc_html__( 'Storico Anomalie - %s', 'fp-digital-marketing' ), 
-			esc_html( $client_title ) 
+
+		echo '<h2>' . sprintf(
+			esc_html__( 'Storico Anomalie - %s', 'fp-digital-marketing' ),
+			esc_html( $client_title )
 		) . '</h2>';
 
 		$this->render_navigation_tabs( $client_id, 'history' );
 
 		// Get filters
 		$days_back = (int) ( $_GET['days_back'] ?? 30 );
-		$metric = sanitize_text_field( $_GET['metric'] ?? '' );
+		$metric    = sanitize_text_field( $_GET['metric'] ?? '' );
 
 		// Filter form
 		echo '<div class="tablenav top">';
@@ -220,9 +226,13 @@ class AnomalyRadar {
 		echo '<input type="hidden" name="page" value="' . esc_attr( self::PAGE_SLUG ) . '">';
 		echo '<input type="hidden" name="client_id" value="' . esc_attr( $client_id ) . '">';
 		echo '<input type="hidden" name="action" value="history">';
-		
+
 		echo '<select name="days_back">';
-		$periods = [ 7 => '7 giorni', 30 => '30 giorni', 90 => '90 giorni' ];
+		$periods = [
+			7  => '7 giorni',
+			30 => '30 giorni',
+			90 => '90 giorni',
+		];
 		foreach ( $periods as $period => $label ) {
 			$selected = $period === $days_back ? 'selected' : '';
 			echo '<option value="' . esc_attr( $period ) . '" ' . $selected . '>' . esc_html( $label ) . '</option>';
@@ -246,7 +256,7 @@ class AnomalyRadar {
 		$filters = [
 			'client_id' => $client_id,
 			'days_back' => $days_back,
-			'limit' => 100
+			'limit'     => 100,
 		];
 
 		if ( ! empty( $metric ) ) {
@@ -272,10 +282,10 @@ class AnomalyRadar {
 	 */
 	private function display_client_rules( int $client_id ): void {
 		$client_title = get_the_title( $client_id );
-		
-		echo '<h2>' . sprintf( 
-			esc_html__( 'Regole di Monitoraggio - %s', 'fp-digital-marketing' ), 
-			esc_html( $client_title ) 
+
+		echo '<h2>' . sprintf(
+			esc_html__( 'Regole di Monitoraggio - %s', 'fp-digital-marketing' ),
+			esc_html( $client_title )
 		) . '</h2>';
 
 		$this->render_navigation_tabs( $client_id, 'rules' );
@@ -297,9 +307,9 @@ class AnomalyRadar {
 			$kpi_definitions = MetricsSchema::get_kpi_definitions();
 
 			foreach ( $rules as $rule ) {
-				$metric_name = $kpi_definitions[ $rule->metric ]['name'] ?? $rule->metric;
+				$metric_name  = $kpi_definitions[ $rule->metric ]['name'] ?? $rule->metric;
 				$status_class = $rule->is_active ? 'active' : 'inactive';
-				$status_text = $rule->is_active ? __( 'Attiva', 'fp-digital-marketing' ) : __( 'Inattiva', 'fp-digital-marketing' );
+				$status_text  = $rule->is_active ? __( 'Attiva', 'fp-digital-marketing' ) : __( 'Inattiva', 'fp-digital-marketing' );
 
 				echo '<tr>';
 				echo '<td><strong>' . esc_html( $rule->name ) . '</strong></td>';
@@ -339,7 +349,7 @@ class AnomalyRadar {
 		echo '<div class="fp-anomaly-radar-intro">';
 		echo '<h3>' . esc_html__( 'Cos\'è l\'Anomaly Radar?', 'fp-digital-marketing' ) . '</h3>';
 		echo '<p>' . esc_html__( 'L\'Anomaly Radar è un sistema di monitoraggio avanzato che ti avvisa quando i KPI di un cliente presentano comportamenti anomali rispetto ai pattern storici.', 'fp-digital-marketing' ) . '</p>';
-		
+
 		echo '<h4>' . esc_html__( 'Funzionalità principali:', 'fp-digital-marketing' ) . '</h4>';
 		echo '<ul>';
 		echo '<li>📊 ' . esc_html__( 'Monitoraggio in tempo reale dei KPI principali', 'fp-digital-marketing' ) . '</li>';
@@ -353,24 +363,24 @@ class AnomalyRadar {
 	/**
 	 * Render navigation tabs for client-specific views
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $current_tab Current active tab
 	 * @return void
 	 */
 	private function render_navigation_tabs( int $client_id, string $current_tab ): void {
 		$base_url = admin_url( 'edit.php?post_type=' . ClientePostType::POST_TYPE . '&page=' . self::PAGE_SLUG . '&client_id=' . $client_id );
-		
+
 		$tabs = [
 			'overview' => __( 'Panoramica', 'fp-digital-marketing' ),
-			'history' => __( 'Storico', 'fp-digital-marketing' ),
-			'rules' => __( 'Regole', 'fp-digital-marketing' )
+			'history'  => __( 'Storico', 'fp-digital-marketing' ),
+			'rules'    => __( 'Regole', 'fp-digital-marketing' ),
 		];
 
 		echo '<h2 class="nav-tab-wrapper" style="margin-bottom: 20px;">';
 		foreach ( $tabs as $tab_key => $tab_label ) {
 			$active_class = $current_tab === $tab_key ? ' nav-tab-active' : '';
-			$tab_url = $tab_key === 'overview' ? $base_url : $base_url . '&action=' . $tab_key;
-			
+			$tab_url      = $tab_key === 'overview' ? $base_url : $base_url . '&action=' . $tab_key;
+
 			echo '<a href="' . esc_url( $tab_url ) . '" class="nav-tab' . $active_class . '">';
 			echo esc_html( $tab_label );
 			echo '</a>';
@@ -382,7 +392,7 @@ class AnomalyRadar {
 	 * Render a statistics card
 	 *
 	 * @param string $title Card title
-	 * @param mixed $value Card value
+	 * @param mixed  $value Card value
 	 * @param string $icon Dashicon class
 	 * @param string $color Optional color
 	 * @return void
@@ -399,7 +409,7 @@ class AnomalyRadar {
 	 * Render anomalies table
 	 *
 	 * @param array $anomalies Array of anomaly objects
-	 * @param bool $compact Whether to show compact view
+	 * @param bool  $compact Whether to show compact view
 	 * @return void
 	 */
 	private function render_anomalies_table( array $anomalies, bool $compact = false ): void {
@@ -420,8 +430,8 @@ class AnomalyRadar {
 
 		foreach ( $anomalies as $anomaly ) {
 			$metric_name = $kpi_definitions[ $anomaly->metric ]['name'] ?? $anomaly->metric;
-			$row_class = $anomaly->acknowledged ? 'acknowledged' : 'unacknowledged';
-			$anomaly_id = 'anomaly-' . $anomaly->id;
+			$row_class   = $anomaly->acknowledged ? 'acknowledged' : 'unacknowledged';
+			$anomaly_id  = 'anomaly-' . $anomaly->id;
 
 			echo '<tr class="' . esc_attr( $row_class ) . '" data-anomaly-id="' . esc_attr( $anomaly->id ) . '">';
 			echo '<td><strong>' . esc_html( $metric_name ) . '</strong></td>';
@@ -433,20 +443,20 @@ class AnomalyRadar {
 				echo ' <span class="dashicons dashicons-arrow-down-alt" style="color: #d63638;"></span>';
 			}
 			echo '</td>';
-			
+
 			if ( ! $compact ) {
 				echo '<td>' . esc_html( number_format( $anomaly->expected_value ?? 0, 2 ) ) . '</td>';
 				echo '<td>' . esc_html( ucfirst( str_replace( '_', ' ', $anomaly->detection_method ) ) ) . '</td>';
 			}
-			
+
 			$severity_colors = [
 				'critical' => '#d63638',
-				'high' => '#dba617',
-				'medium' => '#00a0d2',
-				'low' => '#007cba'
+				'high'     => '#dba617',
+				'medium'   => '#00a0d2',
+				'low'      => '#007cba',
 			];
-			$severity_color = $severity_colors[ $anomaly->severity ] ?? '#666';
-			
+			$severity_color  = $severity_colors[ $anomaly->severity ] ?? '#666';
+
 			echo '<td><span style="color: ' . esc_attr( $severity_color ) . '; font-weight: bold;">' . esc_html( ucfirst( $anomaly->severity ) ) . '</span></td>';
 			echo '<td>' . esc_html( wp_date( 'Y-m-d H:i', strtotime( $anomaly->detected_at ) ) ) . '</td>';
 			echo '<td>';
@@ -509,8 +519,8 @@ class AnomalyRadar {
 
 		foreach ( $suggestions as $suggestion ) {
 			$priority_class = 'priority-' . $suggestion['priority'];
-			$category_icon = $this->get_category_icon( $suggestion['category'] );
-			
+			$category_icon  = $this->get_category_icon( $suggestion['category'] );
+
 			echo '<div class="suggestion-card ' . esc_attr( $priority_class ) . '">';
 			echo '<div class="suggestion-header">';
 			echo '<span class="category-icon">' . $category_icon . '</span>';
@@ -519,10 +529,10 @@ class AnomalyRadar {
 			echo esc_html( $this->get_priority_label( $suggestion['priority'] ) );
 			echo '</span>';
 			echo '</div>';
-			
+
 			echo '<div class="suggestion-content">';
 			echo '<p>' . esc_html( $suggestion['description'] ) . '</p>';
-			
+
 			if ( ! empty( $suggestion['actions'] ) ) {
 				echo '<div class="suggested-actions">';
 				echo '<strong>' . esc_html__( 'Azioni consigliate:', 'fp-digital-marketing' ) . '</strong>';
@@ -641,11 +651,11 @@ class AnomalyRadar {
 	 */
 	private function get_category_icon( string $category ): string {
 		$icons = [
-			AnomalySuggestionEngine::CATEGORY_TECHNICAL => '🔧',
-			AnomalySuggestionEngine::CATEGORY_CONTENT => '📝',
-			AnomalySuggestionEngine::CATEGORY_MARKETING => '📈',
+			AnomalySuggestionEngine::CATEGORY_TECHNICAL   => '🔧',
+			AnomalySuggestionEngine::CATEGORY_CONTENT     => '📝',
+			AnomalySuggestionEngine::CATEGORY_MARKETING   => '📈',
 			AnomalySuggestionEngine::CATEGORY_PERFORMANCE => '⚡',
-			AnomalySuggestionEngine::CATEGORY_PLATFORM => '🔗',
+			AnomalySuggestionEngine::CATEGORY_PLATFORM    => '🔗',
 		];
 
 		return $icons[ $category ] ?? '💡';
@@ -660,9 +670,9 @@ class AnomalyRadar {
 	private function get_priority_label( string $priority ): string {
 		$labels = [
 			AnomalySuggestionEngine::PRIORITY_CRITICAL => __( 'Critico', 'fp-digital-marketing' ),
-			AnomalySuggestionEngine::PRIORITY_HIGH => __( 'Alto', 'fp-digital-marketing' ),
-			AnomalySuggestionEngine::PRIORITY_MEDIUM => __( 'Medio', 'fp-digital-marketing' ),
-			AnomalySuggestionEngine::PRIORITY_LOW => __( 'Basso', 'fp-digital-marketing' ),
+			AnomalySuggestionEngine::PRIORITY_HIGH     => __( 'Alto', 'fp-digital-marketing' ),
+			AnomalySuggestionEngine::PRIORITY_MEDIUM   => __( 'Medio', 'fp-digital-marketing' ),
+			AnomalySuggestionEngine::PRIORITY_LOW      => __( 'Basso', 'fp-digital-marketing' ),
 		];
 
 		return $labels[ $priority ] ?? $priority;
@@ -681,7 +691,9 @@ class AnomalyRadar {
 		}
 
 		// Add some custom CSS for the radar interface
-		wp_add_inline_style( 'wp-admin', '
+		wp_add_inline_style(
+			'wp-admin',
+			'
 			.fp-anomaly-radar-overview {
 				margin-top: 20px;
 			}
@@ -721,6 +733,7 @@ class AnomalyRadar {
 				margin: 8px 0;
 				padding-left: 0;
 			}
-		' );
+		'
+		);
 	}
 }

@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Database\DatabaseUtils;
 
 /**
  * UTM Campaigns Table class for database table management
- * 
+ *
  * This class handles the creation and management of the wp_fp_utm_campaigns table
  * used to store UTM campaign data and track their performance.
  */
@@ -29,27 +29,27 @@ class UTMCampaignsTable {
 	 *
 	 * @return string Full table name
 	 */
-        public static function get_table_name(): string {
-                global $wpdb;
-                return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
-        }
+	public static function get_table_name(): string {
+			global $wpdb;
+			return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
+	}
 
 	/**
 	 * Create the UTM campaigns table
 	 *
 	 * @return bool True on success, false on failure
 	 */
-        public static function create_table(): bool {
-                global $wpdb;
+	public static function create_table(): bool {
+			global $wpdb;
 
-                $table_name = self::get_table_name();
-                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
+			$table_name      = self::get_table_name();
+			$charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
-                if ( self::table_exists() ) {
-                        return true;
-                }
+		if ( self::table_exists() ) {
+				return true;
+		}
 
-                $sql = "CREATE TABLE $table_name (
+			$sql = "CREATE TABLE $table_name (
                         id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			campaign_name varchar(255) NOT NULL,
 			utm_source varchar(255) NOT NULL,
@@ -79,12 +79,12 @@ class UTMCampaignsTable {
 			KEY idx_created_by (created_by)
 		) $charset_collate;";
 
-                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
-                        return false;
-                }
+		if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
+				return false;
+		}
 
-                // Check if table was created successfully.
-                return self::table_exists();
+			// Check if table was created successfully.
+			return self::table_exists();
 	}
 
 	/**
@@ -96,8 +96,8 @@ class UTMCampaignsTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		$query = $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name );
-		
+		$query      = $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name );
+
 		return $wpdb->get_var( $query ) === $table_name;
 	}
 
@@ -110,8 +110,8 @@ class UTMCampaignsTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		$sql = "DROP TABLE IF EXISTS $table_name";
-		
+		$sql        = "DROP TABLE IF EXISTS $table_name";
+
 		return $wpdb->query( $sql ) !== false;
 	}
 

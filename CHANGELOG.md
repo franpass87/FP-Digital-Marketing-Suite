@@ -5,6 +5,23 @@ All notable changes to the FP Digital Marketing Suite will be documented in this
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-09-26
+
+### Added
+- Network-aware upgrade registry that migrates wizard menu state and performance cache schemas safely on update.
+- Schema version metadata with migration timestamps for cache settings and onboarding menu state payloads.
+
+### Changed
+- Normalized PerformanceCache configuration to enforce TTL minimums, sanitize indexes and persist schema versions.
+- Automatically flushes PerformanceCache, WordPress object cache and OPcache during upgrades to prevent stale analytics.
+
+### Packaging
+- Published `dist/fp-digital-marketing-suite-1.2.0.zip` with accompanying SHA-256 checksum for WordPress installation.
+- Documented upgrade, QA and verification procedures across README, readme.txt and the new `UPGRADE.md` guide.
+
+### Fixed
+- Resolved legacy menu state payloads lacking sanitized slugs or status values by normalizing stored options during upgrades.
+
 ## [1.1.0] - 2024-04-30
 
 ### Added
@@ -94,13 +111,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version Support
 
-- **Current Version**: 1.1.0
+- **Current Version**: 1.2.0
 - **Minimum WordPress**: 5.0
 - **Minimum PHP**: 7.4
 - **Tested up to WordPress**: 6.4
 - **Tested PHP versions**: 7.4, 8.0, 8.1, 8.2
 
 ## Upgrade Path
+
+### From 1.1.0 to 1.2.0
+Ensure scheduled upgrades run during low-traffic windows so cache purges can complete. The new upgrade registry will migrate wizard menu state and cache settings automatically; review custom TTL overrides to confirm they still meet your retention goals.
 
 ### From 1.0.1 to 1.1.0
 Review the new alerting policies and reporting schedules introduced in 1.1.0. Existing automation rules remain intact, but administrators should validate thresholds and notification recipients after updating.

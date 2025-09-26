@@ -159,24 +159,24 @@ class UTMCampaign {
 	 * @return void
 	 */
 	public function populate( array $data ): void {
-		$this->id = isset( $data['id'] ) ? (int) $data['id'] : null;
-                $this->campaign_name = $this->sanitize_text_value( $data['campaign_name'] ?? '' );
-                $this->utm_source = $this->sanitize_text_value( $data['utm_source'] ?? '' );
-                $this->utm_medium = $this->sanitize_text_value( $data['utm_medium'] ?? '' );
-                $this->utm_campaign = $this->sanitize_text_value( $data['utm_campaign'] ?? '' );
-                $this->utm_term = ! empty( $data['utm_term'] ) ? $this->sanitize_text_value( $data['utm_term'] ) : null;
-                $this->utm_content = ! empty( $data['utm_content'] ) ? $this->sanitize_text_value( $data['utm_content'] ) : null;
-                $this->base_url = $this->sanitize_url( $data['base_url'] ?? '' );
-		$this->final_url = esc_url_raw( $data['final_url'] ?? '' );
-		$this->short_url = ! empty( $data['short_url'] ) ? esc_url_raw( $data['short_url'] ) : null;
-		$this->preset_used = ! empty( $data['preset_used'] ) ? sanitize_text_field( $data['preset_used'] ) : null;
-		$this->clicks = isset( $data['clicks'] ) ? (int) $data['clicks'] : 0;
-		$this->conversions = isset( $data['conversions'] ) ? (int) $data['conversions'] : 0;
-		$this->revenue = isset( $data['revenue'] ) ? (float) $data['revenue'] : 0.0;
-                $this->status = $this->sanitize_text_value( $data['status'] ?? 'active' );
-		$this->created_at = $data['created_at'] ?? null;
-		$this->updated_at = $data['updated_at'] ?? null;
-		$this->created_by = isset( $data['created_by'] ) ? (int) $data['created_by'] : null;
+		$this->id                    = isset( $data['id'] ) ? (int) $data['id'] : null;
+				$this->campaign_name = $this->sanitize_text_value( $data['campaign_name'] ?? '' );
+				$this->utm_source    = $this->sanitize_text_value( $data['utm_source'] ?? '' );
+				$this->utm_medium    = $this->sanitize_text_value( $data['utm_medium'] ?? '' );
+				$this->utm_campaign  = $this->sanitize_text_value( $data['utm_campaign'] ?? '' );
+				$this->utm_term      = ! empty( $data['utm_term'] ) ? $this->sanitize_text_value( $data['utm_term'] ) : null;
+				$this->utm_content   = ! empty( $data['utm_content'] ) ? $this->sanitize_text_value( $data['utm_content'] ) : null;
+				$this->base_url      = $this->sanitize_url( $data['base_url'] ?? '' );
+		$this->final_url             = esc_url_raw( $data['final_url'] ?? '' );
+		$this->short_url             = ! empty( $data['short_url'] ) ? esc_url_raw( $data['short_url'] ) : null;
+		$this->preset_used           = ! empty( $data['preset_used'] ) ? sanitize_text_field( $data['preset_used'] ) : null;
+		$this->clicks                = isset( $data['clicks'] ) ? (int) $data['clicks'] : 0;
+		$this->conversions           = isset( $data['conversions'] ) ? (int) $data['conversions'] : 0;
+		$this->revenue               = isset( $data['revenue'] ) ? (float) $data['revenue'] : 0.0;
+				$this->status        = $this->sanitize_text_value( $data['status'] ?? 'active' );
+		$this->created_at            = $data['created_at'] ?? null;
+		$this->updated_at            = $data['updated_at'] ?? null;
+		$this->created_by            = isset( $data['created_by'] ) ? (int) $data['created_by'] : null;
 
 		// Generate final URL if not provided.
 		if ( empty( $this->final_url ) && ! empty( $this->base_url ) ) {
@@ -211,7 +211,7 @@ class UTMCampaign {
 		}
 
 		$table_name = UTMCampaignsTable::get_table_name();
-		$data = $this->to_array();
+		$data       = $this->to_array();
 
 		// Remove timestamps for new records.
 		if ( null === $this->id ) {
@@ -229,10 +229,10 @@ class UTMCampaign {
 			}
 		} else {
 			// Update existing record.
-			$result = $wpdb->update( 
-				$table_name, 
-				$data, 
-				[ 'id' => $this->id ] 
+			$result = $wpdb->update(
+				$table_name,
+				$data,
+				[ 'id' => $this->id ]
 			);
 			return $result !== false;
 		}
@@ -253,8 +253,8 @@ class UTMCampaign {
 		global $wpdb;
 		$table_name = UTMCampaignsTable::get_table_name();
 
-		$result = $wpdb->delete( 
-			$table_name, 
+		$result = $wpdb->delete(
+			$table_name,
 			[ 'id' => $this->id ],
 			[ '%d' ]
 		);
@@ -272,7 +272,7 @@ class UTMCampaign {
 		global $wpdb;
 		$table_name = UTMCampaignsTable::get_table_name();
 
-		$data = $wpdb->get_row( 
+		$data = $wpdb->get_row(
 			$wpdb->prepare( "SELECT * FROM $table_name WHERE id = %d", $id ),
 			ARRAY_A
 		);
@@ -293,29 +293,29 @@ class UTMCampaign {
 		$table_name = UTMCampaignsTable::get_table_name();
 
 		$where_conditions = [];
-		$where_values = [];
+		$where_values     = [];
 
 		// Apply filters.
 		if ( ! empty( $filters['status'] ) ) {
 			$where_conditions[] = 'status = %s';
-			$where_values[] = $filters['status'];
+			$where_values[]     = $filters['status'];
 		}
 
 		if ( ! empty( $filters['utm_source'] ) ) {
 			$where_conditions[] = 'utm_source = %s';
-			$where_values[] = $filters['utm_source'];
+			$where_values[]     = $filters['utm_source'];
 		}
 
 		if ( ! empty( $filters['utm_medium'] ) ) {
 			$where_conditions[] = 'utm_medium = %s';
-			$where_values[] = $filters['utm_medium'];
+			$where_values[]     = $filters['utm_medium'];
 		}
 
 		if ( ! empty( $filters['search'] ) ) {
 			$where_conditions[] = '(campaign_name LIKE %s OR utm_campaign LIKE %s)';
-			$search_term = '%' . $wpdb->esc_like( $filters['search'] ) . '%';
-			$where_values[] = $search_term;
-			$where_values[] = $search_term;
+			$search_term        = '%' . $wpdb->esc_like( $filters['search'] ) . '%';
+			$where_values[]     = $search_term;
+			$where_values[]     = $search_term;
 		}
 
 		// Build query.
@@ -330,9 +330,12 @@ class UTMCampaign {
 
 		$results = $wpdb->get_results( $query, ARRAY_A );
 
-		return array_map( function( $data ) {
-			return new self( $data );
-		}, $results ?: [] );
+		return array_map(
+			function ( $data ) {
+				return new self( $data );
+			},
+			$results ?: []
+		);
 	}
 
 	/**
@@ -346,33 +349,33 @@ class UTMCampaign {
 		$table_name = UTMCampaignsTable::get_table_name();
 
 		$where_conditions = [];
-		$where_values = [];
+		$where_values     = [];
 
 		// Apply same filters as get_campaigns.
 		if ( ! empty( $filters['status'] ) ) {
 			$where_conditions[] = 'status = %s';
-			$where_values[] = $filters['status'];
+			$where_values[]     = $filters['status'];
 		}
 
 		if ( ! empty( $filters['utm_source'] ) ) {
 			$where_conditions[] = 'utm_source = %s';
-			$where_values[] = $filters['utm_source'];
+			$where_values[]     = $filters['utm_source'];
 		}
 
 		if ( ! empty( $filters['utm_medium'] ) ) {
 			$where_conditions[] = 'utm_medium = %s';
-			$where_values[] = $filters['utm_medium'];
+			$where_values[]     = $filters['utm_medium'];
 		}
 
 		if ( ! empty( $filters['search'] ) ) {
 			$where_conditions[] = '(campaign_name LIKE %s OR utm_campaign LIKE %s)';
-			$search_term = '%' . $wpdb->esc_like( $filters['search'] ) . '%';
-			$where_values[] = $search_term;
-			$where_values[] = $search_term;
+			$search_term        = '%' . $wpdb->esc_like( $filters['search'] ) . '%';
+			$where_values[]     = $search_term;
+			$where_values[]     = $search_term;
 		}
 
 		$where_clause = ! empty( $where_conditions ) ? 'WHERE ' . implode( ' AND ', $where_conditions ) : '';
-		$query = "SELECT COUNT(*) FROM $table_name $where_clause";
+		$query        = "SELECT COUNT(*) FROM $table_name $where_clause";
 
 		if ( ! empty( $where_values ) ) {
 			$query = $wpdb->prepare( $query, $where_values );
@@ -388,11 +391,11 @@ class UTMCampaign {
 	 */
 	private function validate(): bool {
 		// Required fields.
-		if ( empty( $this->campaign_name ) || 
-			 empty( $this->utm_source ) || 
-			 empty( $this->utm_medium ) || 
-			 empty( $this->utm_campaign ) ||
-			 empty( $this->base_url ) ) {
+		if ( empty( $this->campaign_name ) ||
+			empty( $this->utm_source ) ||
+			empty( $this->utm_medium ) ||
+			empty( $this->utm_campaign ) ||
+			empty( $this->base_url ) ) {
 			return false;
 		}
 
@@ -428,22 +431,22 @@ class UTMCampaign {
 
 		// Add optional parameters to uniqueness check.
 		if ( $this->utm_term ) {
-			$query .= " AND utm_term = %s";
+			$query   .= ' AND utm_term = %s';
 			$params[] = $this->utm_term;
 		} else {
-			$query .= " AND utm_term IS NULL";
+			$query .= ' AND utm_term IS NULL';
 		}
 
 		if ( $this->utm_content ) {
-			$query .= " AND utm_content = %s";
+			$query   .= ' AND utm_content = %s';
 			$params[] = $this->utm_content;
 		} else {
-			$query .= " AND utm_content IS NULL";
+			$query .= ' AND utm_content IS NULL';
 		}
 
 		// Exclude current record if updating.
 		if ( $this->id ) {
-			$query .= " AND id != %d";
+			$query   .= ' AND id != %d';
 			$params[] = $this->id;
 		}
 
@@ -473,67 +476,67 @@ class UTMCampaign {
 	 *
 	 * @return array Model data as array.
 	 */
-        public function to_array(): array {
-                return [
-                        'id'            => $this->id,
-			'campaign_name' => $this->campaign_name,
-			'utm_source'    => $this->utm_source,
-			'utm_medium'    => $this->utm_medium,
-			'utm_campaign'  => $this->utm_campaign,
-			'utm_term'      => $this->utm_term,
-			'utm_content'   => $this->utm_content,
-			'base_url'      => $this->base_url,
-			'final_url'     => $this->final_url,
-			'short_url'     => $this->short_url,
-			'preset_used'   => $this->preset_used,
-			'clicks'        => $this->clicks,
-			'conversions'   => $this->conversions,
-			'revenue'       => $this->revenue,
-			'status'        => $this->status,
-			'created_at'    => $this->created_at,
-			'updated_at'    => $this->updated_at,
-                        'created_by'    => $this->created_by,
-                ];
-        }
+	public function to_array(): array {
+			return [
+				'id'            => $this->id,
+				'campaign_name' => $this->campaign_name,
+				'utm_source'    => $this->utm_source,
+				'utm_medium'    => $this->utm_medium,
+				'utm_campaign'  => $this->utm_campaign,
+				'utm_term'      => $this->utm_term,
+				'utm_content'   => $this->utm_content,
+				'base_url'      => $this->base_url,
+				'final_url'     => $this->final_url,
+				'short_url'     => $this->short_url,
+				'preset_used'   => $this->preset_used,
+				'clicks'        => $this->clicks,
+				'conversions'   => $this->conversions,
+				'revenue'       => $this->revenue,
+				'status'        => $this->status,
+				'created_at'    => $this->created_at,
+				'updated_at'    => $this->updated_at,
+				'created_by'    => $this->created_by,
+			];
+	}
 
-        /**
-         * Sanitize text fields using a multi-step approach that strips script content
-         * and normalizes whitespace for safe storage.
-         *
-         * @param string $value Raw input value.
-         * @return string
-         */
-        private function sanitize_text_value( string $value ): string {
-                if ( '' === $value ) {
-                        return '';
-                }
+		/**
+		 * Sanitize text fields using a multi-step approach that strips script content
+		 * and normalizes whitespace for safe storage.
+		 *
+		 * @param string $value Raw input value.
+		 * @return string
+		 */
+	private function sanitize_text_value( string $value ): string {
+		if ( '' === $value ) {
+				return '';
+		}
 
-                $value = preg_replace( '#<script\b[^>]*>(.*?)</script>#is', '', $value );
-                $value = wp_strip_all_tags( $value, true );
-                $value = sanitize_text_field( $value );
+			$value = preg_replace( '#<script\b[^>]*>(.*?)</script>#is', '', $value );
+			$value = wp_strip_all_tags( $value, true );
+			$value = sanitize_text_field( $value );
 
-                return trim( $value );
-        }
+			return trim( $value );
+	}
 
-        /**
-         * Sanitize URL values ensuring dangerous schemes are removed.
-         *
-         * @param string $url Raw URL value.
-         * @return string
-         */
-        private function sanitize_url( string $url ): string {
-                $url = trim( (string) $url );
+		/**
+		 * Sanitize URL values ensuring dangerous schemes are removed.
+		 *
+		 * @param string $url Raw URL value.
+		 * @return string
+		 */
+	private function sanitize_url( string $url ): string {
+			$url = trim( (string) $url );
 
-                if ( '' === $url ) {
-                        return '';
-                }
+		if ( '' === $url ) {
+				return '';
+		}
 
-                if ( preg_match( '#^(javascript|data):#i', $url ) ) {
-                        return '';
-                }
+		if ( preg_match( '#^(javascript|data):#i', $url ) ) {
+				return '';
+		}
 
-                return esc_url_raw( $url );
-        }
+			return esc_url_raw( $url );
+	}
 
 	/**
 	 * Get campaign ID
@@ -626,9 +629,9 @@ class UTMCampaign {
 	 * @return bool True on success, false on failure.
 	 */
 	public function update_performance( int $clicks = 0, int $conversions = 0, float $revenue = 0.0 ): bool {
-		$this->clicks += $clicks;
+		$this->clicks      += $clicks;
 		$this->conversions += $conversions;
-		$this->revenue += $revenue;
+		$this->revenue     += $revenue;
 
 		return $this->save();
 	}

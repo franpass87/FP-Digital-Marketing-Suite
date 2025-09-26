@@ -28,9 +28,9 @@ class AlertEngineTest extends TestCase {
 	public function setUp(): void {
 		parent::setUp();
 
-                // Create mock wpdb using the bootstrap helper to guarantee required methods exist.
-                $this->wpdb_mock = new WPDB_Mock();
-                $this->wpdb_mock->prefix = 'wp_';
+				// Create mock wpdb using the bootstrap helper to guarantee required methods exist.
+				$this->wpdb_mock         = new WPDB_Mock();
+				$this->wpdb_mock->prefix = 'wp_';
 
 		// Set global wpdb
 		global $wpdb;
@@ -73,7 +73,7 @@ class AlertEngineTest extends TestCase {
 	 */
 	public function test_evaluate_condition(): void {
 		$reflection = new ReflectionClass( AlertEngine::class );
-		$method = $reflection->getMethod( 'evaluate_condition' );
+		$method     = $reflection->getMethod( 'evaluate_condition' );
 		$method->setAccessible( true );
 
 		// Test greater than
@@ -110,7 +110,7 @@ class AlertEngineTest extends TestCase {
 	 */
 	public function test_condition_operators(): void {
 		$operators = AlertRule::get_condition_operators();
-		
+
 		$this->assertIsArray( $operators );
 		$this->assertArrayHasKey( AlertRule::CONDITION_GREATER_THAN, $operators );
 		$this->assertArrayHasKey( AlertRule::CONDITION_LESS_THAN, $operators );
@@ -127,7 +127,7 @@ class AlertEngineTest extends TestCase {
 	 */
 	public function test_format_metric_value(): void {
 		$reflection = new ReflectionClass( AlertEngine::class );
-		$method = $reflection->getMethod( 'format_metric_value' );
+		$method     = $reflection->getMethod( 'format_metric_value' );
 		$method->setAccessible( true );
 
 		// Mock MetricsSchema::get_kpi_definitions
@@ -164,15 +164,15 @@ class AlertEngineTest extends TestCase {
 
 		// Test log structure
 		$sample_results = [
-			'checked' => 5,
-			'triggered' => 2,
-			'errors' => 0,
+			'checked'            => 5,
+			'triggered'          => 2,
+			'errors'             => 0,
 			'notifications_sent' => 2,
 		];
 
 		// Use reflection to test the private log method
 		$reflection = new ReflectionClass( AlertEngine::class );
-		$method = $reflection->getMethod( 'log_check_results' );
+		$method     = $reflection->getMethod( 'log_check_results' );
 		$method->setAccessible( true );
 
 		// This would log the results (mocked in our test environment)
@@ -214,15 +214,15 @@ class AlertEngineTest extends TestCase {
 	public function test_check_rule_with_mock_data(): void {
 		// Create a mock rule object
 		$mock_rule = (object) [
-			'id' => 1,
-			'client_id' => 123,
-			'name' => 'Test Rule',
-			'metric' => 'sessions',
-			'condition' => AlertRule::CONDITION_GREATER_THAN,
-			'threshold_value' => 100,
-			'notification_email' => 'test@example.com',
+			'id'                        => 1,
+			'client_id'                 => 123,
+			'name'                      => 'Test Rule',
+			'metric'                    => 'sessions',
+			'condition'                 => AlertRule::CONDITION_GREATER_THAN,
+			'threshold_value'           => 100,
+			'notification_email'        => 'test@example.com',
 			'notification_admin_notice' => 1,
-			'is_active' => 1,
+			'is_active'                 => 1,
 		];
 
 		// Mock MetricsAggregator::get_metrics to return test data

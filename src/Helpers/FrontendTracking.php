@@ -43,14 +43,14 @@ class FrontendTracking {
 		// NOTE: Microsoft Clarity tracking script is no longer automatically injected
 		// This plugin now monitors CLIENT websites, not the agency website where it's installed
 		// Clarity tracking for client websites should be handled separately on each client site
-		
+
 		// Output other tracking scripts here (if any in the future)
 		// self::output_other_tracking( $api_keys );
 	}
 
 	/**
 	 * Output Microsoft Clarity tracking script
-	 * 
+	 *
 	 * @deprecated This method is no longer used as Clarity now monitors client websites, not the agency website.
 	 * @param array $api_keys API keys configuration
 	 * @return void
@@ -58,23 +58,23 @@ class FrontendTracking {
 	private static function output_clarity_tracking( array $api_keys ): void {
 		// This method is no longer used. Clarity tracking is now configured per-client
 		// to monitor client websites, not the agency website where the plugin is installed.
-		
+
 		// If you need to track the agency website, configure Clarity directly on the website
 		// rather than through this plugin.
-		
+
 		return;
-		
+
 		// Previous implementation (kept for reference):
 		/*
 		$project_id = $api_keys['clarity_project_id'] ?? '';
-		
+
 		if ( empty( $project_id ) ) {
 			return;
 		}
 
 		$clarity = new MicrosoftClarity( $project_id );
 		$tracking_script = $clarity->get_tracking_script();
-		
+
 		if ( ! empty( $tracking_script ) ) {
 			echo "\n<!-- Microsoft Clarity tracking -->\n";
 			echo $tracking_script;

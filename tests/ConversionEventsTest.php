@@ -21,7 +21,7 @@ class ConversionEventsTest extends TestCase {
 	 */
 	public function setUp(): void {
 		parent::setUp();
-		
+
 		// Create test table
 		ConversionEventsTable::create_table();
 	}
@@ -34,11 +34,11 @@ class ConversionEventsTest extends TestCase {
 		$event_types = ConversionEventRegistry::get_event_types();
 		$this->assertIsArray( $event_types );
 		$this->assertNotEmpty( $event_types );
-		
+
 		// Test specific event type exists
 		$this->assertArrayHasKey( ConversionEventRegistry::EVENT_SIGNUP, $event_types );
 		$this->assertArrayHasKey( ConversionEventRegistry::EVENT_PURCHASE, $event_types );
-		
+
 		// Test event type definition structure
 		$signup_def = $event_types[ ConversionEventRegistry::EVENT_SIGNUP ];
 		$this->assertArrayHasKey( 'name', $signup_def );
@@ -55,14 +55,14 @@ class ConversionEventsTest extends TestCase {
 		// Test GA4 event mapping
 		$normalized = ConversionEventRegistry::normalize_event_type( 'google_analytics_4', 'sign_up' );
 		$this->assertEquals( ConversionEventRegistry::EVENT_SIGNUP, $normalized );
-		
+
 		$normalized = ConversionEventRegistry::normalize_event_type( 'google_analytics_4', 'purchase' );
 		$this->assertEquals( ConversionEventRegistry::EVENT_PURCHASE, $normalized );
-		
+
 		// Test Facebook Ads event mapping
 		$normalized = ConversionEventRegistry::normalize_event_type( 'facebook_ads', 'CompleteRegistration' );
 		$this->assertEquals( ConversionEventRegistry::EVENT_SIGNUP, $normalized );
-		
+
 		// Test unknown event type (should return original)
 		$normalized = ConversionEventRegistry::normalize_event_type( 'unknown_source', 'unknown_event' );
 		$this->assertEquals( 'unknown_event', $normalized );
@@ -73,14 +73,14 @@ class ConversionEventsTest extends TestCase {
 	 */
 	public function test_create_event_from_source(): void {
 		$source_data = [
-			'event_type' => 'sign_up',
-			'value' => 25.00,
-			'currency' => 'EUR',
-			'user_id' => 'user123',
-			'utm_source' => 'google',
-			'utm_medium' => 'cpc',
-			'utm_campaign' => 'summer_sale',
-			'email' => 'test@example.com',
+			'event_type'          => 'sign_up',
+			'value'               => 25.00,
+			'currency'            => 'EUR',
+			'user_id'             => 'user123',
+			'utm_source'          => 'google',
+			'utm_medium'          => 'cpc',
+			'utm_campaign'        => 'summer_sale',
+			'email'               => 'test@example.com',
 			'registration_source' => 'homepage',
 		];
 
@@ -110,7 +110,7 @@ class ConversionEventsTest extends TestCase {
 
 		$source_data = [
 			'event_type' => 'sign_up',
-			'timestamp' => $timestamp,
+			'timestamp'  => $timestamp,
 		];
 
 		$event_data = ConversionEventRegistry::create_event_from_source( 'google_analytics_4', $source_data, 456 );
@@ -126,7 +126,7 @@ class ConversionEventsTest extends TestCase {
 
 		$source_data = [
 			'event_type' => 'sign_up',
-			'timestamp' => $timestamp,
+			'timestamp'  => $timestamp,
 		];
 
 		$event_data = ConversionEventRegistry::create_event_from_source( 'google_analytics_4', $source_data, 789 );
@@ -142,7 +142,7 @@ class ConversionEventsTest extends TestCase {
 
 		$source_data = [
 			'event_type' => 'sign_up',
-			'timestamp' => $timestamp,
+			'timestamp'  => $timestamp,
 		];
 
 		$event_data = ConversionEventRegistry::create_event_from_source( 'google_analytics_4', $source_data, 321 );
@@ -158,7 +158,7 @@ class ConversionEventsTest extends TestCase {
 
 		$source_data = [
 			'event_type' => 'sign_up',
-			'timestamp' => 'not-a-date',
+			'timestamp'  => 'not-a-date',
 		];
 
 		$event_data = ConversionEventRegistry::create_event_from_source( 'google_analytics_4', $source_data, 654 );
@@ -169,7 +169,7 @@ class ConversionEventsTest extends TestCase {
 
 		$actual_timestamp = strtotime( $event_data['created_at'] );
 		$before_timestamp = strtotime( $before );
-		$after_timestamp = strtotime( $after );
+		$after_timestamp  = strtotime( $after );
 
 		$this->assertNotFalse( $actual_timestamp );
 		$this->assertNotFalse( $before_timestamp );
@@ -184,16 +184,19 @@ class ConversionEventsTest extends TestCase {
 	 */
 	public function test_conversion_event_model(): void {
 		$event_data = [
-			'event_id' => 'test_event_123',
-			'event_type' => ConversionEventRegistry::EVENT_PURCHASE,
-			'event_name' => 'Test Purchase',
-			'client_id' => 456,
-			'source' => 'woocommerce',
-			'event_value' => 99.99,
-			'currency' => 'EUR',
-			'user_id' => 'user456',
-			'utm_campaign' => 'black_friday',
-			'event_attributes' => [ 'product_id' => 'product123', 'quantity' => 2 ],
+			'event_id'         => 'test_event_123',
+			'event_type'       => ConversionEventRegistry::EVENT_PURCHASE,
+			'event_name'       => 'Test Purchase',
+			'client_id'        => 456,
+			'source'           => 'woocommerce',
+			'event_value'      => 99.99,
+			'currency'         => 'EUR',
+			'user_id'          => 'user456',
+			'utm_campaign'     => 'black_friday',
+			'event_attributes' => [
+				'product_id' => 'product123',
+				'quantity'   => 2,
+			],
 		];
 
 		$event = new ConversionEvent( $event_data );
@@ -242,16 +245,19 @@ class ConversionEventsTest extends TestCase {
 
 		// Test event insertion
 		$event_data = [
-			'event_id' => 'db_test_event_1',
-			'event_type' => ConversionEventRegistry::EVENT_LEAD_SUBMIT,
-			'event_name' => 'Contact Form Submission',
-			'client_id' => 789,
-			'source' => 'contact_form_7',
-			'event_value' => 0.0,
-			'utm_source' => 'linkedin',
-			'utm_medium' => 'social',
-			'utm_campaign' => 'lead_gen_2024',
-			'event_attributes' => [ 'form_name' => 'contact_us', 'lead_quality' => 'high' ],
+			'event_id'         => 'db_test_event_1',
+			'event_type'       => ConversionEventRegistry::EVENT_LEAD_SUBMIT,
+			'event_name'       => 'Contact Form Submission',
+			'client_id'        => 789,
+			'source'           => 'contact_form_7',
+			'event_value'      => 0.0,
+			'utm_source'       => 'linkedin',
+			'utm_medium'       => 'social',
+			'utm_campaign'     => 'lead_gen_2024',
+			'event_attributes' => [
+				'form_name'    => 'contact_us',
+				'lead_quality' => 'high',
+			],
 		];
 
 		$insert_id = ConversionEventsTable::insert_event( $event_data );
@@ -296,109 +302,109 @@ class ConversionEventsTest extends TestCase {
 	/**
 	 * Test event ingestion and deduplication
 	 */
-        public function test_event_ingestion(): void {
-                // Test event ingestion
-                $source_data = [
-                        'event_type' => 'purchase',
-                        'value' => 150.00,
-			'currency' => 'EUR',
-			'transaction_id' => 'txn_123',
-			'user_id' => 'user789',
-			'utm_source' => 'facebook',
-			'utm_medium' => 'ads',
-			'utm_campaign' => 'holiday_sale',
-			'product_id' => 'prod_456',
-			'quantity' => 3,
-		];
+	public function test_event_ingestion(): void {
+			// Test event ingestion
+			$source_data = [
+				'event_type'     => 'purchase',
+				'value'          => 150.00,
+				'currency'       => 'EUR',
+				'transaction_id' => 'txn_123',
+				'user_id'        => 'user789',
+				'utm_source'     => 'facebook',
+				'utm_medium'     => 'ads',
+				'utm_campaign'   => 'holiday_sale',
+				'product_id'     => 'prod_456',
+				'quantity'       => 3,
+			];
 
-		$event = ConversionEventManager::ingest_event( 'facebook_ads', $source_data, 999 );
+			$event = ConversionEventManager::ingest_event( 'facebook_ads', $source_data, 999 );
 
-		$this->assertInstanceOf( ConversionEvent::class, $event );
-		$this->assertEquals( ConversionEventRegistry::EVENT_PURCHASE, $event->get_event_type() );
-		$this->assertEquals( 999, $event->get_client_id() );
-		$this->assertEquals( 'facebook_ads', $event->get_source() );
-		$this->assertEquals( 150.00, $event->get_event_value() );
-		$this->assertFalse( $event->is_duplicate() );
+			$this->assertInstanceOf( ConversionEvent::class, $event );
+			$this->assertEquals( ConversionEventRegistry::EVENT_PURCHASE, $event->get_event_type() );
+			$this->assertEquals( 999, $event->get_client_id() );
+			$this->assertEquals( 'facebook_ads', $event->get_source() );
+			$this->assertEquals( 150.00, $event->get_event_value() );
+			$this->assertFalse( $event->is_duplicate() );
 
-		// Test duplicate detection - ingest same event again
-		$duplicate_event = ConversionEventManager::ingest_event( 'facebook_ads', $source_data, 999 );
-                $this->assertInstanceOf( ConversionEvent::class, $duplicate_event );
-                // One of the events should be marked as duplicate
-                $this->assertTrue( $duplicate_event->is_duplicate() || $event->is_duplicate() );
-        }
+			// Test duplicate detection - ingest same event again
+			$duplicate_event = ConversionEventManager::ingest_event( 'facebook_ads', $source_data, 999 );
+			$this->assertInstanceOf( ConversionEvent::class, $duplicate_event );
+			// One of the events should be marked as duplicate
+			$this->assertTrue( $duplicate_event->is_duplicate() || $event->is_duplicate() );
+	}
 
-        /**
-         * Ensure duplicate detection works based on source_event_id even with distant timestamps.
-         */
-        public function test_duplicate_detection_by_source_event_id(): void {
-                $client_id = 555;
-                $source = 'google_analytics_4';
-                $shared_source_event_id = 'shared-source-event-123';
+		/**
+		 * Ensure duplicate detection works based on source_event_id even with distant timestamps.
+		 */
+	public function test_duplicate_detection_by_source_event_id(): void {
+			$client_id              = 555;
+			$source                 = 'google_analytics_4';
+			$shared_source_event_id = 'shared-source-event-123';
 
-                $base_source_data = [
-                        'event_type' => 'purchase',
-                        'value' => 129.99,
-                        'currency' => 'EUR',
-                        'source_event_id' => $shared_source_event_id,
-                ];
+			$base_source_data = [
+				'event_type'      => 'purchase',
+				'value'           => 129.99,
+				'currency'        => 'EUR',
+				'source_event_id' => $shared_source_event_id,
+			];
 
-                $first_event = ConversionEventManager::ingest_event(
-                        $source,
-                        array_merge(
-                                $base_source_data,
-                                [
-                                        'timestamp' => '2024-01-01 10:00:00',
-                                ]
-                        ),
-                        $client_id
-                );
+			$first_event = ConversionEventManager::ingest_event(
+				$source,
+				array_merge(
+					$base_source_data,
+					[
+						'timestamp' => '2024-01-01 10:00:00',
+					]
+				),
+				$client_id
+			);
 
-                $this->assertInstanceOf( ConversionEvent::class, $first_event );
-                $this->assertFalse( $first_event->is_duplicate() );
+			$this->assertInstanceOf( ConversionEvent::class, $first_event );
+			$this->assertFalse( $first_event->is_duplicate() );
 
-                $second_event = ConversionEventManager::ingest_event(
-                        $source,
-                        array_merge(
-                                $base_source_data,
-                                [
-                                        'timestamp' => '2024-03-01 10:00:00',
-                                ]
-                        ),
-                        $client_id
-                );
+			$second_event = ConversionEventManager::ingest_event(
+				$source,
+				array_merge(
+					$base_source_data,
+					[
+						'timestamp' => '2024-03-01 10:00:00',
+					]
+				),
+				$client_id
+			);
 
-                $this->assertInstanceOf( ConversionEvent::class, $second_event );
-                $this->assertTrue( $second_event->is_duplicate() );
+			$this->assertInstanceOf( ConversionEvent::class, $second_event );
+			$this->assertTrue( $second_event->is_duplicate() );
 
-                $stored_events = ConversionEventsTable::get_events(
-                        [
-                                'client_id' => $client_id,
-                                'source' => $source,
-                        ],
-                        10,
-                        0
-                );
+			$stored_events = ConversionEventsTable::get_events(
+				[
+					'client_id' => $client_id,
+					'source'    => $source,
+				],
+				10,
+				0
+			);
 
-                $this->assertCount( 2, $stored_events );
-                $this->assertEquals( $shared_source_event_id, $stored_events[0]['source_event_id'] );
-                $this->assertEquals( 1, (int) $stored_events[0]['is_duplicate'] );
-                $this->assertEquals( $shared_source_event_id, $stored_events[1]['source_event_id'] );
-                $this->assertEquals( 0, (int) $stored_events[1]['is_duplicate'] );
-        }
+			$this->assertCount( 2, $stored_events );
+			$this->assertEquals( $shared_source_event_id, $stored_events[0]['source_event_id'] );
+			$this->assertEquals( 1, (int) $stored_events[0]['is_duplicate'] );
+			$this->assertEquals( $shared_source_event_id, $stored_events[1]['source_event_id'] );
+			$this->assertEquals( 0, (int) $stored_events[1]['is_duplicate'] );
+	}
 
-        /**
-         * Ensure events with different user IDs are not marked as duplicates.
-         */
-        public function test_events_with_different_user_ids_are_not_marked_as_duplicates(): void {
-                $client_id = 654;
-		$source = 'facebook_ads';
+		/**
+		 * Ensure events with different user IDs are not marked as duplicates.
+		 */
+	public function test_events_with_different_user_ids_are_not_marked_as_duplicates(): void {
+			$client_id = 654;
+		$source        = 'facebook_ads';
 
 		$base_event = [
 			'event_type' => 'purchase',
-			'value' => 199.99,
-			'currency' => 'EUR',
+			'value'      => 199.99,
+			'currency'   => 'EUR',
 			'ip_address' => '198.51.100.10',
-			'timestamp' => '2024-01-05 12:00:00',
+			'timestamp'  => '2024-01-05 12:00:00',
 		];
 
 		$first_event = ConversionEventManager::ingest_event(
@@ -420,7 +426,7 @@ class ConversionEventsTest extends TestCase {
 			array_merge(
 				$base_event,
 				[
-					'user_id' => 'duplicate-user-b',
+					'user_id'   => 'duplicate-user-b',
 					'timestamp' => '2024-01-05 12:00:30',
 				]
 			),
@@ -433,7 +439,7 @@ class ConversionEventsTest extends TestCase {
 		$user_a_events = ConversionEventsTable::get_events(
 			[
 				'client_id' => $client_id,
-				'user_id' => 'duplicate-user-a',
+				'user_id'   => 'duplicate-user-a',
 			],
 			10,
 			0
@@ -444,7 +450,7 @@ class ConversionEventsTest extends TestCase {
 		$user_b_events = ConversionEventsTable::get_events(
 			[
 				'client_id' => $client_id,
-				'user_id' => 'duplicate-user-b',
+				'user_id'   => 'duplicate-user-b',
 			],
 			10,
 			0
@@ -456,7 +462,7 @@ class ConversionEventsTest extends TestCase {
 			ConversionEventsTable::get_events_count(
 				[
 					'client_id' => $client_id,
-					'user_id' => 'duplicate-user-b',
+					'user_id'   => 'duplicate-user-b',
 				]
 			)
 		);
@@ -468,21 +474,21 @@ class ConversionEventsTest extends TestCase {
 	public function test_bulk_ingestion(): void {
 		$events_data = [
 			[
-				'event_type' => 'sign_up',
-				'value' => 0.0,
-				'user_id' => 'user001',
+				'event_type'   => 'sign_up',
+				'value'        => 0.0,
+				'user_id'      => 'user001',
 				'utm_campaign' => 'spring_signup',
 			],
 			[
-				'event_type' => 'sign_up',
-				'value' => 0.0,
-				'user_id' => 'user002',
+				'event_type'   => 'sign_up',
+				'value'        => 0.0,
+				'user_id'      => 'user002',
 				'utm_campaign' => 'spring_signup',
 			],
 			[
-				'event_type' => 'purchase',
-				'value' => 75.00,
-				'user_id' => 'user001',
+				'event_type'   => 'purchase',
+				'value'        => 75.00,
+				'user_id'      => 'user001',
 				'utm_campaign' => 'spring_signup',
 			],
 		];
@@ -501,21 +507,21 @@ class ConversionEventsTest extends TestCase {
 		// Insert test events
 		$test_events = [
 			[
-				'event_id' => 'query_test_1',
-				'event_type' => ConversionEventRegistry::EVENT_SIGNUP,
-				'event_name' => 'User Signup',
-				'client_id' => 111,
-				'source' => 'website',
-				'event_value' => 0.0,
+				'event_id'     => 'query_test_1',
+				'event_type'   => ConversionEventRegistry::EVENT_SIGNUP,
+				'event_name'   => 'User Signup',
+				'client_id'    => 111,
+				'source'       => 'website',
+				'event_value'  => 0.0,
 				'utm_campaign' => 'test_campaign',
 			],
 			[
-				'event_id' => 'query_test_2',
-				'event_type' => ConversionEventRegistry::EVENT_PURCHASE,
-				'event_name' => 'Product Purchase',
-				'client_id' => 111,
-				'source' => 'website',
-				'event_value' => 99.99,
+				'event_id'     => 'query_test_2',
+				'event_type'   => ConversionEventRegistry::EVENT_PURCHASE,
+				'event_name'   => 'Product Purchase',
+				'client_id'    => 111,
+				'source'       => 'website',
+				'event_value'  => 99.99,
 				'utm_campaign' => 'test_campaign',
 			],
 		];
@@ -533,15 +539,17 @@ class ConversionEventsTest extends TestCase {
 		$this->assertEquals( 2, $results['total_count'] );
 
 		// Test filtered query
-		$results = ConversionEventManager::query_events( [
-			'client_id' => 111,
-			'event_type' => ConversionEventRegistry::EVENT_PURCHASE,
-		] );
+		$results = ConversionEventManager::query_events(
+			[
+				'client_id'  => 111,
+				'event_type' => ConversionEventRegistry::EVENT_PURCHASE,
+			]
+		);
 		$this->assertCount( 1, $results['events'] );
 		$this->assertEquals( ConversionEventRegistry::EVENT_PURCHASE, $results['events'][0]['event_type'] );
 
 		// Test query with summary
-		$results = ConversionEventManager::query_events( 
+		$results = ConversionEventManager::query_events(
 			[ 'client_id' => 111 ],
 			[ 'include_summary' => true ]
 		);
@@ -556,16 +564,28 @@ class ConversionEventsTest extends TestCase {
 	public function test_conversion_funnel(): void {
 		// Insert funnel test events
 		$funnel_events = [
-			[ 'event_type' => ConversionEventRegistry::EVENT_SIGNUP, 'client_id' => 222 ],
-			[ 'event_type' => ConversionEventRegistry::EVENT_SIGNUP, 'client_id' => 222 ],
-			[ 'event_type' => ConversionEventRegistry::EVENT_ADD_TO_CART, 'client_id' => 222 ],
-			[ 'event_type' => ConversionEventRegistry::EVENT_PURCHASE, 'client_id' => 222 ],
+			[
+				'event_type' => ConversionEventRegistry::EVENT_SIGNUP,
+				'client_id'  => 222,
+			],
+			[
+				'event_type' => ConversionEventRegistry::EVENT_SIGNUP,
+				'client_id'  => 222,
+			],
+			[
+				'event_type' => ConversionEventRegistry::EVENT_ADD_TO_CART,
+				'client_id'  => 222,
+			],
+			[
+				'event_type' => ConversionEventRegistry::EVENT_PURCHASE,
+				'client_id'  => 222,
+			],
 		];
 
 		foreach ( $funnel_events as $i => $event_data ) {
-			$event_data['event_id'] = 'funnel_test_' . $i;
-			$event_data['event_name'] = 'Funnel Test Event';
-			$event_data['source'] = 'test';
+			$event_data['event_id']    = 'funnel_test_' . $i;
+			$event_data['event_name']  = 'Funnel Test Event';
+			$event_data['source']      = 'test';
 			$event_data['event_value'] = 0.0;
 			ConversionEventsTable::insert_event( $event_data );
 		}

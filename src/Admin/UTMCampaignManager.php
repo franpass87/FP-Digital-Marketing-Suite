@@ -52,28 +52,28 @@ class UTMCampaignManager {
 
 	/**
 	 * Add admin menu page
-	 * 
+	 *
 	 * Note: This method is disabled when MenuManager is active to prevent
 	 * duplicate menu registrations in the rationalized menu structure.
 	 *
 	 * @return void
 	 */
-        public function add_admin_menu(): void {
-                // Check if centralized MenuManager is active
-                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
-                        // MenuManager will handle menu registration
-                        return;
-                }
+	public function add_admin_menu(): void {
+			// Check if centralized MenuManager is active
+		if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+				// MenuManager will handle menu registration
+				return;
+		}
 
-		// Legacy menu registration (fallback)
-		add_submenu_page(
-			'fp-digital-marketing-dashboard',
-			__( 'Gestione Campagne UTM', 'fp-digital-marketing' ),
-			__( '🚀 Campagne UTM', 'fp-digital-marketing' ),
-			Capabilities::MANAGE_CAMPAIGNS,
-			self::PAGE_SLUG,
-			[ $this, 'render_page' ]
-		);
+			// Legacy menu registration (fallback)
+			add_submenu_page(
+				'fp-digital-marketing-dashboard',
+				__( 'Gestione Campagne UTM', 'fp-digital-marketing' ),
+				__( '🚀 Campagne UTM', 'fp-digital-marketing' ),
+				Capabilities::MANAGE_CAMPAIGNS,
+				self::PAGE_SLUG,
+				[ $this, 'render_page' ]
+			);
 	}
 
 	/**
@@ -89,7 +89,7 @@ class UTMCampaignManager {
 
 		wp_enqueue_script( 'jquery' );
 		wp_enqueue_script( 'wp-util' );
-		
+
 		// UTM Campaign Manager specific styles.
 		wp_add_inline_style( 'wp-admin', $this->get_inline_css() );
 
@@ -97,17 +97,21 @@ class UTMCampaignManager {
 		wp_add_inline_script( 'jquery', $this->get_inline_js() );
 
 		// Localize script for AJAX.
-		wp_localize_script( 'jquery', 'fpUtmAjax', [
-			'ajaxurl'   => admin_url( 'admin-ajax.php' ),
-			'nonce'     => wp_create_nonce( self::NONCE_ACTION ),
-			'strings'   => [
-				'confirm_delete' => __( 'Sei sicuro di voler eliminare questa campagna?', 'fp-digital-marketing' ),
-				'url_copied'     => __( 'URL copiato negli appunti!', 'fp-digital-marketing' ),
-				'copy_failed'    => __( 'Impossibile copiare l\'URL. Seleziona e copia manualmente.', 'fp-digital-marketing' ),
-				'generating'     => __( 'Generazione in corso...', 'fp-digital-marketing' ),
-				'error'          => __( 'Si è verificato un errore. Riprova.', 'fp-digital-marketing' ),
-			],
-		] );
+		wp_localize_script(
+			'jquery',
+			'fpUtmAjax',
+			[
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
+				'strings' => [
+					'confirm_delete' => __( 'Sei sicuro di voler eliminare questa campagna?', 'fp-digital-marketing' ),
+					'url_copied'     => __( 'URL copiato negli appunti!', 'fp-digital-marketing' ),
+					'copy_failed'    => __( 'Impossibile copiare l\'URL. Seleziona e copia manualmente.', 'fp-digital-marketing' ),
+					'generating'     => __( 'Generazione in corso...', 'fp-digital-marketing' ),
+					'error'          => __( 'Si è verificato un errore. Riprova.', 'fp-digital-marketing' ),
+				],
+			]
+		);
 	}
 
 	/**
@@ -149,19 +153,19 @@ class UTMCampaignManager {
 	 */
 	private function handle_save_campaign(): void {
 		$campaign_data = $this->sanitize_campaign_data( $_POST );
-		
+
 		// Validate required fields.
-		if ( empty( $campaign_data['campaign_name'] ) || 
-			 empty( $campaign_data['utm_source'] ) || 
-			 empty( $campaign_data['utm_medium'] ) || 
-			 empty( $campaign_data['utm_campaign'] ) ||
-			 empty( $campaign_data['base_url'] ) ) {
+		if ( empty( $campaign_data['campaign_name'] ) ||
+			empty( $campaign_data['utm_source'] ) ||
+			empty( $campaign_data['utm_medium'] ) ||
+			empty( $campaign_data['utm_campaign'] ) ||
+			empty( $campaign_data['base_url'] ) ) {
 			$this->add_admin_notice( __( 'Tutti i campi obbligatori devono essere compilati.', 'fp-digital-marketing' ), 'error' );
 			return;
 		}
 
 		$campaign = new UTMCampaign( $campaign_data );
-		
+
 		if ( $campaign->save() ) {
 			$this->add_admin_notice( __( 'Campagna UTM salvata con successo.', 'fp-digital-marketing' ), 'success' );
 			// Redirect to avoid resubmission.
@@ -179,7 +183,7 @@ class UTMCampaignManager {
 	 */
 	private function handle_update_campaign(): void {
 		$campaign_id = (int) ( $_POST['campaign_id'] ?? 0 );
-		
+
 		if ( empty( $campaign_id ) ) {
 			$this->add_admin_notice( __( 'ID campagna non valido.', 'fp-digital-marketing' ), 'error' );
 			return;
@@ -219,7 +223,7 @@ class UTMCampaignManager {
 			wp_send_json_error( [ 'message' => __( 'Permessi insufficienti.', 'fp-digital-marketing' ) ] );
 		}
 
-		$base_url = esc_url_raw( $_POST['base_url'] ?? '' );
+		$base_url   = esc_url_raw( $_POST['base_url'] ?? '' );
 		$utm_params = [
 			'source'   => sanitize_text_field( $_POST['utm_source'] ?? '' ),
 			'medium'   => sanitize_text_field( $_POST['utm_medium'] ?? '' ),
@@ -230,7 +234,7 @@ class UTMCampaignManager {
 
 		// Generate final URL.
 		$final_url = UTMGenerator::generate_utm_url( $base_url, $utm_params );
-		
+
 		if ( empty( $final_url ) ) {
 			wp_send_json_error( [ 'message' => __( 'Impossibile generare l\'URL. Verifica i parametri.', 'fp-digital-marketing' ) ] );
 		}
@@ -238,10 +242,12 @@ class UTMCampaignManager {
 		// Generate suggested campaign name.
 		$suggested_name = UTMGenerator::suggest_campaign_name( $utm_params );
 
-		wp_send_json_success( [
-			'final_url'       => $final_url,
-			'suggested_name'  => $suggested_name,
-		] );
+		wp_send_json_success(
+			[
+				'final_url'      => $final_url,
+				'suggested_name' => $suggested_name,
+			]
+		);
 	}
 
 	/**
@@ -249,16 +255,21 @@ class UTMCampaignManager {
 	 *
 	 * @return void
 	 */
-	public function handle_ajax_load_preset(): void {
-		// Verify nonce.
-		if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', self::NONCE_ACTION ) ) {
-			wp_send_json_error( [ 'message' => __( 'Nonce non valido.', 'fp-digital-marketing' ) ] );
-		}
+        public function handle_ajax_load_preset(): void {
+                // Verify nonce.
+                if ( ! wp_verify_nonce( $_POST['nonce'] ?? '', self::NONCE_ACTION ) ) {
+                        wp_send_json_error( [ 'message' => __( 'Nonce non valido.', 'fp-digital-marketing' ) ] );
+                }
 
-		$preset_id = sanitize_text_field( $_POST['preset_id'] ?? '' );
-		$preset = UTMGenerator::get_preset( $preset_id );
+                // Check capabilities.
+                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_CAMPAIGNS ) ) {
+                        wp_send_json_error( [ 'message' => __( 'Permessi insufficienti.', 'fp-digital-marketing' ) ] );
+                }
 
-		if ( ! $preset ) {
+                $preset_id = sanitize_text_field( $_POST['preset_id'] ?? '' );
+                $preset    = UTMGenerator::get_preset( $preset_id );
+
+                if ( ! $preset ) {
 			wp_send_json_error( [ 'message' => __( 'Preset non trovato.', 'fp-digital-marketing' ) ] );
 		}
 
@@ -282,7 +293,7 @@ class UTMCampaignManager {
 		}
 
 		$campaign_id = (int) ( $_POST['campaign_id'] ?? 0 );
-		$campaign = UTMCampaign::find( $campaign_id );
+		$campaign    = UTMCampaign::find( $campaign_id );
 
 		if ( ! $campaign ) {
 			wp_send_json_error( [ 'message' => __( 'Campagna non trovata.', 'fp-digital-marketing' ) ] );
@@ -306,7 +317,7 @@ class UTMCampaignManager {
 			wp_die( __( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
 		}
 
-		$action = $_GET['action'] ?? 'list';
+		$action      = $_GET['action'] ?? 'list';
 		$campaign_id = (int) ( $_GET['campaign_id'] ?? 0 );
 
 		switch ( $action ) {
@@ -343,21 +354,33 @@ class UTMCampaignManager {
 		$filters = array_filter( $filters );
 
 		// Pagination.
-		$per_page = 20;
+		$per_page     = 20;
 		$current_page = max( 1, (int) ( $_GET['paged'] ?? 1 ) );
-		$offset = ( $current_page - 1 ) * $per_page;
+		$offset       = ( $current_page - 1 ) * $per_page;
 
 		// Get campaigns.
-		$campaigns = UTMCampaign::get_campaigns( $filters, $per_page, $offset );
+		$campaigns       = UTMCampaign::get_campaigns( $filters, $per_page, $offset );
 		$total_campaigns = UTMCampaign::get_campaigns_count( $filters );
-		$total_pages = ceil( $total_campaigns / $per_page );
+		$total_pages     = ceil( $total_campaigns / $per_page );
 
 		?>
 		<div class="wrap">
 			<h1 class="wp-heading-inline">
 				<?php esc_html_e( 'Gestione Campagne UTM', 'fp-digital-marketing' ); ?>
 			</h1>
-			<a href="<?php echo esc_url( add_query_arg( [ 'page' => self::PAGE_SLUG, 'action' => 'new' ], admin_url( 'admin.php' ) ) ); ?>" class="page-title-action">
+			<a href="
+			<?php
+			echo esc_url(
+				add_query_arg(
+					[
+						'page'   => self::PAGE_SLUG,
+						'action' => 'new',
+					],
+					admin_url( 'admin.php' )
+				)
+			);
+			?>
+						" class="page-title-action">
 				<?php esc_html_e( 'Aggiungi Nuova Campagna', 'fp-digital-marketing' ); ?>
 			</a>
 
@@ -410,7 +433,20 @@ class UTMCampaignManager {
 							<tr>
 								<td>
 									<strong>
-										<a href="<?php echo esc_url( add_query_arg( [ 'page' => self::PAGE_SLUG, 'action' => 'view', 'campaign_id' => $campaign->get_id() ], admin_url( 'admin.php' ) ) ); ?>">
+										<a href="
+										<?php
+										echo esc_url(
+											add_query_arg(
+												[
+													'page' => self::PAGE_SLUG,
+													'action' => 'view',
+													'campaign_id' => $campaign->get_id(),
+												],
+												admin_url( 'admin.php' )
+											)
+										);
+										?>
+													">
 											<?php echo esc_html( $campaign->get_campaign_name() ); ?>
 										</a>
 									</strong>
@@ -421,7 +457,7 @@ class UTMCampaignManager {
 								<td><?php echo esc_html( number_format( $campaign->get_conversions() ) ); ?></td>
 								<td>
 									<span class="utm-status utm-status-<?php echo esc_attr( $campaign->get_status() ); ?>">
-										<?php 
+										<?php
 										$statuses = [
 											'active'    => __( 'Attiva', 'fp-digital-marketing' ),
 											'paused'    => __( 'In pausa', 'fp-digital-marketing' ),
@@ -433,7 +469,20 @@ class UTMCampaignManager {
 								</td>
 								<td><?php echo esc_html( mysql2date( 'd/m/Y H:i', $campaign->to_array()['created_at'] ) ); ?></td>
 								<td>
-									<a href="<?php echo esc_url( add_query_arg( [ 'page' => self::PAGE_SLUG, 'action' => 'edit', 'campaign_id' => $campaign->get_id() ], admin_url( 'admin.php' ) ) ); ?>" class="button button-small">
+									<a href="
+									<?php
+									echo esc_url(
+										add_query_arg(
+											[
+												'page'   => self::PAGE_SLUG,
+												'action' => 'edit',
+												'campaign_id' => $campaign->get_id(),
+											],
+											admin_url( 'admin.php' )
+										)
+									);
+									?>
+												" class="button button-small">
 										<?php esc_html_e( 'Modifica', 'fp-digital-marketing' ); ?>
 									</a>
 									<button type="button" class="button button-small button-delete-campaign" data-campaign-id="<?php echo esc_attr( $campaign->get_id() ); ?>">
@@ -476,7 +525,7 @@ class UTMCampaignManager {
 	 */
 	private function render_campaign_form( ?int $campaign_id = null ): void {
 		$campaign = null;
-		$is_edit = false;
+		$is_edit  = false;
 
 		if ( $campaign_id ) {
 			$campaign = UTMCampaign::find( $campaign_id );
@@ -716,7 +765,7 @@ class UTMCampaignManager {
 								<th><?php esc_html_e( 'Stato', 'fp-digital-marketing' ); ?></th>
 								<td>
 									<span class="utm-status utm-status-<?php echo esc_attr( $campaign->get_status() ); ?>">
-										<?php 
+										<?php
 										$statuses = [
 											'active'    => __( 'Attiva', 'fp-digital-marketing' ),
 											'paused'    => __( 'In pausa', 'fp-digital-marketing' ),
@@ -753,10 +802,11 @@ class UTMCampaignManager {
 						</div>
 						<div class="utm-stat-card">
 							<div class="utm-stat-number">
-								<?php 
+								<?php
 								$ctr = $campaign->get_clicks() > 0 ? ( $campaign->get_conversions() / $campaign->get_clicks() ) * 100 : 0;
 								echo esc_html( number_format( $ctr, 2 ) );
-								?>%
+								?>
+								%
 							</div>
 							<div class="utm-stat-label"><?php esc_html_e( 'Tasso di Conversione', 'fp-digital-marketing' ); ?></div>
 						</div>
@@ -765,7 +815,20 @@ class UTMCampaignManager {
 			</div>
 
 			<p class="utm-campaign-actions">
-				<a href="<?php echo esc_url( add_query_arg( [ 'page' => self::PAGE_SLUG, 'action' => 'edit', 'campaign_id' => $campaign->get_id() ], admin_url( 'admin.php' ) ) ); ?>" class="button button-primary">
+				<a href="
+				<?php
+				echo esc_url(
+					add_query_arg(
+						[
+							'page'        => self::PAGE_SLUG,
+							'action'      => 'edit',
+							'campaign_id' => $campaign->get_id(),
+						],
+						admin_url( 'admin.php' )
+					)
+				);
+				?>
+							" class="button button-primary">
 					<?php esc_html_e( 'Modifica Campagna', 'fp-digital-marketing' ); ?>
 				</a>
 				<a href="<?php echo esc_url( add_query_arg( [ 'page' => self::PAGE_SLUG ], admin_url( 'admin.php' ) ) ); ?>" class="button button-secondary">
@@ -804,13 +867,16 @@ class UTMCampaignManager {
 	 * @return void
 	 */
 	private function add_admin_notice( string $message, string $type = 'info' ): void {
-		add_action( 'admin_notices', function() use ( $message, $type ) {
-			printf( 
-				'<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
-				esc_attr( $type ),
-				esc_html( $message )
-			);
-		} );
+		add_action(
+			'admin_notices',
+			function () use ( $message, $type ) {
+				printf(
+					'<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+					esc_attr( $type ),
+					esc_html( $message )
+				);
+			}
+		);
 	}
 
 	/**

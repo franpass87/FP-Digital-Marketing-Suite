@@ -22,10 +22,10 @@ class DataExporter {
 	/**
 	 * Export formats
 	 */
-	public const FORMAT_CSV = 'csv';
+	public const FORMAT_CSV  = 'csv';
 	public const FORMAT_JSON = 'json';
-	public const FORMAT_XML = 'xml';
-	public const FORMAT_PDF = 'pdf';
+	public const FORMAT_XML  = 'xml';
+	public const FORMAT_PDF  = 'pdf';
 
 	/**
 	 * Maximum export size (rows)
@@ -64,8 +64,8 @@ class DataExporter {
 		}
 
 		$export_type = sanitize_text_field( $_POST['export_type'] ?? '' );
-		$format = sanitize_text_field( $_POST['format'] ?? self::FORMAT_CSV );
-		$filters = array_map( 'sanitize_text_field', $_POST['filters'] ?? [] );
+		$format      = sanitize_text_field( $_POST['format'] ?? self::FORMAT_CSV );
+		$filters     = array_map( 'sanitize_text_field', $_POST['filters'] ?? [] );
 
 		// Validate export type
 		$valid_types = [ 'analytics', 'clients', 'campaigns', 'reports', 'settings' ];
@@ -82,37 +82,45 @@ class DataExporter {
 		try {
 			// Generate export
 			$export_result = self::generate_export( $export_type, $format, $filters );
-			
-			// Log export activity
-			Security::log_security_event( 'data_export', [
-				'export_type' => $export_type,
-				'format' => $format,
-				'user_id' => get_current_user_id(),
-				'ip' => Security::get_client_ip(),
-				'file_size' => $export_result['file_size'] ?? 0,
-				'row_count' => $export_result['row_count'] ?? 0,
-			] );
 
-			wp_send_json_success( [
-				'message' => __( 'Esportazione completata con successo.', 'fp-digital-marketing' ),
-				'download_url' => $export_result['download_url'],
-				'file_name' => $export_result['file_name'],
-				'file_size' => $export_result['file_size'],
-				'row_count' => $export_result['row_count'],
-			] );
+			// Log export activity
+			Security::log_security_event(
+				'data_export',
+				[
+					'export_type' => $export_type,
+					'format'      => $format,
+					'user_id'     => get_current_user_id(),
+					'ip'          => Security::get_client_ip(),
+					'file_size'   => $export_result['file_size'] ?? 0,
+					'row_count'   => $export_result['row_count'] ?? 0,
+				]
+			);
+
+			wp_send_json_success(
+				[
+					'message'      => __( 'Esportazione completata con successo.', 'fp-digital-marketing' ),
+					'download_url' => $export_result['download_url'],
+					'file_name'    => $export_result['file_name'],
+					'file_size'    => $export_result['file_size'],
+					'row_count'    => $export_result['row_count'],
+				]
+			);
 
 		} catch ( \Exception $e ) {
-			Security::log_security_event( 'export_error', [
-				'export_type' => $export_type,
-				'error' => $e->getMessage(),
-				'user_id' => get_current_user_id(),
-			] );
+			Security::log_security_event(
+				'export_error',
+				[
+					'export_type' => $export_type,
+					'error'       => $e->getMessage(),
+					'user_id'     => get_current_user_id(),
+				]
+			);
 
-			wp_send_json_error( 
-				sprintf( 
-					__( 'Errore durante l\'esportazione: %s', 'fp-digital-marketing' ), 
-					$e->getMessage() 
-				) 
+			wp_send_json_error(
+				sprintf(
+					__( 'Errore durante l\'esportazione: %s', 'fp-digital-marketing' ),
+					$e->getMessage()
+				)
 			);
 		}
 	}
@@ -122,7 +130,7 @@ class DataExporter {
 	 *
 	 * @param string $export_type Type of data to export
 	 * @param string $format Export format
-	 * @param array $filters Export filters
+	 * @param array  $filters Export filters
 	 * @return array Export result with file info
 	 * @throws \Exception If export fails
 	 */
@@ -139,11 +147,11 @@ class DataExporter {
 
 		// Check size limit
 		if ( count( $data ) > self::MAX_EXPORT_SIZE ) {
-			throw new \Exception( 
-				sprintf( 
-					__( 'Troppi dati da esportare. Limite: %d righe.', 'fp-digital-marketing' ), 
-					self::MAX_EXPORT_SIZE 
-				) 
+			throw new \Exception(
+				sprintf(
+					__( 'Troppi dati da esportare. Limite: %d righe.', 'fp-digital-marketing' ),
+					self::MAX_EXPORT_SIZE
+				)
 			);
 		}
 
@@ -152,9 +160,9 @@ class DataExporter {
 
 		return [
 			'download_url' => self::get_download_url( $file_info['token'] ),
-			'file_name' => $file_info['file_name'],
-			'file_size' => $file_info['file_size'],
-			'row_count' => count( $data ),
+			'file_name'    => $file_info['file_name'],
+			'file_size'    => $file_info['file_size'],
+			'row_count'    => count( $data ),
 		];
 	}
 
@@ -162,26 +170,26 @@ class DataExporter {
 	 * Get data for export based on type
 	 *
 	 * @param string $export_type Type of data to export
-	 * @param array $filters Export filters
+	 * @param array  $filters Export filters
 	 * @return array Export data
 	 */
 	private static function get_export_data( string $export_type, array $filters ): array {
 		switch ( $export_type ) {
 			case 'analytics':
 				return self::get_analytics_export_data( $filters );
-			
+
 			case 'clients':
 				return self::get_clients_export_data( $filters );
-			
+
 			case 'campaigns':
 				return self::get_campaigns_export_data( $filters );
-			
+
 			case 'reports':
 				return self::get_reports_export_data( $filters );
-			
+
 			case 'settings':
 				return self::get_settings_export_data( $filters );
-			
+
 			default:
 				return [];
 		}
@@ -194,9 +202,9 @@ class DataExporter {
 	 * @return array Analytics data
 	 */
 	private static function get_analytics_export_data( array $filters ): array {
-		$client_id = (int) ( $filters['client_id'] ?? 0 );
+		$client_id  = (int) ( $filters['client_id'] ?? 0 );
 		$start_date = $filters['start_date'] ?? date( 'Y-m-01' );
-		$end_date = $filters['end_date'] ?? date( 'Y-m-t' );
+		$end_date   = $filters['end_date'] ?? date( 'Y-m-t' );
 
 		// Get metrics data using the existing aggregator
 		$metrics = MetricsAggregator::get_aggregated_metrics(
@@ -208,13 +216,13 @@ class DataExporter {
 		$export_data = [];
 		foreach ( $metrics as $metric_name => $metric_data ) {
 			$export_data[] = [
-				'Metric' => $metric_name,
-				'Value' => $metric_data['total_value'] ?? 0,
+				'Metric'          => $metric_name,
+				'Value'           => $metric_data['total_value'] ?? 0,
 				'Previous Period' => $metric_data['previous_period_value'] ?? 0,
-				'Change %' => $metric_data['period_change_percent'] ?? 0,
-				'Date Range' => $start_date . ' to ' . $end_date,
-				'Client ID' => $client_id,
-				'Export Date' => current_time( 'mysql' ),
+				'Change %'        => $metric_data['period_change_percent'] ?? 0,
+				'Date Range'      => $start_date . ' to ' . $end_date,
+				'Client ID'       => $client_id,
+				'Export Date'     => current_time( 'mysql' ),
 			];
 		}
 
@@ -229,35 +237,35 @@ class DataExporter {
 	 */
 	private static function get_clients_export_data( array $filters ): array {
 		$args = [
-			'post_type' => 'cliente',
-			'post_status' => 'publish',
+			'post_type'      => 'cliente',
+			'post_status'    => 'publish',
 			'posts_per_page' => self::MAX_EXPORT_SIZE,
-			'meta_query' => [],
+			'meta_query'     => [],
 		];
 
 		// Apply filters
 		if ( ! empty( $filters['status'] ) ) {
 			$args['meta_query'][] = [
-				'key' => '_cliente_status',
-				'value' => sanitize_text_field( $filters['status'] ),
+				'key'     => '_cliente_status',
+				'value'   => sanitize_text_field( $filters['status'] ),
 				'compare' => '=',
 			];
 		}
 
-		$clients = get_posts( $args );
+		$clients     = get_posts( $args );
 		$export_data = [];
 
 		foreach ( $clients as $client ) {
-			$meta = get_post_meta( $client->ID );
+			$meta          = get_post_meta( $client->ID );
 			$export_data[] = [
-				'ID' => $client->ID,
-				'Nome' => $client->post_title,
-				'Descrizione' => $client->post_content,
-				'Status' => $meta['_cliente_status'][0] ?? '',
-				'Settore' => $meta['_cliente_settore'][0] ?? '',
-				'Paese' => $meta['_cliente_paese'][0] ?? '',
-				'Sito Web' => $meta['_cliente_website'][0] ?? '',
-				'Data Creazione' => $client->post_date,
+				'ID'              => $client->ID,
+				'Nome'            => $client->post_title,
+				'Descrizione'     => $client->post_content,
+				'Status'          => $meta['_cliente_status'][0] ?? '',
+				'Settore'         => $meta['_cliente_settore'][0] ?? '',
+				'Paese'           => $meta['_cliente_paese'][0] ?? '',
+				'Sito Web'        => $meta['_cliente_website'][0] ?? '',
+				'Data Creazione'  => $client->post_date,
 				'Ultima Modifica' => $client->post_modified,
 			];
 		}
@@ -274,28 +282,28 @@ class DataExporter {
 	private static function get_campaigns_export_data( array $filters ): array {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'fp_dms_utm_campaigns';
+		$table_name       = $wpdb->prefix . 'fp_dms_utm_campaigns';
 		$where_conditions = [ '1=1' ];
-		$values = [];
+		$values           = [];
 
 		if ( ! empty( $filters['campaign_name'] ) ) {
 			$where_conditions[] = 'campaign_name LIKE %s';
-			$values[] = '%' . $wpdb->esc_like( $filters['campaign_name'] ) . '%';
+			$values[]           = '%' . $wpdb->esc_like( $filters['campaign_name'] ) . '%';
 		}
 
 		if ( ! empty( $filters['start_date'] ) ) {
 			$where_conditions[] = 'created_at >= %s';
-			$values[] = $filters['start_date'];
+			$values[]           = $filters['start_date'];
 		}
 
 		if ( ! empty( $filters['end_date'] ) ) {
 			$where_conditions[] = 'created_at <= %s';
-			$values[] = $filters['end_date'] . ' 23:59:59';
+			$values[]           = $filters['end_date'] . ' 23:59:59';
 		}
 
 		$where_clause = implode( ' AND ', $where_conditions );
-		$query = "SELECT * FROM {$table_name} WHERE {$where_clause} ORDER BY created_at DESC LIMIT %d";
-		$values[] = self::MAX_EXPORT_SIZE;
+		$query        = "SELECT * FROM {$table_name} WHERE {$where_clause} ORDER BY created_at DESC LIMIT %d";
+		$values[]     = self::MAX_EXPORT_SIZE;
 
 		$campaigns = $wpdb->get_results(
 			$wpdb->prepare( $query, ...$values ),
@@ -316,12 +324,12 @@ class DataExporter {
 		// For now, return sample structure
 		return [
 			[
-				'Report ID' => 1,
-				'Report Name' => 'Monthly Analytics Report',
+				'Report ID'      => 1,
+				'Report Name'    => 'Monthly Analytics Report',
 				'Generated Date' => current_time( 'mysql' ),
-				'Client ID' => $filters['client_id'] ?? 0,
-				'Status' => 'completed',
-			]
+				'Client ID'      => $filters['client_id'] ?? 0,
+				'Status'         => 'completed',
+			],
 		];
 	}
 
@@ -331,138 +339,138 @@ class DataExporter {
 	 * @param array $filters Export filters
 	 * @return array Settings data
 	 */
-        private static function get_settings_export_data( array $filters ): array {
-                $collected_options = self::gather_plugin_options();
-                $export_data = [];
+	private static function get_settings_export_data( array $filters ): array {
+			$collected_options = self::gather_plugin_options();
+			$export_data       = [];
 
-                // Export plugin settings (excluding sensitive data)
-                $option_names = [
-                        'fp_digital_marketing_demo_option',
-                        'fp_digital_marketing_cache_settings',
-                        'fp_digital_marketing_seo_settings',
-                        'fp_digital_marketing_sitemap_settings',
-                        'fp_digital_marketing_schema_settings',
-                ];
+			// Export plugin settings (excluding sensitive data)
+			$option_names = [
+				'fp_digital_marketing_demo_option',
+				'fp_digital_marketing_cache_settings',
+				'fp_digital_marketing_seo_settings',
+				'fp_digital_marketing_sitemap_settings',
+				'fp_digital_marketing_schema_settings',
+			];
 
-                $timestamp = self::get_current_time_for_export();
+			$timestamp = self::get_current_time_for_export();
 
-                foreach ( $option_names as $option_name ) {
-                        $value = null;
+			foreach ( $option_names as $option_name ) {
+					$value = null;
 
-                        if ( array_key_exists( $option_name, $collected_options ) ) {
-                                $value = $collected_options[ $option_name ];
-                                unset( $collected_options[ $option_name ] );
-                        } else {
-                                $value = get_option( $option_name, null );
-                        }
+				if ( array_key_exists( $option_name, $collected_options ) ) {
+						$value = $collected_options[ $option_name ];
+						unset( $collected_options[ $option_name ] );
+				} else {
+						$value = get_option( $option_name, null );
+				}
 
-                        if ( null === $value || false === $value ) {
-                                continue;
-                        }
+				if ( null === $value || false === $value ) {
+						continue;
+				}
 
-                        $export_data[] = self::format_setting_row( $option_name, $value, $timestamp );
-                }
+					$export_data[] = self::format_setting_row( $option_name, $value, $timestamp );
+			}
 
-                foreach ( $collected_options as $option_name => $value ) {
-                        $export_data[] = self::format_setting_row( $option_name, $value, $timestamp );
-                }
+			foreach ( $collected_options as $option_name => $value ) {
+					$export_data[] = self::format_setting_row( $option_name, $value, $timestamp );
+			}
 
-                if ( empty( $export_data ) ) {
-                        $export_data[] = self::format_setting_row(
-                                'fp_digital_marketing_version',
-                                defined( 'FP_DIGITAL_MARKETING_VERSION' ) ? FP_DIGITAL_MARKETING_VERSION : 'unknown',
-                                $timestamp
-                        );
-                }
+			if ( empty( $export_data ) ) {
+					$export_data[] = self::format_setting_row(
+						'fp_digital_marketing_version',
+						defined( 'FP_DIGITAL_MARKETING_VERSION' ) ? FP_DIGITAL_MARKETING_VERSION : 'unknown',
+						$timestamp
+					);
+			}
 
-                return $export_data;
-        }
+			return $export_data;
+	}
 
-        /**
-         * Retrieve plugin options available in the current runtime.
-         *
-         * @return array<string, mixed> Option name => value map.
-         */
-        private static function gather_plugin_options(): array {
-                $all_options = [];
+		/**
+		 * Retrieve plugin options available in the current runtime.
+		 *
+		 * @return array<string, mixed> Option name => value map.
+		 */
+	private static function gather_plugin_options(): array {
+			$all_options = [];
 
-                if ( function_exists( 'wp_load_alloptions' ) ) {
-                        $loaded = wp_load_alloptions();
-                        if ( is_array( $loaded ) ) {
-                                $all_options = $loaded;
-                        }
-                } elseif ( isset( $GLOBALS['wp_options'] ) && is_array( $GLOBALS['wp_options'] ) ) {
-                        $all_options = $GLOBALS['wp_options'];
-                }
+		if ( function_exists( 'wp_load_alloptions' ) ) {
+				$loaded = wp_load_alloptions();
+			if ( is_array( $loaded ) ) {
+				$all_options = $loaded;
+			}
+		} elseif ( isset( $GLOBALS['wp_options'] ) && is_array( $GLOBALS['wp_options'] ) ) {
+				$all_options = $GLOBALS['wp_options'];
+		}
 
-                $filtered = [];
-                foreach ( $all_options as $option_name => $value ) {
-                        if ( 0 === strpos( (string) $option_name, 'fp_digital_marketing_' ) ) {
-                                $filtered[ $option_name ] = $value;
-                        }
-                }
+			$filtered = [];
+		foreach ( $all_options as $option_name => $value ) {
+			if ( 0 === strpos( (string) $option_name, 'fp_digital_marketing_' ) ) {
+					$filtered[ $option_name ] = $value;
+			}
+		}
 
-                return $filtered;
-        }
+			return $filtered;
+	}
 
-        /**
-         * Format a single settings row for export.
-         *
-         * @param string $option_name Option identifier.
-         * @param mixed  $value       Stored value.
-         * @param string $timestamp   Timestamp for the export row.
-         * @return array<string, string> Normalised export row.
-         */
-        private static function format_setting_row( string $option_name, $value, string $timestamp ): array {
-                return [
-                        'Setting Name' => $option_name,
-                        'Setting Value' => self::normalise_setting_value( $value ),
-                        'Export Date' => $timestamp,
-                ];
-        }
+		/**
+		 * Format a single settings row for export.
+		 *
+		 * @param string $option_name Option identifier.
+		 * @param mixed  $value       Stored value.
+		 * @param string $timestamp   Timestamp for the export row.
+		 * @return array<string, string> Normalised export row.
+		 */
+	private static function format_setting_row( string $option_name, $value, string $timestamp ): array {
+			return [
+				'Setting Name'  => $option_name,
+				'Setting Value' => self::normalise_setting_value( $value ),
+				'Export Date'   => $timestamp,
+			];
+	}
 
-        /**
-         * Normalise setting value into a portable string representation.
-         *
-         * @param mixed $value Option value.
-         * @return string Normalised string value.
-         */
-        private static function normalise_setting_value( $value ): string {
-                if ( is_array( $value ) || is_object( $value ) ) {
-                        $encoder = function_exists( 'wp_json_encode' ) ? 'wp_json_encode' : 'json_encode';
-                        $encoded = $encoder( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		/**
+		 * Normalise setting value into a portable string representation.
+		 *
+		 * @param mixed $value Option value.
+		 * @return string Normalised string value.
+		 */
+	private static function normalise_setting_value( $value ): string {
+		if ( is_array( $value ) || is_object( $value ) ) {
+				$encoder = function_exists( 'wp_json_encode' ) ? 'wp_json_encode' : 'json_encode';
+				$encoded = $encoder( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 
-                        return is_string( $encoded ) ? $encoded : '';
-                }
+				return is_string( $encoded ) ? $encoded : '';
+		}
 
-                if ( is_bool( $value ) ) {
-                        return $value ? 'true' : 'false';
-                }
+		if ( is_bool( $value ) ) {
+				return $value ? 'true' : 'false';
+		}
 
-                if ( null === $value ) {
-                        return '';
-                }
+		if ( null === $value ) {
+				return '';
+		}
 
-                return (string) $value;
-        }
+			return (string) $value;
+	}
 
-        /**
-         * Provide a consistent timestamp for export rows.
-         *
-         * @return string Timestamp string suitable for storage.
-         */
-        private static function get_current_time_for_export(): string {
-                if ( function_exists( 'current_time' ) ) {
-                        return current_time( 'mysql' );
-                }
+		/**
+		 * Provide a consistent timestamp for export rows.
+		 *
+		 * @return string Timestamp string suitable for storage.
+		 */
+	private static function get_current_time_for_export(): string {
+		if ( function_exists( 'current_time' ) ) {
+				return current_time( 'mysql' );
+		}
 
-                return gmdate( 'Y-m-d H:i:s' );
-        }
+			return gmdate( 'Y-m-d H:i:s' );
+	}
 
 	/**
 	 * Create export file
 	 *
-	 * @param array $data Export data
+	 * @param array  $data Export data
 	 * @param string $export_type Export type
 	 * @param string $format Export format
 	 * @return array File information
@@ -471,32 +479,32 @@ class DataExporter {
 	private static function create_export_file( array $data, string $export_type, string $format ): array {
 		// Sanitize export type to prevent directory traversal
 		$export_type = sanitize_file_name( $export_type );
-		$format = sanitize_file_name( $format );
-		
-		$timestamp = date( 'Y-m-d_H-i-s' );
-		$file_name = "fp_dms_{$export_type}_{$timestamp}.{$format}";
+		$format      = sanitize_file_name( $format );
+
+		$timestamp  = date( 'Y-m-d_H-i-s' );
+		$file_name  = "fp_dms_{$export_type}_{$timestamp}.{$format}";
 		$upload_dir = wp_upload_dir();
-		
+
 		// Ensure we have a valid upload directory
 		if ( empty( $upload_dir['basedir'] ) || ! is_writable( $upload_dir['basedir'] ) ) {
 			throw new \Exception( __( 'Directory di upload non accessibile.', 'fp-digital-marketing' ) );
 		}
-		
+
 		$export_dir = $upload_dir['basedir'] . '/fp-dms-exports';
-		
+
 		// Create export directory if it doesn't exist
 		if ( ! file_exists( $export_dir ) ) {
 			if ( ! wp_mkdir_p( $export_dir ) ) {
 				throw new \Exception( __( 'Impossibile creare la directory di esportazione.', 'fp-digital-marketing' ) );
 			}
-			
+
 			// Add .htaccess to protect directory
 			$htaccess_content = "Order deny,allow\nDeny from all\n";
-			$htaccess_result = file_put_contents( 
-				$export_dir . '/.htaccess', 
-				$htaccess_content 
+			$htaccess_result  = file_put_contents(
+				$export_dir . '/.htaccess',
+				$htaccess_content
 			);
-			
+
 			if ( false === $htaccess_result ) {
 				// Log warning but don't fail - security protection is preferred but not critical
 				error_log( 'FP DMS: Could not create .htaccess protection for export directory' );
@@ -510,19 +518,19 @@ class DataExporter {
 			case self::FORMAT_CSV:
 				$content = self::generate_csv_content( $data );
 				break;
-			
+
 			case self::FORMAT_JSON:
 				$content = self::generate_json_content( $data );
 				break;
-			
+
 			case self::FORMAT_XML:
 				$content = self::generate_xml_content( $data );
 				break;
-			
+
 			case self::FORMAT_PDF:
 				$content = self::generate_pdf_content( $data, $export_type );
 				break;
-			
+
 			default:
 				throw new \Exception( 'Formato non supportato.' );
 		}
@@ -534,11 +542,11 @@ class DataExporter {
 		}
 
 		// Generate secure token for download
-		$token = wp_generate_password( 32, false );
+		$token      = wp_generate_password( 32, false );
 		$token_data = [
-			'file_path' => $file_path,
-			'file_name' => $file_name,
-			'user_id' => get_current_user_id(),
+			'file_path'  => $file_path,
+			'file_name'  => $file_name,
+			'user_id'    => get_current_user_id(),
 			'created_at' => time(),
 			'expires_at' => time() + ( 2 * HOUR_IN_SECONDS ), // 2 hours
 		];
@@ -549,7 +557,7 @@ class DataExporter {
 			'file_path' => $file_path,
 			'file_name' => $file_name,
 			'file_size' => filesize( $file_path ),
-			'token' => $token,
+			'token'     => $token,
 		];
 	}
 
@@ -573,11 +581,11 @@ class DataExporter {
 		fwrite( $output, "\xEF\xBB\xBF" );
 
 		$first_row = (array) $data[0];
-		$headers = array_keys( $first_row );
+		$headers   = array_keys( $first_row );
 		CsvExporter::write_row( $output, $headers );
 
 		foreach ( $data as $row ) {
-			$row_array = (array) $row;
+			$row_array      = (array) $row;
 			$ordered_values = [];
 
 			foreach ( $headers as $header ) {
@@ -602,10 +610,10 @@ class DataExporter {
 	 */
 	private static function generate_json_content( array $data ): string {
 		$export_info = [
-			'export_date' => current_time( 'c' ),
+			'export_date'    => current_time( 'c' ),
 			'plugin_version' => FP_DIGITAL_MARKETING_VERSION,
-			'row_count' => count( $data ),
-			'data' => $data,
+			'row_count'      => count( $data ),
+			'data'           => $data,
 		];
 
 		return wp_json_encode( $export_info, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE );
@@ -624,11 +632,11 @@ class DataExporter {
 		$xml->addAttribute( 'row_count', (string) count( $data ) );
 
 		$records = $xml->addChild( 'records' );
-		
+
 		foreach ( $data as $index => $row ) {
 			$record = $records->addChild( 'record' );
 			$record->addAttribute( 'index', (string) $index );
-			
+
 			foreach ( $row as $key => $value ) {
 				$field = $record->addChild( 'field', htmlspecialchars( (string) $value ) );
 				$field->addAttribute( 'name', $key );
@@ -641,7 +649,7 @@ class DataExporter {
 	/**
 	 * Generate PDF content
 	 *
-	 * @param array $data Export data
+	 * @param array  $data Export data
 	 * @param string $export_type Export type for title
 	 * @return string PDF content
 	 * @throws \Exception If PDF generation fails
@@ -656,7 +664,7 @@ class DataExporter {
 		// Check if dompdf is available
 		if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
 			// Try to load via composer autoload
-			$plugin_dir = dirname( dirname( dirname( __FILE__ ) ) );
+			$plugin_dir    = dirname( dirname( __DIR__ ) );
 			$autoload_path = $plugin_dir . '/vendor/autoload.php';
 			if ( file_exists( $autoload_path ) && is_readable( $autoload_path ) ) {
 				try {
@@ -665,7 +673,7 @@ class DataExporter {
 					// Continue if autoload fails
 				}
 			}
-			
+
 			// If still not available, throw exception
 			if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
 				// Restore memory limit before throwing
@@ -719,8 +727,8 @@ class DataExporter {
 
 		try {
 			// Check available memory before PDF generation
-			$memory_usage = memory_get_usage( true );
-			$memory_limit = ini_get( 'memory_limit' );
+			$memory_usage       = memory_get_usage( true );
+			$memory_limit       = ini_get( 'memory_limit' );
 			$memory_limit_bytes = self::return_bytes( $memory_limit );
 
 			if ( null !== $memory_limit_bytes && $memory_limit_bytes > 0 && $memory_usage > ( $memory_limit_bytes * 0.8 ) ) {
@@ -728,39 +736,41 @@ class DataExporter {
 			}
 
 			// Generate PDF using dompdf with safer options
-			$dompdf = new \Dompdf\Dompdf([
-				'isPhpEnabled' => false,
-				'isRemoteEnabled' => false,
-				'isJavascriptEnabled' => false
-			]);
+			$dompdf = new \Dompdf\Dompdf(
+				[
+					'isPhpEnabled'        => false,
+					'isRemoteEnabled'     => false,
+					'isJavascriptEnabled' => false,
+				]
+			);
 			$dompdf->loadHtml( $html );
 			$dompdf->setPaper( 'A4', 'portrait' );
 			$dompdf->render();
-			
+
 			$pdf_content = $dompdf->output();
-			
+
 			// Verify PDF was generated successfully
 			if ( empty( $pdf_content ) || strlen( $pdf_content ) < 100 ) {
 				throw new \Exception( __( 'PDF generato vuoto o corrotto.', 'fp-digital-marketing' ) );
 			}
-			
+
 			return $pdf_content;
-			
+
 		} catch ( \Exception $e ) {
 			// If PDF generation fails, throw exception to be handled by caller
-			throw new \Exception( 
-				sprintf( 
-					__( 'Errore nella generazione PDF: %s', 'fp-digital-marketing' ), 
-					$e->getMessage() 
-				) 
+			throw new \Exception(
+				sprintf(
+					__( 'Errore nella generazione PDF: %s', 'fp-digital-marketing' ),
+					$e->getMessage()
+				)
 			);
 		} catch ( \Error $e ) {
 			// Handle fatal errors during PDF generation
-			throw new \Exception( 
-				sprintf( 
-					__( 'Errore fatale nella generazione PDF: %s', 'fp-digital-marketing' ), 
-					$e->getMessage() 
-				) 
+			throw new \Exception(
+				sprintf(
+					__( 'Errore fatale nella generazione PDF: %s', 'fp-digital-marketing' ),
+					$e->getMessage()
+				)
 			);
 		} finally {
 			// Restore original memory limit
@@ -810,27 +820,31 @@ class DataExporter {
 	 * @param string $token Export token
 	 * @return string Download URL
 	 */
-       private static function get_download_url( string $token ): string {
-               return add_query_arg(
-                       [
-                               'action' => 'fp_download_export',
-                               'token'  => $token,
-                       ],
-                       admin_url( 'admin-ajax.php' )
-               );
-       }
+	private static function get_download_url( string $token ): string {
+			return add_query_arg(
+				[
+					'action' => 'fp_download_export',
+					'token'  => $token,
+				],
+				admin_url( 'admin-ajax.php' )
+			);
+	}
 
 	/**
 	 * Handle export download request
 	 *
 	 * @return void
 	 */
-	public static function handle_download_request(): void {
-		$token = sanitize_text_field( $_GET['token'] ?? '' );
-		
-		if ( empty( $token ) ) {
-			wp_die( esc_html__( 'Token di download mancante.', 'fp-digital-marketing' ) );
-		}
+        public static function handle_download_request(): void {
+                if ( ! Capabilities::current_user_can( Capabilities::EXPORT_DATA ) ) {
+                        wp_die( esc_html__( 'Permessi insufficienti per scaricare questo file.', 'fp-digital-marketing' ) );
+                }
+
+                $token = sanitize_text_field( $_GET['token'] ?? '' );
+
+                if ( empty( $token ) ) {
+                        wp_die( esc_html__( 'Token di download mancante.', 'fp-digital-marketing' ) );
+                }
 
 		$token_data = get_transient( "fp_dms_export_{$token}" );
 		if ( false === $token_data ) {
@@ -876,12 +890,12 @@ class DataExporter {
 	 */
 	private static function get_mime_type( string $file_path ): string {
 		$extension = pathinfo( $file_path, PATHINFO_EXTENSION );
-		
+
 		$mime_types = [
-			'csv' => 'text/csv',
+			'csv'  => 'text/csv',
 			'json' => 'application/json',
-			'xml' => 'application/xml',
-			'pdf' => 'application/pdf',
+			'xml'  => 'application/xml',
+			'pdf'  => 'application/pdf',
 		];
 
 		return $mime_types[ $extension ] ?? 'application/octet-stream';
@@ -909,13 +923,13 @@ class DataExporter {
 			'fpDmsExport',
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce' => wp_create_nonce( 'fp_dms_export_nonce' ),
+				'nonce'   => wp_create_nonce( 'fp_dms_export_nonce' ),
 				'strings' => [
-					'exporting' => __( 'Esportazione in corso...', 'fp-digital-marketing' ),
+					'exporting'      => __( 'Esportazione in corso...', 'fp-digital-marketing' ),
 					'exportComplete' => __( 'Esportazione completata!', 'fp-digital-marketing' ),
-					'exportError' => __( 'Errore durante l\'esportazione.', 'fp-digital-marketing' ),
-					'confirmExport' => __( 'Confermi l\'esportazione dei dati selezionati?', 'fp-digital-marketing' ),
-				]
+					'exportError'    => __( 'Errore durante l\'esportazione.', 'fp-digital-marketing' ),
+					'confirmExport'  => __( 'Confermi l\'esportazione dei dati selezionati?', 'fp-digital-marketing' ),
+				],
 			]
 		);
 	}
@@ -928,12 +942,12 @@ class DataExporter {
 	public static function cleanup_old_exports(): void {
 		$upload_dir = wp_upload_dir();
 		$export_dir = $upload_dir['basedir'] . '/fp-dms-exports';
-		
+
 		if ( ! is_dir( $export_dir ) ) {
 			return;
 		}
 
-		$files = glob( $export_dir . '/fp_dms_*' );
+		$files       = glob( $export_dir . '/fp_dms_*' );
 		$cutoff_time = time() - ( 24 * HOUR_IN_SECONDS ); // 24 hours
 
 		foreach ( $files as $file ) {

@@ -29,35 +29,35 @@ class AlertEngine {
 	 */
 	public static function check_all_rules(): array {
 		$results = [
-			'checked' => 0,
-			'triggered' => 0,
-			'errors' => 0,
+			'checked'            => 0,
+			'triggered'          => 0,
+			'errors'             => 0,
 			'notifications_sent' => 0,
 		];
 
 		$active_rules = AlertRule::get_active_rules();
-		
+
 		foreach ( $active_rules as $rule ) {
-			$results['checked']++;
-			
+			++$results['checked'];
+
 			try {
 				$check_result = self::check_rule( $rule );
-				
+
 				if ( $check_result['triggered'] ) {
-					$results['triggered']++;
-					
+					++$results['triggered'];
+
 					// Record the trigger
 					AlertRule::record_trigger( (int) $rule->id );
-					
+
 					// Send notifications
 					$notification_result = self::send_notifications( $rule, $check_result );
-					
+
 					if ( $notification_result['success'] ) {
-						$results['notifications_sent']++;
+						++$results['notifications_sent'];
 					}
 				}
 			} catch ( Exception $e ) {
-				$results['errors']++;
+				++$results['errors'];
 				error_log( 'FP Digital Marketing Alert Error: ' . $e->getMessage() );
 			}
 		}
@@ -76,15 +76,15 @@ class AlertEngine {
 	 */
 	public static function check_rule( object $rule ): array {
 		$result = [
-			'triggered' => false,
-			'current_value' => null,
+			'triggered'       => false,
+			'current_value'   => null,
 			'threshold_value' => $rule->threshold_value,
-			'condition' => $rule->condition,
-			'metric' => $rule->metric,
+			'condition'       => $rule->condition,
+			'metric'          => $rule->metric,
 		];
 
 		// Get current metric value for the last 24 hours
-		$end_date = current_time( 'mysql' );
+		$end_date   = current_time( 'mysql' );
 		$start_date = date( 'Y-m-d H:i:s', strtotime( '-24 hours', strtotime( $end_date ) ) );
 
 		// Get the metric value using MetricsAggregator
@@ -100,14 +100,14 @@ class AlertEngine {
 			return $result;
 		}
 
-		$current_value = $metrics[ $rule->metric ]['total_value'];
+		$current_value           = $metrics[ $rule->metric ]['total_value'];
 		$result['current_value'] = $current_value;
 
 		// Evaluate the condition
-		$result['triggered'] = self::evaluate_condition( 
-			$current_value, 
-			$rule->condition, 
-			(float) $rule->threshold_value 
+		$result['triggered'] = self::evaluate_condition(
+			$current_value,
+			$rule->condition,
+			(float) $rule->threshold_value
 		);
 
 		return $result;
@@ -149,10 +149,10 @@ class AlertEngine {
 	 */
 	private static function send_notifications( object $rule, array $result ): array {
 		$notification_result = [
-			'success' => false,
+			'success'           => false,
 			'admin_notice_sent' => false,
-			'email_sent' => false,
-			'errors' => [],
+			'email_sent'        => false,
+			'errors'            => [],
 		];
 
 		// Send admin notice
@@ -180,15 +180,15 @@ class AlertEngine {
 	private static function send_admin_notice( object $rule, array $result ): bool {
 		// Store admin notice in transient for display
 		$notice_key = 'fp_dms_alert_' . $rule->id . '_' . time();
-		
+
 		$notice_data = [
-			'rule_name' => $rule->name,
-			'metric' => $rule->metric,
-			'current_value' => $result['current_value'],
-			'condition' => $rule->condition,
+			'rule_name'       => $rule->name,
+			'metric'          => $rule->metric,
+			'current_value'   => $result['current_value'],
+			'condition'       => $rule->condition,
 			'threshold_value' => $rule->threshold_value,
-			'client_id' => $rule->client_id,
-			'triggered_at' => current_time( 'mysql' ),
+			'client_id'       => $rule->client_id,
+			'triggered_at'    => current_time( 'mysql' ),
 		];
 
 		return set_transient( $notice_key, $notice_data, 24 * HOUR_IN_SECONDS );
@@ -203,25 +203,25 @@ class AlertEngine {
 	 */
 	private static function send_email_notification( object $rule, array $result ): bool {
 		$to = $rule->notification_email;
-		
+
 		// Get client name
 		$client_name = get_the_title( $rule->client_id ) ?: __( 'Client sconosciuto', 'fp-digital-marketing' );
-		
+
 		// Get metric definition for display name
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
-		$metric_name = $kpi_definitions[ $rule->metric ]['name'] ?? $rule->metric;
+		$metric_name     = $kpi_definitions[ $rule->metric ]['name'] ?? $rule->metric;
 
 		$subject = sprintf(
-			__( '[%s] Alert: %s', 'fp-digital-marketing' ),
+			__( '[%1$s] Alert: %2$s', 'fp-digital-marketing' ),
 			get_bloginfo( 'name' ),
 			$rule->name
 		);
 
-		$formatted_value = self::format_metric_value( $result['current_value'], $rule->metric );
+		$formatted_value     = self::format_metric_value( $result['current_value'], $rule->metric );
 		$formatted_threshold = self::format_metric_value( $rule->threshold_value, $rule->metric );
 
 		$message = sprintf(
-			__( "Alert attivato per il cliente: %s\n\nRegola: %s\nMetrica: %s\nValore attuale: %s\nCondizione: %s %s\nSoglia: %s\n\nData/ora: %s\n\nPer maggiori dettagli, accedi al pannello di amministrazione.", 'fp-digital-marketing' ),
+			__( "Alert attivato per il cliente: %1\$s\n\nRegola: %2\$s\nMetrica: %3\$s\nValore attuale: %4\$s\nCondizione: %5\$s %6\$s\nSoglia: %7\$s\n\nData/ora: %8\$s\n\nPer maggiori dettagli, accedi al pannello di amministrazione.", 'fp-digital-marketing' ),
 			$client_name,
 			$rule->name,
 			$metric_name,
@@ -249,7 +249,7 @@ class AlertEngine {
 	 */
 	private static function format_metric_value( float $value, string $metric ): string {
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
-		$format = $kpi_definitions[ $metric ]['format'] ?? 'number';
+		$format          = $kpi_definitions[ $metric ]['format'] ?? 'number';
 
 		switch ( $format ) {
 			case 'percentage':
@@ -271,7 +271,7 @@ class AlertEngine {
 		global $wpdb;
 
 		$notices = [];
-		
+
 		// Get all alert-related transients
 		$transients = $wpdb->get_results(
 			"SELECT option_name, option_value 
@@ -283,7 +283,7 @@ class AlertEngine {
 		foreach ( $transients as $transient ) {
 			$notice_data = maybe_unserialize( $transient->option_value );
 			if ( is_array( $notice_data ) ) {
-				$notice_key = str_replace( '_transient_', '', $transient->option_name );
+				$notice_key             = str_replace( '_transient_', '', $transient->option_name );
 				$notices[ $notice_key ] = $notice_data;
 			}
 		}
@@ -327,19 +327,19 @@ class AlertEngine {
 	private static function log_check_results( array $results ): void {
 		$log_entry = [
 			'timestamp' => current_time( 'c' ),
-			'type' => 'alert_check',
-			'results' => $results,
+			'type'      => 'alert_check',
+			'results'   => $results,
 		];
 
 		error_log( 'FP Digital Marketing Alert Check: ' . wp_json_encode( $log_entry ) );
 
 		// Store in database for admin review (keep last 50 entries)
 		$alert_logs = get_option( 'fp_dms_alert_logs', [] );
-		
+
 		if ( count( $alert_logs ) >= 50 ) {
 			$alert_logs = array_slice( $alert_logs, -49 );
 		}
-		
+
 		$alert_logs[] = $log_entry;
 		update_option( 'fp_dms_alert_logs', $alert_logs, false );
 	}
@@ -352,10 +352,10 @@ class AlertEngine {
 	 */
 	public static function get_alert_logs( int $limit = 20 ): array {
 		$logs = get_option( 'fp_dms_alert_logs', [] );
-		
+
 		// Return most recent logs first
 		$logs = array_reverse( $logs );
-		
+
 		if ( $limit > 0 ) {
 			$logs = array_slice( $logs, 0, $limit );
 		}
@@ -370,23 +370,23 @@ class AlertEngine {
 	 */
 	public static function check_all_anomaly_rules(): array {
 		$results = [
-			'checked' => 0,
+			'checked'            => 0,
 			'anomalies_detected' => 0,
-			'errors' => 0,
+			'errors'             => 0,
 			'notifications_sent' => 0,
 		];
 
 		$active_rules = AnomalyRule::get_active_rules();
-		
+
 		foreach ( $active_rules as $rule ) {
-			$results['checked']++;
-			
+			++$results['checked'];
+
 			try {
 				$check_result = self::check_anomaly_rule( $rule );
-				
+
 				if ( $check_result['is_anomaly'] ) {
-					$results['anomalies_detected']++;
-					
+					++$results['anomalies_detected'];
+
 					// Record the anomaly
 					$anomaly_id = DetectedAnomaly::create(
 						(int) $rule->client_id,
@@ -395,22 +395,22 @@ class AlertEngine {
 						$check_result,
 						(int) $rule->id
 					);
-					
+
 					if ( $anomaly_id ) {
 						// Record rule trigger
 						AnomalyRule::record_trigger( (int) $rule->id );
-						
+
 						// Send notifications
 						$notification_result = self::send_anomaly_notifications( $rule, $check_result, $anomaly_id );
-						
+
 						if ( $notification_result['success'] ) {
-							$results['notifications_sent']++;
+							++$results['notifications_sent'];
 							DetectedAnomaly::mark_notification_sent( $anomaly_id );
 						}
 					}
 				}
 			} catch ( Exception $e ) {
-				$results['errors']++;
+				++$results['errors'];
 				error_log( 'FP Digital Marketing Anomaly Detection Error: ' . $e->getMessage() );
 			}
 		}
@@ -429,7 +429,7 @@ class AlertEngine {
 	 */
 	public static function check_anomaly_rule( object $rule ): array {
 		// Get current metric value for the last 24 hours
-		$end_date = current_time( 'mysql' );
+		$end_date   = current_time( 'mysql' );
 		$start_date = date( 'Y-m-d H:i:s', strtotime( '-24 hours', strtotime( $end_date ) ) );
 
 		// Get the metric value using MetricsAggregator
@@ -443,9 +443,9 @@ class AlertEngine {
 		if ( ! isset( $metrics[ $rule->metric ] ) ) {
 			// No data available for this metric
 			return [
-				'is_anomaly' => false,
-				'reason' => 'no_data',
-				'metric' => $rule->metric,
+				'is_anomaly'    => false,
+				'reason'        => 'no_data',
+				'metric'        => $rule->metric,
 				'current_value' => 0.0,
 			];
 		}
@@ -455,9 +455,9 @@ class AlertEngine {
 		// Prepare detection options
 		$options = [
 			'z_score_threshold' => (float) $rule->z_score_threshold,
-			'band_deviations' => (float) $rule->band_deviations,
-			'window_size' => (int) $rule->window_size,
-			'historical_days' => (int) $rule->historical_days,
+			'band_deviations'   => (float) $rule->band_deviations,
+			'window_size'       => (int) $rule->window_size,
+			'historical_days'   => (int) $rule->historical_days,
 		];
 
 		// Perform anomaly detection based on method
@@ -489,8 +489,8 @@ class AlertEngine {
 			default:
 				return [
 					'is_anomaly' => false,
-					'reason' => 'unknown_method',
-					'method' => $rule->detection_method,
+					'reason'     => 'unknown_method',
+					'method'     => $rule->detection_method,
 				];
 		}
 	}
@@ -499,16 +499,16 @@ class AlertEngine {
 	 * Send notifications for detected anomaly
 	 *
 	 * @param object $rule Anomaly rule object
-	 * @param array $result Anomaly detection result
-	 * @param int $anomaly_id Detected anomaly ID
+	 * @param array  $result Anomaly detection result
+	 * @param int    $anomaly_id Detected anomaly ID
 	 * @return array Notification result
 	 */
 	private static function send_anomaly_notifications( object $rule, array $result, int $anomaly_id ): array {
 		$notification_result = [
-			'success' => false,
+			'success'           => false,
 			'admin_notice_sent' => false,
-			'email_sent' => false,
-			'errors' => [],
+			'email_sent'        => false,
+			'errors'            => [],
 		];
 
 		// Send admin notice
@@ -530,25 +530,25 @@ class AlertEngine {
 	 * Send admin notice for detected anomaly
 	 *
 	 * @param object $rule Anomaly rule object
-	 * @param array $result Anomaly detection result
-	 * @param int $anomaly_id Detected anomaly ID
+	 * @param array  $result Anomaly detection result
+	 * @param int    $anomaly_id Detected anomaly ID
 	 * @return bool True on success
 	 */
 	private static function send_anomaly_admin_notice( object $rule, array $result, int $anomaly_id ): bool {
 		// Store admin notice in transient for display
 		$notice_key = 'fp_dms_anomaly_' . $rule->id . '_' . time();
-		
+
 		$notice_data = [
-			'type' => 'anomaly',
-			'rule_name' => $rule->name,
-			'metric' => $rule->metric,
+			'type'             => 'anomaly',
+			'rule_name'        => $rule->name,
+			'metric'           => $rule->metric,
 			'detection_method' => $rule->detection_method,
-			'current_value' => $result['current_value'] ?? 0,
-			'client_id' => $rule->client_id,
-			'anomaly_id' => $anomaly_id,
-			'confidence' => self::get_anomaly_confidence( $result ),
-			'severity' => self::get_anomaly_severity( $result ),
-			'triggered_at' => current_time( 'mysql' ),
+			'current_value'    => $result['current_value'] ?? 0,
+			'client_id'        => $rule->client_id,
+			'anomaly_id'       => $anomaly_id,
+			'confidence'       => self::get_anomaly_confidence( $result ),
+			'severity'         => self::get_anomaly_severity( $result ),
+			'triggered_at'     => current_time( 'mysql' ),
 		];
 
 		return set_transient( $notice_key, $notice_data, 24 * HOUR_IN_SECONDS );
@@ -558,18 +558,18 @@ class AlertEngine {
 	 * Send email notification for detected anomaly
 	 *
 	 * @param object $rule Anomaly rule object
-	 * @param array $result Anomaly detection result
-	 * @param int $anomaly_id Detected anomaly ID
+	 * @param array  $result Anomaly detection result
+	 * @param int    $anomaly_id Detected anomaly ID
 	 * @return bool True on success
 	 */
 	private static function send_anomaly_email_notification( object $rule, array $result, int $anomaly_id ): bool {
-		$client_name = get_the_title( $rule->client_id ) ?: __( 'Cliente sconosciuto', 'fp-digital-marketing' );
+		$client_name     = get_the_title( $rule->client_id ) ?: __( 'Cliente sconosciuto', 'fp-digital-marketing' );
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
-		$metric_name = $kpi_definitions[ $rule->metric ]['name'] ?? $rule->metric;
+		$metric_name     = $kpi_definitions[ $rule->metric ]['name'] ?? $rule->metric;
 
 		$current_value = $result['current_value'] ?? 0;
-		$confidence = self::get_anomaly_confidence( $result );
-		$severity = self::get_anomaly_severity( $result );
+		$confidence    = self::get_anomaly_confidence( $result );
+		$severity      = self::get_anomaly_severity( $result );
 
 		$subject = sprintf(
 			/* translators: 1: Site name, 2: Rule name */
@@ -590,7 +590,7 @@ class AlertEngine {
 				"Gravità: %7\$s\n\n" .
 				"Data/ora: %8\$s\n\n" .
 				"Per maggiori dettagli, accedi al pannello di amministrazione.\n" .
-				"ID Anomalia: %9\$d",
+				'ID Anomalia: %9$d',
 				'fp-digital-marketing'
 			),
 			$client_name,
@@ -617,11 +617,11 @@ class AlertEngine {
 		if ( isset( $result['combined_confidence'] ) ) {
 			return $result['combined_confidence'];
 		}
-		
+
 		if ( isset( $result['z_score_analysis']['confidence'] ) ) {
 			return $result['z_score_analysis']['confidence'];
 		}
-		
+
 		return 'unknown';
 	}
 
@@ -635,7 +635,7 @@ class AlertEngine {
 		if ( isset( $result['moving_average_analysis']['severity'] ) ) {
 			return $result['moving_average_analysis']['severity'];
 		}
-		
+
 		// Map confidence to severity for Z-score
 		$confidence = self::get_anomaly_confidence( $result );
 		switch ( $confidence ) {
@@ -659,19 +659,19 @@ class AlertEngine {
 	private static function log_anomaly_check_results( array $results ): void {
 		$log_entry = [
 			'timestamp' => current_time( 'c' ),
-			'type' => 'anomaly_check',
-			'results' => $results,
+			'type'      => 'anomaly_check',
+			'results'   => $results,
 		];
 
 		error_log( 'FP Digital Marketing Anomaly Check: ' . wp_json_encode( $log_entry ) );
 
 		// Store in database for admin review (keep last 50 entries)
 		$anomaly_logs = get_option( 'fp_dms_anomaly_logs', [] );
-		
+
 		if ( count( $anomaly_logs ) >= 50 ) {
 			$anomaly_logs = array_slice( $anomaly_logs, -49 );
 		}
-		
+
 		$anomaly_logs[] = $log_entry;
 		update_option( 'fp_dms_anomaly_logs', $anomaly_logs, false );
 	}
@@ -684,10 +684,10 @@ class AlertEngine {
 	 */
 	public static function get_anomaly_logs( int $limit = 20 ): array {
 		$logs = get_option( 'fp_dms_anomaly_logs', [] );
-		
+
 		// Return most recent logs first
 		$logs = array_reverse( $logs );
-		
+
 		if ( $limit > 0 ) {
 			$logs = array_slice( $logs, 0, $limit );
 		}
@@ -702,14 +702,14 @@ class AlertEngine {
 	 */
 	public static function check_all_monitoring(): array {
 		$threshold_results = self::check_all_rules();
-		$anomaly_results = self::check_all_anomaly_rules();
+		$anomaly_results   = self::check_all_anomaly_rules();
 
 		return [
-			'threshold_alerts' => $threshold_results,
-			'anomaly_detection' => $anomaly_results,
-			'total_checks' => $threshold_results['checked'] + $anomaly_results['checked'],
-			'total_triggered' => $threshold_results['triggered'] + $anomaly_results['anomalies_detected'],
-			'total_errors' => $threshold_results['errors'] + $anomaly_results['errors'],
+			'threshold_alerts'    => $threshold_results,
+			'anomaly_detection'   => $anomaly_results,
+			'total_checks'        => $threshold_results['checked'] + $anomaly_results['checked'],
+			'total_triggered'     => $threshold_results['triggered'] + $anomaly_results['anomalies_detected'],
+			'total_errors'        => $threshold_results['errors'] + $anomaly_results['errors'],
 			'total_notifications' => $threshold_results['notifications_sent'] + $anomaly_results['notifications_sent'],
 		];
 	}

@@ -26,25 +26,25 @@ class AudienceSegmentationTest extends TestCase {
 	 */
 	public function test_segment_creation(): void {
 		$segment_data = [
-			'name' => 'Test Segment',
+			'name'        => 'Test Segment',
 			'description' => 'A test segment for unit testing',
-			'client_id' => 1,
-			'rules' => [
-				'logic' => 'AND',
+			'client_id'   => 1,
+			'rules'       => [
+				'logic'      => 'AND',
 				'conditions' => [
 					[
-						'type' => 'event',
-						'field' => 'signup',
+						'type'     => 'event',
+						'field'    => 'signup',
 						'operator' => 'greater_than',
-						'value' => '0'
-					]
-				]
+						'value'    => '0',
+					],
+				],
 			],
-			'is_active' => true,
+			'is_active'   => true,
 		];
 
 		$segment = new AudienceSegment( $segment_data );
-		
+
 		$this->assertEquals( 'Test Segment', $segment->get_name() );
 		$this->assertEquals( 'A test segment for unit testing', $segment->get_description() );
 		$this->assertEquals( 1, $segment->get_client_id() );
@@ -59,32 +59,34 @@ class AudienceSegmentationTest extends TestCase {
 	 */
 	public function test_segment_rules(): void {
 		$rules = [
-			'logic' => 'OR',
+			'logic'      => 'OR',
 			'conditions' => [
 				[
-					'type' => 'event',
-					'field' => 'purchase',
+					'type'     => 'event',
+					'field'    => 'purchase',
 					'operator' => 'greater_than',
-					'value' => '2'
+					'value'    => '2',
 				],
 				[
-					'type' => 'utm',
-					'field' => 'utm_source',
+					'type'     => 'utm',
+					'field'    => 'utm_source',
 					'operator' => 'equals',
-					'value' => 'google'
-				]
-			]
+					'value'    => 'google',
+				],
+			],
 		];
 
-		$segment = new AudienceSegment( [
-			'name' => 'Multi-condition Segment',
-			'client_id' => 1,
-			'rules' => $rules,
-		] );
+		$segment = new AudienceSegment(
+			[
+				'name'      => 'Multi-condition Segment',
+				'client_id' => 1,
+				'rules'     => $rules,
+			]
+		);
 
 		$this->assertEquals( 'OR', $segment->get_rules()['logic'] );
 		$this->assertCount( 2, $segment->get_rules()['conditions'] );
-		
+
 		$conditions = $segment->get_rules()['conditions'];
 		$this->assertEquals( 'event', $conditions[0]['type'] );
 		$this->assertEquals( 'purchase', $conditions[0]['field'] );
@@ -97,7 +99,7 @@ class AudienceSegmentationTest extends TestCase {
 	 */
 	public function test_rule_types_and_operators(): void {
 		$rule_types = SegmentationEngine::get_rule_types();
-		$operators = SegmentationEngine::get_operators();
+		$operators  = SegmentationEngine::get_operators();
 
 		$this->assertIsArray( $rule_types );
 		$this->assertIsArray( $operators );
@@ -120,7 +122,7 @@ class AudienceSegmentationTest extends TestCase {
 	 */
 	public function test_compare_values_handles_non_string_inputs(): void {
 		$reflection = new \ReflectionClass( SegmentationEngine::class );
-		$method = $reflection->getMethod( 'compare_values' );
+		$method     = $reflection->getMethod( 'compare_values' );
 		$method->setAccessible( true );
 
 		$this->assertFalse(
@@ -137,17 +139,17 @@ class AudienceSegmentationTest extends TestCase {
 	 */
 	public function test_segment_to_array(): void {
 		$original_data = [
-			'name' => 'Array Test Segment',
+			'name'        => 'Array Test Segment',
 			'description' => 'Testing array conversion',
-			'client_id' => 2,
-			'rules' => [
-				'logic' => 'AND',
-				'conditions' => []
+			'client_id'   => 2,
+			'rules'       => [
+				'logic'      => 'AND',
+				'conditions' => [],
 			],
-			'is_active' => false,
+			'is_active'   => false,
 		];
 
-		$segment = new AudienceSegment( $original_data );
+		$segment    = new AudienceSegment( $original_data );
 		$array_data = $segment->to_array();
 
 		$this->assertIsArray( $array_data );
@@ -179,17 +181,19 @@ class AudienceSegmentationTest extends TestCase {
 	 * Test rule manipulation methods
 	 */
 	public function test_rule_manipulation(): void {
-		$segment = new AudienceSegment( [
-			'name' => 'Rule Test',
-			'client_id' => 1,
-		] );
+		$segment = new AudienceSegment(
+			[
+				'name'      => 'Rule Test',
+				'client_id' => 1,
+			]
+		);
 
 		// Add a rule
 		$rule1 = [
-			'type' => 'event',
-			'field' => 'signup',
+			'type'     => 'event',
+			'field'    => 'signup',
 			'operator' => 'equals',
-			'value' => '1'
+			'value'    => '1',
 		];
 		$segment->add_rule( $rule1 );
 
@@ -199,10 +203,10 @@ class AudienceSegmentationTest extends TestCase {
 
 		// Add another rule
 		$rule2 = [
-			'type' => 'utm',
-			'field' => 'utm_medium',
+			'type'     => 'utm',
+			'field'    => 'utm_medium',
 			'operator' => 'contains',
-			'value' => 'email'
+			'value'    => 'email',
 		];
 		$segment->add_rule( $rule2 );
 
@@ -226,10 +230,12 @@ class AudienceSegmentationTest extends TestCase {
 	 * Test member count update
 	 */
 	public function test_member_count_update(): void {
-		$segment = new AudienceSegment( [
-			'name' => 'Count Test',
-			'client_id' => 1,
-		] );
+		$segment = new AudienceSegment(
+			[
+				'name'      => 'Count Test',
+				'client_id' => 1,
+			]
+		);
 
 		$this->assertEquals( 0, $segment->get_member_count() );
 
@@ -243,33 +249,38 @@ class AudienceSegmentationTest extends TestCase {
 	/**
 	 * Test segment evaluation only considers events for the evaluated user.
 	 */
-	public function test_segment_evaluation_filters_events_by_user(): void {
+        /**
+         * @group integration
+         */
+        public function test_segment_evaluation_filters_events_by_user(): void {
 		$client_id = 4321;
 
 		ConversionEventsTable::create_table();
 
 		try {
-			$segment = new AudienceSegment( [
-				'name' => 'High Value Buyers',
-				'client_id' => $client_id,
-				'is_active' => true,
-				'rules' => [
-					'logic' => 'AND',
-					'conditions' => [
-						[
-							'type' => 'event',
-							'field' => ConversionEventRegistry::EVENT_PURCHASE,
-							'operator' => 'greater_than',
-							'value' => '1',
+			$segment = new AudienceSegment(
+				[
+					'name'      => 'High Value Buyers',
+					'client_id' => $client_id,
+					'is_active' => true,
+					'rules'     => [
+						'logic'      => 'AND',
+						'conditions' => [
+							[
+								'type'     => 'event',
+								'field'    => ConversionEventRegistry::EVENT_PURCHASE,
+								'operator' => 'greater_than',
+								'value'    => '1',
+							],
 						],
 					],
-				],
-			] );
+				]
+			);
 
 			$base_event = [
 				'event_type' => 'purchase',
-				'value' => 125.0,
-				'currency' => 'EUR',
+				'value'      => 125.0,
+				'currency'   => 'EUR',
 				'ip_address' => '203.0.113.10',
 			];
 
@@ -278,7 +289,7 @@ class AudienceSegmentationTest extends TestCase {
 				array_merge(
 					$base_event,
 					[
-						'user_id' => 'segment-user-a',
+						'user_id'   => 'segment-user-a',
 						'timestamp' => '2024-01-03 09:00:00',
 					]
 				),
@@ -290,7 +301,7 @@ class AudienceSegmentationTest extends TestCase {
 				array_merge(
 					$base_event,
 					[
-						'user_id' => 'segment-user-a',
+						'user_id'   => 'segment-user-a',
 						'timestamp' => '2024-01-03 09:10:00',
 					]
 				),
@@ -302,7 +313,7 @@ class AudienceSegmentationTest extends TestCase {
 				array_merge(
 					$base_event,
 					[
-						'user_id' => 'segment-user-b',
+						'user_id'   => 'segment-user-b',
 						'timestamp' => '2024-01-03 09:00:30',
 					]
 				),
@@ -312,7 +323,7 @@ class AudienceSegmentationTest extends TestCase {
 			$user_a_events = ConversionEventsTable::get_events(
 				[
 					'client_id' => $client_id,
-					'user_id' => 'segment-user-a',
+					'user_id'   => 'segment-user-a',
 				],
 				10,
 				0
@@ -322,7 +333,7 @@ class AudienceSegmentationTest extends TestCase {
 			$user_b_events = ConversionEventsTable::get_events(
 				[
 					'client_id' => $client_id,
-					'user_id' => 'segment-user-b',
+					'user_id'   => 'segment-user-b',
 				],
 				10,
 				0
@@ -334,7 +345,7 @@ class AudienceSegmentationTest extends TestCase {
 				ConversionEventsTable::get_events_count(
 					[
 						'client_id' => $client_id,
-						'user_id' => 'segment-user-b',
+						'user_id'   => 'segment-user-b',
 					]
 				)
 			);

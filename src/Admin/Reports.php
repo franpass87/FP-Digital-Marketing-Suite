@@ -34,7 +34,7 @@ use FP\DigitalMarketing\Models\SyncLog;
 
 /**
  * Reports class for plugin administration
- * 
+ *
  * This class provides a debug interface to view registered data sources
  * and their configurations. It's useful for developers and administrators
  * to understand the current state of data source integrations.
@@ -60,15 +60,15 @@ class Reports {
 
 	/**
 	 * Add admin menu page
-	 * 
+	 *
 	 * Note: This method is disabled when MenuManager is active to prevent
 	 * duplicate menu registrations in the rationalized menu structure.
 	 *
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
-                // Check if centralized MenuManager is active
-                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+				// Check if centralized MenuManager is active
+		if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
 			// MenuManager will handle menu registration
 			return;
 		}
@@ -98,99 +98,102 @@ class Reports {
 			return;
 		}
 
-                // Handle PDF download with nonce verification
-                if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_pdf' && isset( $_GET['client_id'] ) ) {
-                        $client_id = intval( $_GET['client_id'] );
-                        $nonce     = sanitize_text_field( $_GET['_wpnonce'] ?? '' );
+				// Handle PDF download with nonce verification
+		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_pdf' && isset( $_GET['client_id'] ) ) {
+				$client_id = intval( $_GET['client_id'] );
+				$nonce     = sanitize_text_field( $_GET['_wpnonce'] ?? '' );
 
-                        if ( ! wp_verify_nonce( $nonce, 'download_pdf_' . $client_id ) ) {
-                                wp_die( esc_html__( 'Nonce non valido', 'fp-digital-marketing' ) );
-                        }
+			if ( ! wp_verify_nonce( $nonce, 'download_pdf_' . $client_id ) ) {
+						wp_die( esc_html__( 'Nonce non valido', 'fp-digital-marketing' ) );
+			}
 
-                        if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
-                                $this->download_pdf_report( $client_id );
-                        } else {
-                                wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
-                        }
-                }
+			if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
+							$this->download_pdf_report( $client_id );
+			} else {
+				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+			}
+		}
 
-                // Handle CSV download with nonce verification
-                if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_csv' && isset( $_GET['client_id'] ) ) {
-                        $client_id = intval( $_GET['client_id'] );
-                        $nonce     = sanitize_text_field( $_GET['_wpnonce'] ?? '' );
+				// Handle CSV download with nonce verification
+		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_csv' && isset( $_GET['client_id'] ) ) {
+				$client_id = intval( $_GET['client_id'] );
+				$nonce     = sanitize_text_field( $_GET['_wpnonce'] ?? '' );
 
-                        if ( ! wp_verify_nonce( $nonce, 'download_csv_' . $client_id ) ) {
-                                wp_die( esc_html__( 'Nonce non valido', 'fp-digital-marketing' ) );
-                        }
+			if ( ! wp_verify_nonce( $nonce, 'download_csv_' . $client_id ) ) {
+						wp_die( esc_html__( 'Nonce non valido', 'fp-digital-marketing' ) );
+			}
 
-                        if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
-                                $separator = sanitize_text_field( $_GET['separator'] ?? ',' );
-                                $this->download_csv_report( $client_id, $separator );
-                        } else {
-                                wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
-                        }
-                }
+			if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
+							$separator = sanitize_text_field( $_GET['separator'] ?? ',' );
+							$this->download_csv_report( $client_id, $separator );
+			} else {
+				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+			}
+		}
 
-                // Handle custom report download with nonce verification
-                if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_custom_report' && isset( $_GET['report_id'] ) ) {
-                        $report_id = intval( $_GET['report_id'] );
-                        $nonce     = sanitize_text_field( $_GET['_wpnonce'] ?? '' );
+				// Handle custom report download with nonce verification
+		if ( isset( $_GET['action'] ) && $_GET['action'] === 'download_custom_report' && isset( $_GET['report_id'] ) ) {
+				$report_id = intval( $_GET['report_id'] );
+				$nonce     = sanitize_text_field( $_GET['_wpnonce'] ?? '' );
 
-                        if ( ! wp_verify_nonce( $nonce, 'download_custom_report_' . $report_id ) ) {
-                                wp_die( esc_html__( 'Nonce non valido', 'fp-digital-marketing' ) );
-                        }
+			if ( ! wp_verify_nonce( $nonce, 'download_custom_report_' . $report_id ) ) {
+						wp_die( esc_html__( 'Nonce non valido', 'fp-digital-marketing' ) );
+			}
 
-                        if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
-                                $this->download_custom_report( $report_id );
-                        } else {
-                                wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
-                        }
-                }
+			if ( Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) ) {
+							$this->download_custom_report( $report_id );
+			} else {
+				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
+			}
+		}
 
 		// Handle custom report generation
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_custom_report' && 
-			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
-			 Security::verify_nonce_with_logging( 'generate_custom_report' ) ) {
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_custom_report' &&
+			Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+			Security::verify_nonce_with_logging( 'generate_custom_report' ) ) {
 			$this->handle_custom_report_generation();
 		}
 
 		// Handle new custom report creation
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'create_custom_report' && 
-			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
-			 Security::verify_nonce_with_logging( 'create_custom_report' ) ) {
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'create_custom_report' &&
+			Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+			Security::verify_nonce_with_logging( 'create_custom_report' ) ) {
 			$this->handle_custom_report_creation();
 		}
 
 		// Handle sentiment response
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'respond_to_sentiment' && 
-			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
-			 Security::verify_nonce_with_logging( 'respond_to_sentiment' ) ) {
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'respond_to_sentiment' &&
+			Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+			Security::verify_nonce_with_logging( 'respond_to_sentiment' ) ) {
 			$this->handle_sentiment_response();
 		}
 
-                // Handle generate sample sentiment data
-                if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_sample_sentiment' &&
-                         Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
-                         Security::verify_nonce_with_logging( 'generate_sample_sentiment' ) ) {
-                        $this->handle_generate_sample_sentiment();
-                }
+				// Handle generate sample sentiment data
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_sample_sentiment' &&
+						Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+						Security::verify_nonce_with_logging( 'generate_sample_sentiment' ) ) {
+				$this->handle_generate_sample_sentiment();
+		}
 
-                if ( isset( $_POST['action'] ) && $_POST['action'] === 'sync_google_reviews' &&
-                         Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
-                         Security::verify_nonce_with_logging( 'sync_google_reviews' ) ) {
-                        $this->handle_sync_google_reviews();
-                }
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'sync_google_reviews' &&
+						Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+						Security::verify_nonce_with_logging( 'sync_google_reviews' ) ) {
+				$this->handle_sync_google_reviews();
+		}
 
 		// Handle manual report generation
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_reports' && 
-			 Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
-			 Security::verify_nonce_with_logging( 'generate_reports' ) ) {
+		if ( isset( $_POST['action'] ) && $_POST['action'] === 'generate_reports' &&
+			Capabilities::current_user_can( Capabilities::EXPORT_REPORTS ) &&
+			Security::verify_nonce_with_logging( 'generate_reports' ) ) {
 			$count = ReportScheduler::trigger_manual_generation();
-			add_action( 'admin_notices', function() use ( $count ) {
-				echo '<div class="notice notice-success is-dismissible"><p>';
-				printf( __( 'Generati %d report con successo!', 'fp-digital-marketing' ), $count );
-				echo '</p></div>';
-			} );
+			add_action(
+				'admin_notices',
+				function () use ( $count ) {
+					echo '<div class="notice notice-success is-dismissible"><p>';
+					printf( __( 'Generati %d report con successo!', 'fp-digital-marketing' ), $count );
+					echo '</p></div>';
+				}
+			);
 		}
 	}
 
@@ -202,7 +205,7 @@ class Reports {
 	 */
 	private function download_pdf_report( int $client_id ): void {
 		$report_data = ReportGenerator::generate_demo_report_data( $client_id );
-		
+
 		// Validate report data
 		$validation = ReportGenerator::validate_report_data( $report_data );
 		if ( ! $validation['valid'] ) {
@@ -211,7 +214,7 @@ class Reports {
 
 		try {
 			$pdf_content = ReportGenerator::generate_pdf_report( $report_data );
-			$filename = sprintf( 'digital-marketing-report-%d-%s.pdf', $client_id, date( 'Y-m-d' ) );
+			$filename    = sprintf( 'digital-marketing-report-%d-%s.pdf', $client_id, date( 'Y-m-d' ) );
 
 			// Log the report generation
 			ReportGenerator::log_report_generation( $client_id, 'pdf', strlen( $pdf_content ), true );
@@ -232,13 +235,13 @@ class Reports {
 	/**
 	 * Download CSV report for a client
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $separator CSV separator
 	 * @return void
 	 */
 	private function download_csv_report( int $client_id, string $separator = ',' ): void {
 		$report_data = ReportGenerator::generate_demo_report_data( $client_id );
-		
+
 		// Validate report data
 		$validation = ReportGenerator::validate_report_data( $report_data );
 		if ( ! $validation['valid'] ) {
@@ -247,7 +250,7 @@ class Reports {
 
 		try {
 			$csv_content = ReportGenerator::generate_csv_report( $report_data, $separator );
-			$filename = sprintf( 'digital-marketing-report-%d-%s.csv', $client_id, date( 'Y-m-d' ) );
+			$filename    = sprintf( 'digital-marketing-report-%d-%s.csv', $client_id, date( 'Y-m-d' ) );
 
 			// Log the report generation
 			ReportGenerator::log_report_generation( $client_id, 'csv', strlen( $csv_content ), true );
@@ -271,53 +274,64 @@ class Reports {
 	 * @return void
 	 */
 	private function handle_custom_report_creation(): void {
-		$client_id = intval( $_POST['client_id'] ?? 0 );
-		$report_name = sanitize_text_field( $_POST['report_name'] ?? '' );
+		$client_id          = intval( $_POST['client_id'] ?? 0 );
+		$report_name        = sanitize_text_field( $_POST['report_name'] ?? '' );
 		$report_description = sanitize_textarea_field( $_POST['report_description'] ?? '' );
-		$time_period = sanitize_text_field( $_POST['time_period'] ?? '30_days' );
-		$selected_kpis = isset( $_POST['selected_kpis'] ) ? array_map( 'sanitize_text_field', $_POST['selected_kpis'] ) : [];
-		$report_frequency = sanitize_text_field( $_POST['report_frequency'] ?? 'manual' );
-		$email_recipients = isset( $_POST['email_recipients'] ) ? array_map( 'sanitize_email', explode( ',', $_POST['email_recipients'] ) ) : [];
-		$auto_send = isset( $_POST['auto_send'] ) ? 1 : 0;
+		$time_period        = sanitize_text_field( $_POST['time_period'] ?? '30_days' );
+		$selected_kpis      = isset( $_POST['selected_kpis'] ) ? array_map( 'sanitize_text_field', $_POST['selected_kpis'] ) : [];
+		$report_frequency   = sanitize_text_field( $_POST['report_frequency'] ?? 'manual' );
+		$email_recipients   = isset( $_POST['email_recipients'] ) ? array_map( 'sanitize_email', explode( ',', $_POST['email_recipients'] ) ) : [];
+		$auto_send          = isset( $_POST['auto_send'] ) ? 1 : 0;
 
 		if ( ! $client_id || ! $report_name ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error is-dismissible"><p>';
-				echo esc_html__( 'Cliente e nome report sono obbligatori', 'fp-digital-marketing' );
-				echo '</p></div>';
-			} );
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error is-dismissible"><p>';
+					echo esc_html__( 'Cliente e nome report sono obbligatori', 'fp-digital-marketing' );
+					echo '</p></div>';
+				}
+			);
 			return;
 		}
 
-		$custom_report = new CustomReport([
-			'client_id' => $client_id,
-			'report_name' => $report_name,
-			'report_description' => $report_description,
-			'time_period' => $time_period,
-			'selected_kpis' => $selected_kpis,
-			'report_frequency' => $report_frequency,
-			'email_recipients' => array_filter( $email_recipients ),
-			'auto_send' => $auto_send,
-			'status' => 'active',
-		]);
+		$custom_report = new CustomReport(
+			[
+				'client_id'          => $client_id,
+				'report_name'        => $report_name,
+				'report_description' => $report_description,
+				'time_period'        => $time_period,
+				'selected_kpis'      => $selected_kpis,
+				'report_frequency'   => $report_frequency,
+				'email_recipients'   => array_filter( $email_recipients ),
+				'auto_send'          => $auto_send,
+				'status'             => 'active',
+			]
+		);
 
-                if ( $custom_report->save() ) {
-                        PerformanceCache::clear_cache_by_pattern(
-                                sprintf( 'report_client_%d_*', $client_id ),
-                                PerformanceCache::CACHE_GROUP_REPORTS
-                        );
+		if ( $custom_report->save() ) {
+				PerformanceCache::clear_cache_by_pattern(
+					sprintf( 'report_client_%d_*', $client_id ),
+					PerformanceCache::CACHE_GROUP_REPORTS
+				);
 
-                        add_action( 'admin_notices', function() {
-                                echo '<div class="notice notice-success is-dismissible"><p>';
-                                echo esc_html__( 'Report personalizzato creato con successo!', 'fp-digital-marketing' );
-                                echo '</p></div>';
-                        } );
+				add_action(
+					'admin_notices',
+					function () {
+						echo '<div class="notice notice-success is-dismissible"><p>';
+						echo esc_html__( 'Report personalizzato creato con successo!', 'fp-digital-marketing' );
+						echo '</p></div>';
+					}
+				);
 		} else {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error is-dismissible"><p>';
-				echo esc_html__( 'Errore nella creazione del report personalizzato', 'fp-digital-marketing' );
-				echo '</p></div>';
-			} );
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error is-dismissible"><p>';
+					echo esc_html__( 'Errore nella creazione del report personalizzato', 'fp-digital-marketing' );
+					echo '</p></div>';
+				}
+			);
 		}
 	}
 
@@ -334,8 +348,8 @@ class Reports {
 		}
 
 		$custom_report = new CustomReport( $report_data );
-		$format = sanitize_text_field( $_GET['format'] ?? 'pdf' );
-		$result = $custom_report->generate( $format );
+		$format        = sanitize_text_field( $_GET['format'] ?? 'pdf' );
+		$result        = $custom_report->generate( $format );
 
 		if ( ! $result['success'] ) {
 			wp_die( esc_html( implode( ', ', $result['errors'] ) ) );
@@ -366,30 +380,39 @@ class Reports {
 	 * @return void
 	 */
 	private function handle_sentiment_response(): void {
-		$sentiment_id = intval( $_POST['sentiment_id'] ?? 0 );
+		$sentiment_id  = intval( $_POST['sentiment_id'] ?? 0 );
 		$response_text = sanitize_textarea_field( $_POST['response_text'] ?? '' );
 
 		if ( ! $sentiment_id || ! $response_text ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error is-dismissible"><p>';
-				echo esc_html__( 'ID recensione e testo risposta sono obbligatori', 'fp-digital-marketing' );
-				echo '</p></div>';
-			} );
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error is-dismissible"><p>';
+					echo esc_html__( 'ID recensione e testo risposta sono obbligatori', 'fp-digital-marketing' );
+					echo '</p></div>';
+				}
+			);
 			return;
 		}
 
 		if ( SocialSentimentTable::mark_as_responded( $sentiment_id, $response_text ) ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-success is-dismissible"><p>';
-				echo esc_html__( 'Risposta salvata con successo!', 'fp-digital-marketing' );
-				echo '</p></div>';
-			} );
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-success is-dismissible"><p>';
+					echo esc_html__( 'Risposta salvata con successo!', 'fp-digital-marketing' );
+					echo '</p></div>';
+				}
+			);
 		} else {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error is-dismissible"><p>';
-				echo esc_html__( 'Errore nel salvare la risposta', 'fp-digital-marketing' );
-				echo '</p></div>';
-			} );
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error is-dismissible"><p>';
+					echo esc_html__( 'Errore nel salvare la risposta', 'fp-digital-marketing' );
+					echo '</p></div>';
+				}
+			);
 		}
 	}
 
@@ -398,123 +421,150 @@ class Reports {
 	 *
 	 * @return void
 	 */
-        private function handle_generate_sample_sentiment(): void {
-                $client_id = intval( $_POST['client_id'] ?? 0 );
-                $count = intval( $_POST['sample_count'] ?? 20 );
+	private function handle_generate_sample_sentiment(): void {
+			$client_id = intval( $_POST['client_id'] ?? 0 );
+			$count     = intval( $_POST['sample_count'] ?? 20 );
 
-                if ( ! $client_id ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error is-dismissible"><p>';
-				echo esc_html__( 'Seleziona un cliente', 'fp-digital-marketing' );
-				echo '</p></div>';
-			} );
+		if ( ! $client_id ) {
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error is-dismissible"><p>';
+					echo esc_html__( 'Seleziona un cliente', 'fp-digital-marketing' );
+					echo '</p></div>';
+				}
+			);
 			return;
 		}
 
 		if ( SocialSentimentTable::generate_sample_data( $client_id, $count ) ) {
-			add_action( 'admin_notices', function() use ( $count ) {
-				echo '<div class="notice notice-success is-dismissible"><p>';
-				printf( __( 'Generati %d dati demo per l\'analisi del sentiment!', 'fp-digital-marketing' ), $count );
-				echo '</p></div>';
-			} );
+			add_action(
+				'admin_notices',
+				function () use ( $count ) {
+					echo '<div class="notice notice-success is-dismissible"><p>';
+					printf( __( 'Generati %d dati demo per l\'analisi del sentiment!', 'fp-digital-marketing' ), $count );
+					echo '</p></div>';
+				}
+			);
 		} else {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error is-dismissible"><p>';
-				echo esc_html__( 'Errore nella generazione dei dati demo', 'fp-digital-marketing' );
-				echo '</p></div>';
-			} );
-                }
-        }
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error is-dismissible"><p>';
+					echo esc_html__( 'Errore nella generazione dei dati demo', 'fp-digital-marketing' );
+					echo '</p></div>';
+				}
+			);
+		}
+	}
 
-        /**
-         * Handle synchronization of Google Reviews for sentiment analysis.
-         */
-        private function handle_sync_google_reviews(): void {
-                $client_id = intval( $_POST['client_id'] ?? 0 );
-                $limit = intval( $_POST['review_limit'] ?? 10 );
-                $limit = max( 1, min( 50, $limit ) );
+		/**
+		 * Handle synchronization of Google Reviews for sentiment analysis.
+		 */
+	private function handle_sync_google_reviews(): void {
+			$client_id = intval( $_POST['client_id'] ?? 0 );
+			$limit     = intval( $_POST['review_limit'] ?? 10 );
+			$limit     = max( 1, min( 50, $limit ) );
 
-                if ( ! $client_id ) {
-                        add_action( 'admin_notices', function() {
-                                echo '<div class="notice notice-error is-dismissible"><p>';
-                                echo esc_html__( 'Seleziona un cliente prima di sincronizzare le recensioni.', 'fp-digital-marketing' );
-                                echo '</p></div>';
-                        } );
+		if ( ! $client_id ) {
+				add_action(
+					'admin_notices',
+					function () {
+						echo '<div class="notice notice-error is-dismissible"><p>';
+						echo esc_html__( 'Seleziona un cliente prima di sincronizzare le recensioni.', 'fp-digital-marketing' );
+						echo '</p></div>';
+					}
+				);
 
-                        return;
-                }
+				return;
+		}
 
-                $api_keys = SecretsManager::get_api_keys( true );
-                $api_key = $api_keys['google_reviews_api_key'] ?? '';
+			$api_keys = SecretsManager::get_api_keys( true );
+			$api_key  = $api_keys['google_reviews_api_key'] ?? '';
 
-                if ( empty( $api_key ) ) {
-                        add_action( 'admin_notices', function() {
-                                echo '<div class="notice notice-warning is-dismissible"><p>';
-                                echo esc_html__( "Configura prima l'API key di Google Places nella pagina Impostazioni.", 'fp-digital-marketing' );
-                                echo '</p></div>';
-                        } );
+		if ( empty( $api_key ) ) {
+				add_action(
+					'admin_notices',
+					function () {
+						echo '<div class="notice notice-warning is-dismissible"><p>';
+						echo esc_html__( "Configura prima l'API key di Google Places nella pagina Impostazioni.", 'fp-digital-marketing' );
+						echo '</p></div>';
+					}
+				);
 
-                        return;
-                }
+				return;
+		}
 
-                $place_id = get_post_meta( $client_id, ClienteMeta::META_GOOGLE_PLACE_ID, true );
-                if ( empty( $place_id ) ) {
-                        $place_id = $api_keys['google_reviews_place_id'] ?? '';
-                }
+			$place_id = get_post_meta( $client_id, ClienteMeta::META_GOOGLE_PLACE_ID, true );
+		if ( empty( $place_id ) ) {
+				$place_id = $api_keys['google_reviews_place_id'] ?? '';
+		}
 
-                if ( empty( $place_id ) ) {
-                        add_action( 'admin_notices', function() {
-                                echo '<div class="notice notice-error is-dismissible"><p>';
-                                echo esc_html__( 'Nessun Google Place ID disponibile. Aggiungilo nelle impostazioni globali o nella scheda del cliente.', 'fp-digital-marketing' );
-                                echo '</p></div>';
-                        } );
+		if ( empty( $place_id ) ) {
+				add_action(
+					'admin_notices',
+					function () {
+						echo '<div class="notice notice-error is-dismissible"><p>';
+						echo esc_html__( 'Nessun Google Place ID disponibile. Aggiungilo nelle impostazioni globali o nella scheda del cliente.', 'fp-digital-marketing' );
+						echo '</p></div>';
+					}
+				);
 
-                        return;
-                }
+				return;
+		}
 
-                $result = SocialSentimentTable::sync_google_reviews( $client_id, $place_id, $api_key, $limit );
+			$result = SocialSentimentTable::sync_google_reviews( $client_id, $place_id, $api_key, $limit );
 
-                if ( empty( $result['success'] ) ) {
-                        $error_message = isset( $result['error'] ) ? $result['error'] : __( 'Sincronizzazione non riuscita.', 'fp-digital-marketing' );
-                        add_action( 'admin_notices', function() use ( $error_message ) {
-                                echo '<div class="notice notice-error is-dismissible"><p>';
-                                echo esc_html( $error_message );
-                                echo '</p></div>';
-                        } );
+		if ( empty( $result['success'] ) ) {
+				$error_message = isset( $result['error'] ) ? $result['error'] : __( 'Sincronizzazione non riuscita.', 'fp-digital-marketing' );
+				add_action(
+					'admin_notices',
+					function () use ( $error_message ) {
+						echo '<div class="notice notice-error is-dismissible"><p>';
+						echo esc_html( $error_message );
+						echo '</p></div>';
+					}
+				);
 
-                        return;
-                }
+				return;
+		}
 
-                $inserted = intval( $result['inserted'] ?? 0 );
-                $updated = intval( $result['updated'] ?? 0 );
-                $skipped = intval( $result['skipped'] ?? 0 );
+			$inserted = intval( $result['inserted'] ?? 0 );
+			$updated  = intval( $result['updated'] ?? 0 );
+			$skipped  = intval( $result['skipped'] ?? 0 );
 
-                add_action( 'admin_notices', function() use ( $inserted, $updated, $skipped ) {
-                        echo '<div class="notice notice-success is-dismissible"><p>';
-                        printf(
-                                esc_html__( 'Sincronizzazione completata: %1$d nuove recensioni, %2$d aggiornate, %3$d ignorate.', 'fp-digital-marketing' ),
-                                $inserted,
-                                $updated,
-                                $skipped
-                        );
-                        echo '</p></div>';
-                } );
-        }
+			add_action(
+				'admin_notices',
+				function () use ( $inserted, $updated, $skipped ) {
+					echo '<div class="notice notice-success is-dismissible"><p>';
+					printf(
+						esc_html__( 'Sincronizzazione completata: %1$d nuove recensioni, %2$d aggiornate, %3$d ignorate.', 'fp-digital-marketing' ),
+						$inserted,
+						$updated,
+						$skipped
+					);
+					echo '</p></div>';
+				}
+			);
+	}
 
-        private function handle_custom_report_generation(): void {
-		$client_id = intval( $_POST['client_id'] ?? 0 );
-		$format = sanitize_text_field( $_POST['format'] ?? 'pdf' );
-		$period_start = sanitize_text_field( $_POST['period_start'] ?? '' );
-		$period_end = sanitize_text_field( $_POST['period_end'] ?? '' );
+	private function handle_custom_report_generation(): void {
+		$client_id     = intval( $_POST['client_id'] ?? 0 );
+		$format        = sanitize_text_field( $_POST['format'] ?? 'pdf' );
+		$period_start  = sanitize_text_field( $_POST['period_start'] ?? '' );
+		$period_end    = sanitize_text_field( $_POST['period_end'] ?? '' );
 		$selected_kpis = isset( $_POST['selected_kpis'] ) ? array_map( 'sanitize_text_field', $_POST['selected_kpis'] ) : [];
 		$csv_separator = sanitize_text_field( $_POST['csv_separator'] ?? ',' );
 
 		if ( ! $client_id ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error is-dismissible"><p>';
-				echo esc_html__( 'Cliente non selezionato', 'fp-digital-marketing' );
-				echo '</p></div>';
-			} );
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error is-dismissible"><p>';
+					echo esc_html__( 'Cliente non selezionato', 'fp-digital-marketing' );
+					echo '</p></div>';
+				}
+			);
 			return;
 		}
 
@@ -522,11 +572,11 @@ class Reports {
 			// Get actual data using MetricsAggregator if real data is needed
 			// For now, using demo data but filtering KPIs if specified
 			$report_data = ReportGenerator::generate_demo_report_data( $client_id );
-			
+
 			// Override period if specified
 			if ( $period_start && $period_end ) {
 				$report_data['period_start'] = $period_start;
-				$report_data['period_end'] = $period_end;
+				$report_data['period_end']   = $period_end;
 			}
 
 			// Filter KPIs if specific ones were selected
@@ -547,11 +597,14 @@ class Reports {
 				$this->download_pdf_report_with_data( $report_data );
 			}
 		} catch ( Exception $e ) {
-			add_action( 'admin_notices', function() use ( $e ) {
-				echo '<div class="notice notice-error is-dismissible"><p>';
-				echo esc_html__( 'Errore nella generazione del report: ', 'fp-digital-marketing' ) . esc_html( $e->getMessage() );
-				echo '</p></div>';
-			} );
+			add_action(
+				'admin_notices',
+				function () use ( $e ) {
+					echo '<div class="notice notice-error is-dismissible"><p>';
+					echo esc_html__( 'Errore nella generazione del report: ', 'fp-digital-marketing' ) . esc_html( $e->getMessage() );
+					echo '</p></div>';
+				}
+			);
 		}
 	}
 
@@ -568,7 +621,7 @@ class Reports {
 		}
 
 		$pdf_content = ReportGenerator::generate_pdf_report( $report_data );
-		$filename = sprintf( 'custom-report-%d-%s.pdf', $report_data['client_id'], date( 'Y-m-d-H-i' ) );
+		$filename    = sprintf( 'custom-report-%d-%s.pdf', $report_data['client_id'], date( 'Y-m-d-H-i' ) );
 
 		ReportGenerator::log_report_generation( $report_data['client_id'], 'pdf', strlen( $pdf_content ), true );
 
@@ -583,7 +636,7 @@ class Reports {
 	/**
 	 * Download CSV report with custom data
 	 *
-	 * @param array $report_data Report data
+	 * @param array  $report_data Report data
 	 * @param string $separator CSV separator
 	 * @return void
 	 */
@@ -594,7 +647,7 @@ class Reports {
 		}
 
 		$csv_content = ReportGenerator::generate_csv_report( $report_data, $separator );
-		$filename = sprintf( 'custom-report-%d-%s.csv', $report_data['client_id'], date( 'Y-m-d-H-i' ) );
+		$filename    = sprintf( 'custom-report-%d-%s.csv', $report_data['client_id'], date( 'Y-m-d-H-i' ) );
 
 		ReportGenerator::log_report_generation( $report_data['client_id'], 'csv', strlen( $csv_content ), true );
 
@@ -618,11 +671,13 @@ class Reports {
 		}
 
 		// Get clients for report generation
-		$clientes = get_posts( [
-			'post_type'      => 'cliente',
-			'post_status'    => 'publish',
-			'posts_per_page' => 50,
-		] );
+		$clientes = get_posts(
+			[
+				'post_type'      => 'cliente',
+				'post_status'    => 'publish',
+				'posts_per_page' => 50,
+			]
+		);
 
 		// Get current tab
 		$current_tab = sanitize_text_field( $_GET['tab'] ?? 'standard_reports' );
@@ -633,20 +688,20 @@ class Reports {
 			
 			<!-- Tab Navigation -->
 			<nav class="nav-tab-wrapper" style="margin: 20px 0;">
-				<a href="<?php echo esc_url( add_query_arg( ['tab' => 'standard_reports'], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-				   class="nav-tab <?php echo $current_tab === 'standard_reports' ? 'nav-tab-active' : ''; ?>">
+				<a href="<?php echo esc_url( add_query_arg( [ 'tab' => 'standard_reports' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+					class="nav-tab <?php echo $current_tab === 'standard_reports' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Report Standard', 'fp-digital-marketing' ); ?>
 				</a>
-				<a href="<?php echo esc_url( add_query_arg( ['tab' => 'custom_reports'], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-				   class="nav-tab <?php echo $current_tab === 'custom_reports' ? 'nav-tab-active' : ''; ?>">
+				<a href="<?php echo esc_url( add_query_arg( [ 'tab' => 'custom_reports' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+					class="nav-tab <?php echo $current_tab === 'custom_reports' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Report Personalizzati', 'fp-digital-marketing' ); ?>
 				</a>
-				<a href="<?php echo esc_url( add_query_arg( ['tab' => 'sentiment_analysis'], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-				   class="nav-tab <?php echo $current_tab === 'sentiment_analysis' ? 'nav-tab-active' : ''; ?>">
+				<a href="<?php echo esc_url( add_query_arg( [ 'tab' => 'sentiment_analysis' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+					class="nav-tab <?php echo $current_tab === 'sentiment_analysis' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Analisi Sentiment', 'fp-digital-marketing' ); ?>
 				</a>
-				<a href="<?php echo esc_url( add_query_arg( ['tab' => 'debug'], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
-				   class="nav-tab <?php echo $current_tab === 'debug' ? 'nav-tab-active' : ''; ?>">
+				<a href="<?php echo esc_url( add_query_arg( [ 'tab' => 'debug' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ) ); ?>" 
+					class="nav-tab <?php echo $current_tab === 'debug' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Debug & Analytics', 'fp-digital-marketing' ); ?>
 				</a>
 			</nav>
@@ -718,14 +773,44 @@ class Reports {
 						<div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 4px;">
 							<h4 style="margin: 0 0 10px 0;"><?php echo esc_html( $cliente->post_title ); ?></h4>
 							<div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                                                                <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_pdf_' . $cliente->ID ) ); ?>"
-                                                                   class="button button-secondary">
-                                                                        <?php esc_html_e( 'PDF', 'fp-digital-marketing' ); ?>
-                                                                </a>
-                                                                <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_csv', 'client_id' => $cliente->ID ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_csv_' . $cliente->ID ) ); ?>"
-                                                                   class="button button-secondary">
-                                                                        <?php esc_html_e( 'CSV', 'fp-digital-marketing' ); ?>
-                                                                </a>
+																<a href="
+																<?php
+																echo esc_url(
+																	wp_nonce_url(
+																		add_query_arg(
+																			[
+																				'action' => 'download_pdf',
+																				'client_id' => $cliente->ID,
+																			],
+																			admin_url( 'admin.php?page=' . self::PAGE_SLUG )
+																		),
+																		'download_pdf_' . $cliente->ID
+																	)
+																);
+																?>
+																			"
+																	class="button button-secondary">
+																		<?php esc_html_e( 'PDF', 'fp-digital-marketing' ); ?>
+																</a>
+																<a href="
+																<?php
+																echo esc_url(
+																	wp_nonce_url(
+																		add_query_arg(
+																			[
+																				'action' => 'download_csv',
+																				'client_id' => $cliente->ID,
+																			],
+																			admin_url( 'admin.php?page=' . self::PAGE_SLUG )
+																		),
+																		'download_csv_' . $cliente->ID
+																	)
+																);
+																?>
+																			"
+																	class="button button-secondary">
+																		<?php esc_html_e( 'CSV', 'fp-digital-marketing' ); ?>
+																</a>
 							</div>
 						</div>
 					<?php endforeach; ?>
@@ -789,13 +874,13 @@ class Reports {
 					<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
 						<?php
 						$available_kpis = [
-							'sessions' => __( 'Sessioni', 'fp-digital-marketing' ),
-							'users' => __( 'Utenti', 'fp-digital-marketing' ),
+							'sessions'        => __( 'Sessioni', 'fp-digital-marketing' ),
+							'users'           => __( 'Utenti', 'fp-digital-marketing' ),
 							'conversion_rate' => __( 'Tasso di Conversione', 'fp-digital-marketing' ),
-							'revenue' => __( 'Fatturato', 'fp-digital-marketing' ),
+							'revenue'         => __( 'Fatturato', 'fp-digital-marketing' ),
 						];
 						foreach ( $available_kpis as $kpi_key => $kpi_label ) :
-						?>
+							?>
 							<label style="display: flex; align-items: center; padding: 8px; background: #f8f9fa; border-radius: 4px;">
 								<input type="checkbox" name="selected_kpis[]" value="<?php echo esc_attr( $kpi_key ); ?>" checked style="margin-right: 8px;">
 								<?php echo esc_html( $kpi_label ); ?>
@@ -821,7 +906,7 @@ class Reports {
 			<?php
 			$logs = ReportGenerator::get_report_logs( 20 );
 			if ( ! empty( $logs ) ) :
-			?>
+				?>
 				<table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
 					<thead>
 						<tr>
@@ -886,10 +971,10 @@ class Reports {
 	 */
 	private function render_custom_reports_tab( array $clientes ): void {
 		// Get existing custom reports
-		$custom_reports = CustomReportsTable::get_all_reports( ['limit' => 100] );
+		$custom_reports = CustomReportsTable::get_all_reports( [ 'limit' => 100 ] );
 		$available_kpis = CustomReport::get_available_kpis();
-		$time_periods = CustomReportsTable::get_available_time_periods();
-		$frequencies = CustomReportsTable::get_available_frequencies();
+		$time_periods   = CustomReportsTable::get_available_time_periods();
+		$frequencies    = CustomReportsTable::get_available_frequencies();
 
 		?>
 		<!-- Create New Custom Report Section -->
@@ -1049,10 +1134,42 @@ class Reports {
 									</td>
 									<td>
 										<div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                                                                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_custom_report', 'report_id' => $report['id'], 'format' => 'pdf' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_custom_report_' . $report['id'] ) ); ?>"
-                                                                                           class="button button-small">PDF</a>
-                                                                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_custom_report', 'report_id' => $report['id'], 'format' => 'csv' ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_custom_report_' . $report['id'] ) ); ?>"
-                                                                                           class="button button-small">CSV</a>
+																						<a href="
+																						<?php
+																						echo esc_url(
+																							wp_nonce_url(
+																								add_query_arg(
+																									[
+																										'action' => 'download_custom_report',
+																										'report_id' => $report['id'],
+																										'format' => 'pdf',
+																									],
+																									admin_url( 'admin.php?page=' . self::PAGE_SLUG )
+																								),
+																								'download_custom_report_' . $report['id']
+																							)
+																						);
+																						?>
+																									"
+																							class="button button-small">PDF</a>
+																						<a href="
+																						<?php
+																						echo esc_url(
+																							wp_nonce_url(
+																								add_query_arg(
+																									[
+																										'action' => 'download_custom_report',
+																										'report_id' => $report['id'],
+																										'format' => 'csv',
+																									],
+																									admin_url( 'admin.php?page=' . self::PAGE_SLUG )
+																								),
+																								'download_custom_report_' . $report['id']
+																							)
+																						);
+																						?>
+																									"
+																							class="button button-small">CSV</a>
 										</div>
 									</td>
 								</tr>
@@ -1077,81 +1194,84 @@ class Reports {
 	 */
 	private function render_sentiment_analysis_tab( array $clientes ): void {
 		// Get current filter parameters
-		$selected_client = intval( $_GET['filter_client'] ?? 0 );
-		$sentiment_filter = sanitize_text_field( $_GET['sentiment_filter'] ?? '' );
+		$selected_client        = intval( $_GET['filter_client'] ?? 0 );
+		$sentiment_filter       = sanitize_text_field( $_GET['sentiment_filter'] ?? '' );
 		$action_required_filter = isset( $_GET['action_required'] ) ? intval( $_GET['action_required'] ) : null;
 
 		// Get sentiment data
-		$sentiment_data = [];
+		$sentiment_data    = [];
 		$sentiment_summary = [];
-		$top_issues = [];
+		$top_issues        = [];
 
 		if ( $selected_client ) {
-			$sentiment_data = SocialSentimentTable::get_client_sentiment( $selected_client, [
-				'limit' => 50,
-				'sentiment_label' => $sentiment_filter ?: null,
-				'action_required' => $action_required_filter,
-			] );
+			$sentiment_data    = SocialSentimentTable::get_client_sentiment(
+				$selected_client,
+				[
+					'limit'           => 50,
+					'sentiment_label' => $sentiment_filter ?: null,
+					'action_required' => $action_required_filter,
+				]
+			);
 			$sentiment_summary = SocialSentimentTable::get_sentiment_summary( $selected_client );
-			$top_issues = SocialSentimentTable::get_top_issues( $selected_client );
+			$top_issues        = SocialSentimentTable::get_top_issues( $selected_client );
 		}
 
-                $platforms = SocialSentimentTable::get_available_platforms();
-                $api_keys = SecretsManager::get_api_keys( true );
-                $has_reviews_api_key = ! empty( $api_keys['google_reviews_api_key'] );
-                $default_place_id = $api_keys['google_reviews_place_id'] ?? '';
+				$platforms           = SocialSentimentTable::get_available_platforms();
+				$api_keys            = SecretsManager::get_api_keys( true );
+				$has_reviews_api_key = ! empty( $api_keys['google_reviews_api_key'] );
+				$default_place_id    = $api_keys['google_reviews_place_id'] ?? '';
 
-                ?>
-                <!-- Google Reviews Sync Section -->
-                <div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        <h2><?php esc_html_e( 'Sincronizza Recensioni Google', 'fp-digital-marketing' ); ?></h2>
-                        <p><?php esc_html_e( "Recupera recensioni reali da Google e calcola automaticamente il sentiment con l'AI integrata.", 'fp-digital-marketing' ); ?></p>
+		?>
+				<!-- Google Reviews Sync Section -->
+				<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+						<h2><?php esc_html_e( 'Sincronizza Recensioni Google', 'fp-digital-marketing' ); ?></h2>
+						<p><?php esc_html_e( "Recupera recensioni reali da Google e calcola automaticamente il sentiment con l'AI integrata.", 'fp-digital-marketing' ); ?></p>
 
-                        <?php if ( ! $has_reviews_api_key ) : ?>
-                                <div class="notice notice-warning inline" style="margin-top: 10px;">
-                                        <p><?php esc_html_e( "Configura l'API key di Google Places nella pagina Impostazioni per poter sincronizzare le recensioni reali.", 'fp-digital-marketing' ); ?></p>
-                                </div>
-                        <?php endif; ?>
+						<?php if ( ! $has_reviews_api_key ) : ?>
+								<div class="notice notice-warning inline" style="margin-top: 10px;">
+										<p><?php esc_html_e( "Configura l'API key di Google Places nella pagina Impostazioni per poter sincronizzare le recensioni reali.", 'fp-digital-marketing' ); ?></p>
+								</div>
+						<?php endif; ?>
 
-                        <form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; align-items: end;">
-                                <?php wp_nonce_field( 'sync_google_reviews' ); ?>
-                                <input type="hidden" name="action" value="sync_google_reviews">
+						<form method="post" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; align-items: end;">
+								<?php wp_nonce_field( 'sync_google_reviews' ); ?>
+								<input type="hidden" name="action" value="sync_google_reviews">
 
-                                <div>
-                                        <label for="sync_client"><strong><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></strong></label>
-                                        <select id="sync_client" name="client_id" required style="width: 100%; padding: 8px; margin-top: 5px;">
-                                                <option value=""><?php esc_html_e( 'Seleziona cliente...', 'fp-digital-marketing' ); ?></option>
-                                                <?php foreach ( $clientes as $cliente ) : ?>
-                                                        <option value="<?php echo esc_attr( $cliente->ID ); ?>"><?php echo esc_html( $cliente->post_title ); ?></option>
-                                                <?php endforeach; ?>
-                                        </select>
-                                </div>
+								<div>
+										<label for="sync_client"><strong><?php esc_html_e( 'Cliente', 'fp-digital-marketing' ); ?></strong></label>
+										<select id="sync_client" name="client_id" required style="width: 100%; padding: 8px; margin-top: 5px;">
+												<option value=""><?php esc_html_e( 'Seleziona cliente...', 'fp-digital-marketing' ); ?></option>
+												<?php foreach ( $clientes as $cliente ) : ?>
+														<option value="<?php echo esc_attr( $cliente->ID ); ?>"><?php echo esc_html( $cliente->post_title ); ?></option>
+												<?php endforeach; ?>
+										</select>
+								</div>
 
-                                <div>
-                                        <label for="review_limit"><strong><?php esc_html_e( 'Numero di recensioni da importare', 'fp-digital-marketing' ); ?></strong></label>
-                                        <select id="review_limit" name="review_limit" style="width: 100%; padding: 8px; margin-top: 5px;">
-                                                <option value="5">5</option>
-                                                <option value="10" selected>10</option>
-                                                <option value="20">20</option>
-                                        </select>
-                                </div>
+								<div>
+										<label for="review_limit"><strong><?php esc_html_e( 'Numero di recensioni da importare', 'fp-digital-marketing' ); ?></strong></label>
+										<select id="review_limit" name="review_limit" style="width: 100%; padding: 8px; margin-top: 5px;">
+												<option value="5">5</option>
+												<option value="10" selected>10</option>
+												<option value="20">20</option>
+										</select>
+								</div>
 
-                                <div>
-                                        <button type="submit" class="button button-primary" style="padding: 10px 20px;" <?php disabled( ! $has_reviews_api_key ); ?>>
-                                                <?php esc_html_e( 'Sincronizza Recensioni', 'fp-digital-marketing' ); ?>
-                                        </button>
-                                        <?php if ( ! empty( $default_place_id ) ) : ?>
-                                                <p class="description" style="margin-top: 8px;">&raquo; <?php esc_html_e( 'Se un cliente non ha un Place ID assegnato verrà utilizzato il fallback globale dalle impostazioni.', 'fp-digital-marketing' ); ?></p>
-                                        <?php endif; ?>
-                                </div>
-                        </form>
+								<div>
+										<button type="submit" class="button button-primary" style="padding: 10px 20px;" <?php disabled( ! $has_reviews_api_key ); ?>>
+												<?php esc_html_e( 'Sincronizza Recensioni', 'fp-digital-marketing' ); ?>
+										</button>
+										<?php if ( ! empty( $default_place_id ) ) : ?>
+												<p class="description" style="margin-top: 8px;">&raquo; <?php esc_html_e( 'Se un cliente non ha un Place ID assegnato verrà utilizzato il fallback globale dalle impostazioni.', 'fp-digital-marketing' ); ?></p>
+										<?php endif; ?>
+								</div>
+						</form>
 
-                        <p class="description" style="margin-top: 15px;">
-                                <?php esc_html_e( 'Suggerimento: assegna il Google Place ID specifico a ciascun cliente dalla scheda "Informazioni Cliente" per ottenere risultati accurati.', 'fp-digital-marketing' ); ?>
-                        </p>
-                </div>
+						<p class="description" style="margin-top: 15px;">
+								<?php esc_html_e( 'Suggerimento: assegna il Google Place ID specifico a ciascun cliente dalla scheda "Informazioni Cliente" per ottenere risultati accurati.', 'fp-digital-marketing' ); ?>
+						</p>
+				</div>
 
-                <!-- Generate Sample Data Section -->
+				<!-- Generate Sample Data Section -->
 		<div class="fp-dms-reports-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
 			<h2><?php esc_html_e( 'Genera Dati Demo per l\'Analisi Sentiment', 'fp-digital-marketing' ); ?></h2>
 			<p><?php esc_html_e( 'Genera dati di esempio per testare il sistema di analisi del sentiment sociale.', 'fp-digital-marketing' ); ?></p>
@@ -1316,9 +1436,9 @@ class Reports {
 											$sentiment_colors = [
 												'positive' => '#00a32a',
 												'negative' => '#d63638',
-												'neutral' => '#dba617',
+												'neutral'  => '#dba617',
 											];
-											$color = $sentiment_colors[ $item['sentiment_label'] ] ?? '#666';
+											$color            = $sentiment_colors[ $item['sentiment_label'] ] ?? '#666';
 											?>
 											<div style="color: <?php echo esc_attr( $color ); ?>; font-weight: bold;">
 												<?php echo esc_html( ucfirst( $item['sentiment_label'] ) ); ?>
@@ -1461,15 +1581,15 @@ class Reports {
 	 */
 	private function render_debug_tab( array $clientes ): void {
 		// Get data sources for debug output.
-		$all_data_sources = fp_dms_get_data_sources();
+		$all_data_sources  = fp_dms_get_data_sources();
 		$analytics_sources = fp_dms_get_data_sources( DataSources::TYPE_ANALYTICS );
 		$available_sources = DataSources::get_data_sources_by_status( 'available' );
-		$planned_sources = DataSources::get_data_sources_by_status( 'planned' );
+		$planned_sources   = DataSources::get_data_sources_by_status( 'planned' );
 		$data_source_types = DataSources::get_data_source_types();
 
 		// Generate demo report for preview
 		$demo_report_data = ReportGenerator::generate_demo_report_data( 1 );
-		$demo_html = ReportGenerator::generate_html_report( $demo_report_data );
+		$demo_html        = ReportGenerator::generate_html_report( $demo_report_data );
 
 		?>
 		<!-- Sync Engine Status Section -->
@@ -1496,10 +1616,25 @@ class Reports {
 				<?php echo $demo_html; ?>
 			</div>
 			
-                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( [ 'action' => 'download_pdf', 'client_id' => 1 ], admin_url( 'admin.php?page=' . self::PAGE_SLUG ) ), 'download_pdf_1' ) ); ?>"
-                           class="button button-primary" target="_blank">
-                                <?php esc_html_e( 'Scarica Report Demo PDF', 'fp-digital-marketing' ); ?>
-                        </a>
+						<a href="
+						<?php
+						echo esc_url(
+							wp_nonce_url(
+								add_query_arg(
+									[
+										'action'    => 'download_pdf',
+										'client_id' => 1,
+									],
+									admin_url( 'admin.php?page=' . self::PAGE_SLUG )
+								),
+								'download_pdf_1'
+							)
+						);
+						?>
+									"
+							class="button button-primary" target="_blank">
+								<?php esc_html_e( 'Scarica Report Demo PDF', 'fp-digital-marketing' ); ?>
+						</a>
 		</div>
 
 		<!-- Debug Section - Data Sources -->
@@ -1621,10 +1756,10 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 		<?php
 	}
 	private function render_ga4_metrics_section(): void {
-		$oauth = new GoogleOAuth();
+		$oauth             = new GoogleOAuth();
 		$connection_status = $oauth->get_connection_status();
-		$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
-		$property_id = $api_keys['ga4_property_id'] ?? '';
+		$api_keys          = get_option( 'fp_digital_marketing_api_keys', [] );
+		$property_id       = $api_keys['ga4_property_id'] ?? '';
 
 		?>
 		<div class="fp-dms-ga4-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -1637,19 +1772,19 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 					<?php echo esc_html( $connection_status['status'] ); ?>
 				</p>
 				
-				<?php if ( ! empty( $property_id ) ): ?>
+				<?php if ( ! empty( $property_id ) ) : ?>
 					<p><strong><?php esc_html_e( 'Property ID:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $property_id ); ?></p>
 				<?php endif; ?>
 			</div>
 
-			<?php if ( $connection_status['connected'] && ! empty( $property_id ) ): ?>
+			<?php if ( $connection_status['connected'] && ! empty( $property_id ) ) : ?>
 				<?php $this->render_ga4_demo_metrics( $property_id ); ?>
 				<?php $this->render_cached_ga4_metrics(); ?>
-			<?php else: ?>
+			<?php else : ?>
 				<div class="notice notice-warning inline">
 					<p>
 						<?php esc_html_e( 'Per visualizzare le metriche GA4, configura prima la connessione nelle', 'fp-digital-marketing' ); ?>
-                                                <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>">
+												<a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>">
 							<?php esc_html_e( 'Impostazioni', 'fp-digital-marketing' ); ?>
 						</a>.
 					</p>
@@ -1665,10 +1800,10 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 	 * @return void
 	 */
 	private function render_gsc_metrics_section(): void {
-		$oauth = new GoogleOAuth();
+		$oauth             = new GoogleOAuth();
 		$connection_status = $oauth->get_connection_status();
-		$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
-		$site_url = $api_keys['gsc_site_url'] ?? '';
+		$api_keys          = get_option( 'fp_digital_marketing_api_keys', [] );
+		$site_url          = $api_keys['gsc_site_url'] ?? '';
 
 		?>
 		<div class="fp-dms-gsc-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -1678,7 +1813,7 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 				<h3 style="margin-top: 0;"><?php esc_html_e( 'Stato Connessione', 'fp-digital-marketing' ); ?></h3>
 				<p class="gsc-status" style="<?php echo ( $connection_status['connected'] && ! empty( $site_url ) ) ? 'color: #00a32a;' : 'color: #d63638;'; ?>">
 					<span class="status-indicator">●</span>
-					<?php 
+					<?php
 					if ( $connection_status['connected'] && ! empty( $site_url ) ) {
 						esc_html_e( 'Connesso', 'fp-digital-marketing' );
 					} else {
@@ -1687,19 +1822,19 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 					?>
 				</p>
 				
-				<?php if ( ! empty( $site_url ) ): ?>
+				<?php if ( ! empty( $site_url ) ) : ?>
 					<p><strong><?php esc_html_e( 'Site URL:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $site_url ); ?></p>
 				<?php endif; ?>
 			</div>
 
-			<?php if ( $connection_status['connected'] && ! empty( $site_url ) ): ?>
+			<?php if ( $connection_status['connected'] && ! empty( $site_url ) ) : ?>
 				<?php $this->render_gsc_demo_metrics( $site_url ); ?>
 				<?php $this->render_cached_gsc_metrics(); ?>
-			<?php else: ?>
+			<?php else : ?>
 				<div class="notice notice-warning inline">
 					<p>
 						<?php esc_html_e( 'Per visualizzare le metriche Search Console, configura prima la connessione nelle', 'fp-digital-marketing' ); ?>
-                                                <a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>">
+												<a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>">
 							<?php esc_html_e( 'Impostazioni', 'fp-digital-marketing' ); ?>
 						</a>.
 					</p>
@@ -1717,16 +1852,16 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 	 */
 	private function render_ga4_demo_metrics( string $property_id ): void {
 		// Create GA4 instance and fetch demo data
-		$ga4 = new GoogleAnalytics4( $property_id );
-		$end_date = date( 'Y-m-d' );
+		$ga4        = new GoogleAnalytics4( $property_id );
+		$end_date   = date( 'Y-m-d' );
 		$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
-		
+
 		// For demo purposes, we'll show mock data even if not fully connected
 		$demo_metrics = [
-			'sessions' => rand( 1500, 3500 ),
-			'users' => rand( 1200, 2800 ),
+			'sessions'    => rand( 1500, 3500 ),
+			'users'       => rand( 1200, 2800 ),
 			'conversions' => rand( 25, 85 ),
-			'revenue' => rand( 2500, 8500 ),
+			'revenue'     => rand( 2500, 8500 ),
 		];
 
 		?>
@@ -1775,11 +1910,13 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 	 */
 	private function render_cached_ga4_metrics(): void {
 		// Get recent cached metrics
-		$recent_metrics = MetricsCache::get_metrics([
-			'source' => GoogleAnalytics4::SOURCE_ID,
-			'limit' => 10,
-			'order_by' => 'fetched_at'
-		]);
+		$recent_metrics = MetricsCache::get_metrics(
+			[
+				'source'   => GoogleAnalytics4::SOURCE_ID,
+				'limit'    => 10,
+				'order_by' => 'fetched_at',
+			]
+		);
 
 		if ( empty( $recent_metrics ) ) {
 			return;
@@ -1801,12 +1938,12 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 						</tr>
 					</thead>
 					<tbody>
-						<?php foreach ( $recent_metrics as $metric ): ?>
+						<?php foreach ( $recent_metrics as $metric ) : ?>
 							<tr>
 								<td><strong><?php echo esc_html( $metric->metric ); ?></strong></td>
 								<td><?php echo esc_html( number_format( (float) $metric->value ) ); ?></td>
 								<td>
-									<?php 
+									<?php
 									echo esc_html( date( 'd/m/Y', strtotime( $metric->period_start ) ) );
 									echo ' - ';
 									echo esc_html( date( 'd/m/Y', strtotime( $metric->period_end ) ) );
@@ -1821,8 +1958,8 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 
 			<p style="margin-top: 15px;">
 				<strong><?php esc_html_e( 'Totale record cache:', 'fp-digital-marketing' ); ?></strong>
-				<?php 
-				$total_cached = MetricsCache::count(['source' => GoogleAnalytics4::SOURCE_ID]);
+				<?php
+				$total_cached = MetricsCache::count( [ 'source' => GoogleAnalytics4::SOURCE_ID ] );
 				echo esc_html( number_format( $total_cached ) );
 				?>
 			</p>
@@ -1838,8 +1975,8 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 	 */
 	private function render_gsc_demo_metrics( string $site_url ): void {
 		// Create GSC instance and fetch demo data
-		$gsc = new GoogleSearchConsole( $site_url );
-		$end_date = date( 'Y-m-d' );
+		$gsc        = new GoogleSearchConsole( $site_url );
+		$end_date   = date( 'Y-m-d' );
 		$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
 
 		// Fetch demo metrics (mock data)
@@ -1887,12 +2024,14 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 	 * @return void
 	 */
 	private function render_cached_gsc_metrics(): void {
-		$cached_metrics = MetricsCache::get_metrics([
-			'source' => GoogleSearchConsole::SOURCE_ID,
-			'limit' => 10,
-			'order_by' => 'period_start',
-			'order' => 'DESC'
-		]);
+		$cached_metrics = MetricsCache::get_metrics(
+			[
+				'source'   => GoogleSearchConsole::SOURCE_ID,
+				'limit'    => 10,
+				'order_by' => 'period_start',
+				'order'    => 'DESC',
+			]
+		);
 
 		?>
 		<div class="gsc-cached-metrics" style="margin: 20px 0;">
@@ -1908,19 +2047,19 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 						</tr>
 					</thead>
 					<tbody>
-						<?php if ( ! empty( $cached_metrics ) ): ?>
-							<?php foreach ( $cached_metrics as $metric ): ?>
+						<?php if ( ! empty( $cached_metrics ) ) : ?>
+							<?php foreach ( $cached_metrics as $metric ) : ?>
 								<tr>
 									<td><?php echo esc_html( date( 'd/m/Y H:i', strtotime( $metric['created_at'] ) ) ); ?></td>
 									<td>
 										<strong><?php echo esc_html( ucfirst( $metric['metric_name'] ) ); ?></strong>
-										<?php if ( ! empty( $metric['metadata']['site_url'] ) ): ?>
+										<?php if ( ! empty( $metric['metadata']['site_url'] ) ) : ?>
 											<br><small style="color: #666;"><?php echo esc_html( $metric['metadata']['site_url'] ); ?></small>
 										<?php endif; ?>
 									</td>
 									<td>
 										<span style="font-weight: bold; color: #2c3e50;">
-											<?php 
+											<?php
 											if ( $metric['metric_name'] === 'ctr' ) {
 												echo esc_html( $metric['value'] ) . '%';
 											} elseif ( $metric['metric_name'] === 'position' ) {
@@ -1939,7 +2078,7 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 									</td>
 								</tr>
 							<?php endforeach; ?>
-						<?php else: ?>
+						<?php else : ?>
 							<tr>
 								<td colspan="4" style="text-align: center; padding: 20px; color: #666;">
 									<?php esc_html_e( 'Nessuna metrica Search Console in cache. Le metriche appariranno qui dopo la prima sincronizzazione.', 'fp-digital-marketing' ); ?>
@@ -1952,8 +2091,8 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 
 			<p style="margin-top: 15px;">
 				<strong><?php esc_html_e( 'Totale record cache:', 'fp-digital-marketing' ); ?></strong>
-				<?php 
-				$total_cached = MetricsCache::count(['source' => GoogleSearchConsole::SOURCE_ID]);
+				<?php
+				$total_cached = MetricsCache::count( [ 'source' => GoogleSearchConsole::SOURCE_ID ] );
 				echo esc_html( number_format( $total_cached ) );
 				?>
 			</p>
@@ -2007,9 +2146,9 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 
 				<?php
 				// Generate mock aggregated data for demo
-				$demo_client_id = 999;
-				$period_start = '2024-01-01 00:00:00';
-				$period_end = '2024-01-31 23:59:59';
+				$demo_client_id  = 999;
+				$period_start    = '2024-01-01 00:00:00';
+				$period_end      = '2024-01-31 23:59:59';
 				$mock_aggregated = MetricsAggregator::generate_mock_data( $demo_client_id, $period_start, $period_end );
 				?>
 
@@ -2023,7 +2162,7 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 							<div style="font-size: 24px; font-weight: bold; color: #333; margin: 10px 0;">
 								<?php
 								$format = $kpi_def['format'] ?? 'number';
-								$value = $data['total_value'];
+								$value  = $data['total_value'];
 								switch ( $format ) {
 									case 'percentage':
 										echo esc_html( number_format( $value * 100, 2 ) . '%' );
@@ -2087,8 +2226,10 @@ $is_available = \FP\DigitalMarketing\Helpers\DataSources::is_data_source_availab
 				<h3><?php esc_html_e( 'Esempi di Utilizzo API Interna', 'fp-digital-marketing' ); ?></h3>
 				<p><?php esc_html_e( 'Come utilizzare il sistema di aggregazione nel codice:', 'fp-digital-marketing' ); ?></p>
 
-				<pre style="background: #f9f9f9; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px;"><?php
-echo esc_html( '
+				<pre style="background: #f9f9f9; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 12px;">
+				<?php
+				echo esc_html(
+					'
 // Ottenere metriche aggregate per un cliente
 $aggregated = MetricsAggregator::get_aggregated_metrics(
     $client_id, 
@@ -2117,7 +2258,10 @@ $quality_report = MetricsAggregator::get_data_quality_report(
     \'2024-01-01 00:00:00\', 
     \'2024-01-31 23:59:59\'
 );
-' ); ?></pre>
+'
+				);
+				?>
+				</pre>
 			</div>
 
 			<!-- Fallback System Demo -->
@@ -2151,9 +2295,9 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 	 * @return void
 	 */
 	private function render_sync_status_section(): void {
-		$sync_stats = SyncLog::get_sync_stats( 7 );
+		$sync_stats  = SyncLog::get_sync_stats( 7 );
 		$recent_logs = SyncLog::get_all_logs( 10 );
-		$error_logs = SyncLog::get_error_logs( 5 );
+		$error_logs  = SyncLog::get_error_logs( 5 );
 		?>
 		<div class="fp-dms-sync-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
 			<h2><?php esc_html_e( 'Stato Sync Engine', 'fp-digital-marketing' ); ?></h2>
@@ -2219,11 +2363,11 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 											<?php
 											$status_colors = [
 												'success' => '#00a32a',
-												'error' => '#d63638',
+												'error'   => '#d63638',
 												'warning' => '#dba617',
 												'running' => '#0073aa',
 											];
-											$color = $status_colors[ $log['status'] ] ?? '#666';
+											$color         = $status_colors[ $log['status'] ] ?? '#666';
 											?>
 											<span style="color: <?php echo esc_attr( $color ); ?>;">
 												<?php echo esc_html( ucfirst( $log['status'] ) ); ?>
@@ -2279,18 +2423,20 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 	 */
 	private function render_clarity_metrics_section(): void {
 		// Get all clients with Clarity Project IDs configured
-		$clients_with_clarity = get_posts([
-			'post_type' => 'cliente',
-			'meta_query' => [
-				[
-					'key' => \FP\DigitalMarketing\Admin\ClienteMeta::META_CLARITY_PROJECT_ID,
-					'value' => '',
-					'compare' => '!='
-				]
-			],
-			'post_status' => 'publish',
-			'numberposts' => -1
-		]);
+		$clients_with_clarity = get_posts(
+			[
+				'post_type'   => 'cliente',
+				'meta_query'  => [
+					[
+						'key'     => \FP\DigitalMarketing\Admin\ClienteMeta::META_CLARITY_PROJECT_ID,
+						'value'   => '',
+						'compare' => '!=',
+					],
+				],
+				'post_status' => 'publish',
+				'numberposts' => -1,
+			]
+		);
 
 		?>
 		<div class="fp-dms-clarity-section" style="background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -2300,7 +2446,7 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 				<h3 style="margin-top: 0;"><?php esc_html_e( 'Stato Configurazione', 'fp-digital-marketing' ); ?></h3>
 				<p class="clarity-status" style="<?php echo count( $clients_with_clarity ) > 0 ? 'color: #00a32a;' : 'color: #d63638;'; ?>">
 					<span class="status-indicator">●</span>
-					<?php 
+					<?php
 					if ( count( $clients_with_clarity ) > 0 ) {
 						/* translators: %d: number of clients with Clarity configured */
 						echo esc_html( sprintf( _n( '%d cliente configurato', '%d clienti configurati', count( $clients_with_clarity ), 'fp-digital-marketing' ), count( $clients_with_clarity ) ) );
@@ -2318,10 +2464,10 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 				</div>
 			</div>
 
-			<?php if ( count( $clients_with_clarity ) > 0 ): ?>
+			<?php if ( count( $clients_with_clarity ) > 0 ) : ?>
 				<?php $this->render_per_client_clarity_metrics( $clients_with_clarity ); ?>
 				<?php $this->render_cached_clarity_metrics(); ?>
-			<?php else: ?>
+			<?php else : ?>
 				<div class="notice notice-warning inline">
 					<p>
 						<?php esc_html_e( 'Per visualizzare le metriche Microsoft Clarity, configura il Project ID per i tuoi clienti.', 'fp-digital-marketing' ); ?>
@@ -2344,14 +2490,14 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 	 */
 	private function render_clarity_demo_metrics( string $project_id ): void {
 		$clarity = new MicrosoftClarity( $project_id );
-		
+
 		// Demo Client ID for demo purposes
 		$demo_client_id = 1;
-		$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
-		$end_date = date( 'Y-m-d' );
-		
+		$start_date     = date( 'Y-m-d', strtotime( '-30 days' ) );
+		$end_date       = date( 'Y-m-d' );
+
 		$metrics = $clarity->fetch_metrics( $demo_client_id, $start_date, $end_date );
-		
+
 		if ( $metrics ) {
 			?>
 			<div class="clarity-demo-metrics">
@@ -2419,16 +2565,16 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 		<div class="clarity-per-client-metrics">
 			<h3><?php esc_html_e( 'Metriche Demo per Cliente (ultimi 30 giorni)', 'fp-digital-marketing' ); ?></h3>
 			
-			<?php foreach ( $clients_with_clarity as $client ): ?>
-				<?php 
+			<?php foreach ( $clients_with_clarity as $client ) : ?>
+				<?php
 				$clarity = MicrosoftClarity::for_client( $client->ID );
 				if ( ! $clarity ) {
 					continue;
 				}
-				
+
 				$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
-				$end_date = date( 'Y-m-d' );
-				$metrics = $clarity->fetch_metrics( $client->ID, $start_date, $end_date );
+				$end_date   = date( 'Y-m-d' );
+				$metrics    = $clarity->fetch_metrics( $client->ID, $start_date, $end_date );
 				$project_id = MicrosoftClarity::get_client_project_id( $client->ID );
 				?>
 				
@@ -2443,7 +2589,7 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 					</div>
 					
 					<div style="padding: 15px;">
-						<?php if ( $metrics ): ?>
+						<?php if ( $metrics ) : ?>
 							<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin: 15px 0;">
 								<div class="metric-card" style="background: #f0f6ff; border: 1px solid #b3d7ff; border-radius: 4px; padding: 12px; text-align: center;">
 									<div style="font-size: 20px; font-weight: bold; color: #0073aa;"><?php echo esc_html( number_format( $metrics['sessions'] ) ); ?></div>
@@ -2470,7 +2616,7 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 									<div style="font-size: 12px; color: #666;"><?php esc_html_e( 'Scroll Depth', 'fp-digital-marketing' ); ?></div>
 								</div>
 							</div>
-						<?php else: ?>
+						<?php else : ?>
 							<div class="notice notice-error inline" style="margin: 0;">
 								<p><?php esc_html_e( 'Errore nel recupero delle metriche demo per questo cliente.', 'fp-digital-marketing' ); ?></p>
 							</div>
@@ -2495,9 +2641,9 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 	 * @return void
 	 */
 	private function render_cached_clarity_metrics(): void {
-		$cache = new MetricsCache();
+		$cache   = new MetricsCache();
 		$metrics = $cache->get_metrics_by_source( MicrosoftClarity::SOURCE_ID );
-		
+
 		if ( empty( $metrics ) ) {
 			?>
 			<div class="clarity-cached-metrics" style="margin-top: 30px;">
@@ -2534,7 +2680,7 @@ $quality_report = MetricsAggregator::get_data_quality_report(
 								<td><?php echo esc_html( number_format( $metric['value'], 2 ) ); ?></td>
 								<td><?php echo esc_html( date( 'd/m/Y', strtotime( $metric['date'] ) ) ); ?></td>
 								<td style="font-size: 11px;">
-									<?php 
+									<?php
 									$metadata = is_string( $metric['metadata'] ) ? json_decode( $metric['metadata'], true ) : $metric['metadata'];
 									if ( is_array( $metadata ) ) {
 										foreach ( $metadata as $key => $value ) {

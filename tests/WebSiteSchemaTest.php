@@ -21,7 +21,7 @@ class WebSiteSchemaTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		
+
 		// Include the class files
 		require_once __DIR__ . '/bootstrap.php';
 		require_once __DIR__ . '/../src/Helpers/Schema/BaseSchema.php';
@@ -39,9 +39,9 @@ class WebSiteSchemaTest extends TestCase {
 	 */
 	public function test_website_schema_generation_home_page(): void {
 		global $wp_mock_functions;
-		
+
 		// Mock WordPress functions
-		$wp_mock_functions['get_bloginfo'] = function( $show = '' ) {
+		$wp_mock_functions['get_bloginfo']  = function ( $show = '' ) {
 			switch ( $show ) {
 				case 'name':
 					return 'Test Website';
@@ -51,13 +51,13 @@ class WebSiteSchemaTest extends TestCase {
 					return '';
 			}
 		};
-		$wp_mock_functions['home_url'] = function() {
+		$wp_mock_functions['home_url']      = function () {
 			return 'https://testsite.com';
 		};
-		$wp_mock_functions['is_home'] = function() {
+		$wp_mock_functions['is_home']       = function () {
 			return true;
 		};
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return true;
 		};
 
@@ -69,7 +69,7 @@ class WebSiteSchemaTest extends TestCase {
 		$this->assertEquals( 'Test Website', $schema['name'] );
 		$this->assertEquals( 'https://testsite.com', $schema['url'] );
 		$this->assertEquals( 'A test website description', $schema['description'] );
-		
+
 		// Should include search action on home page
 		$this->assertArrayHasKey( 'potentialAction', $schema );
 		$this->assertEquals( 'SearchAction', $schema['potentialAction']['@type'] );
@@ -84,9 +84,9 @@ class WebSiteSchemaTest extends TestCase {
 	 */
 	public function test_website_schema_generation_non_home_page(): void {
 		global $wp_mock_functions;
-		
+
 		// Mock WordPress functions
-		$wp_mock_functions['get_bloginfo'] = function( $show = '' ) {
+		$wp_mock_functions['get_bloginfo']  = function ( $show = '' ) {
 			switch ( $show ) {
 				case 'name':
 					return 'Test Website';
@@ -96,13 +96,13 @@ class WebSiteSchemaTest extends TestCase {
 					return '';
 			}
 		};
-		$wp_mock_functions['home_url'] = function() {
+		$wp_mock_functions['home_url']      = function () {
 			return 'https://testsite.com';
 		};
-		$wp_mock_functions['is_home'] = function() {
+		$wp_mock_functions['is_home']       = function () {
 			return false;
 		};
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return false;
 		};
 
@@ -110,7 +110,7 @@ class WebSiteSchemaTest extends TestCase {
 
 		$this->assertIsArray( $schema );
 		$this->assertEquals( 'WebSite', $schema['@type'] );
-		
+
 		// Should NOT include search action on non-home pages
 		$this->assertArrayNotHasKey( 'potentialAction', $schema );
 	}
@@ -122,9 +122,9 @@ class WebSiteSchemaTest extends TestCase {
 	 */
 	public function test_website_schema_without_description(): void {
 		global $wp_mock_functions;
-		
+
 		// Mock WordPress functions
-		$wp_mock_functions['get_bloginfo'] = function( $show = '' ) {
+		$wp_mock_functions['get_bloginfo']  = function ( $show = '' ) {
 			switch ( $show ) {
 				case 'name':
 					return 'Test Website';
@@ -134,13 +134,13 @@ class WebSiteSchemaTest extends TestCase {
 					return '';
 			}
 		};
-		$wp_mock_functions['home_url'] = function() {
+		$wp_mock_functions['home_url']      = function () {
 			return 'https://testsite.com';
 		};
-		$wp_mock_functions['is_home'] = function() {
+		$wp_mock_functions['is_home']       = function () {
 			return false;
 		};
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return false;
 		};
 
@@ -148,7 +148,7 @@ class WebSiteSchemaTest extends TestCase {
 
 		$this->assertIsArray( $schema );
 		$this->assertEquals( 'WebSite', $schema['@type'] );
-		
+
 		// Should not include empty description
 		$this->assertArrayNotHasKey( 'description', $schema );
 	}
@@ -170,18 +170,18 @@ class WebSiteSchemaTest extends TestCase {
 	 */
 	public function test_search_action_url_template(): void {
 		global $wp_mock_functions;
-		
+
 		// Mock WordPress functions for search functionality
-		$wp_mock_functions['get_bloginfo'] = function( $show = '' ) {
+		$wp_mock_functions['get_bloginfo']  = function ( $show = '' ) {
 			return $show === 'name' ? 'Test Website' : '';
 		};
-		$wp_mock_functions['home_url'] = function( $path = '' ) {
+		$wp_mock_functions['home_url']      = function ( $path = '' ) {
 			return 'https://testsite.com' . $path;
 		};
-		$wp_mock_functions['is_home'] = function() {
+		$wp_mock_functions['is_home']       = function () {
 			return true;
 		};
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return true;
 		};
 
@@ -189,7 +189,7 @@ class WebSiteSchemaTest extends TestCase {
 
 		$this->assertArrayHasKey( 'potentialAction', $schema );
 		$search_action = $schema['potentialAction'];
-		
+
 		$this->assertEquals( 'SearchAction', $search_action['@type'] );
 		$this->assertArrayHasKey( 'target', $search_action );
 		$this->assertArrayHasKey( 'urlTemplate', $search_action['target'] );
@@ -204,9 +204,9 @@ class WebSiteSchemaTest extends TestCase {
 	 */
 	public function test_website_schema_with_special_characters(): void {
 		global $wp_mock_functions;
-		
+
 		// Mock WordPress functions with special characters
-		$wp_mock_functions['get_bloginfo'] = function( $show = '' ) {
+		$wp_mock_functions['get_bloginfo']  = function ( $show = '' ) {
 			switch ( $show ) {
 				case 'name':
 					return 'Test & Company "Website" \'Site\'';
@@ -216,13 +216,13 @@ class WebSiteSchemaTest extends TestCase {
 					return '';
 			}
 		};
-		$wp_mock_functions['home_url'] = function() {
+		$wp_mock_functions['home_url']      = function () {
 			return 'https://testsite.com';
 		};
-		$wp_mock_functions['is_home'] = function() {
+		$wp_mock_functions['is_home']       = function () {
 			return false;
 		};
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return false;
 		};
 
@@ -231,11 +231,11 @@ class WebSiteSchemaTest extends TestCase {
 		$this->assertIsArray( $schema );
 		$this->assertEquals( 'Test & Company "Website" \'Site\'', $schema['name'] );
 		$this->assertEquals( 'Description with <tags> & special chars', $schema['description'] );
-		
+
 		// Verify the schema is valid JSON when encoded
 		$json = json_encode( $schema );
 		$this->assertNotFalse( $json );
-		
+
 		$decoded = json_decode( $json, true );
 		$this->assertEquals( $schema, $decoded );
 	}

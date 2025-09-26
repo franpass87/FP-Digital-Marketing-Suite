@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Database\DatabaseUtils;
 
 /**
  * Anomaly Rules Table class for database table management
- * 
+ *
  * This class handles the creation and management of the wp_fp_anomaly_rules table
  * used to store anomaly detection rule definitions for statistical monitoring.
  */
@@ -29,10 +29,10 @@ class AnomalyRulesTable {
 	 *
 	 * @return string Full table name
 	 */
-        public static function get_table_name(): string {
-                global $wpdb;
-                return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
-        }
+	public static function get_table_name(): string {
+			global $wpdb;
+			return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
+	}
 
 	/**
 	 * Create the anomaly rules table
@@ -42,8 +42,8 @@ class AnomalyRulesTable {
 	public static function create_table(): bool {
 		global $wpdb;
 
-		$table_name = self::get_table_name();
-                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
+		$table_name              = self::get_table_name();
+				$charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -73,12 +73,12 @@ class AnomalyRulesTable {
 			KEY last_triggered (last_triggered)
 		) $charset_collate;";
 
-                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
-                        return false;
-                }
+		if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
+				return false;
+		}
 
-                // Check if table was created successfully
-                return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
+				// Check if table was created successfully
+				return $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name;
 	}
 
 	/**
@@ -89,10 +89,10 @@ class AnomalyRulesTable {
 	public static function drop_table(): bool {
 		global $wpdb;
 
-                $table_name = self::get_table_name();
-                $result = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+				$table_name = self::get_table_name();
+				$result     = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
 
-                return $result !== false;
+				return $result !== false;
 	}
 
 	/**
@@ -104,8 +104,8 @@ class AnomalyRulesTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		$result = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
-		
+		$result     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+
 		return $result === $table_name;
 	}
 }

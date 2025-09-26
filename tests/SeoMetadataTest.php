@@ -21,7 +21,7 @@ class SeoMetadataTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		
+
 		// Include the class files.
 		require_once __DIR__ . '/bootstrap.php';
 		require_once __DIR__ . '/../src/Helpers/SeoMetadata.php';
@@ -35,31 +35,31 @@ class SeoMetadataTest extends TestCase {
 	public function test_get_title(): void {
 		// Create a mock post.
 		$post = (object) [
-			'ID' => 123,
-			'post_title' => 'Test Post Title',
+			'ID'           => 123,
+			'post_title'   => 'Test Post Title',
 			'post_content' => 'This is the content of the test post.',
 		];
 
 		// Mock WordPress functions.
 		global $wp_mock_functions;
 		$wp_mock_functions = [];
-		
-		$wp_mock_functions['get_post'] = function( $post_id ) use ( $post ) {
+
+		$wp_mock_functions['get_post'] = function ( $post_id ) use ( $post ) {
 			return $post_id === 123 ? $post : null;
 		};
 
-		$wp_mock_functions['get_post_meta'] = function( $post_id, $key, $single = false ) {
+		$wp_mock_functions['get_post_meta'] = function ( $post_id, $key, $single = false ) {
 			if ( $post_id === 123 && $key === '_seo_title' ) {
 				return '';
 			}
 			return '';
 		};
 
-		$wp_mock_functions['get_the_title'] = function( $post ) {
+		$wp_mock_functions['get_the_title'] = function ( $post ) {
 			return $post->post_title ?? '';
 		};
 
-		$wp_mock_functions['get_bloginfo'] = function( $show ) {
+		$wp_mock_functions['get_bloginfo'] = function ( $show ) {
 			if ( $show === 'name' ) {
 				return 'Test Site';
 			}
@@ -69,7 +69,7 @@ class SeoMetadataTest extends TestCase {
 			return '';
 		};
 
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return false;
 		};
 
@@ -86,26 +86,26 @@ class SeoMetadataTest extends TestCase {
 	 */
 	public function test_get_description_with_excerpt(): void {
 		$post = (object) [
-			'ID' => 123,
-			'post_title' => 'Test Post',
+			'ID'           => 123,
+			'post_title'   => 'Test Post',
 			'post_content' => 'This is a long content that should be used as fallback for the description when no excerpt is available.',
 			'post_excerpt' => 'This is the excerpt',
 		];
 
 		global $wp_mock_functions;
-		$wp_mock_functions['get_post'] = function( $post_id ) use ( $post ) {
+		$wp_mock_functions['get_post'] = function ( $post_id ) use ( $post ) {
 			return $post_id === 123 ? $post : null;
 		};
 
-		$wp_mock_functions['get_post_meta'] = function( $post_id, $key, $single = false ) {
+		$wp_mock_functions['get_post_meta'] = function ( $post_id, $key, $single = false ) {
 			return '';
 		};
 
-		$wp_mock_functions['get_the_excerpt'] = function( $post ) {
+		$wp_mock_functions['get_the_excerpt'] = function ( $post ) {
 			return $post->post_excerpt ?? '';
 		};
 
-		$wp_mock_functions['wp_strip_all_tags'] = function( $text ) {
+		$wp_mock_functions['wp_strip_all_tags'] = function ( $text ) {
 			return strip_tags( $text );
 		};
 
@@ -120,26 +120,26 @@ class SeoMetadataTest extends TestCase {
 	 */
 	public function test_get_description_from_content(): void {
 		$post = (object) [
-			'ID' => 123,
-			'post_title' => 'Test Post',
+			'ID'           => 123,
+			'post_title'   => 'Test Post',
 			'post_content' => 'This is a long content that should be used as fallback for the description when no excerpt is available.',
 			'post_excerpt' => '',
 		];
 
 		global $wp_mock_functions;
-		$wp_mock_functions['get_post'] = function( $post_id ) use ( $post ) {
+		$wp_mock_functions['get_post'] = function ( $post_id ) use ( $post ) {
 			return $post_id === 123 ? $post : null;
 		};
 
-		$wp_mock_functions['get_post_meta'] = function( $post_id, $key, $single = false ) {
+		$wp_mock_functions['get_post_meta'] = function ( $post_id, $key, $single = false ) {
 			return '';
 		};
 
-		$wp_mock_functions['get_the_excerpt'] = function( $post ) {
+		$wp_mock_functions['get_the_excerpt'] = function ( $post ) {
 			return '';
 		};
 
-		$wp_mock_functions['wp_strip_all_tags'] = function( $text ) {
+		$wp_mock_functions['wp_strip_all_tags'] = function ( $text ) {
 			return strip_tags( $text );
 		};
 
@@ -171,28 +171,28 @@ class SeoMetadataTest extends TestCase {
 	 */
 	public function test_get_robots(): void {
 		$post = (object) [
-			'ID' => 123,
+			'ID'        => 123,
 			'post_type' => 'post',
 		];
 
 		global $wp_mock_functions;
-		$wp_mock_functions['get_post'] = function( $post_id ) use ( $post ) {
+		$wp_mock_functions['get_post'] = function ( $post_id ) use ( $post ) {
 			return $post_id === 123 ? $post : null;
 		};
 
-		$wp_mock_functions['get_post_meta'] = function( $post_id, $key, $single = false ) {
+		$wp_mock_functions['get_post_meta'] = function ( $post_id, $key, $single = false ) {
 			return '';
 		};
 
-		$wp_mock_functions['get_post_type'] = function( $post ) {
+		$wp_mock_functions['get_post_type'] = function ( $post ) {
 			return $post->post_type ?? 'post';
 		};
 
-		$wp_mock_functions['get_option'] = function( $option_name, $default = false ) {
+		$wp_mock_functions['get_option'] = function ( $option_name, $default = false ) {
 			return $default;
 		};
 
-		$wp_mock_functions['sanitize_text_field'] = function( $text ) {
+		$wp_mock_functions['sanitize_text_field'] = function ( $text ) {
 			return trim( strip_tags( $text ) );
 		};
 
@@ -211,23 +211,23 @@ class SeoMetadataTest extends TestCase {
 		];
 
 		global $wp_mock_functions;
-		$wp_mock_functions['get_post'] = function( $post_id ) use ( $post ) {
+		$wp_mock_functions['get_post'] = function ( $post_id ) use ( $post ) {
 			return $post_id === 123 ? $post : null;
 		};
 
-		$wp_mock_functions['get_post_meta'] = function( $post_id, $key, $single = false ) {
+		$wp_mock_functions['get_post_meta'] = function ( $post_id, $key, $single = false ) {
 			return '';
 		};
 
-		$wp_mock_functions['get_permalink'] = function( $post ) {
+		$wp_mock_functions['get_permalink'] = function ( $post ) {
 			return 'https://example.com/test-post/?param=value';
 		};
 
-		$wp_mock_functions['esc_url'] = function( $url ) {
+		$wp_mock_functions['esc_url'] = function ( $url ) {
 			return $url;
 		};
 
-		$wp_mock_functions['wp_parse_url'] = function( $url, $component = -1 ) {
+		$wp_mock_functions['wp_parse_url'] = function ( $url, $component = -1 ) {
 			return parse_url( $url, $component );
 		};
 
@@ -242,32 +242,32 @@ class SeoMetadataTest extends TestCase {
 	 */
 	public function test_get_og_title(): void {
 		$post = (object) [
-			'ID' => 123,
+			'ID'         => 123,
 			'post_title' => 'Test Post Title',
 		];
 
 		global $wp_mock_functions;
-		$wp_mock_functions['get_post'] = function( $post_id ) use ( $post ) {
+		$wp_mock_functions['get_post'] = function ( $post_id ) use ( $post ) {
 			return $post_id === 123 ? $post : null;
 		};
 
-		$wp_mock_functions['get_post_meta'] = function( $post_id, $key, $single = false ) {
+		$wp_mock_functions['get_post_meta'] = function ( $post_id, $key, $single = false ) {
 			return '';
 		};
 
-		$wp_mock_functions['get_the_title'] = function( $post ) {
+		$wp_mock_functions['get_the_title'] = function ( $post ) {
 			return $post->post_title ?? '';
 		};
 
-		$wp_mock_functions['get_bloginfo'] = function( $show ) {
+		$wp_mock_functions['get_bloginfo'] = function ( $show ) {
 			return $show === 'name' ? 'Test Site' : '';
 		};
 
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return false;
 		};
 
-		$wp_mock_functions['wp_strip_all_tags'] = function( $text ) {
+		$wp_mock_functions['wp_strip_all_tags'] = function ( $text ) {
 			return strip_tags( $text );
 		};
 
@@ -282,38 +282,38 @@ class SeoMetadataTest extends TestCase {
 	 */
 	public function test_empty_content_edge_case(): void {
 		$post = (object) [
-			'ID' => 123,
-			'post_title' => '',
+			'ID'           => 123,
+			'post_title'   => '',
 			'post_content' => '',
 			'post_excerpt' => '',
 		];
 
 		global $wp_mock_functions;
-		$wp_mock_functions['get_post'] = function( $post_id ) use ( $post ) {
+		$wp_mock_functions['get_post'] = function ( $post_id ) use ( $post ) {
 			return $post_id === 123 ? $post : null;
 		};
 
-		$wp_mock_functions['get_post_meta'] = function( $post_id, $key, $single = false ) {
+		$wp_mock_functions['get_post_meta'] = function ( $post_id, $key, $single = false ) {
 			return '';
 		};
 
-		$wp_mock_functions['get_the_title'] = function( $post ) {
+		$wp_mock_functions['get_the_title'] = function ( $post ) {
 			return '';
 		};
 
-		$wp_mock_functions['get_the_excerpt'] = function( $post ) {
+		$wp_mock_functions['get_the_excerpt'] = function ( $post ) {
 			return '';
 		};
 
-		$wp_mock_functions['wp_strip_all_tags'] = function( $text ) {
+		$wp_mock_functions['wp_strip_all_tags'] = function ( $text ) {
 			return strip_tags( $text );
 		};
 
-		$wp_mock_functions['get_bloginfo'] = function( $show ) {
+		$wp_mock_functions['get_bloginfo'] = function ( $show ) {
 			return $show === 'name' ? 'Test Site' : '';
 		};
 
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return false;
 		};
 
@@ -328,37 +328,37 @@ class SeoMetadataTest extends TestCase {
 	 */
 	public function test_special_characters(): void {
 		$post = (object) [
-			'ID' => 123,
-			'post_title' => 'Test "Quote" & Ampersand <script>alert("xss")</script>',
+			'ID'           => 123,
+			'post_title'   => 'Test "Quote" & Ampersand <script>alert("xss")</script>',
 			'post_content' => 'Content with <strong>HTML</strong> & special chars "quotes"',
 		];
 
 		global $wp_mock_functions;
-		$wp_mock_functions['get_post'] = function( $post_id ) use ( $post ) {
+		$wp_mock_functions['get_post'] = function ( $post_id ) use ( $post ) {
 			return $post_id === 123 ? $post : null;
 		};
 
-		$wp_mock_functions['get_post_meta'] = function( $post_id, $key, $single = false ) {
+		$wp_mock_functions['get_post_meta'] = function ( $post_id, $key, $single = false ) {
 			return '';
 		};
 
-		$wp_mock_functions['get_the_title'] = function( $post ) {
+		$wp_mock_functions['get_the_title'] = function ( $post ) {
 			return $post->post_title ?? '';
 		};
 
-		$wp_mock_functions['get_the_excerpt'] = function( $post ) {
+		$wp_mock_functions['get_the_excerpt'] = function ( $post ) {
 			return '';
 		};
 
-		$wp_mock_functions['wp_strip_all_tags'] = function( $text ) {
+		$wp_mock_functions['wp_strip_all_tags'] = function ( $text ) {
 			return strip_tags( $text );
 		};
 
-		$wp_mock_functions['get_bloginfo'] = function( $show ) {
+		$wp_mock_functions['get_bloginfo'] = function ( $show ) {
 			return $show === 'name' ? 'Test Site' : '';
 		};
 
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return false;
 		};
 

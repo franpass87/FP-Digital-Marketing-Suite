@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Database\SocialSentimentTable;
 
 /**
  * Social Sentiment model class
- * 
+ *
  * Handles social sentiment analysis and AI-powered review monitoring.
  */
 class SocialSentiment {
@@ -150,24 +150,24 @@ class SocialSentiment {
 	 * @param array $data Sentiment data
 	 */
 	public function __construct( array $data = [] ) {
-		$this->id = $data['id'] ?? null;
-		$this->client_id = $data['client_id'] ?? 0;
-		$this->review_source = $data['review_source'] ?? '';
-		$this->review_platform = $data['review_platform'] ?? '';
-		$this->review_url = $data['review_url'] ?? '';
-		$this->review_text = $data['review_text'] ?? '';
-		$this->review_rating = isset( $data['review_rating'] ) ? (float) $data['review_rating'] : null;
-		$this->review_date = $data['review_date'] ?? null;
-		$this->sentiment_score = isset( $data['sentiment_score'] ) ? (float) $data['sentiment_score'] : null;
-		$this->sentiment_label = $data['sentiment_label'] ?? '';
+		$this->id                   = $data['id'] ?? null;
+		$this->client_id            = $data['client_id'] ?? 0;
+		$this->review_source        = $data['review_source'] ?? '';
+		$this->review_platform      = $data['review_platform'] ?? '';
+		$this->review_url           = $data['review_url'] ?? '';
+		$this->review_text          = $data['review_text'] ?? '';
+		$this->review_rating        = isset( $data['review_rating'] ) ? (float) $data['review_rating'] : null;
+		$this->review_date          = $data['review_date'] ?? null;
+		$this->sentiment_score      = isset( $data['sentiment_score'] ) ? (float) $data['sentiment_score'] : null;
+		$this->sentiment_label      = $data['sentiment_label'] ?? '';
 		$this->sentiment_confidence = isset( $data['sentiment_confidence'] ) ? (float) $data['sentiment_confidence'] : null;
-		$this->key_issues = $data['key_issues'] ?? [];
-		$this->positive_aspects = $data['positive_aspects'] ?? [];
-		$this->ai_summary = $data['ai_summary'] ?? '';
-		$this->action_required = (bool) ( $data['action_required'] ?? false );
-		$this->responded = (bool) ( $data['responded'] ?? false );
-		$this->response_text = $data['response_text'] ?? '';
-		$this->response_date = $data['response_date'] ?? null;
+		$this->key_issues           = $data['key_issues'] ?? [];
+		$this->positive_aspects     = $data['positive_aspects'] ?? [];
+		$this->ai_summary           = $data['ai_summary'] ?? '';
+		$this->action_required      = (bool) ( $data['action_required'] ?? false );
+		$this->responded            = (bool) ( $data['responded'] ?? false );
+		$this->response_text        = $data['response_text'] ?? '';
+		$this->response_date        = $data['response_date'] ?? null;
 	}
 
 	/**
@@ -184,13 +184,13 @@ class SocialSentiment {
 		// In production, this would integrate with OpenAI, Google NLP, or similar services
 		$analysis = $this->perform_ai_sentiment_analysis( $this->review_text );
 
-		$this->sentiment_score = $analysis['score'];
-		$this->sentiment_label = $analysis['label'];
+		$this->sentiment_score      = $analysis['score'];
+		$this->sentiment_label      = $analysis['label'];
 		$this->sentiment_confidence = $analysis['confidence'];
-		$this->key_issues = $analysis['issues'];
-		$this->positive_aspects = $analysis['positives'];
-		$this->ai_summary = $analysis['summary'];
-		$this->action_required = $analysis['action_required'];
+		$this->key_issues           = $analysis['issues'];
+		$this->positive_aspects     = $analysis['positives'];
+		$this->ai_summary           = $analysis['summary'];
+		$this->action_required      = $analysis['action_required'];
 
 		return true;
 	}
@@ -203,63 +203,92 @@ class SocialSentiment {
 	 */
 	private function perform_ai_sentiment_analysis( string $text ): array {
 		$text = strtolower( $text );
-		
+
 		// Define positive and negative keywords (Italian)
 		$positive_keywords = [
-			'eccellente', 'fantastico', 'ottimo', 'bravo', 'perfetto', 'soddisfatto',
-			'consiglio', 'felice', 'contento', 'professionale', 'veloce', 'efficiente',
-			'cordiale', 'disponibile', 'qualità', 'servizio', 'puntuale'
+			'eccellente',
+			'fantastico',
+			'ottimo',
+			'bravo',
+			'perfetto',
+			'soddisfatto',
+			'consiglio',
+			'felice',
+			'contento',
+			'professionale',
+			'veloce',
+			'efficiente',
+			'cordiale',
+			'disponibile',
+			'qualità',
+			'servizio',
+			'puntuale',
 		];
 
 		$negative_keywords = [
-			'pessimo', 'orribile', 'deludente', 'lento', 'scortese', 'insoddisfatto',
-			'sconsiglio', 'arrabbiato', 'deluso', 'problemi', 'difetti', 'errore',
-			'ritardo', 'caro', 'costoso', 'non funziona', 'rotto', 'guasto'
+			'pessimo',
+			'orribile',
+			'deludente',
+			'lento',
+			'scortese',
+			'insoddisfatto',
+			'sconsiglio',
+			'arrabbiato',
+			'deluso',
+			'problemi',
+			'difetti',
+			'errore',
+			'ritardo',
+			'caro',
+			'costoso',
+			'non funziona',
+			'rotto',
+			'guasto',
 		];
 
 		$issue_keywords = [
-			'tempo' => 'Tempi di attesa',
-			'attesa' => 'Tempi di attesa',
-			'lento' => 'Velocità del servizio',
-			'veloce' => 'Velocità del servizio',
-			'prezzo' => 'Prezzo',
-			'caro' => 'Prezzo',
-			'costoso' => 'Prezzo',
-			'qualità' => 'Qualità del prodotto',
-			'servizio' => 'Servizio clienti',
-			'staff' => 'Personale',
-			'consegna' => 'Consegna',
-			'spedizione' => 'Spedizione',
+			'tempo'         => 'Tempi di attesa',
+			'attesa'        => 'Tempi di attesa',
+			'lento'         => 'Velocità del servizio',
+			'veloce'        => 'Velocità del servizio',
+			'prezzo'        => 'Prezzo',
+			'caro'          => 'Prezzo',
+			'costoso'       => 'Prezzo',
+			'qualità'       => 'Qualità del prodotto',
+			'servizio'      => 'Servizio clienti',
+			'staff'         => 'Personale',
+			'consegna'      => 'Consegna',
+			'spedizione'    => 'Spedizione',
 			'comunicazione' => 'Comunicazione',
-			'supporto' => 'Supporto tecnico',
+			'supporto'      => 'Supporto tecnico',
 		];
 
 		$positive_aspects_keywords = [
 			'professionale' => 'Staff professionale',
-			'veloce' => 'Servizio veloce',
-			'puntuale' => 'Puntualità',
-			'qualità' => 'Alta qualità',
-			'conveniente' => 'Prezzo conveniente',
-			'cordiale' => 'Cordialità',
-			'disponibile' => 'Disponibilità',
-			'efficiente' => 'Efficienza',
+			'veloce'        => 'Servizio veloce',
+			'puntuale'      => 'Puntualità',
+			'qualità'       => 'Alta qualità',
+			'conveniente'   => 'Prezzo conveniente',
+			'cordiale'      => 'Cordialità',
+			'disponibile'   => 'Disponibilità',
+			'efficiente'    => 'Efficienza',
 		];
 
 		// Count positive and negative keywords
-		$positive_count = 0;
-		$negative_count = 0;
-		$identified_issues = [];
+		$positive_count       = 0;
+		$negative_count       = 0;
+		$identified_issues    = [];
 		$identified_positives = [];
 
 		foreach ( $positive_keywords as $keyword ) {
 			if ( strpos( $text, $keyword ) !== false ) {
-				$positive_count++;
+				++$positive_count;
 			}
 		}
 
 		foreach ( $negative_keywords as $keyword ) {
 			if ( strpos( $text, $keyword ) !== false ) {
-				$negative_count++;
+				++$negative_count;
 			}
 		}
 
@@ -284,12 +313,12 @@ class SocialSentiment {
 		// Calculate sentiment score and label
 		$total_sentiment_words = $positive_count + $negative_count;
 		if ( $total_sentiment_words === 0 ) {
-			$score = 0.0;
-			$label = 'neutral';
+			$score      = 0.0;
+			$label      = 'neutral';
 			$confidence = 0.5;
 		} else {
 			$score = ( $positive_count - $negative_count ) / $total_sentiment_words;
-			
+
 			if ( $score > 0.2 ) {
 				$label = 'positive';
 			} elseif ( $score < -0.2 ) {
@@ -308,12 +337,12 @@ class SocialSentiment {
 		$action_required = ( $label === 'negative' && $score < -0.3 ) || count( $identified_issues ) >= 2;
 
 		return [
-			'score' => $score,
-			'label' => $label,
-			'confidence' => $confidence,
-			'issues' => $identified_issues,
-			'positives' => $identified_positives,
-			'summary' => $summary,
+			'score'           => $score,
+			'label'           => $label,
+			'confidence'      => $confidence,
+			'issues'          => $identified_issues,
+			'positives'       => $identified_positives,
+			'summary'         => $summary,
 			'action_required' => $action_required,
 		];
 	}
@@ -322,9 +351,9 @@ class SocialSentiment {
 	 * Generate AI summary
 	 *
 	 * @param string $label Sentiment label
-	 * @param float $score Sentiment score
-	 * @param array $issues Identified issues
-	 * @param array $positives Positive aspects
+	 * @param float  $score Sentiment score
+	 * @param array  $issues Identified issues
+	 * @param array  $positives Positive aspects
 	 * @return string
 	 */
 	private function generate_ai_summary( string $label, float $score, array $issues, array $positives ): string {
@@ -378,23 +407,23 @@ class SocialSentiment {
 	 */
 	public function save(): bool {
 		$data = [
-			'client_id' => $this->client_id,
-			'review_source' => $this->review_source,
-			'review_platform' => $this->review_platform,
-			'review_url' => $this->review_url,
-			'review_text' => $this->review_text,
-			'review_rating' => $this->review_rating,
-			'review_date' => $this->review_date,
-			'sentiment_score' => $this->sentiment_score,
-			'sentiment_label' => $this->sentiment_label,
+			'client_id'            => $this->client_id,
+			'review_source'        => $this->review_source,
+			'review_platform'      => $this->review_platform,
+			'review_url'           => $this->review_url,
+			'review_text'          => $this->review_text,
+			'review_rating'        => $this->review_rating,
+			'review_date'          => $this->review_date,
+			'sentiment_score'      => $this->sentiment_score,
+			'sentiment_label'      => $this->sentiment_label,
 			'sentiment_confidence' => $this->sentiment_confidence,
-			'key_issues' => $this->key_issues,
-			'positive_aspects' => $this->positive_aspects,
-			'ai_summary' => $this->ai_summary,
-			'action_required' => $this->action_required ? 1 : 0,
-			'responded' => $this->responded ? 1 : 0,
-			'response_text' => $this->response_text,
-			'response_date' => $this->response_date,
+			'key_issues'           => $this->key_issues,
+			'positive_aspects'     => $this->positive_aspects,
+			'ai_summary'           => $this->ai_summary,
+			'action_required'      => $this->action_required ? 1 : 0,
+			'responded'            => $this->responded ? 1 : 0,
+			'response_text'        => $this->response_text,
+			'response_date'        => $this->response_date,
 		];
 
 		if ( $this->id ) {
@@ -416,7 +445,7 @@ class SocialSentiment {
 	 * @return bool
 	 */
 	public function mark_as_responded( string $response_text ): bool {
-		$this->responded = true;
+		$this->responded     = true;
 		$this->response_text = $response_text;
 		$this->response_date = current_time( 'mysql' );
 
@@ -575,38 +604,64 @@ class SocialSentiment {
 		}
 
 		return [
-			'processed_text' => $cleaned_text,
+			'processed_text'  => $cleaned_text,
 			'character_count' => strlen( $cleaned_text ),
-			'word_count' => str_word_count( $cleaned_text ),
+			'word_count'      => str_word_count( $cleaned_text ),
 		];
 	}
 
 	// Getters and setters
-	public function get_id(): ?int { return $this->id; }
-	public function get_client_id(): int { return $this->client_id; }
-	public function get_review_source(): string { return $this->review_source; }
-	public function get_review_platform(): string { return $this->review_platform; }
-	public function get_review_url(): string { return $this->review_url; }
-	public function get_review_text(): string { return $this->review_text; }
-	public function get_review_rating(): ?float { return $this->review_rating; }
-	public function get_review_date(): ?string { return $this->review_date; }
-	public function get_sentiment_score(): ?float { return $this->sentiment_score; }
-	public function get_sentiment_label(): string { return $this->sentiment_label; }
-	public function get_sentiment_confidence(): ?float { return $this->sentiment_confidence; }
-	public function get_key_issues(): array { return $this->key_issues; }
-	public function get_positive_aspects(): array { return $this->positive_aspects; }
-	public function get_ai_summary(): string { return $this->ai_summary; }
-	public function is_action_required(): bool { return $this->action_required; }
-	public function is_responded(): bool { return $this->responded; }
-	public function get_response_text(): string { return $this->response_text; }
-	public function get_response_date(): ?string { return $this->response_date; }
+	public function get_id(): ?int {
+		return $this->id; }
+	public function get_client_id(): int {
+		return $this->client_id; }
+	public function get_review_source(): string {
+		return $this->review_source; }
+	public function get_review_platform(): string {
+		return $this->review_platform; }
+	public function get_review_url(): string {
+		return $this->review_url; }
+	public function get_review_text(): string {
+		return $this->review_text; }
+	public function get_review_rating(): ?float {
+		return $this->review_rating; }
+	public function get_review_date(): ?string {
+		return $this->review_date; }
+	public function get_sentiment_score(): ?float {
+		return $this->sentiment_score; }
+	public function get_sentiment_label(): string {
+		return $this->sentiment_label; }
+	public function get_sentiment_confidence(): ?float {
+		return $this->sentiment_confidence; }
+	public function get_key_issues(): array {
+		return $this->key_issues; }
+	public function get_positive_aspects(): array {
+		return $this->positive_aspects; }
+	public function get_ai_summary(): string {
+		return $this->ai_summary; }
+	public function is_action_required(): bool {
+		return $this->action_required; }
+	public function is_responded(): bool {
+		return $this->responded; }
+	public function get_response_text(): string {
+		return $this->response_text; }
+	public function get_response_date(): ?string {
+		return $this->response_date; }
 
-	public function set_client_id( int $client_id ): void { $this->client_id = $client_id; }
-	public function set_review_source( string $review_source ): void { $this->review_source = $review_source; }
-	public function set_review_platform( string $review_platform ): void { $this->review_platform = $review_platform; }
-	public function set_review_url( string $review_url ): void { $this->review_url = $review_url; }
-	public function set_review_text( string $review_text ): void { $this->review_text = $review_text; }
-	public function set_review_rating( ?float $review_rating ): void { $this->review_rating = $review_rating; }
-	public function set_review_date( ?string $review_date ): void { $this->review_date = $review_date; }
-	public function set_action_required( bool $action_required ): void { $this->action_required = $action_required; }
+	public function set_client_id( int $client_id ): void {
+		$this->client_id = $client_id; }
+	public function set_review_source( string $review_source ): void {
+		$this->review_source = $review_source; }
+	public function set_review_platform( string $review_platform ): void {
+		$this->review_platform = $review_platform; }
+	public function set_review_url( string $review_url ): void {
+		$this->review_url = $review_url; }
+	public function set_review_text( string $review_text ): void {
+		$this->review_text = $review_text; }
+	public function set_review_rating( ?float $review_rating ): void {
+		$this->review_rating = $review_rating; }
+	public function set_review_date( ?string $review_date ): void {
+		$this->review_date = $review_date; }
+	public function set_action_required( bool $action_required ): void {
+		$this->action_required = $action_required; }
 }

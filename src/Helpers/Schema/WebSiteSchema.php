@@ -22,10 +22,13 @@ class WebSiteSchema extends BaseSchema {
 	public static function generate(): ?array {
 		$site_info = self::get_site_info();
 
-		$schema = self::create_base_schema( 'WebSite', [
-			'name' => $site_info['name'],
-			'url' => $site_info['url']
-		] );
+		$schema = self::create_base_schema(
+			'WebSite',
+			[
+				'name' => $site_info['name'],
+				'url'  => $site_info['url'],
+			]
+		);
 
 		// Add description if available
 		if ( ! empty( $site_info['description'] ) ) {
@@ -57,7 +60,7 @@ class WebSiteSchema extends BaseSchema {
 	 */
 	private static function get_search_action(): array {
 		$search_url = home_url( '/' );
-		
+
 		// Try to get the search URL template
 		if ( function_exists( 'get_search_link' ) ) {
 			$search_url = str_replace( home_url( '/' ), '', get_search_link() );
@@ -72,12 +75,12 @@ class WebSiteSchema extends BaseSchema {
 		}
 
 		return [
-			'@type' => 'SearchAction',
-			'target' => [
-				'@type' => 'EntryPoint',
-				'urlTemplate' => $search_url
+			'@type'       => 'SearchAction',
+			'target'      => [
+				'@type'       => 'EntryPoint',
+				'urlTemplate' => $search_url,
 			],
-			'query-input' => 'required name=search_term_string'
+			'query-input' => 'required name=search_term_string',
 		];
 	}
 }

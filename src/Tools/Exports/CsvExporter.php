@@ -24,7 +24,7 @@ class CsvExporter {
 		if ( is_array( $value ) || is_object( $value ) ) {
 			$encoder = function_exists( 'wp_json_encode' ) ? 'wp_json_encode' : 'json_encode';
 			$encoded = $encoder( $value );
-			$value = false !== $encoded ? $encoded : '';
+			$value   = false !== $encoded ? $encoded : '';
 		} elseif ( is_bool( $value ) ) {
 			$value = $value ? '1' : '0';
 		} elseif ( null === $value ) {
@@ -72,11 +72,11 @@ class CsvExporter {
 			return;
 		}
 
-                $enclosure = '"';
-                $escape = '\\';
+				$enclosure = '"';
+				$escape    = '\\';
 
-                fputcsv( $handle, self::sanitize_row( $row ), $separator, $enclosure, $escape );
-        }
+				fputcsv( $handle, self::sanitize_row( $row ), $separator, $enclosure, $escape );
+	}
 
 	/**
 	 * Convert a row to a CSV string.

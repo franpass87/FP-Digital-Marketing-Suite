@@ -1,0 +1,28 @@
+# Phase 2 – Linters Report
+
+## Tooling Setup
+- Installed Composer dev dependencies for static analysis and coding standards:
+  - `squizlabs/php_codesniffer` with WordPress Coding Standards.
+  - `phpstan/phpstan` (level 5).
+  - Added WordPress and WooCommerce stubs to improve PHPStan awareness of core APIs.
+- Updated `phpstan-bootstrap.php` to load Composer autoloader, stub files, and define plugin constants for analysis context.
+- Added the main plugin bootstrap file to PHPStan analysis paths for global helpers and constants.
+
+## PHPCS Results
+- Command: `vendor/bin/phpcs --report=summary`
+- Automated fixes applied via `vendor/bin/phpcbf`, resolving **29,861** coding standard issues across 150 files.
+- Remaining findings: **3,849 errors** and **651 warnings** in 142 files.
+  - High-volume categories include inline comment punctuation, docblock formatting, alignment, and Yoda condition enforcement.
+  - Identified lingering debug helpers (`error_log`, `eval`) and strict spacing requirements needing manual refactors.
+
+## PHPStan Results
+- Command: `vendor/bin/phpstan analyse --memory-limit=1G`
+- Current status: **253 errors** at level 5.
+  - Major themes: unreachable code paths, redundant condition checks, undefined model/static methods, loose array typing, and tests relying on dynamic anonymous functions not supported by PHPStan.
+  - Additional issues flagged around type safety (e.g., strict parameter expectations for SEO helpers) and inaccurate capability checks.
+
+## Next Steps
+- Prioritize refactoring areas with unreachable code and impossible conditions reported by PHPStan.
+- Normalize comment/documentation style and evaluate suppressing overly pedantic sniffs versus updating comments.
+- Replace discouraged functions (`eval`, `error_log`) with safer alternatives and implement missing model/static APIs flagged by analysis.
+- Expand type annotations or introduce dedicated test fixtures to satisfy PHPStan expectations in unit/integration tests.

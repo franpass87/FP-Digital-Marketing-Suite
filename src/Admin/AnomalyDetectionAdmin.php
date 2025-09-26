@@ -50,22 +50,22 @@ class AnomalyDetectionAdmin {
 
 	/**
 	 * Add admin menu
-        *
-         * @return void
-         */
-        public function add_admin_menu(): void {
-                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
-                        return;
-                }
+	 *
+	 * @return void
+	 */
+	public function add_admin_menu(): void {
+		if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+				return;
+		}
 
-                add_submenu_page(
-                        'fp-digital-marketing-dashboard',
-                        __( 'Rilevazione Anomalie', 'fp-digital-marketing' ),
-			__( '🔍 Rilevazione Anomalie', 'fp-digital-marketing' ),
-			Capabilities::MANAGE_ALERTS,
-			'fp-digital-marketing-anomalies',
-			[ $this, 'display_admin_page' ]
-		);
+			add_submenu_page(
+				'fp-digital-marketing-dashboard',
+				__( 'Rilevazione Anomalie', 'fp-digital-marketing' ),
+				__( '🔍 Rilevazione Anomalie', 'fp-digital-marketing' ),
+				Capabilities::MANAGE_ALERTS,
+				'fp-digital-marketing-anomalies',
+				[ $this, 'display_admin_page' ]
+			);
 	}
 
 	/**
@@ -74,7 +74,7 @@ class AnomalyDetectionAdmin {
 	 * @return void
 	 */
 	public function display_admin_page(): void {
-		$action = $_GET['action'] ?? 'list';
+		$action  = $_GET['action'] ?? 'list';
 		$rule_id = (int) ( $_GET['rule_id'] ?? 0 );
 
 		switch ( $action ) {
@@ -102,7 +102,7 @@ class AnomalyDetectionAdmin {
 	 * @return void
 	 */
 	private function display_rules_list(): void {
-		$rules = AnomalyRule::get_rules();
+		$rules           = AnomalyRule::get_rules();
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
 
 		?>
@@ -138,18 +138,18 @@ class AnomalyDetectionAdmin {
 					</tr>
 				</thead>
 				<tbody>
-					<?php if ( empty( $rules ) ): ?>
+					<?php if ( empty( $rules ) ) : ?>
 						<tr>
 							<td colspan="7" style="text-align: center;">
 								<?php esc_html_e( 'Nessuna regola di rilevazione anomalie configurata.', 'fp-digital-marketing' ); ?>
 							</td>
 						</tr>
-					<?php else: ?>
-						<?php foreach ( $rules as $rule ): ?>
+					<?php else : ?>
+						<?php foreach ( $rules as $rule ) : ?>
 							<tr>
 								<td>
 									<strong><?php echo esc_html( $rule->name ); ?></strong>
-									<?php if ( $rule->description ): ?>
+									<?php if ( $rule->description ) : ?>
 										<br><small><?php echo esc_html( $rule->description ); ?></small>
 									<?php endif; ?>
 								</td>
@@ -157,24 +157,24 @@ class AnomalyDetectionAdmin {
 								<td><?php echo esc_html( $kpi_definitions[ $rule->metric ]['name'] ?? $rule->metric ); ?></td>
 								<td><?php echo esc_html( AnomalyRule::get_detection_methods()[ $rule->detection_method ] ?? $rule->detection_method ); ?></td>
 								<td>
-									<?php if ( $rule->is_active ): ?>
-										<?php if ( $rule->silence_until && strtotime( $rule->silence_until ) > time() ): ?>
+									<?php if ( $rule->is_active ) : ?>
+										<?php if ( $rule->silence_until && strtotime( $rule->silence_until ) > time() ) : ?>
 											<span class="fp-status-silenced">
 												<?php esc_html_e( 'Silenziata', 'fp-digital-marketing' ); ?>
 												<small>(<?php echo esc_html( date_i18n( 'j M H:i', strtotime( $rule->silence_until ) ) ); ?>)</small>
 											</span>
-										<?php else: ?>
+										<?php else : ?>
 											<span class="fp-status-active"><?php esc_html_e( 'Attiva', 'fp-digital-marketing' ); ?></span>
 										<?php endif; ?>
-									<?php else: ?>
+									<?php else : ?>
 										<span class="fp-status-inactive"><?php esc_html_e( 'Inattiva', 'fp-digital-marketing' ); ?></span>
 									<?php endif; ?>
 								</td>
 								<td>
-									<?php if ( $rule->last_triggered ): ?>
+									<?php if ( $rule->last_triggered ) : ?>
 										<?php echo esc_html( date_i18n( 'j M Y H:i', strtotime( $rule->last_triggered ) ) ); ?>
 										<br><small><?php printf( esc_html__( '%d volte', 'fp-digital-marketing' ), $rule->triggered_count ); ?></small>
-									<?php else: ?>
+									<?php else : ?>
 										<em><?php esc_html_e( 'Mai', 'fp-digital-marketing' ); ?></em>
 									<?php endif; ?>
 								</td>
@@ -182,11 +182,11 @@ class AnomalyDetectionAdmin {
 									<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=cliente&page=fp-digital-marketing-anomalies&action=edit&rule_id=' . $rule->id ) ); ?>" class="button button-small">
 										<?php esc_html_e( 'Modifica', 'fp-digital-marketing' ); ?>
 									</a>
-									<?php if ( $rule->is_active && ( ! $rule->silence_until || strtotime( $rule->silence_until ) <= time() ) ): ?>
+									<?php if ( $rule->is_active && ( ! $rule->silence_until || strtotime( $rule->silence_until ) <= time() ) ) : ?>
 										<button type="button" class="button button-small silence-rule" data-rule-id="<?php echo esc_attr( $rule->id ); ?>">
 											<?php esc_html_e( 'Silenzia', 'fp-digital-marketing' ); ?>
 										</button>
-									<?php elseif ( $rule->silence_until && strtotime( $rule->silence_until ) > time() ): ?>
+									<?php elseif ( $rule->silence_until && strtotime( $rule->silence_until ) > time() ) : ?>
 										<button type="button" class="button button-small unsilence-rule" data-rule-id="<?php echo esc_attr( $rule->id ); ?>">
 											<?php esc_html_e( 'Riattiva', 'fp-digital-marketing' ); ?>
 										</button>
@@ -215,7 +215,7 @@ class AnomalyDetectionAdmin {
 	private function display_anomalies_list(): void {
 		$filters = [
 			'days_back' => (int) ( $_GET['days_back'] ?? 7 ),
-			'limit' => 100,
+			'limit'     => 100,
 		];
 
 		if ( isset( $_GET['client_id'] ) && $_GET['client_id'] !== '' ) {
@@ -234,8 +234,8 @@ class AnomalyDetectionAdmin {
 			$filters['acknowledged'] = $_GET['acknowledged'] === '1';
 		}
 
-		$anomalies = DetectedAnomaly::get_recent_anomalies( $filters );
-		$statistics = DetectedAnomaly::get_statistics( $filters );
+		$anomalies       = DetectedAnomaly::get_recent_anomalies( $filters );
+		$statistics      = DetectedAnomaly::get_statistics( $filters );
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
 
 		?>
@@ -312,14 +312,14 @@ class AnomalyDetectionAdmin {
 					</tr>
 				</thead>
 				<tbody>
-					<?php if ( empty( $anomalies ) ): ?>
+					<?php if ( empty( $anomalies ) ) : ?>
 						<tr>
 							<td colspan="8" style="text-align: center;">
 								<?php esc_html_e( 'Nessuna anomalia rilevata nel periodo selezionato.', 'fp-digital-marketing' ); ?>
 							</td>
 						</tr>
-					<?php else: ?>
-						<?php foreach ( $anomalies as $anomaly ): ?>
+					<?php else : ?>
+						<?php foreach ( $anomalies as $anomaly ) : ?>
 							<tr class="<?php echo $anomaly->acknowledged ? 'acknowledged' : 'unacknowledged'; ?>">
 								<td>
 									<strong><?php echo esc_html( $kpi_definitions[ $anomaly->metric ]['name'] ?? $anomaly->metric ); ?></strong>
@@ -327,16 +327,16 @@ class AnomalyDetectionAdmin {
 								<td><?php echo esc_html( get_the_title( $anomaly->client_id ) ?: __( 'Cliente sconosciuto', 'fp-digital-marketing' ) ); ?></td>
 								<td>
 									<span class="current-value"><?php echo esc_html( number_format( $anomaly->current_value, 2 ) ); ?></span>
-									<?php if ( $anomaly->deviation_type === 'positive' ): ?>
+									<?php if ( $anomaly->deviation_type === 'positive' ) : ?>
 										<span class="dashicons dashicons-arrow-up-alt" style="color: #d63638;"></span>
-									<?php elseif ( $anomaly->deviation_type === 'negative' ): ?>
+									<?php elseif ( $anomaly->deviation_type === 'negative' ) : ?>
 										<span class="dashicons dashicons-arrow-down-alt" style="color: #d63638;"></span>
 									<?php endif; ?>
 								</td>
 								<td>
-									<?php if ( $anomaly->expected_value ): ?>
+									<?php if ( $anomaly->expected_value ) : ?>
 										<?php echo esc_html( number_format( $anomaly->expected_value, 2 ) ); ?>
-									<?php else: ?>
+									<?php else : ?>
 										<em><?php esc_html_e( 'N/A', 'fp-digital-marketing' ); ?></em>
 									<?php endif; ?>
 								</td>
@@ -366,11 +366,11 @@ class AnomalyDetectionAdmin {
 								</td>
 								<td><?php echo esc_html( date_i18n( 'j M Y H:i', strtotime( $anomaly->detected_at ) ) ); ?></td>
 								<td>
-									<?php if ( ! $anomaly->acknowledged ): ?>
+									<?php if ( ! $anomaly->acknowledged ) : ?>
 										<button type="button" class="button button-small acknowledge-anomaly" data-anomaly-id="<?php echo esc_attr( $anomaly->id ); ?>">
 											<?php esc_html_e( 'Riconosci', 'fp-digital-marketing' ); ?>
 										</button>
-									<?php else: ?>
+									<?php else : ?>
 										<span class="dashicons dashicons-yes" style="color: #007cba;" title="<?php esc_attr_e( 'Riconosciuta', 'fp-digital-marketing' ); ?>"></span>
 									<?php endif; ?>
 								</td>
@@ -408,7 +408,7 @@ class AnomalyDetectionAdmin {
 	 */
 	private function display_edit_rule_form( int $rule_id ): void {
 		$rule = AnomalyRule::get_by_id( $rule_id );
-		
+
 		if ( ! $rule ) {
 			wp_die( __( 'Regola non trovata.', 'fp-digital-marketing' ) );
 		}
@@ -423,24 +423,26 @@ class AnomalyDetectionAdmin {
 	 * @return void
 	 */
 	private function display_rule_form( ?object $rule = null ): void {
-		$is_edit = $rule !== null;
-		$kpi_definitions = MetricsSchema::get_kpi_definitions();
+		$is_edit           = $rule !== null;
+		$kpi_definitions   = MetricsSchema::get_kpi_definitions();
 		$supported_metrics = AnomalyDetector::get_supported_metrics();
 		$detection_methods = AnomalyRule::get_detection_methods();
 
 		// Get clients list
-		$clients = get_posts( [
-			'post_type' => 'cliente',
-			'posts_per_page' => -1,
-			'post_status' => 'publish',
-			'orderby' => 'title',
-			'order' => 'ASC',
-		] );
+		$clients = get_posts(
+			[
+				'post_type'      => 'cliente',
+				'posts_per_page' => -1,
+				'post_status'    => 'publish',
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			]
+		);
 
 		?>
 		<div class="wrap">
 			<h1>
-				<?php 
+				<?php
 				if ( $is_edit ) {
 					esc_html_e( 'Modifica Regola di Rilevazione Anomalia', 'fp-digital-marketing' );
 				} else {
@@ -452,10 +454,10 @@ class AnomalyDetectionAdmin {
 			<form method="post" action="">
 				<?php wp_nonce_field( 'fp_dms_anomaly_rule', 'fp_dms_anomaly_rule_nonce' ); ?>
 				
-				<?php if ( $is_edit ): ?>
+				<?php if ( $is_edit ) : ?>
 					<input type="hidden" name="action" value="edit_anomaly_rule">
 					<input type="hidden" name="rule_id" value="<?php echo esc_attr( $rule->id ); ?>">
-				<?php else: ?>
+				<?php else : ?>
 					<input type="hidden" name="action" value="add_anomaly_rule">
 				<?php endif; ?>
 
@@ -467,7 +469,7 @@ class AnomalyDetectionAdmin {
 						<td>
 							<select name="client_id" id="client_id" required>
 								<option value=""><?php esc_html_e( 'Seleziona cliente', 'fp-digital-marketing' ); ?></option>
-								<?php foreach ( $clients as $client ): ?>
+								<?php foreach ( $clients as $client ) : ?>
 									<option value="<?php echo esc_attr( $client->ID ); ?>" <?php selected( $rule->client_id ?? '', $client->ID ); ?>>
 										<?php echo esc_html( $client->post_title ); ?>
 									</option>
@@ -498,7 +500,7 @@ class AnomalyDetectionAdmin {
 						<td>
 							<select name="metric" id="metric" required>
 								<option value=""><?php esc_html_e( 'Seleziona metrica', 'fp-digital-marketing' ); ?></option>
-								<?php foreach ( $supported_metrics as $metric ): ?>
+								<?php foreach ( $supported_metrics as $metric ) : ?>
 									<option value="<?php echo esc_attr( $metric ); ?>" <?php selected( $rule->metric ?? '', $metric ); ?>>
 										<?php echo esc_html( $kpi_definitions[ $metric ]['name'] ?? $metric ); ?>
 									</option>
@@ -513,7 +515,7 @@ class AnomalyDetectionAdmin {
 						<td>
 							<select name="detection_method" id="detection_method" required>
 								<option value=""><?php esc_html_e( 'Seleziona metodo', 'fp-digital-marketing' ); ?></option>
-								<?php foreach ( $detection_methods as $method => $label ): ?>
+								<?php foreach ( $detection_methods as $method => $label ) : ?>
 									<option value="<?php echo esc_attr( $method ); ?>" <?php selected( $rule->detection_method ?? '', $method ); ?>>
 										<?php echo esc_html( $label ); ?>
 									</option>
@@ -676,7 +678,7 @@ class AnomalyDetectionAdmin {
 	 * @return void
 	 */
 	private function display_statistics(): void {
-		$days_back = (int) ( $_GET['days_back'] ?? 30 );
+		$days_back  = (int) ( $_GET['days_back'] ?? 30 );
 		$statistics = DetectedAnomaly::get_statistics( [ 'days_back' => $days_back ] );
 
 		?>
@@ -777,20 +779,20 @@ class AnomalyDetectionAdmin {
 	 * @return void
 	 */
 	private function handle_add_rule(): void {
-		$client_id = (int) $_POST['client_id'];
-		$name = sanitize_text_field( $_POST['name'] );
-		$description = sanitize_textarea_field( $_POST['description'] );
-		$metric = sanitize_text_field( $_POST['metric'] );
-		$detection_method = sanitize_text_field( $_POST['detection_method'] );
-		$notification_email = sanitize_email( $_POST['notification_email'] );
+		$client_id                 = (int) $_POST['client_id'];
+		$name                      = sanitize_text_field( $_POST['name'] );
+		$description               = sanitize_textarea_field( $_POST['description'] );
+		$metric                    = sanitize_text_field( $_POST['metric'] );
+		$detection_method          = sanitize_text_field( $_POST['detection_method'] );
+		$notification_email        = sanitize_email( $_POST['notification_email'] );
 		$notification_admin_notice = isset( $_POST['notification_admin_notice'] );
-		$is_active = isset( $_POST['is_active'] );
+		$is_active                 = isset( $_POST['is_active'] );
 
 		$parameters = [
 			'z_score_threshold' => (float) ( $_POST['z_score_threshold'] ?? 2.0 ),
-			'band_deviations' => (float) ( $_POST['band_deviations'] ?? 2.0 ),
-			'window_size' => (int) ( $_POST['window_size'] ?? 7 ),
-			'historical_days' => (int) ( $_POST['historical_days'] ?? 30 ),
+			'band_deviations'   => (float) ( $_POST['band_deviations'] ?? 2.0 ),
+			'window_size'       => (int) ( $_POST['window_size'] ?? 7 ),
+			'historical_days'   => (int) ( $_POST['historical_days'] ?? 30 ),
 		];
 
 		$rule_id = AnomalyRule::create(
@@ -821,20 +823,20 @@ class AnomalyDetectionAdmin {
 	 */
 	private function handle_edit_rule(): void {
 		$rule_id = (int) $_POST['rule_id'];
-		
+
 		$data = [
-			'client_id' => (int) $_POST['client_id'],
-			'name' => sanitize_text_field( $_POST['name'] ),
-			'description' => sanitize_textarea_field( $_POST['description'] ),
-			'metric' => sanitize_text_field( $_POST['metric'] ),
-			'detection_method' => sanitize_text_field( $_POST['detection_method'] ),
-			'z_score_threshold' => (float) ( $_POST['z_score_threshold'] ?? 2.0 ),
-			'band_deviations' => (float) ( $_POST['band_deviations'] ?? 2.0 ),
-			'window_size' => (int) ( $_POST['window_size'] ?? 7 ),
-			'historical_days' => (int) ( $_POST['historical_days'] ?? 30 ),
-			'notification_email' => sanitize_email( $_POST['notification_email'] ),
+			'client_id'                 => (int) $_POST['client_id'],
+			'name'                      => sanitize_text_field( $_POST['name'] ),
+			'description'               => sanitize_textarea_field( $_POST['description'] ),
+			'metric'                    => sanitize_text_field( $_POST['metric'] ),
+			'detection_method'          => sanitize_text_field( $_POST['detection_method'] ),
+			'z_score_threshold'         => (float) ( $_POST['z_score_threshold'] ?? 2.0 ),
+			'band_deviations'           => (float) ( $_POST['band_deviations'] ?? 2.0 ),
+			'window_size'               => (int) ( $_POST['window_size'] ?? 7 ),
+			'historical_days'           => (int) ( $_POST['historical_days'] ?? 30 ),
+			'notification_email'        => sanitize_email( $_POST['notification_email'] ),
 			'notification_admin_notice' => isset( $_POST['notification_admin_notice'] ),
-			'is_active' => isset( $_POST['is_active'] ),
+			'is_active'                 => isset( $_POST['is_active'] ),
 		];
 
 		$success = AnomalyRule::update( $rule_id, $data );
@@ -854,7 +856,7 @@ class AnomalyDetectionAdmin {
 	 * @return void
 	 */
 	public function display_anomaly_notices(): void {
-		$notices = AlertEngine::get_pending_admin_notices();
+		$notices         = AlertEngine::get_pending_admin_notices();
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
 
 		foreach ( $notices as $notice_key => $notice_data ) {
@@ -865,7 +867,7 @@ class AnomalyDetectionAdmin {
 
 			$metric_name = $kpi_definitions[ $notice_data['metric'] ]['name'] ?? $notice_data['metric'];
 			$client_name = get_the_title( $notice_data['client_id'] ) ?: __( 'Cliente sconosciuto', 'fp-digital-marketing' );
-			
+
 			?>
 			<div class="notice notice-error is-dismissible fp-anomaly-notice" data-notice-key="<?php echo esc_attr( $notice_key ); ?>">
 				<p>
@@ -873,7 +875,8 @@ class AnomalyDetectionAdmin {
 					<?php echo esc_html( $notice_data['rule_name'] ); ?>
 				</p>
 				<p>
-					<?php printf(
+					<?php
+					printf(
 						/* translators: 1: Client name, 2: Metric name, 3: Current value, 4: Detection method, 5: Confidence, 6: Severity */
 						esc_html__( 'Cliente: %1$s | Metrica: %2$s | Valore: %3$s | Metodo: %4$s | Confidenza: %5$s | Gravità: %6$s', 'fp-digital-marketing' ),
 						esc_html( $client_name ),
@@ -882,9 +885,10 @@ class AnomalyDetectionAdmin {
 						esc_html( $notice_data['detection_method'] ),
 						esc_html( $notice_data['confidence'] ),
 						esc_html( $notice_data['severity'] )
-					); ?>
+					);
+					?>
 				</p>
-				<?php if ( isset( $notice_data['anomaly_id'] ) ): ?>
+				<?php if ( isset( $notice_data['anomaly_id'] ) ) : ?>
 					<p>
 						<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=cliente&page=fp-digital-marketing-anomalies&action=anomalies&anomaly_id=' . $notice_data['anomaly_id'] ) ); ?>" class="button button-small">
 							<?php esc_html_e( 'Visualizza Dettagli', 'fp-digital-marketing' ); ?>
@@ -905,7 +909,7 @@ class AnomalyDetectionAdmin {
 		check_ajax_referer( 'fp_dms_admin_nonce', 'nonce' );
 
 		$notice_key = sanitize_text_field( $_POST['notice_key'] ?? '' );
-		
+
 		if ( $notice_key ) {
 			$success = AlertEngine::clear_admin_notice( $notice_key );
 			wp_send_json_success( [ 'dismissed' => $success ] );
@@ -923,7 +927,7 @@ class AnomalyDetectionAdmin {
 		check_ajax_referer( 'fp_dms_admin_nonce', 'nonce' );
 
 		$anomaly_id = (int) ( $_POST['anomaly_id'] ?? 0 );
-		
+
 		if ( $anomaly_id ) {
 			$success = DetectedAnomaly::acknowledge( $anomaly_id, get_current_user_id() );
 			wp_send_json_success( [ 'acknowledged' => $success ] );
@@ -941,8 +945,8 @@ class AnomalyDetectionAdmin {
 		check_ajax_referer( 'fp_dms_admin_nonce', 'nonce' );
 
 		$rule_id = (int) ( $_POST['rule_id'] ?? 0 );
-		$hours = (int) ( $_POST['hours'] ?? 24 );
-		
+		$hours   = (int) ( $_POST['hours'] ?? 24 );
+
 		if ( $rule_id ) {
 			$success = AnomalyRule::silence_rule( $rule_id, $hours );
 			wp_send_json_success( [ 'silenced' => $success ] );
@@ -962,21 +966,25 @@ class AnomalyDetectionAdmin {
 			return;
 		}
 
-                wp_enqueue_script(
-                        'fp-dms-anomaly-admin',
-                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/anomaly-admin.js',
-                        [ 'jquery', 'wp-util' ],
-                        FP_DIGITAL_MARKETING_VERSION,
-                        true
-                );
+				wp_enqueue_script(
+					'fp-dms-anomaly-admin',
+					FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/js/anomaly-admin.js',
+					[ 'jquery', 'wp-util' ],
+					FP_DIGITAL_MARKETING_VERSION,
+					true
+				);
 
-		wp_localize_script( 'fp-dms-anomaly-admin', 'fp_dms_anomaly_admin', [
-			'ajax_url' => admin_url( 'admin-ajax.php' ),
-			'nonce' => wp_create_nonce( 'fp_dms_admin_nonce' ),
-			'strings' => [
-				'confirm_silence' => __( 'Per quante ore vuoi silenziare questa regola?', 'fp-digital-marketing' ),
-				'confirm_acknowledge' => __( 'Sei sicuro di voler riconoscere questa anomalia?', 'fp-digital-marketing' ),
-			],
-		] );
+		wp_localize_script(
+			'fp-dms-anomaly-admin',
+			'fp_dms_anomaly_admin',
+			[
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'fp_dms_admin_nonce' ),
+				'strings'  => [
+					'confirm_silence'     => __( 'Per quante ore vuoi silenziare questa regola?', 'fp-digital-marketing' ),
+					'confirm_acknowledge' => __( 'Sei sicuro di voler riconoscere questa anomalia?', 'fp-digital-marketing' ),
+				],
+			]
+		);
 	}
 }

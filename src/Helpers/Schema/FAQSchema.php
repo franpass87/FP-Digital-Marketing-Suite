@@ -32,9 +32,12 @@ class FAQSchema extends BaseSchema {
 			return null;
 		}
 
-		$schema = self::create_base_schema( 'FAQPage', [
-			'mainEntity' => $faq_items
-		] );
+		$schema = self::create_base_schema(
+			'FAQPage',
+			[
+				'mainEntity' => $faq_items,
+			]
+		);
 
 		return apply_filters( 'fp_dms_faq_schema', $schema, $post );
 	}
@@ -51,15 +54,15 @@ class FAQSchema extends BaseSchema {
 			return false;
 		}
 
-		$settings = get_option( 'fp_digital_marketing_schema_settings', [] );
+		$settings           = get_option( 'fp_digital_marketing_schema_settings', [] );
 		$enabled_post_types = $settings['faq_post_types'] ?? [ 'post', 'page' ];
 
 		// Check if current post type is enabled for FAQ
-                $post_type = $post->post_type ?? '';
+				$post_type = $post->post_type ?? '';
 
-                if ( ! in_array( $post_type, $enabled_post_types, true ) ) {
-                        return false;
-                }
+		if ( ! in_array( $post_type, $enabled_post_types, true ) ) {
+				return false;
+		}
 
 		// Check if post has FAQ content
 		return self::has_faq_content( $post );
@@ -68,71 +71,71 @@ class FAQSchema extends BaseSchema {
 	/**
 	 * Check if post has FAQ content
 	 *
-         * @param object $post Post object
+	 * @param object $post Post object
 	 * @return bool True if has FAQ content
 	 */
-        private static function has_faq_content( object $post ): bool {
+	private static function has_faq_content( object $post ): bool {
 		// Check for FAQ blocks (Gutenberg)
-                $content = isset( $post->post_content ) ? (string) $post->post_content : '';
+			$content = isset( $post->post_content ) ? (string) $post->post_content : '';
 
-                if ( has_blocks( $content ) ) {
-                        if ( self::has_faq_blocks( $content ) ) {
-                                return true;
-                        }
-                }
+		if ( has_blocks( $content ) ) {
+			if ( self::has_faq_blocks( $content ) ) {
+				return true;
+			}
+		}
 
-                // Check for FAQ shortcodes
-                if ( self::has_faq_shortcodes( $content ) ) {
-                        return true;
-                }
+			// Check for FAQ shortcodes
+		if ( self::has_faq_shortcodes( $content ) ) {
+				return true;
+		}
 
-                // Check for FAQ patterns in content
-                if ( self::has_faq_patterns( $content ) ) {
-                        return true;
-                }
+			// Check for FAQ patterns in content
+		if ( self::has_faq_patterns( $content ) ) {
+				return true;
+		}
 
-                // Check for custom FAQ meta fields
-                $custom_faqs = get_post_meta( isset( $post->ID ) ? (int) $post->ID : 0, '_fp_faqs', true );
+			// Check for custom FAQ meta fields
+			$custom_faqs = get_post_meta( isset( $post->ID ) ? (int) $post->ID : 0, '_fp_faqs', true );
 		if ( ! empty( $custom_faqs ) ) {
 			return true;
 		}
 
-		return false;
+			return false;
 	}
 
 	/**
 	 * Get FAQ items from post content
 	 *
-         * @param object $post Post object
+	 * @param object $post Post object
 	 * @return array FAQ items
 	 */
-        private static function get_faq_items( object $post ): array {
-                $faq_items = [];
+	private static function get_faq_items( object $post ): array {
+			$faq_items = [];
 
-                // Get FAQ items from Gutenberg blocks
-                $content = isset( $post->post_content ) ? (string) $post->post_content : '';
+			// Get FAQ items from Gutenberg blocks
+			$content = isset( $post->post_content ) ? (string) $post->post_content : '';
 
-                if ( has_blocks( $content ) ) {
-                        $faq_items = array_merge( $faq_items, self::get_faq_from_blocks( $content ) );
-                }
+		if ( has_blocks( $content ) ) {
+				$faq_items = array_merge( $faq_items, self::get_faq_from_blocks( $content ) );
+		}
 
-                // Get FAQ items from shortcodes
-                $faq_items = array_merge( $faq_items, self::get_faq_from_shortcodes( $content ) );
+			// Get FAQ items from shortcodes
+			$faq_items = array_merge( $faq_items, self::get_faq_from_shortcodes( $content ) );
 
-                // Get FAQ items from content patterns
-                $faq_items = array_merge( $faq_items, self::get_faq_from_patterns( $content ) );
+			// Get FAQ items from content patterns
+			$faq_items = array_merge( $faq_items, self::get_faq_from_patterns( $content ) );
 
-                // Get FAQ items from custom meta fields
-                $custom_faqs = get_post_meta( isset( $post->ID ) ? (int) $post->ID : 0, '_fp_faqs', true );
+			// Get FAQ items from custom meta fields
+			$custom_faqs = get_post_meta( isset( $post->ID ) ? (int) $post->ID : 0, '_fp_faqs', true );
 		if ( is_array( $custom_faqs ) ) {
 			$faq_items = array_merge( $faq_items, self::format_custom_faqs( $custom_faqs ) );
 		}
 
-		// Remove duplicates and filter
-		$faq_items = array_unique( $faq_items, SORT_REGULAR );
-		$faq_items = apply_filters( 'fp_dms_faq_items', $faq_items, $post );
+			// Remove duplicates and filter
+			$faq_items = array_unique( $faq_items, SORT_REGULAR );
+			$faq_items = apply_filters( 'fp_dms_faq_items', $faq_items, $post );
 
-		return $faq_items;
+			return $faq_items;
 	}
 
 	/**
@@ -147,7 +150,7 @@ class FAQSchema extends BaseSchema {
 			'wp:group.*faq',
 			'wp:heading.*\?',
 			'wp:details',
-			'fp-dms/faq'
+			'fp-dms/faq',
 		];
 
 		foreach ( $faq_block_patterns as $pattern ) {
@@ -167,7 +170,7 @@ class FAQSchema extends BaseSchema {
 	 */
 	private static function get_faq_from_blocks( string $content ): array {
 		$faq_items = [];
-		$blocks = parse_blocks( $content );
+		$blocks    = parse_blocks( $content );
 
 		foreach ( $blocks as $block ) {
 			$faq_items = array_merge( $faq_items, self::extract_faq_from_block( $block ) );
@@ -199,8 +202,8 @@ class FAQSchema extends BaseSchema {
 		// Check for details/summary pattern
 		if ( $block['blockName'] === 'core/details' ) {
 			$question = $block['attrs']['summary'] ?? '';
-			$answer = wp_strip_all_tags( render_block( $block ) );
-			
+			$answer   = wp_strip_all_tags( render_block( $block ) );
+
 			if ( $question && $answer ) {
 				$faq_items[] = self::create_faq_item( $question, $answer );
 			}
@@ -284,8 +287,8 @@ class FAQSchema extends BaseSchema {
 
 		foreach ( $matches as $match ) {
 			$question = wp_strip_all_tags( $match[2] );
-			$answer = wp_strip_all_tags( $match[3] );
-			
+			$answer   = wp_strip_all_tags( $match[3] );
+
 			if ( $question && $answer ) {
 				$faq_items[] = self::create_faq_item( $question, $answer );
 			}
@@ -321,12 +324,12 @@ class FAQSchema extends BaseSchema {
 	 */
 	private static function create_faq_item( string $question, string $answer ): array {
 		return [
-			'@type' => 'Question',
-			'name' => wp_strip_all_tags( $question ),
+			'@type'          => 'Question',
+			'name'           => wp_strip_all_tags( $question ),
 			'acceptedAnswer' => [
 				'@type' => 'Answer',
-				'text' => wp_strip_all_tags( $answer )
-			]
+				'text'  => wp_strip_all_tags( $answer ),
+			],
 		];
 	}
 }

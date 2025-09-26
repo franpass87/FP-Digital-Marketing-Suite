@@ -14,7 +14,7 @@ use FP\DigitalMarketing\Models\CoreWebVitals as CoreWebVitalsModel;
 
 /**
  * Core Web Vitals data source integration class
- * 
+ *
  * This class handles the integration with Chrome UX Report (CrUX) API
  * for Core Web Vitals metrics and client-side performance beacons.
  */
@@ -66,7 +66,7 @@ class CoreWebVitals {
 	 */
 	public function __construct( string $origin_url = '', string $api_key = '' ) {
 		$this->origin_url = $origin_url;
-		$this->api_key = $api_key ?: get_option( 'fp_dms_crux_api_key', '' );
+		$this->api_key    = $api_key ?: get_option( 'fp_dms_crux_api_key', '' );
 	}
 
 	/**
@@ -89,64 +89,66 @@ class CoreWebVitals {
 	 */
 	public function fetch_metrics( int $client_id, string $start_date, string $end_date, array $filters = [] ) {
 		// Check cache first
-		$cache_key = PerformanceCache::generate_metrics_key([
-			'source' => self::SOURCE_ID,
-			'client_id' => $client_id,
-			'origin_url' => $this->origin_url,
-			'filters' => $filters,
-		]);
+		$cache_key = PerformanceCache::generate_metrics_key(
+			[
+				'source'     => self::SOURCE_ID,
+				'client_id'  => $client_id,
+				'origin_url' => $this->origin_url,
+				'filters'    => $filters,
+			]
+		);
 
-               $cached_data = null;
-               if ( PerformanceCache::is_cache_enabled() ) {
-                       $cached_data = PerformanceCache::get_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS );
-                       if ( $cached_data !== false && $cached_data !== null ) {
-                               return $cached_data;
-                       }
-               }
+				$cached_data = null;
+		if ( PerformanceCache::is_cache_enabled() ) {
+				$cached_data = PerformanceCache::get_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS );
+			if ( $cached_data !== false && $cached_data !== null ) {
+						return $cached_data;
+			}
+		}
 
 		try {
 			if ( ! $this->is_connected() ) {
 				// Return demo data if not connected
-                                $demo_data = $this->get_demo_metrics();
-                                CoreWebVitalsModel::store_metrics(
-                                        $client_id,
-                                        $demo_data,
-                                        '28_days',
-                                        [
-                                                'period_start' => $start_date,
-                                                'period_end'   => $end_date,
-                                                'meta'         => [
-                                                        'origin_url'        => $this->origin_url,
-                                                        'percentile'        => 75,
-                                                        'collection_period' => '28_days',
-                                                ],
-                                        ]
-                                );
-                                return $demo_data;
-                        }
+								$demo_data = $this->get_demo_metrics();
+								CoreWebVitalsModel::store_metrics(
+									$client_id,
+									$demo_data,
+									'28_days',
+									[
+										'period_start' => $start_date,
+										'period_end'   => $end_date,
+										'meta'         => [
+											'origin_url' => $this->origin_url,
+											'percentile' => 75,
+											'collection_period' => '28_days',
+										],
+									]
+								);
+								return $demo_data;
+			}
 
-                        // Make actual CrUX API call
-                        $metrics = $this->make_crux_api_request( $filters );
+						// Make actual CrUX API call
+						$metrics = $this->make_crux_api_request( $filters );
 
-                        if ( $metrics ) {
-                                // Store in cache
-                                PerformanceCache::set_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS, $metrics, 3600 ); // 1 hour cache
-                                CoreWebVitalsModel::store_metrics(
-                                        $client_id,
-                                        $metrics,
-                                        '28_days',
-                                        [
-                                                'period_start' => $start_date,
-                                                'period_end'   => $end_date,
-                                                'meta'         => [
-                                                        'origin_url'        => $this->origin_url,
-                                                        'percentile'        => 75,
-                                                        'collection_period' => '28_days',
-                                                ],
-                                        ]
-                                );
-                                return $metrics;
-                        }
+			if ( $metrics ) {
+					// Store in cache
+					PerformanceCache::set_cached( $cache_key, PerformanceCache::CACHE_GROUP_METRICS, $metrics, 3600 ); // 1 hour cache
+					CoreWebVitalsModel::store_metrics(
+						$client_id,
+						$metrics,
+						'28_days',
+						[
+							'period_start' => $start_date,
+							'period_end'   => $end_date,
+							'meta'         => [
+								'origin_url'        => $this->origin_url,
+								'percentile'        => 75,
+								'collection_period' => '28_days',
+							],
+						]
+					);
+					return $metrics;
+			}
 
 			return false;
 
@@ -169,7 +171,7 @@ class CoreWebVitals {
 		while ( $retry_count < $max_retries ) {
 			try {
 				$request_body = [
-					'origin' => $this->origin_url,
+					'origin'  => $this->origin_url,
 					'metrics' => [
 						'largest_contentful_paint',
 						'interaction_to_next_paint',
@@ -182,13 +184,13 @@ class CoreWebVitals {
 					$request_body['formFactor'] = strtoupper( $filters['form_factor'] );
 				}
 
-				$response = wp_remote_post( 
+				$response = wp_remote_post(
 					self::CRUX_API_ENDPOINT . '?key=' . $this->api_key,
 					[
 						'headers' => [
 							'Content-Type' => 'application/json',
 						],
-						'body' => wp_json_encode( $request_body ),
+						'body'    => wp_json_encode( $request_body ),
 						'timeout' => 30,
 					]
 				);
@@ -208,11 +210,11 @@ class CoreWebVitals {
 
 				// Check for rate limiting or quota exceeded
 				if ( wp_remote_retrieve_response_code( $response ) === 429 ||
-					 wp_remote_retrieve_response_code( $response ) === 403 ) {
+					wp_remote_retrieve_response_code( $response ) === 403 ) {
 					if ( $retry_count < $max_retries - 1 ) {
 						sleep( $this->backoff_delay );
 						$this->backoff_delay = min( $this->backoff_delay * 2, self::MAX_BACKOFF );
-						$retry_count++;
+						++$retry_count;
 						continue;
 					}
 				}
@@ -220,17 +222,17 @@ class CoreWebVitals {
 				return false;
 
 			} catch ( \Exception $e ) {
-				$retry_count++;
-				
-				if ( strpos( $e->getMessage(), '429' ) !== false || 
-					 strpos( $e->getMessage(), 'quota' ) !== false ) {
+				++$retry_count;
+
+				if ( strpos( $e->getMessage(), '429' ) !== false ||
+					strpos( $e->getMessage(), 'quota' ) !== false ) {
 					if ( $retry_count < $max_retries ) {
 						sleep( $this->backoff_delay );
 						$this->backoff_delay = min( $this->backoff_delay * 2, self::MAX_BACKOFF );
 						continue;
 					}
 				}
-				
+
 				error_log( 'CrUX API error: ' . $e->getMessage() );
 				break;
 			}

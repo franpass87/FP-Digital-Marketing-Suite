@@ -27,9 +27,9 @@ class GoogleSearchConsoleTest extends TestCase {
 	 * Test site URL getter and setter
 	 */
 	public function test_site_url_get_set(): void {
-		$gsc = new GoogleSearchConsole();
+		$gsc      = new GoogleSearchConsole();
 		$site_url = 'https://example.com/';
-		
+
 		$gsc->set_site_url( $site_url );
 		$this->assertEquals( $site_url, $gsc->get_site_url() );
 	}
@@ -39,8 +39,8 @@ class GoogleSearchConsoleTest extends TestCase {
 	 */
 	public function test_site_url_constructor(): void {
 		$site_url = 'https://example.com/';
-		$gsc = new GoogleSearchConsole( $site_url );
-		
+		$gsc      = new GoogleSearchConsole( $site_url );
+
 		$this->assertEquals( $site_url, $gsc->get_site_url() );
 	}
 
@@ -56,9 +56,9 @@ class GoogleSearchConsoleTest extends TestCase {
 	 * Test authorization URL when not configured
 	 */
 	public function test_authorization_url_when_not_configured(): void {
-		$gsc = new GoogleSearchConsole();
+		$gsc      = new GoogleSearchConsole();
 		$auth_url = $gsc->get_authorization_url();
-		
+
 		// Should return empty string when not configured
 		$this->assertIsString( $auth_url );
 	}
@@ -67,9 +67,9 @@ class GoogleSearchConsoleTest extends TestCase {
 	 * Test fetch metrics when not connected
 	 */
 	public function test_fetch_metrics_when_not_connected(): void {
-		$gsc = new GoogleSearchConsole();
+		$gsc    = new GoogleSearchConsole();
 		$result = $gsc->fetch_metrics( 1, '2024-01-01', '2024-01-31' );
-		
+
 		$this->assertFalse( $result );
 	}
 
@@ -77,9 +77,9 @@ class GoogleSearchConsoleTest extends TestCase {
 	 * Test get properties when not connected
 	 */
 	public function test_get_properties_when_not_connected(): void {
-		$gsc = new GoogleSearchConsole();
+		$gsc        = new GoogleSearchConsole();
 		$properties = $gsc->get_properties();
-		
+
 		$this->assertIsArray( $properties );
 		$this->assertEmpty( $properties );
 	}
@@ -88,9 +88,9 @@ class GoogleSearchConsoleTest extends TestCase {
 	 * Test validate property when not connected
 	 */
 	public function test_validate_property_when_not_connected(): void {
-		$gsc = new GoogleSearchConsole();
+		$gsc   = new GoogleSearchConsole();
 		$valid = $gsc->validate_property( 'https://example.com/' );
-		
+
 		$this->assertFalse( $valid );
 	}
 
@@ -106,16 +106,16 @@ class GoogleSearchConsoleTest extends TestCase {
 	 */
 	public function test_fetch_metrics_with_filters(): void {
 		$gsc = new GoogleSearchConsole( 'https://example.com/' );
-		
+
 		$filters = [
-			'query' => 'test query',
-			'page' => 'https://example.com/page',
+			'query'   => 'test query',
+			'page'    => 'https://example.com/page',
 			'country' => 'ita',
-			'device' => 'mobile',
+			'device'  => 'mobile',
 		];
-		
+
 		$result = $gsc->fetch_metrics( 1, '2024-01-01', '2024-01-31', $filters );
-		
+
 		// Should return false when not connected, even with filters
 		$this->assertFalse( $result );
 	}
@@ -125,7 +125,7 @@ class GoogleSearchConsoleTest extends TestCase {
 	 */
 	public function test_oauth_callback_handling(): void {
 		$gsc = new GoogleSearchConsole();
-		
+
 		// Should return boolean
 		$result = $gsc->handle_oauth_callback( 'test_code' );
 		$this->assertIsBool( $result );

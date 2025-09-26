@@ -61,41 +61,41 @@ class ReportGenerator {
 	 */
 	public static function generate_demo_report_data( int $client_id = 1 ): array {
 		// Generate mock KPI data
-		$current_month = date( 'Y-m-01' );
+		$current_month  = date( 'Y-m-01' );
 		$previous_month = date( 'Y-m-01', strtotime( '-1 month' ) );
-		
+
 		return [
-			'client_id'     => $client_id,
-			'period_start'  => $previous_month,
-			'period_end'    => date( 'Y-m-t', strtotime( $previous_month ) ),
-			'generated_at'  => self::current_time( 'mysql' ),
-			'kpis'          => [
-				'sessions' => [
-					'value'           => 12450,
-					'previous_value'  => 11230,
-					'change_percent'  => 10.9,
-					'change_type'     => 'increase',
+			'client_id'    => $client_id,
+			'period_start' => $previous_month,
+			'period_end'   => date( 'Y-m-t', strtotime( $previous_month ) ),
+			'generated_at' => self::current_time( 'mysql' ),
+			'kpis'         => [
+				'sessions'        => [
+					'value'          => 12450,
+					'previous_value' => 11230,
+					'change_percent' => 10.9,
+					'change_type'    => 'increase',
 				],
-				'users' => [
-					'value'           => 8940,
-					'previous_value'  => 8120,
-					'change_percent'  => 10.1,
-					'change_type'     => 'increase',
+				'users'           => [
+					'value'          => 8940,
+					'previous_value' => 8120,
+					'change_percent' => 10.1,
+					'change_type'    => 'increase',
 				],
 				'conversion_rate' => [
-					'value'           => 3.42,
-					'previous_value'  => 3.15,
-					'change_percent'  => 8.6,
-					'change_type'     => 'increase',
+					'value'          => 3.42,
+					'previous_value' => 3.15,
+					'change_percent' => 8.6,
+					'change_type'    => 'increase',
 				],
-				'revenue' => [
-					'value'           => 28500.75,
-					'previous_value'  => 25200.40,
-					'change_percent'  => 13.1,
-					'change_type'     => 'increase',
+				'revenue'         => [
+					'value'          => 28500.75,
+					'previous_value' => 25200.40,
+					'change_percent' => 13.1,
+					'change_type'    => 'increase',
 				],
 			],
-			'channels'      => [
+			'channels'     => [
 				[
 					'name'     => self::__( 'Organic Search', 'fp-digital-marketing' ),
 					'sessions' => 5680,
@@ -128,26 +128,26 @@ class ReportGenerator {
 	 */
 	public static function generate_html_report( array $report_data ): string {
 		$html = self::get_html_template();
-		
+
 		// Replace placeholders with actual data
 		$period_start_timestamp = strtotime( $report_data['period_start'] );
-		$period_end_timestamp = strtotime( $report_data['period_end'] );
+		$period_end_timestamp   = strtotime( $report_data['period_end'] );
 		$generated_at_timestamp = strtotime( $report_data['generated_at'] );
-		
+
 		$replacements = [
-			'{{REPORT_TITLE}}'     => sprintf( self::__( 'Digital Marketing Report - Client %d', 'fp-digital-marketing' ), $report_data['client_id'] ),
-			'{{PERIOD_START}}'     => $period_start_timestamp ? date( 'd/m/Y', $period_start_timestamp ) : $report_data['period_start'],
-			'{{PERIOD_END}}'       => $period_end_timestamp ? date( 'd/m/Y', $period_end_timestamp ) : $report_data['period_end'],
-			'{{GENERATED_AT}}'     => $generated_at_timestamp ? date( 'd/m/Y H:i', $generated_at_timestamp ) : $report_data['generated_at'],
-			'{{SESSIONS_VALUE}}'   => number_format( $report_data['kpis']['sessions']['value'] ),
-			'{{SESSIONS_CHANGE}}'  => self::format_change( $report_data['kpis']['sessions'] ),
-			'{{USERS_VALUE}}'      => number_format( $report_data['kpis']['users']['value'] ),
-			'{{USERS_CHANGE}}'     => self::format_change( $report_data['kpis']['users'] ),
-			'{{CONVERSION_VALUE}}' => number_format( $report_data['kpis']['conversion_rate']['value'], 2 ) . '%',
+			'{{REPORT_TITLE}}'      => sprintf( self::__( 'Digital Marketing Report - Client %d', 'fp-digital-marketing' ), $report_data['client_id'] ),
+			'{{PERIOD_START}}'      => $period_start_timestamp ? date( 'd/m/Y', $period_start_timestamp ) : $report_data['period_start'],
+			'{{PERIOD_END}}'        => $period_end_timestamp ? date( 'd/m/Y', $period_end_timestamp ) : $report_data['period_end'],
+			'{{GENERATED_AT}}'      => $generated_at_timestamp ? date( 'd/m/Y H:i', $generated_at_timestamp ) : $report_data['generated_at'],
+			'{{SESSIONS_VALUE}}'    => number_format( $report_data['kpis']['sessions']['value'] ),
+			'{{SESSIONS_CHANGE}}'   => self::format_change( $report_data['kpis']['sessions'] ),
+			'{{USERS_VALUE}}'       => number_format( $report_data['kpis']['users']['value'] ),
+			'{{USERS_CHANGE}}'      => self::format_change( $report_data['kpis']['users'] ),
+			'{{CONVERSION_VALUE}}'  => number_format( $report_data['kpis']['conversion_rate']['value'], 2 ) . '%',
 			'{{CONVERSION_CHANGE}}' => self::format_change( $report_data['kpis']['conversion_rate'] ),
-			'{{REVENUE_VALUE}}'    => '€' . number_format( $report_data['kpis']['revenue']['value'], 2 ),
-			'{{REVENUE_CHANGE}}'   => self::format_change( $report_data['kpis']['revenue'] ),
-			'{{CHANNELS_TABLE}}'   => self::generate_channels_table( $report_data['channels'] ),
+			'{{REVENUE_VALUE}}'     => '€' . number_format( $report_data['kpis']['revenue']['value'], 2 ),
+			'{{REVENUE_CHANGE}}'    => self::format_change( $report_data['kpis']['revenue'] ),
+			'{{CHANNELS_TABLE}}'    => self::generate_channels_table( $report_data['channels'] ),
 		];
 
 		return str_replace( array_keys( $replacements ), array_values( $replacements ), $html );
@@ -164,12 +164,12 @@ class ReportGenerator {
 		// Check if dompdf is available
 		if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
 			// Try to load via composer autoload
-			$plugin_dir = dirname( dirname( dirname( __FILE__ ) ) );
+			$plugin_dir    = dirname( dirname( __DIR__ ) );
 			$autoload_path = $plugin_dir . '/vendor/autoload.php';
 			if ( file_exists( $autoload_path ) ) {
 				require_once $autoload_path;
 			}
-			
+
 			// If still not available, throw exception
 			if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
 				throw new \Exception( self::__( 'PDF generation non disponibile. Utilizzare formato HTML o installare le dipendenze.', 'fp-digital-marketing' ) );
@@ -191,11 +191,11 @@ class ReportGenerator {
 			return $dompdf->output();
 		} catch ( \Exception $e ) {
 			// If PDF generation fails, throw exception to be handled by caller
-			throw new \Exception( 
-				sprintf( 
-					self::__( 'Errore nella generazione PDF: %s', 'fp-digital-marketing' ), 
-					$e->getMessage() 
-				) 
+			throw new \Exception(
+				sprintf(
+					self::__( 'Errore nella generazione PDF: %s', 'fp-digital-marketing' ),
+					$e->getMessage()
+				)
 			);
 		}
 	}
@@ -203,33 +203,33 @@ class ReportGenerator {
 	/**
 	 * Generate CSV report
 	 *
-	 * @param array $report_data Report data array
+	 * @param array  $report_data Report data array
 	 * @param string $separator CSV separator (default: ',')
 	 * @return string CSV content in UTF-8
 	 */
 	public static function generate_csv_report( array $report_data, string $separator = ',' ): string {
 		$csv_data = [];
-		
+
 		// Add header information
 		$csv_data[] = [
 			self::__( 'Report Type', 'fp-digital-marketing' ),
-			self::__( 'Digital Marketing Report', 'fp-digital-marketing' )
+			self::__( 'Digital Marketing Report', 'fp-digital-marketing' ),
 		];
 		$csv_data[] = [
 			self::__( 'Client ID', 'fp-digital-marketing' ),
-			$report_data['client_id']
+			$report_data['client_id'],
 		];
 		$csv_data[] = [
 			self::__( 'Period Start', 'fp-digital-marketing' ),
-			$report_data['period_start']
+			$report_data['period_start'],
 		];
 		$csv_data[] = [
 			self::__( 'Period End', 'fp-digital-marketing' ),
-			$report_data['period_end']
+			$report_data['period_end'],
 		];
 		$csv_data[] = [
 			self::__( 'Generated At', 'fp-digital-marketing' ),
-			$report_data['generated_at']
+			$report_data['generated_at'],
 		];
 		$csv_data[] = []; // Empty row for separation
 
@@ -239,7 +239,7 @@ class ReportGenerator {
 			self::__( 'Current Value', 'fp-digital-marketing' ),
 			self::__( 'Previous Value', 'fp-digital-marketing' ),
 			self::__( 'Change %', 'fp-digital-marketing' ),
-			self::__( 'Change Type', 'fp-digital-marketing' )
+			self::__( 'Change Type', 'fp-digital-marketing' ),
 		];
 
 		foreach ( $report_data['kpis'] as $kpi_name => $kpi_data ) {
@@ -248,7 +248,7 @@ class ReportGenerator {
 				$kpi_data['value'],
 				$kpi_data['previous_value'],
 				$kpi_data['change_percent'],
-				$kpi_data['change_type']
+				$kpi_data['change_type'],
 			];
 		}
 
@@ -259,14 +259,14 @@ class ReportGenerator {
 			$csv_data[] = [
 				self::__( 'Channel', 'fp-digital-marketing' ),
 				self::__( 'Sessions', 'fp-digital-marketing' ),
-				self::__( 'Revenue', 'fp-digital-marketing' )
+				self::__( 'Revenue', 'fp-digital-marketing' ),
 			];
 
 			foreach ( $report_data['channels'] as $channel ) {
 				$csv_data[] = [
 					$channel['name'],
 					$channel['sessions'],
-					$channel['revenue']
+					$channel['revenue'],
 				];
 			}
 		}
@@ -283,8 +283,8 @@ class ReportGenerator {
 	private static function format_change( array $kpi ): string {
 		$arrow = $kpi['change_type'] === 'increase' ? '↗' : '↘';
 		$class = $kpi['change_type'] === 'increase' ? 'positive' : 'negative';
-		$sign = $kpi['change_type'] === 'increase' ? '+' : '-';
-		
+		$sign  = $kpi['change_type'] === 'increase' ? '+' : '-';
+
 		return sprintf(
 			'<span class="change %s">%s %s%.1f%%</span>',
 			$class,
@@ -301,7 +301,7 @@ class ReportGenerator {
 	 * @return string HTML table
 	 */
 	private static function generate_channels_table( array $channels ): string {
-		$html = '<table class="channels-table">';
+		$html  = '<table class="channels-table">';
 		$html .= '<thead>';
 		$html .= '<tr>';
 		$html .= '<th>' . self::__( 'Canale', 'fp-digital-marketing' ) . '</th>';
@@ -328,7 +328,7 @@ class ReportGenerator {
 	/**
 	 * Convert array to CSV string
 	 *
-	 * @param array $data Data array
+	 * @param array  $data Data array
 	 * @param string $separator CSV separator
 	 * @return string CSV content in UTF-8
 	 */
@@ -361,15 +361,15 @@ class ReportGenerator {
 	 */
 	private static function get_kpi_label( string $kpi_name ): string {
 		$labels = [
-			'sessions' => self::__( 'Sessions', 'fp-digital-marketing' ),
-			'users' => self::__( 'Users', 'fp-digital-marketing' ),
+			'sessions'        => self::__( 'Sessions', 'fp-digital-marketing' ),
+			'users'           => self::__( 'Users', 'fp-digital-marketing' ),
 			'conversion_rate' => self::__( 'Conversion Rate', 'fp-digital-marketing' ),
-			'revenue' => self::__( 'Revenue', 'fp-digital-marketing' ),
-			'pageviews' => self::__( 'Page Views', 'fp-digital-marketing' ),
-			'bounce_rate' => self::__( 'Bounce Rate', 'fp-digital-marketing' ),
-			'impressions' => self::__( 'Impressions', 'fp-digital-marketing' ),
-			'clicks' => self::__( 'Clicks', 'fp-digital-marketing' ),
-			'ctr' => self::__( 'Click-Through Rate', 'fp-digital-marketing' ),
+			'revenue'         => self::__( 'Revenue', 'fp-digital-marketing' ),
+			'pageviews'       => self::__( 'Page Views', 'fp-digital-marketing' ),
+			'bounce_rate'     => self::__( 'Bounce Rate', 'fp-digital-marketing' ),
+			'impressions'     => self::__( 'Impressions', 'fp-digital-marketing' ),
+			'clicks'          => self::__( 'Clicks', 'fp-digital-marketing' ),
+			'ctr'             => self::__( 'Click-Through Rate', 'fp-digital-marketing' ),
 		];
 
 		return $labels[ $kpi_name ] ?? ucfirst( str_replace( '_', ' ', $kpi_name ) );
@@ -378,34 +378,34 @@ class ReportGenerator {
 	/**
 	 * Log report generation
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $format Report format (pdf, csv, html)
-	 * @param int $file_size File size in bytes
-	 * @param bool $success Generation success status
+	 * @param int    $file_size File size in bytes
+	 * @param bool   $success Generation success status
 	 * @param string $error_message Error message if failed
 	 * @return void
 	 */
 	public static function log_report_generation( int $client_id, string $format, int $file_size = 0, bool $success = true, string $error_message = '' ): void {
 		$log_entry = [
-			'timestamp' => self::current_time( 'mysql' ),
-			'client_id' => $client_id,
-			'format' => $format,
-			'file_size' => $file_size,
-			'success' => $success,
+			'timestamp'     => self::current_time( 'mysql' ),
+			'client_id'     => $client_id,
+			'format'        => $format,
+			'file_size'     => $file_size,
+			'success'       => $success,
 			'error_message' => $error_message,
-			'user_id' => self::get_current_user_id(),
+			'user_id'       => self::get_current_user_id(),
 		];
 
 		// Store in WordPress options table as a simple log
 		$existing_logs = function_exists( 'get_option' ) ? get_option( 'fp_dms_report_logs', [] ) : [];
-		
+
 		// Keep only last 1000 entries to prevent bloating
 		if ( count( $existing_logs ) >= 1000 ) {
 			$existing_logs = array_slice( $existing_logs, -999 );
 		}
-		
+
 		$existing_logs[] = $log_entry;
-		
+
 		if ( function_exists( 'update_option' ) ) {
 			update_option( 'fp_dms_report_logs', $existing_logs );
 		}
@@ -432,19 +432,25 @@ class ReportGenerator {
 	 */
 	public static function get_report_logs( int $limit = 50, int $client_id = 0 ): array {
 		$logs = function_exists( 'get_option' ) ? get_option( 'fp_dms_report_logs', [] ) : [];
-		
+
 		// Filter by client if specified
 		if ( $client_id > 0 ) {
-			$logs = array_filter( $logs, function( $log ) use ( $client_id ) {
-				return $log['client_id'] === $client_id;
-			} );
+			$logs = array_filter(
+				$logs,
+				function ( $log ) use ( $client_id ) {
+					return $log['client_id'] === $client_id;
+				}
+			);
 		}
-		
+
 		// Sort by timestamp descending (newest first)
-		usort( $logs, function( $a, $b ) {
-			return strtotime( $b['timestamp'] ) - strtotime( $a['timestamp'] );
-		} );
-		
+		usort(
+			$logs,
+			function ( $a, $b ) {
+				return strtotime( $b['timestamp'] ) - strtotime( $a['timestamp'] );
+			}
+		);
+
 		return array_slice( $logs, 0, $limit );
 	}
 
@@ -452,12 +458,12 @@ class ReportGenerator {
 	 * Validate report data and check for errors
 	 *
 	 * @param array $report_data Report data array
-	 * @param int $max_file_size Maximum allowed file size in bytes (default: 50MB)
+	 * @param int   $max_file_size Maximum allowed file size in bytes (default: 50MB)
 	 * @return array Array with 'valid' boolean and 'errors' array
 	 */
 	public static function validate_report_data( array $report_data, int $max_file_size = 52428800 ): array {
 		$errors = [];
-		
+
 		// Check required fields
 		$required_fields = [ 'client_id', 'period_start', 'period_end', 'kpis' ];
 		foreach ( $required_fields as $field ) {
@@ -465,7 +471,7 @@ class ReportGenerator {
 				$errors[] = sprintf( self::__( 'Missing required field: %s', 'fp-digital-marketing' ), $field );
 			}
 		}
-		
+
 		// Check if KPIs data is valid
 		if ( isset( $report_data['kpis'] ) && is_array( $report_data['kpis'] ) ) {
 			if ( empty( $report_data['kpis'] ) ) {
@@ -478,12 +484,12 @@ class ReportGenerator {
 				}
 			}
 		}
-		
+
 		// Estimate file size for different formats
 		$estimated_sizes = self::estimate_report_sizes( $report_data );
 		foreach ( $estimated_sizes as $format => $size ) {
 			if ( $size > $max_file_size ) {
-				$errors[] = sprintf( 
+				$errors[] = sprintf(
 					self::__( 'Estimated %s file size (%s) exceeds maximum allowed size (%s)', 'fp-digital-marketing' ),
 					strtoupper( $format ),
 					function_exists( 'size_format' ) ? size_format( $size ) : number_format( $size ) . ' bytes',
@@ -491,9 +497,9 @@ class ReportGenerator {
 				);
 			}
 		}
-		
+
 		return [
-			'valid' => empty( $errors ),
+			'valid'  => empty( $errors ),
 			'errors' => $errors,
 		];
 	}
@@ -505,18 +511,18 @@ class ReportGenerator {
 	 * @return array Array with format => estimated_size_in_bytes
 	 */
 	private static function estimate_report_sizes( array $report_data ): array {
-		$kpi_count = isset( $report_data['kpis'] ) ? count( $report_data['kpis'] ) : 0;
+		$kpi_count     = isset( $report_data['kpis'] ) ? count( $report_data['kpis'] ) : 0;
 		$channel_count = isset( $report_data['channels'] ) ? count( $report_data['channels'] ) : 0;
-		
+
 		// Rough estimates based on typical data sizes
-		$csv_size = 1024 + ( $kpi_count * 150 ) + ( $channel_count * 100 ); // Base + KPIs + channels
+		$csv_size  = 1024 + ( $kpi_count * 150 ) + ( $channel_count * 100 ); // Base + KPIs + channels
 		$html_size = 15000 + ( $kpi_count * 300 ) + ( $channel_count * 200 ); // Larger due to HTML/CSS
-		$pdf_size = $html_size * 1.5; // PDFs are typically larger than HTML
-		
+		$pdf_size  = $html_size * 1.5; // PDFs are typically larger than HTML
+
 		return [
-			'csv' => $csv_size,
+			'csv'  => $csv_size,
 			'html' => $html_size,
-			'pdf' => (int) $pdf_size,
+			'pdf'  => (int) $pdf_size,
 		];
 	}
 

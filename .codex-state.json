@@ -1,0 +1,17 @@
+{
+  "current_phase": 10,
+  "completed": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "last_commit": "docs: finalize 1.2.0 release packaging",
+  "notes": "Phase 10 complete. README, readme.txt and CHANGELOG reference the packaged 1.2.0 release, UPGRADE.md documents migration steps, docs/audit/release.md captures QA results, and dist/ contains the signed ZIP and checksum."
+}

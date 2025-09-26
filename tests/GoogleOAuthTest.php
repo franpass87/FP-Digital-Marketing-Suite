@@ -44,7 +44,7 @@ class GoogleOAuthTest extends TestCase {
 	 */
 	public function test_authorization_url_not_configured(): void {
 		$oauth = new GoogleOAuth();
-		$url = $oauth->get_authorization_url();
+		$url   = $oauth->get_authorization_url();
 		$this->assertEquals( '', $url );
 	}
 
@@ -61,9 +61,9 @@ class GoogleOAuthTest extends TestCase {
 	 * Test connection status structure
 	 */
 	public function test_connection_status_structure(): void {
-		$oauth = new GoogleOAuth();
+		$oauth  = new GoogleOAuth();
 		$status = $oauth->get_connection_status();
-		
+
 		$this->assertIsArray( $status );
 		$this->assertArrayHasKey( 'connected', $status );
 		$this->assertArrayHasKey( 'status', $status );
@@ -75,7 +75,7 @@ class GoogleOAuthTest extends TestCase {
 	 * Test token exchange with invalid code
 	 */
 	public function test_token_exchange_invalid_code(): void {
-		$oauth = new GoogleOAuth();
+		$oauth  = new GoogleOAuth();
 		$result = $oauth->exchange_code_for_tokens( 'invalid_code' );
 		$this->assertFalse( $result );
 	}
@@ -84,7 +84,7 @@ class GoogleOAuthTest extends TestCase {
 	 * Test token refresh when no token exists
 	 */
 	public function test_token_refresh_no_token(): void {
-		$oauth = new GoogleOAuth();
+		$oauth  = new GoogleOAuth();
 		$result = $oauth->refresh_token_if_needed();
 		$this->assertFalse( $result );
 	}
@@ -93,7 +93,7 @@ class GoogleOAuthTest extends TestCase {
 	 * Test revoke access
 	 */
 	public function test_revoke_access(): void {
-		$oauth = new GoogleOAuth();
+		$oauth  = new GoogleOAuth();
 		$result = $oauth->revoke_access();
 		$this->assertTrue( $result );
 	}

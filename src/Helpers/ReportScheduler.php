@@ -79,29 +79,33 @@ class ReportScheduler {
 	 */
 	public static function generate_scheduled_reports(): void {
 		// Get all cliente posts
-		$clientes = get_posts( [
-			'post_type'      => 'cliente',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'meta_query'     => [
-				[
-					'key'     => '_fp_auto_reports',
-					'value'   => '1',
-					'compare' => '=',
+		$clientes = get_posts(
+			[
+				'post_type'      => 'cliente',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'meta_query'     => [
+					[
+						'key'     => '_fp_auto_reports',
+						'value'   => '1',
+						'compare' => '=',
+					],
 				],
-			],
-		] );
+			]
+		);
 
 		foreach ( $clientes as $cliente ) {
 			self::generate_client_report( $cliente->ID );
 		}
 
 		// Log the scheduled generation
-		error_log( sprintf( 
-			'FP DMS: Generated %d scheduled reports at %s', 
-			count( $clientes ), 
-			current_time( 'mysql' ) 
-		) );
+		error_log(
+			sprintf(
+				'FP DMS: Generated %d scheduled reports at %s',
+				count( $clientes ),
+				current_time( 'mysql' )
+			)
+		);
 	}
 
 	/**
@@ -112,30 +116,30 @@ class ReportScheduler {
 	 */
 	public static function generate_client_report( int $client_id ): bool {
 		try {
-			$report_data = ReportGenerator::generate_demo_report_data( $client_id );
+			$report_data  = ReportGenerator::generate_demo_report_data( $client_id );
 			$html_content = ReportGenerator::generate_html_report( $report_data );
-			$pdf_content = ReportGenerator::generate_pdf_report( $report_data );
+			$pdf_content  = ReportGenerator::generate_pdf_report( $report_data );
 
 			// Save report to uploads directory
 			$upload_dir = wp_upload_dir();
-			
+
 			// Ensure we have a valid upload directory
 			if ( empty( $upload_dir['basedir'] ) || ! is_writable( $upload_dir['basedir'] ) ) {
 				throw new \Exception( 'Directory di upload non accessibile per la generazione report.' );
 			}
-			
+
 			$reports_dir = $upload_dir['basedir'] . '/fp-dms-reports';
-			
+
 			if ( ! file_exists( $reports_dir ) ) {
 				if ( ! wp_mkdir_p( $reports_dir ) ) {
 					throw new \Exception( 'Impossibile creare la directory dei report.' );
 				}
 			}
 
-			$filename = sprintf( 
-				'report-%d-%s.pdf', 
-				$client_id, 
-				date( 'Y-m-d' ) 
+			$filename = sprintf(
+				'report-%d-%s.pdf',
+				$client_id,
+				date( 'Y-m-d' )
 			);
 			$filepath = $reports_dir . '/' . $filename;
 
@@ -148,7 +152,7 @@ class ReportScheduler {
 			// Save report metadata
 			update_post_meta( $client_id, '_fp_last_report_generated', current_time( 'mysql' ) );
 			update_post_meta( $client_id, '_fp_last_report_file', $filename );
-			
+
 			return true;
 
 		} catch ( \Exception $e ) {
@@ -185,16 +189,18 @@ class ReportScheduler {
 	 * @return int Number of reports generated
 	 */
 	public static function trigger_manual_generation(): int {
-		$clientes = get_posts( [
-			'post_type'      => 'cliente',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-		] );
+		$clientes = get_posts(
+			[
+				'post_type'      => 'cliente',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+			]
+		);
 
 		$count = 0;
 		foreach ( $clientes as $cliente ) {
 			if ( self::generate_client_report( $cliente->ID ) ) {
-				$count++;
+				++$count;
 			}
 		}
 

@@ -49,8 +49,8 @@ class GoogleAnalytics4Test extends TestCase {
 	 */
 	public function test_fetch_metrics_structure(): void {
 		$ga4 = new GoogleAnalytics4( '123456789' );
-		
-		// Since this is a mock implementation, we expect it to return false 
+
+		// Since this is a mock implementation, we expect it to return false
 		// when not properly connected (which it won't be in tests)
 		$result = $ga4->fetch_metrics( 1, '2024-01-01', '2024-01-31' );
 		$this->assertFalse( $result );
@@ -68,9 +68,9 @@ class GoogleAnalytics4Test extends TestCase {
 	 * Test OAuth authorization URL generation
 	 */
 	public function test_oauth_authorization_url(): void {
-		$ga4 = new GoogleAnalytics4( '123456789' );
+		$ga4      = new GoogleAnalytics4( '123456789' );
 		$auth_url = $ga4->get_authorization_url();
-		
+
 		// Should return empty string when not configured
 		$this->assertEquals( '', $auth_url );
 	}
@@ -80,7 +80,7 @@ class GoogleAnalytics4Test extends TestCase {
 	 */
 	public function test_oauth_callback_handling(): void {
 		$ga4 = new GoogleAnalytics4( '123456789' );
-		
+
 		// Should return false with invalid/empty code
 		$result = $ga4->handle_oauth_callback( '' );
 		$this->assertFalse( $result );

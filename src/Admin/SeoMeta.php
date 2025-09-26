@@ -72,23 +72,23 @@ class SeoMeta {
 		wp_nonce_field( self::NONCE_ACTION, self::NONCE_NAME );
 
 		// Get current values.
-		$seo_title = get_post_meta( $post->ID, SeoMetadata::META_TITLE, true );
+		$seo_title       = get_post_meta( $post->ID, SeoMetadata::META_TITLE, true );
 		$seo_description = get_post_meta( $post->ID, SeoMetadata::META_DESCRIPTION, true );
-		$seo_robots = get_post_meta( $post->ID, SeoMetadata::META_ROBOTS, true );
-		$seo_canonical = get_post_meta( $post->ID, SeoMetadata::META_CANONICAL, true );
+		$seo_robots      = get_post_meta( $post->ID, SeoMetadata::META_ROBOTS, true );
+		$seo_canonical   = get_post_meta( $post->ID, SeoMetadata::META_CANONICAL, true );
 
-		$og_title = get_post_meta( $post->ID, SeoMetadata::META_OG_TITLE, true );
+		$og_title       = get_post_meta( $post->ID, SeoMetadata::META_OG_TITLE, true );
 		$og_description = get_post_meta( $post->ID, SeoMetadata::META_OG_DESCRIPTION, true );
-		$og_image = get_post_meta( $post->ID, SeoMetadata::META_OG_IMAGE, true );
+		$og_image       = get_post_meta( $post->ID, SeoMetadata::META_OG_IMAGE, true );
 
-		$twitter_title = get_post_meta( $post->ID, SeoMetadata::META_TWITTER_TITLE, true );
+		$twitter_title       = get_post_meta( $post->ID, SeoMetadata::META_TWITTER_TITLE, true );
 		$twitter_description = get_post_meta( $post->ID, SeoMetadata::META_TWITTER_DESCRIPTION, true );
-		$twitter_image = get_post_meta( $post->ID, SeoMetadata::META_TWITTER_IMAGE, true );
+		$twitter_image       = get_post_meta( $post->ID, SeoMetadata::META_TWITTER_IMAGE, true );
 
 		// Get focus keyword and content analysis data.
-		$focus_keyword = get_post_meta( $post->ID, SeoMetadata::META_FOCUS_KEYWORD, true );
+		$focus_keyword  = get_post_meta( $post->ID, SeoMetadata::META_FOCUS_KEYWORD, true );
 		$saved_analysis = ContentSeoAnalyzer::get_saved_analysis( $post->ID );
-		
+
 		// Perform fresh analysis if we have a focus keyword
 		$current_analysis = $saved_analysis;
 		if ( ! empty( $focus_keyword ) ) {
@@ -96,11 +96,11 @@ class SeoMeta {
 		}
 
 		// Get preview data for fallbacks.
-		$preview_title = SeoMetadata::get_title( $post );
-		$preview_description = SeoMetadata::get_description( $post );
-		$preview_og_title = SeoMetadata::get_og_title( $post );
+		$preview_title          = SeoMetadata::get_title( $post );
+		$preview_description    = SeoMetadata::get_description( $post );
+		$preview_og_title       = SeoMetadata::get_og_title( $post );
 		$preview_og_description = SeoMetadata::get_og_description( $post );
-		$preview_og_image = SeoMetadata::get_og_image( $post );
+		$preview_og_image       = SeoMetadata::get_og_image( $post );
 
 		?>
 		<div class="seo-meta-container">
@@ -205,7 +205,7 @@ class SeoMeta {
 						</tbody>
 					</table>
 
-					<?php if ( ! empty( $focus_keyword ) && ! empty( $current_analysis['overall_score'] ) ): ?>
+					<?php if ( ! empty( $focus_keyword ) && ! empty( $current_analysis['overall_score'] ) ) : ?>
 					<div class="seo-analysis-results">
 						<h4><?php esc_html_e( 'Risultati Analisi SEO', 'fp-digital-marketing' ); ?></h4>
 						
@@ -231,52 +231,60 @@ class SeoMeta {
 						<div class="seo-analysis-section">
 							<h5><?php esc_html_e( 'Analisi Parole Chiave', 'fp-digital-marketing' ); ?></h5>
 							<div class="seo-checks">
-								<?php if ( isset( $current_analysis['keyword_analysis']['title'] ) ): ?>
+								<?php if ( isset( $current_analysis['keyword_analysis']['title'] ) ) : ?>
 								<div class="seo-check <?php echo $current_analysis['keyword_analysis']['title']['present'] ? 'check-pass' : 'check-fail'; ?>">
 									<span class="dashicons <?php echo $current_analysis['keyword_analysis']['title']['present'] ? 'dashicons-yes' : 'dashicons-no'; ?>"></span>
 									<span class="check-label"><?php esc_html_e( 'Titolo', 'fp-digital-marketing' ); ?></span>
 									<span class="check-status">
-										<?php echo $current_analysis['keyword_analysis']['title']['present'] ? 
-											esc_html__( 'Keyword presente', 'fp-digital-marketing' ) : 
-											esc_html__( 'Keyword mancante', 'fp-digital-marketing' ); ?>
+										<?php
+										echo $current_analysis['keyword_analysis']['title']['present'] ?
+											esc_html__( 'Keyword presente', 'fp-digital-marketing' ) :
+											esc_html__( 'Keyword mancante', 'fp-digital-marketing' );
+										?>
 									</span>
 								</div>
 								<?php endif; ?>
 
-								<?php if ( isset( $current_analysis['keyword_analysis']['h1'] ) ): ?>
+								<?php if ( isset( $current_analysis['keyword_analysis']['h1'] ) ) : ?>
 								<div class="seo-check <?php echo $current_analysis['keyword_analysis']['h1']['present'] ? 'check-pass' : 'check-fail'; ?>">
 									<span class="dashicons <?php echo $current_analysis['keyword_analysis']['h1']['present'] ? 'dashicons-yes' : 'dashicons-no'; ?>"></span>
 									<span class="check-label"><?php esc_html_e( 'H1', 'fp-digital-marketing' ); ?></span>
 									<span class="check-status">
-										<?php echo $current_analysis['keyword_analysis']['h1']['present'] ? 
-											esc_html__( 'Keyword presente', 'fp-digital-marketing' ) : 
-											esc_html__( 'Keyword mancante', 'fp-digital-marketing' ); ?>
+										<?php
+										echo $current_analysis['keyword_analysis']['h1']['present'] ?
+											esc_html__( 'Keyword presente', 'fp-digital-marketing' ) :
+											esc_html__( 'Keyword mancante', 'fp-digital-marketing' );
+										?>
 									</span>
 								</div>
 								<?php endif; ?>
 
-								<?php if ( isset( $current_analysis['keyword_analysis']['meta_description'] ) ): ?>
+								<?php if ( isset( $current_analysis['keyword_analysis']['meta_description'] ) ) : ?>
 								<div class="seo-check <?php echo $current_analysis['keyword_analysis']['meta_description']['present'] ? 'check-pass' : 'check-fail'; ?>">
 									<span class="dashicons <?php echo $current_analysis['keyword_analysis']['meta_description']['present'] ? 'dashicons-yes' : 'dashicons-no'; ?>"></span>
 									<span class="check-label"><?php esc_html_e( 'Meta Description', 'fp-digital-marketing' ); ?></span>
 									<span class="check-status">
-										<?php echo $current_analysis['keyword_analysis']['meta_description']['present'] ? 
-											esc_html__( 'Keyword presente', 'fp-digital-marketing' ) : 
-											esc_html__( 'Keyword mancante', 'fp-digital-marketing' ); ?>
+										<?php
+										echo $current_analysis['keyword_analysis']['meta_description']['present'] ?
+											esc_html__( 'Keyword presente', 'fp-digital-marketing' ) :
+											esc_html__( 'Keyword mancante', 'fp-digital-marketing' );
+										?>
 									</span>
 								</div>
 								<?php endif; ?>
 
-								<?php if ( isset( $current_analysis['keyword_analysis']['content_density'] ) ): ?>
+								<?php if ( isset( $current_analysis['keyword_analysis']['content_density'] ) ) : ?>
 								<div class="seo-check">
 									<span class="dashicons dashicons-chart-pie"></span>
 									<span class="check-label"><?php esc_html_e( 'Densità Keyword', 'fp-digital-marketing' ); ?></span>
 									<span class="check-status">
-										<?php printf( 
-											esc_html__( '%s%% (%d occorrenze)', 'fp-digital-marketing' ),
+										<?php
+										printf(
+											esc_html__( '%1$s%% (%2$d occorrenze)', 'fp-digital-marketing' ),
 											esc_html( $current_analysis['keyword_analysis']['content_density']['density'] ),
 											esc_html( $current_analysis['keyword_analysis']['content_density']['keyword_count'] )
-										); ?>
+										);
+										?>
 									</span>
 								</div>
 								<?php endif; ?>
@@ -287,7 +295,7 @@ class SeoMeta {
 						<div class="seo-analysis-section">
 							<h5><?php esc_html_e( 'Analisi Leggibilità', 'fp-digital-marketing' ); ?></h5>
 							<div class="readability-info">
-								<?php if ( isset( $current_analysis['readability_analysis']['flesch_score'] ) ): ?>
+								<?php if ( isset( $current_analysis['readability_analysis']['flesch_score'] ) ) : ?>
 								<div class="readability-item">
 									<span class="readability-label"><?php esc_html_e( 'Punteggio Flesch:', 'fp-digital-marketing' ); ?></span>
 									<span class="readability-value">
@@ -297,14 +305,16 @@ class SeoMeta {
 								</div>
 								<?php endif; ?>
 
-								<?php if ( isset( $current_analysis['readability_analysis']['paragraph_analysis'] ) ): ?>
+								<?php if ( isset( $current_analysis['readability_analysis']['paragraph_analysis'] ) ) : ?>
 								<div class="readability-item">
 									<span class="readability-label"><?php esc_html_e( 'Lunghezza Paragrafi:', 'fp-digital-marketing' ); ?></span>
 									<span class="readability-value">
-										<?php printf(
+										<?php
+										printf(
 											esc_html__( 'Media %d parole/paragrafo', 'fp-digital-marketing' ),
 											esc_html( $current_analysis['readability_analysis']['paragraph_analysis']['average_length'] ?? 0 )
-										); ?>
+										);
+										?>
 									</span>
 								</div>
 								<?php endif; ?>
@@ -312,11 +322,11 @@ class SeoMeta {
 						</div>
 
 						<!-- Suggestions -->
-						<?php if ( ! empty( $current_analysis['suggestions'] ) ): ?>
+						<?php if ( ! empty( $current_analysis['suggestions'] ) ) : ?>
 						<div class="seo-analysis-section">
 							<h5><?php esc_html_e( 'Suggerimenti di Miglioramento', 'fp-digital-marketing' ); ?></h5>
 							<div class="seo-suggestions">
-								<?php foreach ( $current_analysis['suggestions'] as $suggestion ): ?>
+								<?php foreach ( $current_analysis['suggestions'] as $suggestion ) : ?>
 								<div class="seo-suggestion priority-<?php echo esc_attr( $suggestion['priority'] ); ?>">
 									<span class="suggestion-priority"><?php echo esc_html( ucfirst( $suggestion['priority'] ) ); ?></span>
 									<span class="suggestion-message"><?php echo esc_html( $suggestion['message'] ); ?></span>
@@ -326,7 +336,7 @@ class SeoMeta {
 						</div>
 						<?php endif; ?>
 					</div>
-					<?php else: ?>
+					<?php else : ?>
 					<div class="seo-analysis-placeholder">
 						<p><?php esc_html_e( 'Inserisci una parola chiave focus per iniziare l\'analisi del contenuto.', 'fp-digital-marketing' ); ?></p>
 					</div>
@@ -540,7 +550,7 @@ class SeoMeta {
 					<h4><?php esc_html_e( 'Anteprima Facebook', 'fp-digital-marketing' ); ?></h4>
 					<div class="seo-preview-facebook">
 						<div class="facebook-preview">
-							<?php if ( $preview_og_image ): ?>
+							<?php if ( $preview_og_image ) : ?>
 								<div class="fb-image">
 									<img src="<?php echo esc_url( $preview_og_image ); ?>" alt="" style="max-width: 100%; height: auto;" />
 								</div>
@@ -556,7 +566,7 @@ class SeoMeta {
 					<h4><?php esc_html_e( 'Anteprima Twitter', 'fp-digital-marketing' ); ?></h4>
 					<div class="seo-preview-twitter">
 						<div class="twitter-preview">
-							<?php if ( $preview_og_image ): ?>
+							<?php if ( $preview_og_image ) : ?>
 								<div class="twitter-image">
 									<img src="<?php echo esc_url( $preview_og_image ); ?>" alt="" style="max-width: 100%; height: auto;" />
 								</div>
@@ -604,7 +614,7 @@ class SeoMeta {
 
 		// Save focus keyword and perform content analysis.
 		$this->save_field( $post_id, SeoMetadata::META_FOCUS_KEYWORD, 'focus_keyword' );
-		
+
 		// Perform and save content analysis if focus keyword is provided.
 		$focus_keyword = isset( $_POST['focus_keyword'] ) ? sanitize_text_field( $_POST['focus_keyword'] ) : '';
 		if ( ! empty( $focus_keyword ) ) {
@@ -628,14 +638,18 @@ class SeoMeta {
 		}
 
 		wp_add_inline_style( 'wp-admin', $this->get_admin_styles() );
-		
+
 		// Add AJAX data for live analysis
-		wp_localize_script( 'jquery', 'fpSeoAnalysis', [
-			'ajax_url' => admin_url( 'admin-ajax.php' ),
-			'nonce' => wp_create_nonce( 'fp_seo_analysis' ),
-			'post_id' => get_the_ID() ?: 0,
-		] );
-		
+		wp_localize_script(
+			'jquery',
+			'fpSeoAnalysis',
+			[
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'fp_seo_analysis' ),
+				'post_id'  => get_the_ID() ?: 0,
+			]
+		);
+
 		wp_add_inline_script( 'jquery', $this->get_admin_scripts() );
 	}
 
@@ -647,8 +661,8 @@ class SeoMeta {
 	 */
 	private function can_save_meta( int $post_id ): bool {
 		// Check if nonce is valid.
-		if ( ! isset( $_POST[ self::NONCE_NAME ] ) || 
-			 ! wp_verify_nonce( $_POST[ self::NONCE_NAME ], self::NONCE_ACTION ) ) {
+		if ( ! isset( $_POST[ self::NONCE_NAME ] ) ||
+			! wp_verify_nonce( $_POST[ self::NONCE_NAME ], self::NONCE_ACTION ) ) {
 			return false;
 		}
 
@@ -1344,30 +1358,30 @@ class SeoMeta {
 	public function ajax_analyze_content_seo(): void {
 		// Security check
 		check_ajax_referer( 'fp_seo_analysis', 'nonce' );
-		
+
 		if ( ! current_user_can( 'edit_posts' ) ) {
 			wp_die( __( 'Insufficient permissions', 'fp-digital-marketing' ) );
 		}
-		
-		$post_id = intval( $_POST['post_id'] ?? 0 );
-		$focus_keyword = sanitize_text_field( $_POST['focus_keyword'] ?? '' );
-		$title = sanitize_text_field( $_POST['title'] ?? '' );
-		$content = wp_kses_post( $_POST['content'] ?? '' );
+
+		$post_id          = intval( $_POST['post_id'] ?? 0 );
+		$focus_keyword    = sanitize_text_field( $_POST['focus_keyword'] ?? '' );
+		$title            = sanitize_text_field( $_POST['title'] ?? '' );
+		$content          = wp_kses_post( $_POST['content'] ?? '' );
 		$meta_description = sanitize_text_field( $_POST['meta_description'] ?? '' );
-		
+
 		if ( empty( $focus_keyword ) ) {
 			wp_send_json_error( [ 'message' => __( 'Focus keyword is required', 'fp-digital-marketing' ) ] );
 		}
-		
+
 		// Create a temporary post object for analysis
 		$temp_post = (object) [
-			'ID' => $post_id,
-			'post_title' => $title,
+			'ID'           => $post_id,
+			'post_title'   => $title,
 			'post_content' => $content,
-			'post_name' => sanitize_title( $title ),
+			'post_name'    => sanitize_title( $title ),
 			'post_excerpt' => $meta_description,
 		];
-		
+
 		try {
 			$analysis = ContentSeoAnalyzer::analyze_content( $temp_post, $focus_keyword );
 			wp_send_json_success( $analysis );

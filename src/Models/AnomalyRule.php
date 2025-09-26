@@ -19,34 +19,34 @@ class AnomalyRule {
 	/**
 	 * Detection method constants
 	 */
-	public const METHOD_Z_SCORE = 'z_score';
+	public const METHOD_Z_SCORE        = 'z_score';
 	public const METHOD_MOVING_AVERAGE = 'moving_average';
-	public const METHOD_COMBINED = 'combined';
+	public const METHOD_COMBINED       = 'combined';
 
 	/**
 	 * Create a new anomaly rule
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $name Rule name
 	 * @param string $description Rule description
 	 * @param string $metric Metric to monitor
 	 * @param string $detection_method Detection method
-	 * @param array $parameters Detection parameters
+	 * @param array  $parameters Detection parameters
 	 * @param string $notification_email Email for notifications
-	 * @param bool $notification_admin_notice Enable admin notices
-	 * @param bool $is_active Active status
+	 * @param bool   $notification_admin_notice Enable admin notices
+	 * @param bool   $is_active Active status
 	 * @return int|false Rule ID on success, false on failure
 	 */
-	public static function create( 
-		int $client_id, 
-		string $name, 
-		string $description, 
-		string $metric, 
-		string $detection_method, 
+	public static function create(
+		int $client_id,
+		string $name,
+		string $description,
+		string $metric,
+		string $detection_method,
 		array $parameters = [],
 		string $notification_email = '',
 		bool $notification_admin_notice = true,
-		bool $is_active = true 
+		bool $is_active = true
 	) {
 		global $wpdb;
 
@@ -59,18 +59,18 @@ class AnomalyRule {
 
 		// Sanitize and prepare data
 		$data = [
-			'client_id' => $client_id,
-			'name' => sanitize_text_field( $name ),
-			'description' => sanitize_textarea_field( $description ),
-			'metric' => sanitize_text_field( $metric ),
-			'detection_method' => sanitize_text_field( $detection_method ),
-			'z_score_threshold' => isset( $parameters['z_score_threshold'] ) ? (float) $parameters['z_score_threshold'] : 2.0,
-			'band_deviations' => isset( $parameters['band_deviations'] ) ? (float) $parameters['band_deviations'] : 2.0,
-			'window_size' => isset( $parameters['window_size'] ) ? (int) $parameters['window_size'] : 7,
-			'historical_days' => isset( $parameters['historical_days'] ) ? (int) $parameters['historical_days'] : 30,
-			'notification_email' => sanitize_email( $notification_email ),
+			'client_id'                 => $client_id,
+			'name'                      => sanitize_text_field( $name ),
+			'description'               => sanitize_textarea_field( $description ),
+			'metric'                    => sanitize_text_field( $metric ),
+			'detection_method'          => sanitize_text_field( $detection_method ),
+			'z_score_threshold'         => isset( $parameters['z_score_threshold'] ) ? (float) $parameters['z_score_threshold'] : 2.0,
+			'band_deviations'           => isset( $parameters['band_deviations'] ) ? (float) $parameters['band_deviations'] : 2.0,
+			'window_size'               => isset( $parameters['window_size'] ) ? (int) $parameters['window_size'] : 7,
+			'historical_days'           => isset( $parameters['historical_days'] ) ? (int) $parameters['historical_days'] : 30,
+			'notification_email'        => sanitize_email( $notification_email ),
 			'notification_admin_notice' => $notification_admin_notice ? 1 : 0,
-			'is_active' => $is_active ? 1 : 0,
+			'is_active'                 => $is_active ? 1 : 0,
 		];
 
 		$formats = [
@@ -104,11 +104,11 @@ class AnomalyRule {
 
 		$table_name = AnomalyRulesTable::get_table_name();
 
-		$rule = $wpdb->get_row( 
-			$wpdb->prepare( 
-				"SELECT * FROM $table_name WHERE id = %d", 
-				$rule_id 
-			) 
+		$rule = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM $table_name WHERE id = %d",
+				$rule_id
+			)
 		);
 
 		return $rule ?: null;
@@ -125,15 +125,15 @@ class AnomalyRule {
 
 		$table_name = AnomalyRulesTable::get_table_name();
 
-		$sql = "SELECT * FROM $table_name WHERE is_active = 1 AND (silence_until IS NULL OR silence_until < NOW())";
+		$sql    = "SELECT * FROM $table_name WHERE is_active = 1 AND (silence_until IS NULL OR silence_until < NOW())";
 		$params = [];
 
 		if ( $client_id !== null ) {
-			$sql .= " AND client_id = %d";
+			$sql     .= ' AND client_id = %d';
 			$params[] = $client_id;
 		}
 
-		$sql .= " ORDER BY created_at DESC";
+		$sql .= ' ORDER BY created_at DESC';
 
 		if ( ! empty( $params ) ) {
 			$results = $wpdb->get_results( $wpdb->prepare( $sql, ...$params ) );
@@ -156,29 +156,29 @@ class AnomalyRule {
 		$table_name = AnomalyRulesTable::get_table_name();
 
 		$where_clauses = [];
-		$where_values = [];
+		$where_values  = [];
 
 		if ( isset( $filters['client_id'] ) ) {
 			$where_clauses[] = 'client_id = %d';
-			$where_values[] = $filters['client_id'];
+			$where_values[]  = $filters['client_id'];
 		}
 
 		if ( isset( $filters['metric'] ) ) {
 			$where_clauses[] = 'metric = %s';
-			$where_values[] = $filters['metric'];
+			$where_values[]  = $filters['metric'];
 		}
 
 		if ( isset( $filters['is_active'] ) ) {
 			$where_clauses[] = 'is_active = %d';
-			$where_values[] = $filters['is_active'] ? 1 : 0;
+			$where_values[]  = $filters['is_active'] ? 1 : 0;
 		}
 
 		$sql = "SELECT * FROM $table_name";
-		
+
 		if ( ! empty( $where_clauses ) ) {
 			$sql .= ' WHERE ' . implode( ' AND ', $where_clauses );
 		}
-		
+
 		$sql .= ' ORDER BY created_at DESC';
 
 		if ( ! empty( $where_values ) ) {
@@ -193,7 +193,7 @@ class AnomalyRule {
 	/**
 	 * Update an existing anomaly rule
 	 *
-	 * @param int $rule_id Rule ID to update
+	 * @param int   $rule_id Rule ID to update
 	 * @param array $data Data to update
 	 * @return bool True on success, false on failure
 	 */
@@ -204,22 +204,22 @@ class AnomalyRule {
 
 		// Define allowed fields for update
 		$allowed_fields = [
-			'name' => '%s',
-			'description' => '%s',
-			'metric' => '%s',
-			'detection_method' => '%s',
-			'z_score_threshold' => '%f',
-			'band_deviations' => '%f',
-			'window_size' => '%d',
-			'historical_days' => '%d',
-			'notification_email' => '%s',
+			'name'                      => '%s',
+			'description'               => '%s',
+			'metric'                    => '%s',
+			'detection_method'          => '%s',
+			'z_score_threshold'         => '%f',
+			'band_deviations'           => '%f',
+			'window_size'               => '%d',
+			'historical_days'           => '%d',
+			'notification_email'        => '%s',
 			'notification_admin_notice' => '%d',
-			'is_active' => '%d',
-			'silence_until' => '%s',
+			'is_active'                 => '%d',
+			'silence_until'             => '%s',
 		];
 
 		$update_data = [];
-		$formats = [];
+		$formats     = [];
 
 		foreach ( $data as $field => $value ) {
 			if ( isset( $allowed_fields[ $field ] ) ) {
@@ -299,7 +299,7 @@ class AnomalyRule {
 
 		$table_name = AnomalyRulesTable::get_table_name();
 
-		$result = $wpdb->query( 
+		$result = $wpdb->query(
 			$wpdb->prepare(
 				"UPDATE $table_name 
 				SET last_triggered = NOW(), 
@@ -358,9 +358,9 @@ class AnomalyRule {
 	 */
 	public static function get_detection_methods(): array {
 		return [
-			self::METHOD_Z_SCORE => __( 'Z-Score Analysis', 'fp-digital-marketing' ),
+			self::METHOD_Z_SCORE        => __( 'Z-Score Analysis', 'fp-digital-marketing' ),
 			self::METHOD_MOVING_AVERAGE => __( 'Moving Average Bands', 'fp-digital-marketing' ),
-			self::METHOD_COMBINED => __( 'Combined Analysis', 'fp-digital-marketing' ),
+			self::METHOD_COMBINED       => __( 'Combined Analysis', 'fp-digital-marketing' ),
 		];
 	}
 }

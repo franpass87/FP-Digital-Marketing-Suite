@@ -20,26 +20,26 @@ class UTMCampaignsTableTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		
+
 		// Mock WordPress globals and functions
-                global $wpdb;
-                $wpdb = $this->getMockBuilder( stdClass::class )
-                        ->addMethods( [ 'prepare', 'get_var', 'query', 'get_charset_collate' ] )
-                        ->getMock();
-                $wpdb->prefix = 'wp_';
-                $wpdb->method( 'prepare' )->willReturnCallback(
-                        static function ( $query ) {
-                                return $query;
-                        }
-                );
-		
+				global $wpdb;
+				$wpdb         = $this->getMockBuilder( stdClass::class )
+						->addMethods( [ 'prepare', 'get_var', 'query', 'get_charset_collate' ] )
+						->getMock();
+				$wpdb->prefix = 'wp_';
+				$wpdb->method( 'prepare' )->willReturnCallback(
+					static function ( $query ) {
+								return $query;
+					}
+				);
+
 		// Mock WordPress functions
 		if ( ! function_exists( 'dbDelta' ) ) {
 			function dbDelta( $sql ) {
 				return true;
 			}
 		}
-		
+
 		if ( ! defined( 'ABSPATH' ) ) {
 			define( 'ABSPATH', '/tmp/' );
 		}
@@ -126,7 +126,7 @@ class UTMCampaignsTableTest extends TestCase {
 	 */
 	public function test_table_exists(): void {
 		global $wpdb;
-		
+
 		// Mock table exists
 		$wpdb->method( 'prepare' )->willReturn( 'SHOW TABLES LIKE %s' );
 		$wpdb->method( 'get_var' )->willReturn( 'wp_fp_utm_campaigns' );
@@ -141,7 +141,7 @@ class UTMCampaignsTableTest extends TestCase {
 	 */
 	public function test_table_does_not_exist(): void {
 		global $wpdb;
-		
+
 		// Mock table does not exist
 		$wpdb->method( 'prepare' )->willReturn( 'SHOW TABLES LIKE %s' );
 		$wpdb->method( 'get_var' )->willReturn( null );
@@ -156,7 +156,7 @@ class UTMCampaignsTableTest extends TestCase {
 	 */
 	public function test_drop_table(): void {
 		global $wpdb;
-		
+
 		// Mock successful drop
 		$wpdb->method( 'query' )->willReturn( 1 );
 
@@ -170,7 +170,7 @@ class UTMCampaignsTableTest extends TestCase {
 	 */
 	public function test_drop_table_failure(): void {
 		global $wpdb;
-		
+
 		// Mock failed drop
 		$wpdb->method( 'query' )->willReturn( false );
 
@@ -184,7 +184,7 @@ class UTMCampaignsTableTest extends TestCase {
 	 */
 	public function test_create_table_already_exists(): void {
 		global $wpdb;
-		
+
 		$wpdb->method( 'get_charset_collate' )->willReturn( 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci' );
 		$wpdb->method( 'prepare' )->willReturn( 'SHOW TABLES LIKE %s' );
 		$wpdb->method( 'get_var' )->willReturn( 'wp_fp_utm_campaigns' );
@@ -199,9 +199,9 @@ class UTMCampaignsTableTest extends TestCase {
 	 */
 	public function test_create_table_new(): void {
 		global $wpdb;
-		
+
 		$wpdb->method( 'get_charset_collate' )->willReturn( 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci' );
-		
+
 		// First call (table_exists check) returns null, second call (after create) returns table name
 		$wpdb->method( 'prepare' )->willReturn( 'SHOW TABLES LIKE %s' );
 		$wpdb->method( 'get_var' )

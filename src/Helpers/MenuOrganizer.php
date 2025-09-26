@@ -1,7 +1,7 @@
 <?php
 /**
  * Menu Organization Helper
- * 
+ *
  * This file provides a reference for the new menu structure
  * and helps organize menu items logically.
  *
@@ -19,13 +19,13 @@ class MenuOrganizer {
 
 	/**
 	 * Main menu structure reference
-	 * 
+	 *
 	 * This documents the organized menu structure:
-	 * 
+	 *
 	 * FP Digital Marketing (Main Menu)
 	 * ├── 🏠 Dashboard (main page)
 	 * ├── 📊 Reports
-	 * ├── ⚡ Cache Performance  
+	 * ├── ⚡ Cache Performance
 	 * ├─────────────────── [Analytics & Performance]
 	 * ├── 🎯 Eventi Conversione
 	 * ├── 🔗 Campagne UTM
@@ -50,71 +50,71 @@ class MenuOrganizer {
 	 */
 	public const MENU_PRIORITIES = [
 		// Core Navigation
-		'dashboard'           => 0,
-		
-		// Analytics & Performance  
-		'reports'            => 10,
-		'cache-performance'  => 11,
-		
+		'dashboard'         => 0,
+
+		// Analytics & Performance
+		'reports'           => 10,
+		'cache-performance' => 11,
+
 		// Campaign Management
-		'conversion-events'  => 20,
-		'utm-campaigns'      => 21,
-		'segmentation'       => 22,
-		
+		'conversion-events' => 20,
+		'utm-campaigns'     => 21,
+		'segmentation'      => 22,
+
 		// Monitoring & Alerts
-		'alerts'             => 30,
-		'anomaly-detection'  => 31,
-		
+		'alerts'            => 30,
+		'anomaly-detection' => 31,
+
 		// Configuration
-		'settings'           => 40,
-		'security'           => 41,
-		'setup-wizard'       => 42,
+		'settings'          => 40,
+		'security'          => 41,
+		'setup-wizard'      => 42,
 	];
 
 	/**
 	 * Get organized menu sections
-	 * 
+	 *
 	 * @return array Menu sections with their items
 	 */
 	public static function get_menu_sections(): array {
 		return [
-			'core' => [
+			'core'          => [
 				'title' => __( 'Dashboard', 'fp-digital-marketing' ),
-				'items' => [ 'dashboard' ]
+				'items' => [ 'dashboard' ],
 			],
-			'analytics' => [
+			'analytics'     => [
 				'title' => __( 'Analytics & Performance', 'fp-digital-marketing' ),
-				'items' => [ 'reports', 'cache-performance' ]
+				'items' => [ 'reports', 'cache-performance' ],
 			],
-			'campaigns' => [
+			'campaigns'     => [
 				'title' => __( 'Campaign Management', 'fp-digital-marketing' ),
-				'items' => [ 'conversion-events', 'utm-campaigns', 'segmentation' ]
+				'items' => [ 'conversion-events', 'utm-campaigns', 'segmentation' ],
 			],
-			'monitoring' => [
+			'monitoring'    => [
 				'title' => __( 'Monitoring & Alerts', 'fp-digital-marketing' ),
-				'items' => [ 'alerts', 'anomaly-detection' ]
+				'items' => [ 'alerts', 'anomaly-detection' ],
 			],
 			'configuration' => [
 				'title' => __( 'Configuration', 'fp-digital-marketing' ),
-				'items' => [ 'settings', 'security', 'setup-wizard' ]
-			]
+				'items' => [ 'settings', 'security', 'setup-wizard' ],
+			],
 		];
 	}
 
 	/**
 	 * Get menu item configuration
-	 * 
+	 *
 	 * @param string $item_key Menu item key
 	 * @return array Menu item configuration
 	 */
 	public static function get_menu_item_config( string $item_key ): array {
 		$configs = [
-			'dashboard' => [
+			'dashboard'         => [
 				'page_title' => __( 'Dashboard', 'fp-digital-marketing' ),
 				'menu_title' => __( '🏠 Dashboard', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-dashboard',
 			],
-			'reports' => [
+			'reports'           => [
 				'page_title' => __( 'Reports & Analytics', 'fp-digital-marketing' ),
 				'menu_title' => __( '📊 Reports', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-chart-line',
@@ -129,17 +129,17 @@ class MenuOrganizer {
 				'menu_title' => __( '🎯 Eventi Conversione', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-target',
 			],
-			'utm-campaigns' => [
+			'utm-campaigns'     => [
 				'page_title' => __( 'Gestione Campagne UTM', 'fp-digital-marketing' ),
 				'menu_title' => __( '🔗 Campagne UTM', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-admin-links',
 			],
-			'segmentation' => [
+			'segmentation'      => [
 				'page_title' => __( 'Segmentazione Audience', 'fp-digital-marketing' ),
 				'menu_title' => __( '👥 Segmentazione', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-groups',
 			],
-			'alerts' => [
+			'alerts'            => [
 				'page_title' => __( 'Alert e Notifiche', 'fp-digital-marketing' ),
 				'menu_title' => __( '🔔 Alert e Notifiche', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-bell',
@@ -149,17 +149,17 @@ class MenuOrganizer {
 				'menu_title' => __( '🔍 Rilevazione Anomalie', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-search',
 			],
-			'settings' => [
+			'settings'          => [
 				'page_title' => __( 'FP Digital Marketing Settings', 'fp-digital-marketing' ),
 				'menu_title' => __( '⚙️ Settings', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-admin-settings',
 			],
-			'security' => [
+			'security'          => [
 				'page_title' => __( 'Security Settings', 'fp-digital-marketing' ),
 				'menu_title' => __( '🔒 Security', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-lock',
 			],
-			'setup-wizard' => [
+			'setup-wizard'      => [
 				'page_title' => __( 'Setup Wizard', 'fp-digital-marketing' ),
 				'menu_title' => __( '🚀 Setup Wizard', 'fp-digital-marketing' ),
 				'icon'       => 'dashicons-admin-tools',
@@ -171,26 +171,26 @@ class MenuOrganizer {
 
 	/**
 	 * Check if menu reorganization was successful
-	 * 
+	 *
 	 * @return bool True if all menu items are properly organized
 	 */
 	public static function verify_menu_structure(): bool {
 		global $submenu;
-		
+
 		// Check if main menu exists and has expected submenus
 		if ( ! isset( $submenu[ self::MAIN_MENU_SLUG ] ) ) {
 			return false;
 		}
 
 		$expected_items = array_keys( self::MENU_PRIORITIES );
-		$actual_items = array_column( $submenu[ self::MAIN_MENU_SLUG ], 2 );
-		
+		$actual_items   = array_column( $submenu[ self::MAIN_MENU_SLUG ], 2 );
+
 		// Check if we have the minimum expected items
 		$found_items = 0;
 		foreach ( $expected_items as $expected ) {
 			foreach ( $actual_items as $actual ) {
 				if ( strpos( $actual, $expected ) !== false ) {
-					$found_items++;
+					++$found_items;
 					break;
 				}
 			}

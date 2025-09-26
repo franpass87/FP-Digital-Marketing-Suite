@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Database\AlertRulesTable;
 
 /**
  * Alert Rule class for CRUD operations
- * 
+ *
  * This class provides CRUD functionality for the wp_fp_alert_rules table
  * to store and retrieve alert rule definitions.
  */
@@ -22,12 +22,12 @@ class AlertRule {
 	/**
 	 * Available condition operators
 	 */
-	public const CONDITION_GREATER_THAN = '>';
-	public const CONDITION_LESS_THAN = '<';
+	public const CONDITION_GREATER_THAN  = '>';
+	public const CONDITION_LESS_THAN     = '<';
 	public const CONDITION_GREATER_EQUAL = '>=';
-	public const CONDITION_LESS_EQUAL = '<=';
-	public const CONDITION_EQUAL = '=';
-	public const CONDITION_NOT_EQUAL = '!=';
+	public const CONDITION_LESS_EQUAL    = '<=';
+	public const CONDITION_EQUAL         = '=';
+	public const CONDITION_NOT_EQUAL     = '!=';
 
 	/**
 	 * Save an alert rule to the database
@@ -43,11 +43,11 @@ class AlertRule {
 	 * @param bool   $is_active          Whether the rule is active
 	 * @return int|false ID of the inserted record on success, false on failure
 	 */
-	public static function save( 
-		int $client_id, 
-		string $name, 
-		string $metric, 
-		string $condition, 
+	public static function save(
+		int $client_id,
+		string $name,
+		string $metric,
+		string $condition,
 		float $threshold_value,
 		string $description = '',
 		string $notification_email = '',
@@ -59,15 +59,15 @@ class AlertRule {
 		$table_name = AlertRulesTable::get_table_name();
 
 		$data = [
-			'client_id'                  => $client_id,
-			'name'                       => sanitize_text_field( $name ),
-			'description'                => sanitize_textarea_field( $description ),
-			'metric'                     => sanitize_text_field( $metric ),
-			'condition'                  => sanitize_text_field( $condition ),
-			'threshold_value'            => $threshold_value,
-			'notification_email'         => sanitize_email( $notification_email ),
-			'notification_admin_notice'  => $notification_admin_notice ? 1 : 0,
-			'is_active'                  => $is_active ? 1 : 0,
+			'client_id'                 => $client_id,
+			'name'                      => sanitize_text_field( $name ),
+			'description'               => sanitize_textarea_field( $description ),
+			'metric'                    => sanitize_text_field( $metric ),
+			'condition'                 => sanitize_text_field( $condition ),
+			'threshold_value'           => $threshold_value,
+			'notification_email'        => sanitize_email( $notification_email ),
+			'notification_admin_notice' => $notification_admin_notice ? 1 : 0,
+			'is_active'                 => $is_active ? 1 : 0,
 		];
 
 		$formats = [
@@ -101,17 +101,17 @@ class AlertRule {
 
 		// Sanitize and format data
 		$update_data = [];
-		$formats = [];
+		$formats     = [];
 
 		$allowed_fields = [
-			'name' => '%s',
-			'description' => '%s', 
-			'metric' => '%s',
-			'condition' => '%s',
-			'threshold_value' => '%f',
-			'notification_email' => '%s',
+			'name'                      => '%s',
+			'description'               => '%s',
+			'metric'                    => '%s',
+			'condition'                 => '%s',
+			'threshold_value'           => '%f',
+			'notification_email'        => '%s',
 			'notification_admin_notice' => '%d',
-			'is_active' => '%d',
+			'is_active'                 => '%d',
 		];
 
 		foreach ( $data as $field => $value ) {
@@ -166,13 +166,15 @@ class AlertRule {
 
 		$table_name = AlertRulesTable::get_table_name();
 
-		$result = $wpdb->query( $wpdb->prepare(
-			"UPDATE $table_name 
+		$result = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE $table_name 
 			SET last_triggered = %s, triggered_count = triggered_count + 1 
 			WHERE id = %d",
-			current_time( 'mysql' ),
-			$rule_id
-		) );
+				current_time( 'mysql' ),
+				$rule_id
+			)
+		);
 
 		return $result !== false;
 	}
@@ -188,10 +190,12 @@ class AlertRule {
 
 		$table_name = AlertRulesTable::get_table_name();
 
-		$rule = $wpdb->get_row( $wpdb->prepare(
-			"SELECT * FROM $table_name WHERE id = %d",
-			$rule_id
-		) );
+		$rule = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM $table_name WHERE id = %d",
+				$rule_id
+			)
+		);
 
 		return $rule ?: null;
 	}
@@ -209,7 +213,7 @@ class AlertRule {
 		$table_name = AlertRulesTable::get_table_name();
 
 		$where_clause = $wpdb->prepare( 'WHERE client_id = %d', $client_id );
-		
+
 		if ( $active_only ) {
 			$where_clause .= ' AND is_active = 1';
 		}
@@ -265,12 +269,12 @@ class AlertRule {
 	 */
 	public static function get_condition_operators(): array {
 		return [
-			self::CONDITION_GREATER_THAN => __( 'Maggiore di (>)', 'fp-digital-marketing' ),
-			self::CONDITION_LESS_THAN => __( 'Minore di (<)', 'fp-digital-marketing' ),
+			self::CONDITION_GREATER_THAN  => __( 'Maggiore di (>)', 'fp-digital-marketing' ),
+			self::CONDITION_LESS_THAN     => __( 'Minore di (<)', 'fp-digital-marketing' ),
 			self::CONDITION_GREATER_EQUAL => __( 'Maggiore o uguale (>=)', 'fp-digital-marketing' ),
-			self::CONDITION_LESS_EQUAL => __( 'Minore o uguale (<=)', 'fp-digital-marketing' ),
-			self::CONDITION_EQUAL => __( 'Uguale (=)', 'fp-digital-marketing' ),
-			self::CONDITION_NOT_EQUAL => __( 'Diverso (!=)', 'fp-digital-marketing' ),
+			self::CONDITION_LESS_EQUAL    => __( 'Minore o uguale (<=)', 'fp-digital-marketing' ),
+			self::CONDITION_EQUAL         => __( 'Uguale (=)', 'fp-digital-marketing' ),
+			self::CONDITION_NOT_EQUAL     => __( 'Diverso (!=)', 'fp-digital-marketing' ),
 		];
 	}
 

@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Database\DatabaseUtils;
 
 /**
  * Funnel table management class
- * 
+ *
  * Handles creation and management of the funnels table for storing
  * funnel definitions and stages.
  */
@@ -38,20 +38,20 @@ class FunnelTable {
 	 *
 	 * @return string Full table name
 	 */
-        public static function get_table_name(): string {
-                global $wpdb;
-                return DatabaseUtils::resolve_table_name( $wpdb, self::$table_name );
-        }
+	public static function get_table_name(): string {
+			global $wpdb;
+			return DatabaseUtils::resolve_table_name( $wpdb, self::$table_name );
+	}
 
 	/**
 	 * Get the full stages table name with WordPress prefix
 	 *
 	 * @return string Full stages table name
 	 */
-        public static function get_stages_table_name(): string {
-                global $wpdb;
-                return DatabaseUtils::resolve_table_name( $wpdb, self::$stages_table_name );
-        }
+	public static function get_stages_table_name(): string {
+			global $wpdb;
+			return DatabaseUtils::resolve_table_name( $wpdb, self::$stages_table_name );
+	}
 
 	/**
 	 * Check if the funnels table exists
@@ -61,10 +61,12 @@ class FunnelTable {
 	public static function table_exists(): bool {
 		global $wpdb;
 		$table_name = self::get_table_name();
-		$result = $wpdb->get_var( $wpdb->prepare( 
-			"SHOW TABLES LIKE %s", 
-			$table_name 
-		) );
+		$result     = $wpdb->get_var(
+			$wpdb->prepare(
+				'SHOW TABLES LIKE %s',
+				$table_name
+			)
+		);
 		return $result === $table_name;
 	}
 
@@ -76,10 +78,12 @@ class FunnelTable {
 	public static function stages_table_exists(): bool {
 		global $wpdb;
 		$table_name = self::get_stages_table_name();
-		$result = $wpdb->get_var( $wpdb->prepare( 
-			"SHOW TABLES LIKE %s", 
-			$table_name 
-		) );
+		$result     = $wpdb->get_var(
+			$wpdb->prepare(
+				'SHOW TABLES LIKE %s',
+				$table_name
+			)
+		);
 		return $result === $table_name;
 	}
 
@@ -91,8 +95,8 @@ class FunnelTable {
 	public static function create_table(): bool {
 		global $wpdb;
 
-                $table_name      = self::get_table_name();
-                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
+				$table_name      = self::get_table_name();
+				$charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -110,11 +114,11 @@ class FunnelTable {
 			KEY idx_created_at (created_at)
 		) $charset_collate;";
 
-                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
-                        return false;
-                }
+		if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
+				return false;
+		}
 
-                return self::table_exists();
+				return self::table_exists();
 	}
 
 	/**
@@ -122,11 +126,11 @@ class FunnelTable {
 	 *
 	 * @return bool True on success, false on failure
 	 */
-        public static function create_stages_table(): bool {
-                global $wpdb;
+	public static function create_stages_table(): bool {
+			global $wpdb;
 
-                $table_name      = self::get_stages_table_name();
-                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
+			$table_name      = self::get_stages_table_name();
+			$charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -146,40 +150,40 @@ class FunnelTable {
 			CONSTRAINT fk_funnel_stages_funnel FOREIGN KEY (funnel_id) REFERENCES $table_name (id) ON DELETE CASCADE
 		) $charset_collate;";
 
-                if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
-                        return false;
-                }
+		if ( ! DatabaseUtils::run_schema_delta( $sql, $wpdb ) ) {
+				return false;
+		}
 
-                return self::stages_table_exists();
-        }
+			return self::stages_table_exists();
+	}
 
-        /**
-         * Drop the funnels table.
-         *
-         * @return bool True on success, false on failure
-         */
-        public static function drop_table(): bool {
-                global $wpdb;
+		/**
+		 * Drop the funnels table.
+		 *
+		 * @return bool True on success, false on failure
+		 */
+	public static function drop_table(): bool {
+			global $wpdb;
 
-                $table_name = self::get_table_name();
-                $result = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+			$table_name = self::get_table_name();
+			$result     = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
 
-                return $result !== false;
-        }
+			return $result !== false;
+	}
 
-        /**
-         * Drop the funnel stages table.
-         *
-         * @return bool True on success, false on failure
-         */
-        public static function drop_stages_table(): bool {
-                global $wpdb;
+		/**
+		 * Drop the funnel stages table.
+		 *
+		 * @return bool True on success, false on failure
+		 */
+	public static function drop_stages_table(): bool {
+			global $wpdb;
 
-                $table_name = self::get_stages_table_name();
-                $result = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
+			$table_name = self::get_stages_table_name();
+			$result     = $wpdb->query( "DROP TABLE IF EXISTS {$table_name}" );
 
-                return $result !== false;
-        }
+			return $result !== false;
+	}
 
 	/**
 	 * Insert a new funnel
@@ -191,24 +195,24 @@ class FunnelTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		
+
 		$defaults = [
-			'status' => 'draft',
+			'status'                 => 'draft',
 			'conversion_window_days' => 30,
-			'attribution_model' => 'last_click',
+			'attribution_model'      => 'last_click',
 		];
-		
+
 		$data = wp_parse_args( $data, $defaults );
-		
+
 		$result = $wpdb->insert(
 			$table_name,
 			[
-				'name' => sanitize_text_field( $data['name'] ),
-				'description' => sanitize_textarea_field( $data['description'] ?? '' ),
-				'client_id' => (int) $data['client_id'],
-				'status' => sanitize_text_field( $data['status'] ),
+				'name'                   => sanitize_text_field( $data['name'] ),
+				'description'            => sanitize_textarea_field( $data['description'] ?? '' ),
+				'client_id'              => (int) $data['client_id'],
+				'status'                 => sanitize_text_field( $data['status'] ),
 				'conversion_window_days' => (int) $data['conversion_window_days'],
-				'attribution_model' => sanitize_text_field( $data['attribution_model'] ),
+				'attribution_model'      => sanitize_text_field( $data['attribution_model'] ),
 			],
 			[ '%s', '%s', '%d', '%s', '%d', '%s' ]
 		);
@@ -226,16 +230,16 @@ class FunnelTable {
 		global $wpdb;
 
 		$table_name = self::get_stages_table_name();
-		
+
 		$result = $wpdb->insert(
 			$table_name,
 			[
-				'funnel_id' => (int) $data['funnel_id'],
-				'stage_order' => (int) $data['stage_order'],
-				'name' => sanitize_text_field( $data['name'] ),
-				'description' => sanitize_textarea_field( $data['description'] ?? '' ),
-				'event_type' => sanitize_text_field( $data['event_type'] ),
-				'event_conditions' => maybe_serialize( $data['event_conditions'] ?? [] ),
+				'funnel_id'           => (int) $data['funnel_id'],
+				'stage_order'         => (int) $data['stage_order'],
+				'name'                => sanitize_text_field( $data['name'] ),
+				'description'         => sanitize_textarea_field( $data['description'] ?? '' ),
+				'event_type'          => sanitize_text_field( $data['event_type'] ),
+				'event_conditions'    => maybe_serialize( $data['event_conditions'] ?? [] ),
 				'required_attributes' => maybe_serialize( $data['required_attributes'] ?? [] ),
 			],
 			[ '%d', '%d', '%s', '%s', '%s', '%s', '%s' ]
@@ -254,10 +258,13 @@ class FunnelTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		$result = $wpdb->get_row( $wpdb->prepare(
-			"SELECT * FROM $table_name WHERE id = %d",
-			$funnel_id
-		), ARRAY_A );
+		$result     = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM $table_name WHERE id = %d",
+				$funnel_id
+			),
+			ARRAY_A
+		);
 
 		return $result ?: null;
 	}
@@ -272,14 +279,17 @@ class FunnelTable {
 		global $wpdb;
 
 		$table_name = self::get_stages_table_name();
-		$results = $wpdb->get_results( $wpdb->prepare(
-			"SELECT * FROM $table_name WHERE funnel_id = %d ORDER BY stage_order ASC",
-			$funnel_id
-		), ARRAY_A );
+		$results    = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM $table_name WHERE funnel_id = %d ORDER BY stage_order ASC",
+				$funnel_id
+			),
+			ARRAY_A
+		);
 
 		// Unserialize conditions and attributes
 		foreach ( $results as &$stage ) {
-			$stage['event_conditions'] = maybe_unserialize( $stage['event_conditions'] );
+			$stage['event_conditions']    = maybe_unserialize( $stage['event_conditions'] );
 			$stage['required_attributes'] = maybe_unserialize( $stage['required_attributes'] );
 		}
 
@@ -289,23 +299,23 @@ class FunnelTable {
 	/**
 	 * Get funnels for a client
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $status Filter by status (optional)
 	 * @return array Array of funnels
 	 */
 	public static function get_client_funnels( int $client_id, string $status = '' ): array {
 		global $wpdb;
 
-		$table_name = self::get_table_name();
+		$table_name   = self::get_table_name();
 		$where_clause = 'WHERE client_id = %d';
-		$params = [ $client_id ];
+		$params       = [ $client_id ];
 
 		if ( ! empty( $status ) ) {
 			$where_clause .= ' AND status = %s';
-			$params[] = $status;
+			$params[]      = $status;
 		}
 
-		$sql = "SELECT * FROM $table_name $where_clause ORDER BY created_at DESC";
+		$sql     = "SELECT * FROM $table_name $where_clause ORDER BY created_at DESC";
 		$results = $wpdb->get_results( $wpdb->prepare( $sql, ...$params ), ARRAY_A );
 
 		return $results ?: [];
@@ -322,33 +332,33 @@ class FunnelTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		
+
 		$update_data = [];
-		$format = [];
+		$format      = [];
 
 		if ( isset( $data['name'] ) ) {
 			$update_data['name'] = sanitize_text_field( $data['name'] );
-			$format[] = '%s';
+			$format[]            = '%s';
 		}
 
 		if ( isset( $data['description'] ) ) {
 			$update_data['description'] = sanitize_textarea_field( $data['description'] );
-			$format[] = '%s';
+			$format[]                   = '%s';
 		}
 
 		if ( isset( $data['status'] ) ) {
 			$update_data['status'] = sanitize_text_field( $data['status'] );
-			$format[] = '%s';
+			$format[]              = '%s';
 		}
 
 		if ( isset( $data['conversion_window_days'] ) ) {
 			$update_data['conversion_window_days'] = (int) $data['conversion_window_days'];
-			$format[] = '%d';
+			$format[]                              = '%d';
 		}
 
 		if ( isset( $data['attribution_model'] ) ) {
 			$update_data['attribution_model'] = sanitize_text_field( $data['attribution_model'] );
-			$format[] = '%s';
+			$format[]                         = '%s';
 		}
 
 		if ( empty( $update_data ) ) {
@@ -375,7 +385,7 @@ class FunnelTable {
 	public static function delete_funnel( int $funnel_id ): bool {
 		global $wpdb;
 
-		$table_name = self::get_table_name();
+		$table_name        = self::get_table_name();
 		$stages_table_name = self::get_stages_table_name();
 
 		// Delete stages first (if foreign key constraint fails)
@@ -397,7 +407,7 @@ class FunnelTable {
 		global $wpdb;
 
 		$table_name = self::get_stages_table_name();
-		$result = $wpdb->delete( $table_name, [ 'id' => $stage_id ], [ '%d' ] );
+		$result     = $wpdb->delete( $table_name, [ 'id' => $stage_id ], [ '%d' ] );
 
 		return $result !== false;
 	}
@@ -411,7 +421,7 @@ class FunnelTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		$count = $wpdb->get_var( "SELECT COUNT(*) FROM `{$table_name}`" );
+		$count      = $wpdb->get_var( "SELECT COUNT(*) FROM `{$table_name}`" );
 
 		return (int) $count;
 	}
@@ -425,7 +435,7 @@ class FunnelTable {
 		global $wpdb;
 
 		$table_name = self::get_table_name();
-		$count = $wpdb->get_var( "SELECT COUNT(*) FROM `{$table_name}` WHERE status = 'active'" );
+		$count      = $wpdb->get_var( "SELECT COUNT(*) FROM `{$table_name}` WHERE status = 'active'" );
 
 		return (int) $count;
 	}
@@ -435,11 +445,11 @@ class FunnelTable {
 	 *
 	 * @return array
 	 */
-        public static function get_all_funnels(): array {
-                global $wpdb;
+	public static function get_all_funnels(): array {
+			global $wpdb;
 
-                $table_name = self::get_table_name();
-                $results = $wpdb->get_results( "SELECT * FROM `{$table_name}` ORDER BY created_at DESC", ARRAY_A );
+			$table_name = self::get_table_name();
+			$results    = $wpdb->get_results( "SELECT * FROM `{$table_name}` ORDER BY created_at DESC", ARRAY_A );
 
 		return $results ?: [];
 	}

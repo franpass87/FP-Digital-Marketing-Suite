@@ -14,7 +14,7 @@ use FP\DigitalMarketing\Helpers\PerformanceCache;
 
 /**
  * Metrics Aggregator class
- * 
+ *
  * This class provides unified metric aggregation across multiple data sources,
  * normalizing data to a common schema and providing internal API for queries.
  */
@@ -23,55 +23,55 @@ class MetricsAggregator {
 	/**
 	 * Default fallback values for missing data
 	 */
-        private const DEFAULT_FALLBACKS = [
-                MetricsSchema::KPI_SESSIONS => 0,
-                MetricsSchema::KPI_USERS => 0,
-                MetricsSchema::KPI_PAGEVIEWS => 0,
-                MetricsSchema::KPI_BOUNCE_RATE => 0.0,
-                MetricsSchema::KPI_CONVERSIONS => 0,
-                MetricsSchema::KPI_REVENUE => 0.0,
-                MetricsSchema::KPI_IMPRESSIONS => 0,
-                MetricsSchema::KPI_CLICKS => 0,
-                MetricsSchema::KPI_CTR => 0.0,
-                MetricsSchema::KPI_CPC => 0.0,
-                MetricsSchema::KPI_COST => 0.0,
-                MetricsSchema::KPI_ORGANIC_CLICKS => 0,
-                MetricsSchema::KPI_ORGANIC_IMPRESSIONS => 0,
-                MetricsSchema::KPI_AVG_POSITION => 0.0,
-                MetricsSchema::KPI_LCP => 0.0,
-                MetricsSchema::KPI_INP => 0.0,
-                MetricsSchema::KPI_CLS => 0.0,
-                MetricsSchema::KPI_EMAIL_OPENS => 0,
-                MetricsSchema::KPI_EMAIL_CLICKS => 0,
-        ];
+	private const DEFAULT_FALLBACKS = [
+		MetricsSchema::KPI_SESSIONS            => 0,
+		MetricsSchema::KPI_USERS               => 0,
+		MetricsSchema::KPI_PAGEVIEWS           => 0,
+		MetricsSchema::KPI_BOUNCE_RATE         => 0.0,
+		MetricsSchema::KPI_CONVERSIONS         => 0,
+		MetricsSchema::KPI_REVENUE             => 0.0,
+		MetricsSchema::KPI_IMPRESSIONS         => 0,
+		MetricsSchema::KPI_CLICKS              => 0,
+		MetricsSchema::KPI_CTR                 => 0.0,
+		MetricsSchema::KPI_CPC                 => 0.0,
+		MetricsSchema::KPI_COST                => 0.0,
+		MetricsSchema::KPI_ORGANIC_CLICKS      => 0,
+		MetricsSchema::KPI_ORGANIC_IMPRESSIONS => 0,
+		MetricsSchema::KPI_AVG_POSITION        => 0.0,
+		MetricsSchema::KPI_LCP                 => 0.0,
+		MetricsSchema::KPI_INP                 => 0.0,
+		MetricsSchema::KPI_CLS                 => 0.0,
+		MetricsSchema::KPI_EMAIL_OPENS         => 0,
+		MetricsSchema::KPI_EMAIL_CLICKS        => 0,
+	];
 
-        /**
-         * Get aggregated metrics for a client across all sources
-         *
-         * @param int $client_id Client ID
-         * @param string $period_start Start date (Y-m-d H:i:s)
-         * @param string $period_end End date (Y-m-d H:i:s)
-         * @param array $kpis Optional. Specific KPIs to retrieve
-         * @param array $sources Optional. Specific sources to include
-         * @return array Aggregated metrics grouped by KPI
-         */
-        public static function get_aggregated_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
-                try {
-                        // Generate cache key for performance caching
+		/**
+		 * Get aggregated metrics for a client across all sources
+		 *
+		 * @param int    $client_id Client ID
+		 * @param string $period_start Start date (Y-m-d H:i:s)
+		 * @param string $period_end End date (Y-m-d H:i:s)
+		 * @param array  $kpis Optional. Specific KPIs to retrieve
+		 * @param array  $sources Optional. Specific sources to include
+		 * @return array Aggregated metrics grouped by KPI
+		 */
+	public static function get_aggregated_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
+		try {
+				// Generate cache key for performance caching
 			$cache_params = [
-				'client_id' => $client_id,
+				'client_id'    => $client_id,
 				'period_start' => $period_start,
-				'period_end' => $period_end,
-				'kpis' => $kpis,
-				'sources' => $sources,
+				'period_end'   => $period_end,
+				'kpis'         => $kpis,
+				'sources'      => $sources,
 			];
-			$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
+			$cache_key    = PerformanceCache::generate_metrics_key( $cache_params );
 
 			// Use performance cache with fallback to database query
 			return PerformanceCache::get_cached(
 				$cache_key,
 				PerformanceCache::CACHE_GROUP_AGGREGATED,
-				function() use ( $client_id, $period_start, $period_end, $kpis, $sources ) {
+				function () use ( $client_id, $period_start, $period_end, $kpis, $sources ) {
 					return self::get_aggregated_metrics_uncached( $client_id, $period_start, $period_end, $kpis, $sources );
 				},
 				PerformanceCache::get_cache_settings()['aggregated_ttl']
@@ -81,39 +81,39 @@ class MetricsAggregator {
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 				error_log( 'FP Digital Marketing MetricsAggregator Error: ' . $e->getMessage() );
 			}
-			
+
 			// Return fallback empty array with basic structure
 			return [];
-                }
-        }
+		}
+	}
 
-        /**
-         * Retrieve metrics (legacy method).
-         *
-         * This method is kept for backwards compatibility and simply proxies
-         * to {@see self::get_aggregated_metrics()}.
-         *
-         * @param int $client_id Client ID
-         * @param string $period_start Start date (Y-m-d H:i:s)
-         * @param string $period_end End date (Y-m-d H:i:s)
-         * @param array $kpis Optional. Specific KPIs to retrieve
-         * @param array $sources Optional. Specific sources to include
-         * @return array Aggregated metrics grouped by KPI
-         */
-        public static function get_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
-                return self::get_aggregated_metrics( $client_id, $period_start, $period_end, $kpis, $sources );
-        }
+		/**
+		 * Retrieve metrics (legacy method).
+		 *
+		 * This method is kept for backwards compatibility and simply proxies
+		 * to {@see self::get_aggregated_metrics()}.
+		 *
+		 * @param int    $client_id Client ID
+		 * @param string $period_start Start date (Y-m-d H:i:s)
+		 * @param string $period_end End date (Y-m-d H:i:s)
+		 * @param array  $kpis Optional. Specific KPIs to retrieve
+		 * @param array  $sources Optional. Specific sources to include
+		 * @return array Aggregated metrics grouped by KPI
+		 */
+	public static function get_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
+			return self::get_aggregated_metrics( $client_id, $period_start, $period_end, $kpis, $sources );
+	}
 
-        /**
-         * Get aggregated metrics without caching (internal method)
-	 *
-	 * @param int $client_id Client ID
-	 * @param string $period_start Start date (Y-m-d H:i:s)
-	 * @param string $period_end End date (Y-m-d H:i:s)
-	 * @param array $kpis Optional. Specific KPIs to retrieve
-	 * @param array $sources Optional. Specific sources to include
-	 * @return array Aggregated metrics grouped by KPI
-	 */
+		/**
+		 * Get aggregated metrics without caching (internal method)
+		 *
+		 * @param int    $client_id Client ID
+		 * @param string $period_start Start date (Y-m-d H:i:s)
+		 * @param string $period_end End date (Y-m-d H:i:s)
+		 * @param array  $kpis Optional. Specific KPIs to retrieve
+		 * @param array  $sources Optional. Specific sources to include
+		 * @return array Aggregated metrics grouped by KPI
+		 */
 	private static function get_aggregated_metrics_uncached( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [] ): array {
 		try {
 			$criteria = [
@@ -139,18 +139,18 @@ class MetricsAggregator {
 
 				if ( ! isset( $aggregated[ $normalized_kpi ] ) ) {
 					$aggregated[ $normalized_kpi ] = [
-						'kpi' => $normalized_kpi,
-						'values' => [],
-						'sources' => [],
+						'kpi'         => $normalized_kpi,
+						'values'      => [],
+						'sources'     => [],
 						'total_value' => 0,
-						'count' => 0,
+						'count'       => 0,
 					];
 				}
 
-				$value = is_numeric( $metric->value ) ? (float) $metric->value : 0.0;
+				$value                                      = is_numeric( $metric->value ) ? (float) $metric->value : 0.0;
 				$aggregated[ $normalized_kpi ]['values'][]  = $value;
 				$aggregated[ $normalized_kpi ]['sources'][] = $metric->source;
-				$aggregated[ $normalized_kpi ]['count']++;
+				++$aggregated[ $normalized_kpi ]['count'];
 			}
 
 			foreach ( $aggregated as $kpi => &$data ) {
@@ -176,12 +176,12 @@ class MetricsAggregator {
 
 			return self::apply_fallbacks( [], $kpis );
 		}
-}
+	}
 
 	/**
 	 * Get KPI summary for a client
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
 	 * @param string $category Optional. Filter by KPI category
@@ -191,19 +191,19 @@ class MetricsAggregator {
 		try {
 			// Generate cache key for KPI summary
 			$cache_params = [
-				'method' => 'kpi_summary',
-				'client_id' => $client_id,
+				'method'       => 'kpi_summary',
+				'client_id'    => $client_id,
 				'period_start' => $period_start,
-				'period_end' => $period_end,
-				'category' => $category,
+				'period_end'   => $period_end,
+				'category'     => $category,
 			];
-			$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
+			$cache_key    = PerformanceCache::generate_metrics_key( $cache_params );
 
 			// Use performance cache with fallback to computation
 			return PerformanceCache::get_cached(
 				$cache_key,
 				PerformanceCache::CACHE_GROUP_REPORTS,
-				function() use ( $client_id, $period_start, $period_end, $category ) {
+				function () use ( $client_id, $period_start, $period_end, $category ) {
 					return self::get_kpi_summary_uncached( $client_id, $period_start, $period_end, $category );
 				},
 				PerformanceCache::get_cache_settings()['reports_ttl']
@@ -213,15 +213,15 @@ class MetricsAggregator {
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
 				error_log( 'FP Digital Marketing KPI Summary Error: ' . $e->getMessage() );
 			}
-			
+
 			// Return basic fallback structure
 			return [
-				'kpis' => [],
+				'kpis'    => [],
 				'summary' => [
-					'total_sessions' => 0,
-					'total_users' => 0,
+					'total_sessions'    => 0,
+					'total_users'       => 0,
 					'total_conversions' => 0,
-					'total_revenue' => 0.0,
+					'total_revenue'     => 0.0,
 				],
 			];
 		}
@@ -230,7 +230,7 @@ class MetricsAggregator {
 	/**
 	 * Get KPI summary without caching (internal method)
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
 	 * @param string $category Optional. Filter by KPI category
@@ -238,28 +238,28 @@ class MetricsAggregator {
 	 */
 	private static function get_kpi_summary_uncached( int $client_id, string $period_start, string $period_end, string $category = '' ): array {
 		$kpis = [];
-		
+
 		if ( $category ) {
 			$kpis = MetricsSchema::get_kpis_by_category( $category );
 		}
 
 		$aggregated_metrics = self::get_aggregated_metrics( $client_id, $period_start, $period_end, $kpis );
-		
+
 		$summary = [];
-		
+
 		foreach ( $aggregated_metrics as $kpi => $data ) {
 			$kpi_definitions = MetricsSchema::get_kpi_definitions();
-			$definition = $kpi_definitions[ $kpi ] ?? [];
-			
+			$definition      = $kpi_definitions[ $kpi ] ?? [];
+
 			$summary[ $kpi ] = [
-				'name' => $definition['name'] ?? $kpi,
-				'description' => $definition['description'] ?? '',
-				'category' => $definition['category'] ?? 'other',
-				'value' => $data['total_value'],
+				'name'            => $definition['name'] ?? $kpi,
+				'description'     => $definition['description'] ?? '',
+				'category'        => $definition['category'] ?? 'other',
+				'value'           => $data['total_value'],
 				'formatted_value' => self::format_value( $data['total_value'], $definition['format'] ?? 'number' ),
-				'sources' => array_unique( $data['sources'] ?? [] ),
-				'source_count' => count( array_unique( $data['sources'] ?? [] ) ),
-				'has_data' => $data['count'] > 0,
+				'sources'         => array_unique( $data['sources'] ?? [] ),
+				'source_count'    => count( array_unique( $data['sources'] ?? [] ) ),
+				'has_data'        => $data['count'] > 0,
 			];
 		}
 
@@ -269,32 +269,32 @@ class MetricsAggregator {
 	/**
 	 * Get metrics comparison between two periods
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $current_start Current period start
 	 * @param string $current_end Current period end
 	 * @param string $previous_start Previous period start
 	 * @param string $previous_end Previous period end
-	 * @param array $kpis Optional. Specific KPIs to compare
+	 * @param array  $kpis Optional. Specific KPIs to compare
 	 * @return array Comparison data with change percentages
 	 */
 	public static function get_period_comparison( int $client_id, string $current_start, string $current_end, string $previous_start, string $previous_end, array $kpis = [] ): array {
 		// Generate cache key for period comparison
 		$cache_params = [
-			'method' => 'period_comparison',
-			'client_id' => $client_id,
-			'current_start' => $current_start,
-			'current_end' => $current_end,
+			'method'         => 'period_comparison',
+			'client_id'      => $client_id,
+			'current_start'  => $current_start,
+			'current_end'    => $current_end,
 			'previous_start' => $previous_start,
-			'previous_end' => $previous_end,
-			'kpis' => $kpis,
+			'previous_end'   => $previous_end,
+			'kpis'           => $kpis,
 		];
-		$cache_key = PerformanceCache::generate_metrics_key( $cache_params );
+		$cache_key    = PerformanceCache::generate_metrics_key( $cache_params );
 
 		// Use performance cache with fallback to computation
 		return PerformanceCache::get_cached(
 			$cache_key,
 			PerformanceCache::CACHE_GROUP_REPORTS,
-			function() use ( $client_id, $current_start, $current_end, $previous_start, $previous_end, $kpis ) {
+			function () use ( $client_id, $current_start, $current_end, $previous_start, $previous_end, $kpis ) {
 				return self::get_period_comparison_uncached( $client_id, $current_start, $current_end, $previous_start, $previous_end, $kpis );
 			},
 			PerformanceCache::get_cache_settings()['reports_ttl']
@@ -304,35 +304,35 @@ class MetricsAggregator {
 	/**
 	 * Get metrics comparison without caching (internal method)
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $current_start Current period start
 	 * @param string $current_end Current period end
 	 * @param string $previous_start Previous period start
 	 * @param string $previous_end Previous period end
-	 * @param array $kpis Optional. Specific KPIs to compare
+	 * @param array  $kpis Optional. Specific KPIs to compare
 	 * @return array Comparison data with change percentages
 	 */
 	private static function get_period_comparison_uncached( int $client_id, string $current_start, string $current_end, string $previous_start, string $previous_end, array $kpis = [] ): array {
-		$current_metrics = self::get_aggregated_metrics( $client_id, $current_start, $current_end, $kpis );
+		$current_metrics  = self::get_aggregated_metrics( $client_id, $current_start, $current_end, $kpis );
 		$previous_metrics = self::get_aggregated_metrics( $client_id, $previous_start, $previous_end, $kpis );
 
 		$comparison = [];
 
 		foreach ( $current_metrics as $kpi => $current_data ) {
 			$previous_value = $previous_metrics[ $kpi ]['total_value'] ?? 0;
-			$current_value = $current_data['total_value'];
+			$current_value  = $current_data['total_value'];
 
-			$change = $current_value - $previous_value;
+			$change            = $current_value - $previous_value;
 			$change_percentage = $previous_value > 0 ? ( $change / $previous_value ) * 100 : 0;
 
 			$comparison[ $kpi ] = [
-				'kpi' => $kpi,
-				'current_value' => $current_value,
-				'previous_value' => $previous_value,
-				'change' => $change,
+				'kpi'               => $kpi,
+				'current_value'     => $current_value,
+				'previous_value'    => $previous_value,
+				'change'            => $change,
 				'change_percentage' => round( $change_percentage, 2 ),
-				'trend' => $change > 0 ? 'up' : ( $change < 0 ? 'down' : 'stable' ),
-				'has_data' => $current_data['count'] > 0 || ( $previous_metrics[ $kpi ]['count'] ?? 0 ) > 0,
+				'trend'             => $change > 0 ? 'up' : ( $change < 0 ? 'down' : 'stable' ),
+				'has_data'          => $current_data['count'] > 0 || ( $previous_metrics[ $kpi ]['count'] ?? 0 ) > 0,
 			];
 		}
 
@@ -342,42 +342,42 @@ class MetricsAggregator {
 	/**
 	 * Get metrics by data source for a client
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
 	 * @return array Metrics grouped by data source
 	 */
 	public static function get_metrics_by_source( int $client_id, string $period_start, string $period_end ): array {
 		$criteria = [
-			'client_id' => $client_id,
+			'client_id'    => $client_id,
 			'period_start' => $period_start,
-			'period_end' => $period_end,
+			'period_end'   => $period_end,
 		];
 
 		$raw_metrics = MetricsCache::get_metrics( $criteria );
-		
+
 		$by_source = [];
 
 		foreach ( $raw_metrics as $metric ) {
 			if ( ! isset( $by_source[ $metric->source ] ) ) {
 				$by_source[ $metric->source ] = [
-					'source' => $metric->source,
-					'metrics' => [],
+					'source'        => $metric->source,
+					'metrics'       => [],
 					'total_metrics' => 0,
 				];
 			}
 
 			$normalized_kpi = MetricsSchema::normalize_metric_name( $metric->source, $metric->metric );
-			
-                        $by_source[ $metric->source ]['metrics'][ $normalized_kpi ] = [
-                                'original_name' => $metric->metric,
-                                'normalized_name' => $normalized_kpi,
-                                'value' => $metric->value,
-                                'meta' => self::extract_meta_array( $metric ),
-                                'fetched_at' => $metric->fetched_at,
-                        ];
-			
-			$by_source[ $metric->source ]['total_metrics']++;
+
+						$by_source[ $metric->source ]['metrics'][ $normalized_kpi ] = [
+							'original_name'   => $metric->metric,
+							'normalized_name' => $normalized_kpi,
+							'value'           => $metric->value,
+							'meta'            => self::extract_meta_array( $metric ),
+							'fetched_at'      => $metric->fetched_at,
+						];
+
+						++$by_source[ $metric->source ]['total_metrics'];
 		}
 
 		return $by_source;
@@ -386,129 +386,129 @@ class MetricsAggregator {
 	/**
 	 * Generate mock aggregated data for testing/demo purposes
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
 	 * @return array Mock aggregated data
 	 */
-        public static function generate_mock_data( int $client_id, string $period_start, string $period_end ): array {
-                $mock_data = [];
-		
+	public static function generate_mock_data( int $client_id, string $period_start, string $period_end ): array {
+			$mock_data = [];
+
 		// Generate realistic mock values for different KPIs
 		$mock_values = [
-			MetricsSchema::KPI_SESSIONS => rand( 800, 3000 ),
-			MetricsSchema::KPI_USERS => rand( 600, 2500 ),
-			MetricsSchema::KPI_PAGEVIEWS => rand( 2000, 8000 ),
-			MetricsSchema::KPI_BOUNCE_RATE => rand( 40, 80 ) / 100,
-			MetricsSchema::KPI_CONVERSIONS => rand( 15, 120 ),
-			MetricsSchema::KPI_REVENUE => rand( 1500, 15000 ),
-			MetricsSchema::KPI_IMPRESSIONS => rand( 10000, 50000 ),
-			MetricsSchema::KPI_CLICKS => rand( 200, 1500 ),
-			MetricsSchema::KPI_CTR => rand( 1, 8 ) / 100,
-			MetricsSchema::KPI_CPC => rand( 50, 350 ) / 100,
-			MetricsSchema::KPI_COST => rand( 200, 2000 ),
-			MetricsSchema::KPI_ORGANIC_CLICKS => rand( 150, 800 ),
+			MetricsSchema::KPI_SESSIONS            => rand( 800, 3000 ),
+			MetricsSchema::KPI_USERS               => rand( 600, 2500 ),
+			MetricsSchema::KPI_PAGEVIEWS           => rand( 2000, 8000 ),
+			MetricsSchema::KPI_BOUNCE_RATE         => rand( 40, 80 ) / 100,
+			MetricsSchema::KPI_CONVERSIONS         => rand( 15, 120 ),
+			MetricsSchema::KPI_REVENUE             => rand( 1500, 15000 ),
+			MetricsSchema::KPI_IMPRESSIONS         => rand( 10000, 50000 ),
+			MetricsSchema::KPI_CLICKS              => rand( 200, 1500 ),
+			MetricsSchema::KPI_CTR                 => rand( 1, 8 ) / 100,
+			MetricsSchema::KPI_CPC                 => rand( 50, 350 ) / 100,
+			MetricsSchema::KPI_COST                => rand( 200, 2000 ),
+			MetricsSchema::KPI_ORGANIC_CLICKS      => rand( 150, 800 ),
 			MetricsSchema::KPI_ORGANIC_IMPRESSIONS => rand( 5000, 25000 ),
 		];
 
 		foreach ( $mock_values as $kpi => $value ) {
 			$mock_data[ $kpi ] = [
-				'kpi' => $kpi,
-				'values' => [ $value ],
-				'sources' => [ 'mock_source' ],
+				'kpi'         => $kpi,
+				'values'      => [ $value ],
+				'sources'     => [ 'mock_source' ],
 				'total_value' => $value,
-				'count' => 1,
+				'count'       => 1,
 			];
 		}
 
-                return $mock_data;
-        }
+			return $mock_data;
+	}
 
-        /**
-         * Normalize metadata payload into an array regardless of storage format.
-         *
-         * @param object $metric Metric record retrieved from the cache layer.
-         * @return array<string, mixed>
-         */
-        private static function extract_meta_array( object $metric ): array {
-                if ( isset( $metric->metadata ) && is_string( $metric->metadata ) && '' !== $metric->metadata ) {
-                        $decoded = json_decode( $metric->metadata, true );
-                        if ( is_array( $decoded ) ) {
-                                return $decoded;
-                        }
-                }
+		/**
+		 * Normalize metadata payload into an array regardless of storage format.
+		 *
+		 * @param object $metric Metric record retrieved from the cache layer.
+		 * @return array<string, mixed>
+		 */
+	private static function extract_meta_array( object $metric ): array {
+		if ( isset( $metric->metadata ) && is_string( $metric->metadata ) && '' !== $metric->metadata ) {
+				$decoded = json_decode( $metric->metadata, true );
+			if ( is_array( $decoded ) ) {
+				return $decoded;
+			}
+		}
 
-                $raw_meta = $metric->meta ?? null;
+			$raw_meta = $metric->meta ?? null;
 
-                if ( is_array( $raw_meta ) ) {
-                        return $raw_meta;
-                }
+		if ( is_array( $raw_meta ) ) {
+				return $raw_meta;
+		}
 
-                if ( is_string( $raw_meta ) && '' !== $raw_meta ) {
-                        $decoded = json_decode( $raw_meta, true );
-                        if ( is_array( $decoded ) ) {
-                                return $decoded;
-                        }
-                }
+		if ( is_string( $raw_meta ) && '' !== $raw_meta ) {
+				$decoded = json_decode( $raw_meta, true );
+			if ( is_array( $decoded ) ) {
+					return $decoded;
+			}
+		}
 
-                return [];
-        }
+			return [];
+	}
 
-        /**
-         * Calculate a percentile value from a dataset.
-         *
-         * @param array $values     Collection of numeric values.
-         * @param float $percentile Percentile to calculate (0 - 1 range).
-         * @return float Calculated percentile value.
-         */
-        private static function calculate_percentile( array $values, float $percentile ): float {
-                if ( empty( $values ) ) {
-                        return 0.0;
-                }
+		/**
+		 * Calculate a percentile value from a dataset.
+		 *
+		 * @param array $values     Collection of numeric values.
+		 * @param float $percentile Percentile to calculate (0 - 1 range).
+		 * @return float Calculated percentile value.
+		 */
+	private static function calculate_percentile( array $values, float $percentile ): float {
+		if ( empty( $values ) ) {
+				return 0.0;
+		}
 
-                sort( $values );
+			sort( $values );
 
-                $count = count( $values );
-                if ( $count === 1 ) {
-                        return (float) $values[0];
-                }
+			$count = count( $values );
+		if ( $count === 1 ) {
+				return (float) $values[0];
+		}
 
-                $percentile = max( 0.0, min( 1.0, $percentile ) );
-                $rank = ( $count - 1 ) * $percentile;
-                $lower_index = (int) floor( $rank );
-                $upper_index = (int) ceil( $rank );
+			$percentile  = max( 0.0, min( 1.0, $percentile ) );
+			$rank        = ( $count - 1 ) * $percentile;
+			$lower_index = (int) floor( $rank );
+			$upper_index = (int) ceil( $rank );
 
-                if ( $lower_index === $upper_index ) {
-                        return (float) $values[ $lower_index ];
-                }
+		if ( $lower_index === $upper_index ) {
+				return (float) $values[ $lower_index ];
+		}
 
-                $lower_value = (float) $values[ $lower_index ];
-                $upper_value = (float) $values[ $upper_index ];
-                $weight = $rank - $lower_index;
+			$lower_value = (float) $values[ $lower_index ];
+			$upper_value = (float) $values[ $upper_index ];
+			$weight      = $rank - $lower_index;
 
-                return $lower_value + $weight * ( $upper_value - $lower_value );
-        }
+			return $lower_value + $weight * ( $upper_value - $lower_value );
+	}
 
-        /**
-         * Apply fallback values for missing KPIs
-         *
-         * @param array $aggregated Existing aggregated data
-         * @param array $requested_kpis Requested KPIs
-         * @return array Aggregated data with fallbacks applied
-	 */
+		/**
+		 * Apply fallback values for missing KPIs
+		 *
+		 * @param array $aggregated Existing aggregated data
+		 * @param array $requested_kpis Requested KPIs
+		 * @return array Aggregated data with fallbacks applied
+		 */
 	private static function apply_fallbacks( array $aggregated, array $requested_kpis = [] ): array {
 		$all_kpis = ! empty( $requested_kpis ) ? $requested_kpis : array_keys( self::DEFAULT_FALLBACKS );
 
 		foreach ( $all_kpis as $kpi ) {
 			if ( ! isset( $aggregated[ $kpi ] ) ) {
 				$fallback_value = self::DEFAULT_FALLBACKS[ $kpi ] ?? 0;
-				
+
 				$aggregated[ $kpi ] = [
-					'kpi' => $kpi,
-					'values' => [ $fallback_value ],
-					'sources' => [],
+					'kpi'         => $kpi,
+					'values'      => [ $fallback_value ],
+					'sources'     => [],
 					'total_value' => $fallback_value,
-					'count' => 0, // 0 indicates fallback data
+					'count'       => 0, // 0 indicates fallback data
 				];
 			}
 		}
@@ -519,7 +519,7 @@ class MetricsAggregator {
 	/**
 	 * Format value according to its type
 	 *
-	 * @param mixed $value Raw value
+	 * @param mixed  $value Raw value
 	 * @param string $format Format type (number, percentage, currency)
 	 * @return string Formatted value
 	 */
@@ -538,41 +538,41 @@ class MetricsAggregator {
 	/**
 	 * Get available data sources with metrics count
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
 	 * @return array Available sources with data availability
 	 */
 	public static function get_source_availability( int $client_id, string $period_start, string $period_end ): array {
 		$criteria = [
-			'client_id' => $client_id,
+			'client_id'    => $client_id,
 			'period_start' => $period_start,
-			'period_end' => $period_end,
+			'period_end'   => $period_end,
 		];
 
 		$raw_metrics = MetricsCache::get_metrics( $criteria );
-		
-		$source_stats = [];
+
+		$source_stats      = [];
 		$available_sources = DataSources::get_data_sources();
 
 		// Initialize all sources
 		foreach ( $available_sources as $source_id => $source_info ) {
 			$source_stats[ $source_id ] = [
-				'source_id' => $source_id,
-				'name' => $source_info['name'],
-				'status' => $source_info['status'],
+				'source_id'     => $source_id,
+				'name'          => $source_info['name'],
+				'status'        => $source_info['status'],
 				'metrics_count' => 0,
-				'last_fetch' => null,
-				'has_data' => false,
+				'last_fetch'    => null,
+				'has_data'      => false,
 			];
 		}
 
 		// Count metrics per source
 		foreach ( $raw_metrics as $metric ) {
 			if ( isset( $source_stats[ $metric->source ] ) ) {
-				$source_stats[ $metric->source ]['metrics_count']++;
+				++$source_stats[ $metric->source ]['metrics_count'];
 				$source_stats[ $metric->source ]['has_data'] = true;
-				
+
 				if ( ! $source_stats[ $metric->source ]['last_fetch'] || $metric->fetched_at > $source_stats[ $metric->source ]['last_fetch'] ) {
 					$source_stats[ $metric->source ]['last_fetch'] = $metric->fetched_at;
 				}
@@ -585,43 +585,58 @@ class MetricsAggregator {
 	/**
 	 * Get data quality report for a client
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
 	 * @return array Data quality report
 	 */
 	public static function get_data_quality_report( int $client_id, string $period_start, string $period_end ): array {
 		$source_availability = self::get_source_availability( $client_id, $period_start, $period_end );
-		$kpi_summary = self::get_kpi_summary( $client_id, $period_start, $period_end );
+		$kpi_summary         = self::get_kpi_summary( $client_id, $period_start, $period_end );
 
-		$total_sources = count( $source_availability );
-		$active_sources = count( array_filter( $source_availability, function( $source ) {
-			return $source['has_data'];
-		} ) );
+		$total_sources  = count( $source_availability );
+		$active_sources = count(
+			array_filter(
+				$source_availability,
+				function ( $source ) {
+					return $source['has_data'];
+				}
+			)
+		);
 
-		$total_kpis = count( $kpi_summary );
-		$kpis_with_data = count( array_filter( $kpi_summary, function( $kpi ) {
-			return $kpi['has_data'];
-		} ) );
+		$total_kpis     = count( $kpi_summary );
+		$kpis_with_data = count(
+			array_filter(
+				$kpi_summary,
+				function ( $kpi ) {
+					return $kpi['has_data'];
+				}
+			)
+		);
 
 		return [
-			'client_id' => $client_id,
-			'period' => [
+			'client_id'       => $client_id,
+			'period'          => [
 				'start' => $period_start,
-				'end' => $period_end,
+				'end'   => $period_end,
 			],
-			'data_coverage' => [
-				'total_sources' => $total_sources,
-				'active_sources' => $active_sources,
+			'data_coverage'   => [
+				'total_sources'              => $total_sources,
+				'active_sources'             => $active_sources,
 				'source_coverage_percentage' => $total_sources > 0 ? round( ( $active_sources / $total_sources ) * 100, 2 ) : 0,
-				'total_kpis' => $total_kpis,
-				'kpis_with_data' => $kpis_with_data,
-				'kpi_coverage_percentage' => $total_kpis > 0 ? round( ( $kpis_with_data / $total_kpis ) * 100, 2 ) : 0,
+				'total_kpis'                 => $total_kpis,
+				'kpis_with_data'             => $kpis_with_data,
+				'kpi_coverage_percentage'    => $total_kpis > 0 ? round( ( $kpis_with_data / $total_kpis ) * 100, 2 ) : 0,
 			],
-			'source_details' => $source_availability,
-			'missing_kpis' => array_keys( array_filter( $kpi_summary, function( $kpi ) {
-				return ! $kpi['has_data'];
-			} ) ),
+			'source_details'  => $source_availability,
+			'missing_kpis'    => array_keys(
+				array_filter(
+					$kpi_summary,
+					function ( $kpi ) {
+						return ! $kpi['has_data'];
+					}
+				)
+			),
 			'recommendations' => self::generate_recommendations( $source_availability, $kpi_summary ),
 		];
 	}
@@ -634,26 +649,26 @@ class MetricsAggregator {
 	 */
 	public static function query_metrics( array $query_params ): array {
 		// Extract and validate query parameters
-		$client_id = $query_params['client_id'] ?? 0;
-		$period_start = $query_params['period_start'] ?? '';
-		$period_end = $query_params['period_end'] ?? '';
-		$kpis = $query_params['kpis'] ?? [];
-		$sources = $query_params['sources'] ?? [];
-		$source_types = $query_params['source_types'] ?? [];
-		$categories = $query_params['categories'] ?? [];
-		$metric_types = $query_params['metric_types'] ?? [];
+		$client_id          = $query_params['client_id'] ?? 0;
+		$period_start       = $query_params['period_start'] ?? '';
+		$period_end         = $query_params['period_end'] ?? '';
+		$kpis               = $query_params['kpis'] ?? [];
+		$sources            = $query_params['sources'] ?? [];
+		$source_types       = $query_params['source_types'] ?? [];
+		$categories         = $query_params['categories'] ?? [];
+		$metric_types       = $query_params['metric_types'] ?? [];
 		$aggregation_method = $query_params['aggregation'] ?? 'default';
-		$include_trends = $query_params['include_trends'] ?? false;
-		$limit = $query_params['limit'] ?? 0;
-		$offset = $query_params['offset'] ?? 0;
-		$sort_by = $query_params['sort_by'] ?? 'value';
-		$sort_order = $query_params['sort_order'] ?? 'desc';
+		$include_trends     = $query_params['include_trends'] ?? false;
+		$limit              = $query_params['limit'] ?? 0;
+		$offset             = $query_params['offset'] ?? 0;
+		$sort_by            = $query_params['sort_by'] ?? 'value';
+		$sort_order         = $query_params['sort_order'] ?? 'desc';
 
 		// Build base criteria
 		$criteria = [
-			'client_id' => $client_id,
+			'client_id'    => $client_id,
 			'period_start' => $period_start,
-			'period_end' => $period_end,
+			'period_end'   => $period_end,
 		];
 
 		// Apply source filtering
@@ -703,13 +718,13 @@ class MetricsAggregator {
 
 		return [
 			'query_params' => $query_params,
-			'results' => $aggregated_metrics,
-			'metadata' => [
-				'total_results' => count( $aggregated_metrics ),
-				'query_time' => date( 'Y-m-d H:i:s' ),
+			'results'      => $aggregated_metrics,
+			'metadata'     => [
+				'total_results'  => count( $aggregated_metrics ),
+				'query_time'     => date( 'Y-m-d H:i:s' ),
 				'has_pagination' => $limit > 0,
-				'offset' => $offset,
-				'limit' => $limit,
+				'offset'         => $offset,
+				'limit'          => $limit,
 			],
 		];
 	}
@@ -717,15 +732,15 @@ class MetricsAggregator {
 	/**
 	 * Get metrics filtered by metric types
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
-	 * @param array $metric_types Metric types to filter by (traffic, conversion, engagement, etc.)
+	 * @param array  $metric_types Metric types to filter by (traffic, conversion, engagement, etc.)
 	 * @return array Filtered metrics
 	 */
 	public static function get_metrics_by_type( int $client_id, string $period_start, string $period_end, array $metric_types ): array {
 		$kpis_by_type = [];
-		
+
 		foreach ( $metric_types as $type ) {
 			switch ( $type ) {
 				case 'traffic':
@@ -755,10 +770,10 @@ class MetricsAggregator {
 	/**
 	 * Get metrics filtered by source types
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
-	 * @param array $source_types Source types to filter by (analytics, advertising, social, etc.)
+	 * @param array  $source_types Source types to filter by (analytics, advertising, social, etc.)
 	 * @return array Metrics from specified source types
 	 */
 	public static function get_metrics_by_source_type( int $client_id, string $period_start, string $period_end, array $source_types ): array {
@@ -769,55 +784,58 @@ class MetricsAggregator {
 	/**
 	 * Get trending metrics with growth analysis
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
-	 * @param int $trend_periods Number of periods to analyze for trends (default: 4)
+	 * @param int    $trend_periods Number of periods to analyze for trends (default: 4)
 	 * @return array Metrics with trend analysis
 	 */
 	public static function get_trending_metrics( int $client_id, string $period_start, string $period_end, int $trend_periods = 4 ): array {
 		$metrics = self::get_aggregated_metrics( $client_id, $period_start, $period_end );
-		
+
 		// Calculate period length
-		$start_date = new \DateTime( $period_start );
-		$end_date = new \DateTime( $period_end );
+		$start_date    = new \DateTime( $period_start );
+		$end_date      = new \DateTime( $period_end );
 		$period_length = $start_date->diff( $end_date )->days;
 
 		$trending_metrics = [];
 
 		foreach ( $metrics as $kpi => $data ) {
 			$trend_data = [];
-			
+
 			// Get historical data for trend analysis
 			for ( $i = $trend_periods; $i > 0; $i-- ) {
 				$trend_start = clone $start_date;
-				$trend_end = clone $end_date;
-				
+				$trend_end   = clone $end_date;
+
 				$trend_start->sub( new \DateInterval( "P{$i}D" ) );
 				$trend_end->sub( new \DateInterval( "P{$i}D" ) );
-				
-				$historical_metrics = self::get_aggregated_metrics( 
-					$client_id, 
-					$trend_start->format( 'Y-m-d H:i:s' ), 
-					$trend_end->format( 'Y-m-d H:i:s' ), 
-					[ $kpi ] 
+
+				$historical_metrics = self::get_aggregated_metrics(
+					$client_id,
+					$trend_start->format( 'Y-m-d H:i:s' ),
+					$trend_end->format( 'Y-m-d H:i:s' ),
+					[ $kpi ]
 				);
-				
+
 				$trend_data[] = $historical_metrics[ $kpi ]['total_value'] ?? 0;
 			}
 
 			// Calculate trend direction and velocity
 			$trend_direction = self::calculate_trend_direction( $trend_data );
-			$trend_velocity = self::calculate_trend_velocity( $trend_data );
+			$trend_velocity  = self::calculate_trend_velocity( $trend_data );
 
-			$trending_metrics[ $kpi ] = array_merge( $data, [
-				'trend' => [
-					'direction' => $trend_direction,
-					'velocity' => $trend_velocity,
-					'historical_values' => $trend_data,
-					'periods_analyzed' => $trend_periods,
-				],
-			] );
+			$trending_metrics[ $kpi ] = array_merge(
+				$data,
+				[
+					'trend' => [
+						'direction'         => $trend_direction,
+						'velocity'          => $trend_velocity,
+						'historical_values' => $trend_data,
+						'periods_analyzed'  => $trend_periods,
+					],
+				]
+			);
 		}
 
 		return $trending_metrics;
@@ -826,37 +844,39 @@ class MetricsAggregator {
 	/**
 	 * Search metrics by name or description
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
 	 * @param string $search_term Search term to match against metric names/descriptions
 	 * @return array Matching metrics
 	 */
 	public static function search_metrics( int $client_id, string $period_start, string $period_end, string $search_term ): array {
-		$all_metrics = self::get_aggregated_metrics( $client_id, $period_start, $period_end );
+		$all_metrics     = self::get_aggregated_metrics( $client_id, $period_start, $period_end );
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
-		
-		$matching_metrics = [];
+
+		$matching_metrics  = [];
 		$search_term_lower = strtolower( $search_term );
 
 		foreach ( $all_metrics as $kpi => $data ) {
-			$definition = $kpi_definitions[ $kpi ] ?? [];
-			$name = $definition['name'] ?? $kpi;
+			$definition  = $kpi_definitions[ $kpi ] ?? [];
+			$name        = $definition['name'] ?? $kpi;
 			$description = $definition['description'] ?? '';
 
 			// Search in KPI key, name, and description
-			if ( 
-				stripos( $kpi, $search_term ) !== false ||
+			if ( stripos( $kpi, $search_term ) !== false ||
 				stripos( $name, $search_term ) !== false ||
 				stripos( $description, $search_term ) !== false
 			) {
-				$matching_metrics[ $kpi ] = array_merge( $data, [
-					'match_info' => [
-						'matched_kpi' => stripos( $kpi, $search_term ) !== false,
-						'matched_name' => stripos( $name, $search_term ) !== false,
-						'matched_description' => stripos( $description, $search_term ) !== false,
-					],
-				] );
+				$matching_metrics[ $kpi ] = array_merge(
+					$data,
+					[
+						'match_info' => [
+							'matched_kpi'         => stripos( $kpi, $search_term ) !== false,
+							'matched_name'        => stripos( $name, $search_term ) !== false,
+							'matched_description' => stripos( $description, $search_term ) !== false,
+						],
+					]
+				);
 			}
 		}
 
@@ -870,7 +890,7 @@ class MetricsAggregator {
 	 * @return array Source IDs matching the types
 	 */
 	private static function get_sources_by_types( array $source_types ): array {
-		$all_sources = DataSources::get_data_sources();
+		$all_sources      = DataSources::get_data_sources();
 		$matching_sources = [];
 
 		foreach ( $all_sources as $source_id => $source_info ) {
@@ -891,12 +911,12 @@ class MetricsAggregator {
 	 */
 	private static function filter_by_metric_types( array $metrics, array $metric_types ): array {
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
-		$filtered = [];
+		$filtered        = [];
 
 		foreach ( $metrics as $kpi => $data ) {
 			$definition = $kpi_definitions[ $kpi ] ?? [];
-			$category = $definition['category'] ?? '';
-			
+			$category   = $definition['category'] ?? '';
+
 			if ( in_array( $category, $metric_types, true ) ) {
 				$filtered[ $kpi ] = $data;
 			}
@@ -908,7 +928,7 @@ class MetricsAggregator {
 	/**
 	 * Apply custom aggregation method
 	 *
-	 * @param array $metrics Metrics to re-aggregate
+	 * @param array  $metrics Metrics to re-aggregate
 	 * @param string $method Aggregation method (sum, average, max, min)
 	 * @return array Re-aggregated metrics
 	 */
@@ -941,38 +961,38 @@ class MetricsAggregator {
 	/**
 	 * Add trend analysis to metrics
 	 *
-	 * @param array $metrics Current metrics
-	 * @param int $client_id Client ID
+	 * @param array  $metrics Current metrics
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date
 	 * @param string $period_end End date
 	 * @return array Metrics with trend data
 	 */
 	private static function add_trend_analysis( array $metrics, int $client_id, string $period_start, string $period_end ): array {
 		// Calculate previous period for comparison
-		$start_date = new \DateTime( $period_start );
-		$end_date = new \DateTime( $period_end );
+		$start_date    = new \DateTime( $period_start );
+		$end_date      = new \DateTime( $period_end );
 		$period_length = $start_date->diff( $end_date )->days;
 
 		$prev_start = clone $start_date;
-		$prev_end = clone $end_date;
+		$prev_end   = clone $end_date;
 		$prev_start->sub( new \DateInterval( "P{$period_length}D" ) );
 		$prev_end->sub( new \DateInterval( "P{$period_length}D" ) );
 
-		$comparison = self::get_period_comparison( 
-			$client_id, 
-			$period_start, 
-			$period_end, 
-			$prev_start->format( 'Y-m-d H:i:s' ), 
-			$prev_end->format( 'Y-m-d H:i:s' ) 
+		$comparison = self::get_period_comparison(
+			$client_id,
+			$period_start,
+			$period_end,
+			$prev_start->format( 'Y-m-d H:i:s' ),
+			$prev_end->format( 'Y-m-d H:i:s' )
 		);
 
 		foreach ( $metrics as $kpi => &$data ) {
 			if ( isset( $comparison[ $kpi ] ) ) {
 				$data['trend_analysis'] = [
-					'change' => $comparison[ $kpi ]['change'],
+					'change'            => $comparison[ $kpi ]['change'],
 					'change_percentage' => $comparison[ $kpi ]['change_percentage'],
-					'trend' => $comparison[ $kpi ]['trend'],
-					'previous_value' => $comparison[ $kpi ]['previous_value'],
+					'trend'             => $comparison[ $kpi ]['trend'],
+					'previous_value'    => $comparison[ $kpi ]['previous_value'],
 				];
 			}
 		}
@@ -983,7 +1003,7 @@ class MetricsAggregator {
 	/**
 	 * Sort metrics by specified field and order
 	 *
-	 * @param array $metrics Metrics to sort
+	 * @param array  $metrics Metrics to sort
 	 * @param string $sort_by Field to sort by (value, name, change, etc.)
 	 * @param string $sort_order Order (asc, desc)
 	 * @return array Sorted metrics
@@ -991,43 +1011,46 @@ class MetricsAggregator {
 	private static function sort_metrics( array $metrics, string $sort_by, string $sort_order ): array {
 		$kpi_definitions = MetricsSchema::get_kpi_definitions();
 
-		uasort( $metrics, function( $a, $b ) use ( $sort_by, $sort_order, $kpi_definitions ) {
-			$value_a = 0;
-			$value_b = 0;
+		uasort(
+			$metrics,
+			function ( $a, $b ) use ( $sort_by, $sort_order, $kpi_definitions ) {
+				$value_a = 0;
+				$value_b = 0;
 
-			switch ( $sort_by ) {
-				case 'value':
-					$value_a = $a['total_value'];
-					$value_b = $b['total_value'];
-					break;
-				case 'name':
-					$def_a = $kpi_definitions[ $a['kpi'] ] ?? [];
-					$def_b = $kpi_definitions[ $b['kpi'] ] ?? [];
-					$value_a = $def_a['name'] ?? $a['kpi'];
-					$value_b = $def_b['name'] ?? $b['kpi'];
-					break;
-				case 'change':
-					$value_a = $a['trend_analysis']['change'] ?? 0;
-					$value_b = $b['trend_analysis']['change'] ?? 0;
-					break;
-				case 'change_percentage':
-					$value_a = $a['trend_analysis']['change_percentage'] ?? 0;
-					$value_b = $b['trend_analysis']['change_percentage'] ?? 0;
-					break;
-				default:
-					$value_a = $a['total_value'];
-					$value_b = $b['total_value'];
-					break;
+				switch ( $sort_by ) {
+					case 'value':
+						$value_a = $a['total_value'];
+						$value_b = $b['total_value'];
+						break;
+					case 'name':
+						$def_a   = $kpi_definitions[ $a['kpi'] ] ?? [];
+						$def_b   = $kpi_definitions[ $b['kpi'] ] ?? [];
+						$value_a = $def_a['name'] ?? $a['kpi'];
+						$value_b = $def_b['name'] ?? $b['kpi'];
+						break;
+					case 'change':
+						$value_a = $a['trend_analysis']['change'] ?? 0;
+						$value_b = $b['trend_analysis']['change'] ?? 0;
+						break;
+					case 'change_percentage':
+						$value_a = $a['trend_analysis']['change_percentage'] ?? 0;
+						$value_b = $b['trend_analysis']['change_percentage'] ?? 0;
+						break;
+					default:
+						$value_a = $a['total_value'];
+						$value_b = $b['total_value'];
+						break;
+				}
+
+				if ( $sort_by === 'name' ) {
+					$result = strcmp( $value_a, $value_b );
+				} else {
+					$result = $value_a <=> $value_b;
+				}
+
+				return $sort_order === 'desc' ? -$result : $result;
 			}
-
-			if ( $sort_by === 'name' ) {
-				$result = strcmp( $value_a, $value_b );
-			} else {
-				$result = $value_a <=> $value_b;
-			}
-
-			return $sort_order === 'desc' ? -$result : $result;
-		} );
+		);
 
 		return $metrics;
 	}
@@ -1043,11 +1066,11 @@ class MetricsAggregator {
 			return 'stable';
 		}
 
-                $values_count = count( $values );
-                $first_half = array_slice( $values, 0, (int) ceil( $values_count / 2 ) );
-                $second_half = array_slice( $values, (int) floor( $values_count / 2 ) );
+				$values_count = count( $values );
+				$first_half   = array_slice( $values, 0, (int) ceil( $values_count / 2 ) );
+				$second_half  = array_slice( $values, (int) floor( $values_count / 2 ) );
 
-		$first_avg = array_sum( $first_half ) / count( $first_half );
+		$first_avg  = array_sum( $first_half ) / count( $first_half );
 		$second_avg = array_sum( $second_half ) / count( $second_half );
 
 		$change_threshold = 0.05; // 5% threshold for stability
@@ -1073,9 +1096,9 @@ class MetricsAggregator {
 		}
 
 		// Simple linear regression slope calculation
-		$n = count( $values );
-		$sum_x = ( $n * ( $n + 1 ) ) / 2;
-		$sum_y = array_sum( $values );
+		$n      = count( $values );
+		$sum_x  = ( $n * ( $n + 1 ) ) / 2;
+		$sum_y  = array_sum( $values );
 		$sum_xy = 0;
 		$sum_x2 = ( $n * ( $n + 1 ) * ( 2 * $n + 1 ) ) / 6;
 
@@ -1136,17 +1159,17 @@ class MetricsAggregator {
 	/**
 	 * Get conversion events aggregated metrics
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
-	 * @param array $event_types Optional. Specific event types to include
+	 * @param array  $event_types Optional. Specific event types to include
 	 * @return array Aggregated conversion metrics
 	 */
 	public static function get_conversion_events_metrics( int $client_id, string $period_start, string $period_end, array $event_types = [] ): array {
 		$criteria = [
-			'client_id' => $client_id,
-			'period_start' => $period_start,
-			'period_end' => $period_end,
+			'client_id'          => $client_id,
+			'period_start'       => $period_start,
+			'period_end'         => $period_end,
 			'exclude_duplicates' => true,
 		];
 
@@ -1160,34 +1183,34 @@ class MetricsAggregator {
 		// Build normalized metrics for aggregation
 		$conversion_metrics = [
 			MetricsSchema::KPI_CONVERSIONS => [
-				'value' => $summary['total_events'],
-				'source' => 'conversion_events',
+				'value'    => $summary['total_events'],
+				'source'   => 'conversion_events',
 				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
-				'format' => 'number',
+				'format'   => 'number',
 			],
-			MetricsSchema::KPI_REVENUE => [
-				'value' => $summary['total_value'],
-				'source' => 'conversion_events',
+			MetricsSchema::KPI_REVENUE     => [
+				'value'    => $summary['total_value'],
+				'source'   => 'conversion_events',
 				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
-				'format' => 'currency',
+				'format'   => 'currency',
 			],
 		];
 
 		// Add per-event-type metrics
 		foreach ( $summary['breakdown_by_type'] as $breakdown ) {
-			$event_type = $breakdown['event_type'];
+			$event_type                                        = $breakdown['event_type'];
 			$conversion_metrics[ "conversions_{$event_type}" ] = [
-				'value' => $breakdown['count'],
-				'source' => 'conversion_events',
-				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
-				'format' => 'number',
+				'value'      => $breakdown['count'],
+				'source'     => 'conversion_events',
+				'category'   => MetricsSchema::CATEGORY_CONVERSIONS,
+				'format'     => 'number',
 				'event_type' => $event_type,
 			];
-			$conversion_metrics[ "revenue_{$event_type}" ] = [
-				'value' => $breakdown['total_value'],
-				'source' => 'conversion_events',
-				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
-				'format' => 'currency',
+			$conversion_metrics[ "revenue_{$event_type}" ]     = [
+				'value'      => $breakdown['total_value'],
+				'source'     => 'conversion_events',
+				'category'   => MetricsSchema::CATEGORY_CONVERSIONS,
+				'format'     => 'currency',
 				'event_type' => $event_type,
 			];
 		}
@@ -1198,12 +1221,12 @@ class MetricsAggregator {
 	/**
 	 * Get enhanced aggregated metrics including conversion events
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
-	 * @param array $kpis Optional. Specific KPIs to retrieve
-	 * @param array $sources Optional. Specific sources to include
-	 * @param bool $include_conversion_events Whether to include conversion events data
+	 * @param array  $kpis Optional. Specific KPIs to retrieve
+	 * @param array  $sources Optional. Specific sources to include
+	 * @param bool   $include_conversion_events Whether to include conversion events data
 	 * @return array Enhanced aggregated metrics
 	 */
 	public static function get_enhanced_aggregated_metrics( int $client_id, string $period_start, string $period_end, array $kpis = [], array $sources = [], bool $include_conversion_events = true ): array {
@@ -1213,7 +1236,7 @@ class MetricsAggregator {
 		// Add conversion events metrics if requested
 		if ( $include_conversion_events ) {
 			$conversion_metrics = self::get_conversion_events_metrics( $client_id, $period_start, $period_end );
-			
+
 			// Merge conversion metrics into base metrics
 			foreach ( $conversion_metrics as $metric_key => $metric_data ) {
 				if ( empty( $kpis ) || in_array( $metric_key, $kpis, true ) ) {
@@ -1228,8 +1251,8 @@ class MetricsAggregator {
 	/**
 	 * Get conversion funnel metrics
 	 *
-	 * @param int $client_id Client ID
-	 * @param array $funnel_steps Array of event types in funnel order
+	 * @param int    $client_id Client ID
+	 * @param array  $funnel_steps Array of event types in funnel order
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
 	 * @return array Funnel metrics with conversion rates
@@ -1237,7 +1260,7 @@ class MetricsAggregator {
 	public static function get_conversion_funnel_metrics( int $client_id, array $funnel_steps, string $period_start, string $period_end ): array {
 		$criteria = [
 			'period_start' => $period_start,
-			'period_end' => $period_end,
+			'period_end'   => $period_end,
 		];
 
 		$funnel_data = \FP\DigitalMarketing\Helpers\ConversionEventManager::get_conversion_funnel( $client_id, $funnel_steps, $criteria );
@@ -1245,17 +1268,17 @@ class MetricsAggregator {
 		// Convert to metrics format
 		$funnel_metrics = [];
 		foreach ( $funnel_data as $step_data ) {
-			$step_key = "funnel_step_{$step_data['step']}";
+			$step_key                    = "funnel_step_{$step_data['step']}";
 			$funnel_metrics[ $step_key ] = [
-				'value' => $step_data['count'],
+				'value'           => $step_data['count'],
 				'conversion_rate' => $step_data['conversion_rate'],
-				'drop_off_rate' => $step_data['drop_off_rate'],
-				'event_type' => $step_data['event_type'],
-				'event_name' => $step_data['event_name'],
-				'total_value' => $step_data['total_value'],
-				'source' => 'conversion_funnel',
-				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
-				'format' => 'number',
+				'drop_off_rate'   => $step_data['drop_off_rate'],
+				'event_type'      => $step_data['event_type'],
+				'event_name'      => $step_data['event_name'],
+				'total_value'     => $step_data['total_value'],
+				'source'          => 'conversion_funnel',
+				'category'        => MetricsSchema::CATEGORY_CONVERSIONS,
+				'format'          => 'number',
 			];
 		}
 
@@ -1265,16 +1288,16 @@ class MetricsAggregator {
 	/**
 	 * Get campaign conversion metrics
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date (Y-m-d H:i:s)
 	 * @param string $period_end End date (Y-m-d H:i:s)
-	 * @param int $limit Number of campaigns to return
+	 * @param int    $limit Number of campaigns to return
 	 * @return array Top converting campaigns with metrics
 	 */
 	public static function get_campaign_conversion_metrics( int $client_id, string $period_start, string $period_end, int $limit = 10 ): array {
 		$criteria = [
 			'period_start' => $period_start,
-			'period_end' => $period_end,
+			'period_end'   => $period_end,
 		];
 
 		$campaigns = \FP\DigitalMarketing\Helpers\ConversionEventManager::get_top_converting_campaigns( $client_id, $criteria, $limit );
@@ -1282,17 +1305,17 @@ class MetricsAggregator {
 		// Convert to metrics format
 		$campaign_metrics = [];
 		foreach ( $campaigns as $i => $campaign ) {
-			$campaign_key = "campaign_" . sanitize_key( $campaign['utm_campaign'] );
+			$campaign_key                      = 'campaign_' . sanitize_key( $campaign['utm_campaign'] );
 			$campaign_metrics[ $campaign_key ] = [
-				'campaign_name' => $campaign['utm_campaign'],
-				'utm_source' => $campaign['utm_source'],
-				'utm_medium' => $campaign['utm_medium'],
+				'campaign_name'    => $campaign['utm_campaign'],
+				'utm_source'       => $campaign['utm_source'],
+				'utm_medium'       => $campaign['utm_medium'],
 				'conversion_count' => $campaign['conversion_count'],
-				'total_value' => $campaign['total_value'],
-				'avg_value' => $campaign['avg_value'],
-				'source' => 'campaign_conversions',
-				'category' => MetricsSchema::CATEGORY_CONVERSIONS,
-				'rank' => $i + 1,
+				'total_value'      => $campaign['total_value'],
+				'avg_value'        => $campaign['avg_value'],
+				'source'           => 'campaign_conversions',
+				'category'         => MetricsSchema::CATEGORY_CONVERSIONS,
+				'rank'             => $i + 1,
 			];
 		}
 

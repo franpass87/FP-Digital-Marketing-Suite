@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Database\DatabaseUtils;
 
 /**
  * Audience Segment Table class
- * 
+ *
  * Manages the database table for storing audience segments and their membership.
  */
 class AudienceSegmentTable {
@@ -33,20 +33,20 @@ class AudienceSegmentTable {
 	 *
 	 * @return string Full table name
 	 */
-        public static function get_segments_table_name(): string {
-                global $wpdb;
-                return DatabaseUtils::resolve_table_name( $wpdb, self::SEGMENTS_TABLE_NAME );
-        }
+	public static function get_segments_table_name(): string {
+			global $wpdb;
+			return DatabaseUtils::resolve_table_name( $wpdb, self::SEGMENTS_TABLE_NAME );
+	}
 
 	/**
 	 * Get full membership table name with WordPress prefix
 	 *
 	 * @return string Full table name
 	 */
-        public static function get_membership_table_name(): string {
-                global $wpdb;
-                return DatabaseUtils::resolve_table_name( $wpdb, self::MEMBERSHIP_TABLE_NAME );
-        }
+	public static function get_membership_table_name(): string {
+			global $wpdb;
+			return DatabaseUtils::resolve_table_name( $wpdb, self::MEMBERSHIP_TABLE_NAME );
+	}
 
 	/**
 	 * Create the audience segments table
@@ -56,8 +56,8 @@ class AudienceSegmentTable {
 	public static function create_segments_table(): bool {
 		global $wpdb;
 
-		$table_name = self::get_segments_table_name();
-                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
+		$table_name              = self::get_segments_table_name();
+				$charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -76,7 +76,7 @@ class AudienceSegmentTable {
 			PRIMARY KEY (id)
 		) $charset_collate;";
 
-                return DatabaseUtils::run_schema_delta( $sql, $wpdb );
+				return DatabaseUtils::run_schema_delta( $sql, $wpdb );
 	}
 
 	/**
@@ -87,8 +87,8 @@ class AudienceSegmentTable {
 	public static function create_membership_table(): bool {
 		global $wpdb;
 
-		$table_name = self::get_membership_table_name();
-                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
+		$table_name              = self::get_membership_table_name();
+				$charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
 		$sql = "CREATE TABLE $table_name (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -105,7 +105,7 @@ class AudienceSegmentTable {
 			PRIMARY KEY (id)
 		) $charset_collate;";
 
-                return DatabaseUtils::run_schema_delta( $sql, $wpdb );
+				return DatabaseUtils::run_schema_delta( $sql, $wpdb );
 	}
 
 	/**
@@ -116,7 +116,7 @@ class AudienceSegmentTable {
 	public static function segments_table_exists(): bool {
 		global $wpdb;
 		$table_name = self::get_segments_table_name();
-		$result = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) );
+		$result     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
 		return $result === $table_name;
 	}
 
@@ -128,7 +128,7 @@ class AudienceSegmentTable {
 	public static function membership_table_exists(): bool {
 		global $wpdb;
 		$table_name = self::get_membership_table_name();
-		$result = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $table_name ) );
+		$result     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
 		return $result === $table_name;
 	}
 
@@ -140,7 +140,7 @@ class AudienceSegmentTable {
 	public static function drop_segments_table(): bool {
 		global $wpdb;
 		$table_name = self::get_segments_table_name();
-		$result = $wpdb->query( "DROP TABLE IF EXISTS $table_name" );
+		$result     = $wpdb->query( "DROP TABLE IF EXISTS $table_name" );
 		return $result !== false;
 	}
 
@@ -152,7 +152,7 @@ class AudienceSegmentTable {
 	public static function drop_membership_table(): bool {
 		global $wpdb;
 		$table_name = self::get_membership_table_name();
-		$result = $wpdb->query( "DROP TABLE IF EXISTS $table_name" );
+		$result     = $wpdb->query( "DROP TABLE IF EXISTS $table_name" );
 		return $result !== false;
 	}
 
@@ -168,13 +168,16 @@ class AudienceSegmentTable {
 		$table_name = self::get_segments_table_name();
 
 		// Prepare data with defaults
-		$data = wp_parse_args( $segment_data, [
-			'description' => '',
-			'is_active' => 1,
-			'member_count' => 0,
-			'created_at' => current_time( 'mysql' ),
-			'updated_at' => current_time( 'mysql' ),
-		] );
+		$data = wp_parse_args(
+			$segment_data,
+			[
+				'description'  => '',
+				'is_active'    => 1,
+				'member_count' => 0,
+				'created_at'   => current_time( 'mysql' ),
+				'updated_at'   => current_time( 'mysql' ),
+			]
+		);
 
 		// Serialize rules if it's an array
 		if ( isset( $data['rules'] ) && is_array( $data['rules'] ) ) {
@@ -203,9 +206,9 @@ class AudienceSegmentTable {
 			$segment_data['rules'] = wp_json_encode( $segment_data['rules'] );
 		}
 
-		$result = $wpdb->update( 
-			$table_name, 
-			$segment_data, 
+		$result = $wpdb->update(
+			$table_name,
+			$segment_data,
 			[ 'id' => $segment_id ],
 			null,
 			[ '%d' ]
@@ -225,34 +228,34 @@ class AudienceSegmentTable {
 	public static function get_segments( array $criteria = [], int $limit = 50, int $offset = 0 ): array {
 		global $wpdb;
 
-		$table_name = self::get_segments_table_name();
+		$table_name    = self::get_segments_table_name();
 		$where_clauses = [];
-		$where_values = [];
+		$where_values  = [];
 
 		// Build WHERE clause based on criteria
 		if ( isset( $criteria['id'] ) ) {
 			$where_clauses[] = 'id = %d';
-			$where_values[] = $criteria['id'];
+			$where_values[]  = $criteria['id'];
 		}
 
 		if ( isset( $criteria['client_id'] ) ) {
 			$where_clauses[] = 'client_id = %d';
-			$where_values[] = $criteria['client_id'];
+			$where_values[]  = $criteria['client_id'];
 		}
 
 		if ( isset( $criteria['is_active'] ) ) {
 			$where_clauses[] = 'is_active = %d';
-			$where_values[] = $criteria['is_active'];
+			$where_values[]  = $criteria['is_active'];
 		}
 
 		if ( isset( $criteria['name_like'] ) ) {
 			$where_clauses[] = 'name LIKE %s';
-			$where_values[] = '%' . $wpdb->esc_like( $criteria['name_like'] ) . '%';
+			$where_values[]  = '%' . $wpdb->esc_like( $criteria['name_like'] ) . '%';
 		}
 
 		// Build the query
-		$where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
-		$sql = "SELECT * FROM $table_name $where_sql ORDER BY created_at DESC LIMIT %d OFFSET %d";
+		$where_sql      = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
+		$sql            = "SELECT * FROM $table_name $where_sql ORDER BY created_at DESC LIMIT %d OFFSET %d";
 		$where_values[] = $limit;
 		$where_values[] = $offset;
 
@@ -281,28 +284,28 @@ class AudienceSegmentTable {
 	public static function get_segments_count( array $criteria = [] ): int {
 		global $wpdb;
 
-		$table_name = self::get_segments_table_name();
+		$table_name    = self::get_segments_table_name();
 		$where_clauses = [];
-		$where_values = [];
+		$where_values  = [];
 
 		// Build WHERE clause (same as get_segments)
 		if ( isset( $criteria['client_id'] ) ) {
 			$where_clauses[] = 'client_id = %d';
-			$where_values[] = $criteria['client_id'];
+			$where_values[]  = $criteria['client_id'];
 		}
 
 		if ( isset( $criteria['is_active'] ) ) {
 			$where_clauses[] = 'is_active = %d';
-			$where_values[] = $criteria['is_active'];
+			$where_values[]  = $criteria['is_active'];
 		}
 
 		if ( isset( $criteria['name_like'] ) ) {
 			$where_clauses[] = 'name LIKE %s';
-			$where_values[] = '%' . $wpdb->esc_like( $criteria['name_like'] ) . '%';
+			$where_values[]  = '%' . $wpdb->esc_like( $criteria['name_like'] ) . '%';
 		}
 
 		$where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
-		$sql = "SELECT COUNT(*) FROM $table_name $where_sql";
+		$sql       = "SELECT COUNT(*) FROM $table_name $where_sql";
 
 		if ( ! empty( $where_values ) ) {
 			$sql = $wpdb->prepare( $sql, $where_values );
@@ -325,7 +328,7 @@ class AudienceSegmentTable {
 
 		// Then delete the segment itself
 		$table_name = self::get_segments_table_name();
-		$result = $wpdb->delete( $table_name, [ 'id' => $segment_id ], [ '%d' ] );
+		$result     = $wpdb->delete( $table_name, [ 'id' => $segment_id ], [ '%d' ] );
 
 		return $result !== false;
 	}
@@ -341,14 +344,14 @@ class AudienceSegmentTable {
 	public static function add_user_to_segment( int $segment_id, string $user_id, int $client_id ): bool {
 		global $wpdb;
 
-		$table_name = self::get_membership_table_name();
+		$table_name   = self::get_membership_table_name();
 		$current_time = current_time( 'mysql' );
 
 		$data = [
-			'segment_id' => $segment_id,
-			'user_id' => $user_id,
-			'client_id' => $client_id,
-			'added_at' => $current_time,
+			'segment_id'      => $segment_id,
+			'user_id'         => $user_id,
+			'client_id'       => $client_id,
+			'added_at'        => $current_time,
 			'last_matched_at' => $current_time,
 		];
 
@@ -368,13 +371,13 @@ class AudienceSegmentTable {
 		global $wpdb;
 
 		$table_name = self::get_membership_table_name();
-		$result = $wpdb->delete( 
-			$table_name, 
-			[ 
+		$result     = $wpdb->delete(
+			$table_name,
+			[
 				'segment_id' => $segment_id,
-				'user_id' => $user_id 
-			], 
-			[ '%d', '%s' ] 
+				'user_id'    => $user_id,
+			],
+			[ '%d', '%s' ]
 		);
 
 		return $result !== false;
@@ -390,7 +393,7 @@ class AudienceSegmentTable {
 		global $wpdb;
 
 		$table_name = self::get_membership_table_name();
-		$result = $wpdb->delete( $table_name, [ 'segment_id' => $segment_id ], [ '%d' ] );
+		$result     = $wpdb->delete( $table_name, [ 'segment_id' => $segment_id ], [ '%d' ] );
 
 		return $result !== false;
 	}
@@ -407,7 +410,7 @@ class AudienceSegmentTable {
 		global $wpdb;
 
 		$table_name = self::get_membership_table_name();
-		$sql = $wpdb->prepare(
+		$sql        = $wpdb->prepare(
 			"SELECT * FROM $table_name WHERE segment_id = %d ORDER BY added_at DESC LIMIT %d OFFSET %d",
 			$segment_id,
 			$limit,
@@ -427,7 +430,7 @@ class AudienceSegmentTable {
 		global $wpdb;
 
 		$table_name = self::get_membership_table_name();
-		$sql = $wpdb->prepare(
+		$sql        = $wpdb->prepare(
 			"SELECT COUNT(*) FROM $table_name WHERE segment_id = %d",
 			$segment_id
 		);
@@ -443,10 +446,13 @@ class AudienceSegmentTable {
 	 */
 	public static function update_member_count_cache( int $segment_id ): bool {
 		$count = self::get_segment_member_count( $segment_id );
-		
-		return self::update_segment( $segment_id, [
-			'member_count' => $count,
-			'last_evaluated_at' => current_time( 'mysql' ),
-		] );
+
+		return self::update_segment(
+			$segment_id,
+			[
+				'member_count'      => $count,
+				'last_evaluated_at' => current_time( 'mysql' ),
+			]
+		);
 	}
 }

@@ -39,7 +39,7 @@ class AnomalyRadarTest extends TestCase {
 	 */
 	public function test_init_method_callable(): void {
 		$radar = new AnomalyRadar();
-		
+
 		// Mock WordPress functions
 		if ( ! function_exists( 'add_action' ) ) {
 			function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
@@ -49,7 +49,7 @@ class AnomalyRadarTest extends TestCase {
 		}
 
 		$this->assertTrue( method_exists( $radar, 'init' ) );
-		
+
 		// This should not throw any errors
 		$radar->init();
 		$this->assertTrue( true ); // If we get here, no exceptions were thrown
@@ -62,17 +62,17 @@ class AnomalyRadarTest extends TestCase {
 	 */
 	public function test_required_methods_exist(): void {
 		$radar = new AnomalyRadar();
-		
+
 		$required_methods = [
 			'init',
 			'add_client_submenu',
 			'display_radar_page',
-			'enqueue_scripts'
+			'enqueue_scripts',
 		];
 
 		foreach ( $required_methods as $method ) {
-			$this->assertTrue( 
-				method_exists( $radar, $method ), 
+			$this->assertTrue(
+				method_exists( $radar, $method ),
 				"Method '{$method}' should exist in AnomalyRadar class"
 			);
 		}

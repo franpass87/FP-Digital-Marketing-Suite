@@ -21,9 +21,11 @@ class GoogleAdsIntegrationTest extends TestCase {
 	 */
 	protected function tearDown(): void {
 		// Clean up any test data
-		MetricsCache::delete_by_criteria([
-			'source' => GoogleAds::SOURCE_ID,
-		]);
+		MetricsCache::delete_by_criteria(
+			[
+				'source' => GoogleAds::SOURCE_ID,
+			]
+		);
 	}
 
 	/**
@@ -34,14 +36,14 @@ class GoogleAdsIntegrationTest extends TestCase {
 		$google_ads = new GoogleAds( '123-456-7890', 'dev_token_123' );
 
 		// Manually store some test metrics to verify the structure
-		$client_id = 999;
+		$client_id  = 999;
 		$start_date = '2024-01-01';
-		$end_date = '2024-01-31';
-		
+		$end_date   = '2024-01-31';
+
 		$test_metrics = [
 			'impressions' => '15000',
-			'clicks' => '750',
-			'cost' => '150.00',
+			'clicks'      => '750',
+			'cost'        => '150.00',
 			'conversions' => '25',
 		];
 
@@ -55,32 +57,34 @@ class GoogleAdsIntegrationTest extends TestCase {
 				$end_date . ' 23:59:59',
 				$value,
 				[
-					'customer_id' => '123-456-7890',
-					'source_type' => 'google_ads',
-					'utm_source' => 'google',
-					'utm_medium' => 'cpc',
+					'customer_id'  => '123-456-7890',
+					'source_type'  => 'google_ads',
+					'utm_source'   => 'google',
+					'utm_medium'   => 'cpc',
 					'utm_campaign' => 'summer_sale_2024',
-					'test_data' => true,
+					'test_data'    => true,
 				]
 			);
-			
+
 			$this->assertIsInt( $id );
 			$this->assertGreaterThan( 0, $id );
 		}
 
 		// Verify metrics were stored
-		$stored_metrics = MetricsCache::get_metrics([
-			'client_id' => $client_id,
-			'source' => GoogleAds::SOURCE_ID,
-		]);
+		$stored_metrics = MetricsCache::get_metrics(
+			[
+				'client_id' => $client_id,
+				'source'    => GoogleAds::SOURCE_ID,
+			]
+		);
 
 		$this->assertCount( 4, $stored_metrics );
-		
+
 		// Verify first metric structure
 		$first_metric = $stored_metrics[0];
 		$this->assertEquals( GoogleAds::SOURCE_ID, $first_metric->source );
 		$this->assertEquals( $client_id, $first_metric->client_id );
-		$this->assertContains( $first_metric->metric, ['impressions', 'clicks', 'cost', 'conversions'] );
+		$this->assertContains( $first_metric->metric, [ 'impressions', 'clicks', 'cost', 'conversions' ] );
 	}
 
 	/**
@@ -112,17 +116,19 @@ class GoogleAdsIntegrationTest extends TestCase {
 		);
 
 		// Retrieve only Google Ads metrics
-		$google_ads_metrics = MetricsCache::get_metrics([
-			'client_id' => $client_id,
-			'source' => GoogleAds::SOURCE_ID,
-		]);
+		$google_ads_metrics = MetricsCache::get_metrics(
+			[
+				'client_id' => $client_id,
+				'source'    => GoogleAds::SOURCE_ID,
+			]
+		);
 
 		$this->assertCount( 1, $google_ads_metrics );
 		$this->assertEquals( GoogleAds::SOURCE_ID, $google_ads_metrics[0]->source );
 		$this->assertEquals( 'impressions', $google_ads_metrics[0]->metric );
 
 		// Clean up
-		MetricsCache::delete_by_criteria([ 'client_id' => $client_id ]);
+		MetricsCache::delete_by_criteria( [ 'client_id' => $client_id ] );
 	}
 
 	/**
@@ -130,22 +136,22 @@ class GoogleAdsIntegrationTest extends TestCase {
 	 */
 	public function test_google_ads_source_identifier(): void {
 		$this->assertEquals( 'google_ads', GoogleAds::SOURCE_ID );
-		
+
 		// Verify this matches the DataSources registry
 		$data_sources = fp_dms_get_data_sources();
 		$this->assertArrayHasKey( GoogleAds::SOURCE_ID, $data_sources );
-		$this->assertEquals( 'available', $data_sources[GoogleAds::SOURCE_ID]['status'] );
+		$this->assertEquals( 'available', $data_sources[ GoogleAds::SOURCE_ID ]['status'] );
 	}
 
 	/**
 	 * Test UTM mapping metadata storage
 	 */
 	public function test_utm_mapping_metadata_storage(): void {
-		$client_id = 777;
+		$client_id        = 777;
 		$campaign_metrics = [
 			'impressions' => '5000',
-			'clicks' => '250',
-			'cost' => '50.00',
+			'clicks'      => '250',
+			'cost'        => '50.00',
 			'conversions' => '10',
 		];
 
@@ -159,21 +165,23 @@ class GoogleAdsIntegrationTest extends TestCase {
 				'2024-03-31 23:59:59',
 				$value,
 				[
-					'customer_id' => '123-456-7890',
-					'campaign_id' => '12345678',
+					'customer_id'   => '123-456-7890',
+					'campaign_id'   => '12345678',
 					'campaign_name' => 'Summer Sale 2024',
-					'utm_source' => 'google',
-					'utm_medium' => 'cpc',
-					'utm_campaign' => 'summer_sale_2024',
+					'utm_source'    => 'google',
+					'utm_medium'    => 'cpc',
+					'utm_campaign'  => 'summer_sale_2024',
 				]
 			);
 		}
 
 		// Retrieve and verify UTM metadata
-		$metrics_with_utm = MetricsCache::get_metrics([
-			'client_id' => $client_id,
-			'source' => GoogleAds::SOURCE_ID,
-		]);
+		$metrics_with_utm = MetricsCache::get_metrics(
+			[
+				'client_id' => $client_id,
+				'source'    => GoogleAds::SOURCE_ID,
+			]
+		);
 
 		$this->assertCount( 4, $metrics_with_utm );
 
@@ -186,7 +194,7 @@ class GoogleAdsIntegrationTest extends TestCase {
 		}
 
 		// Clean up
-		MetricsCache::delete_by_criteria([ 'client_id' => $client_id ]);
+		MetricsCache::delete_by_criteria( [ 'client_id' => $client_id ] );
 	}
 
 	/**
@@ -194,12 +202,12 @@ class GoogleAdsIntegrationTest extends TestCase {
 	 */
 	public function test_currency_normalization_storage(): void {
 		$client_id = 666;
-		
+
 		// Store cost metrics with normalized currency
 		$cost_metrics = [
 			'150000000' => '150.00',  // $150 in micros normalized
-			'50500000' => '50.50',    // $50.50 in micros normalized
-			'1000000' => '1.00',      // $1 in micros normalized
+			'50500000'  => '50.50',    // $50.50 in micros normalized
+			'1000000'   => '1.00',      // $1 in micros normalized
 		];
 
 		foreach ( $cost_metrics as $original_micros => $expected_normalized ) {
@@ -211,18 +219,20 @@ class GoogleAdsIntegrationTest extends TestCase {
 				'2024-04-30 23:59:59',
 				$expected_normalized,
 				[
-					'customer_id' => '123-456-7890',
+					'customer_id'     => '123-456-7890',
 					'original_micros' => $original_micros,
 				]
 			);
 		}
 
 		// Retrieve and verify normalized values
-		$cost_metrics_stored = MetricsCache::get_metrics([
-			'client_id' => $client_id,
-			'source' => GoogleAds::SOURCE_ID,
-			'metric' => 'cost',
-		]);
+		$cost_metrics_stored = MetricsCache::get_metrics(
+			[
+				'client_id' => $client_id,
+				'source'    => GoogleAds::SOURCE_ID,
+				'metric'    => 'cost',
+			]
+		);
 
 		$this->assertCount( 3, $cost_metrics_stored );
 
@@ -230,10 +240,10 @@ class GoogleAdsIntegrationTest extends TestCase {
 			// Verify the value is in normalized format (not micros)
 			$value = (float) $cost_metric->value;
 			$this->assertLessThan( 1000, $value ); // Should be normal currency, not micros
-			$this->assertContains( $cost_metric->value, ['150.00', '50.50', '1.00'] );
+			$this->assertContains( $cost_metric->value, [ '150.00', '50.50', '1.00' ] );
 		}
 
 		// Clean up
-		MetricsCache::delete_by_criteria([ 'client_id' => $client_id ]);
+		MetricsCache::delete_by_criteria( [ 'client_id' => $client_id ] );
 	}
 }

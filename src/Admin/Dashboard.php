@@ -21,28 +21,28 @@ use FP\DigitalMarketing\DataSources\CoreWebVitals;
 
 /**
  * Dashboard class for admin overview
- * 
- * Provides a user-friendly dashboard interface with KPIs, charts, 
+ *
+ * Provides a user-friendly dashboard interface with KPIs, charts,
  * filters and sync status monitoring.
  */
 class Dashboard {
 
-        /**
-         * Page slug for dashboard
-         */
-        private const PAGE_SLUG = 'fp-digital-marketing-dashboard';
+		/**
+		 * Page slug for dashboard
+		 */
+	private const PAGE_SLUG = 'fp-digital-marketing-dashboard';
 
-        /**
-         * Transient used to toggle the menu verification notice.
-         */
-        private const MENU_NOTICE_TRANSIENT = 'fp_dms_menu_structure_notice';
+		/**
+		 * Transient used to toggle the menu verification notice.
+		 */
+	private const MENU_NOTICE_TRANSIENT = 'fp_dms_menu_structure_notice';
 
-        /**
-         * Admin optimizations instance
-         *
-         * @var AdminOptimizations|null
-         */
-        private ?AdminOptimizations $optimizations = null;
+		/**
+		 * Admin optimizations instance
+		 *
+		 * @var AdminOptimizations|null
+		 */
+	private ?AdminOptimizations $optimizations = null;
 
 	/**
 	 * Initialize the dashboard page
@@ -50,20 +50,20 @@ class Dashboard {
 	 * @return void
 	 */
 	public function init(): void {
-                $this->optimizations = null;
+				$this->optimizations = null;
 
-                try {
-                        // Initialize optimizations with error handling to prevent WSOD
-                        $this->optimizations = new AdminOptimizations();
-                        $this->optimizations->init();
-                } catch ( \Throwable $e ) {
-                        // Reset to safe default and log error but continue initialization
-                        $this->optimizations = null;
+		try {
+				// Initialize optimizations with error handling to prevent WSOD
+				$this->optimizations = new AdminOptimizations();
+				$this->optimizations->init();
+		} catch ( \Throwable $e ) {
+				// Reset to safe default and log error but continue initialization
+				$this->optimizations = null;
 
-                        if ( function_exists( 'error_log' ) ) {
-                                error_log( 'FP Digital Marketing Dashboard: Failed to initialize optimizations - ' . $e->getMessage() );
-                        }
-                }
+			if ( function_exists( 'error_log' ) ) {
+						error_log( 'FP Digital Marketing Dashboard: Failed to initialize optimizations - ' . $e->getMessage() );
+			}
+		}
 
 		// Add admin hooks with error handling to prevent WSOD
 		try {
@@ -75,10 +75,10 @@ class Dashboard {
 			add_action( 'wp_ajax_fp_dms_get_chart_data', [ $this, 'handle_ajax_chart_data' ] );
 			add_action( 'wp_ajax_fp_dms_get_core_web_vitals', [ $this, 'handle_ajax_core_web_vitals' ] );
 			add_action( 'wp_ajax_fp_dms_record_client_vital', [ $this, 'handle_ajax_record_client_vital' ] );
-			
+
 			// Add menu verification hook for debugging
 			add_action( 'admin_notices', [ $this, 'verify_menu_structure' ] );
-			
+
 			// Add performance dashboard widget
 			add_action( 'wp_dashboard_setup', [ $this, 'add_performance_dashboard_widget' ] );
 		} catch ( \Throwable $e ) {
@@ -91,7 +91,7 @@ class Dashboard {
 
 	/**
 	 * Add admin menu page
-	 * 
+	 *
 	 * Note: This method is disabled when MenuManager is active to prevent
 	 * duplicate menu registrations in the rationalized menu structure.
 	 *
@@ -99,10 +99,10 @@ class Dashboard {
 	 */
 	public function add_admin_menu(): void {
 		// Check if centralized MenuManager is active
-                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
-                        // MenuManager will handle menu registration
-                        return;
-                }
+		if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+				// MenuManager will handle menu registration
+				return;
+		}
 
 		// Legacy menu registration (fallback)
 		// Main menu
@@ -115,7 +115,7 @@ class Dashboard {
 			'dashicons-chart-area',
 			20
 		);
-		
+
 		// Dashboard submenu (main page)
 		add_submenu_page(
 			self::PAGE_SLUG,
@@ -134,9 +134,9 @@ class Dashboard {
 	 * @return void
 	 */
 	public function enqueue_dashboard_assets( string $hook ): void {
-		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		$screen              = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
 		$is_dashboard_screen = $screen && $screen->id === 'toplevel_page_' . self::PAGE_SLUG;
-		$is_plugin_screen = $is_dashboard_screen || (
+		$is_plugin_screen    = $is_dashboard_screen || (
 			$screen && 0 === strpos( (string) $screen->id, self::PAGE_SLUG . '_page_' )
 		);
 
@@ -186,60 +186,68 @@ class Dashboard {
 			true
 		);
 
-                // Localize script for AJAX
-		wp_localize_script( 'fp-dms-dashboard', 'fpDmsDashboard', [
-			'ajax_url' => admin_url( 'admin-ajax.php' ),
-			'nonce' => wp_create_nonce( 'fp_dms_dashboard' ),
-			'strings' => [
-				'loading' => __( 'Loading...', 'fp-digital-marketing' ),
-				'error' => __( 'Error loading data', 'fp-digital-marketing' ),
-				'no_data' => __( 'No data available', 'fp-digital-marketing' ),
-				'sessions' => __( 'Sessions', 'fp-digital-marketing' ),
-				'users' => __( 'Users', 'fp-digital-marketing' ),
-				'impressions' => __( 'Impressions', 'fp-digital-marketing' ),
-				'clicks' => __( 'Clicks', 'fp-digital-marketing' ),
-                                'ctr' => __( 'CTR', 'fp-digital-marketing' ),
-                                'revenue' => __( 'Revenue', 'fp-digital-marketing' ),
-                                'lcp' => __( 'LCP', 'fp-digital-marketing' ),
-                                'inp' => __( 'INP', 'fp-digital-marketing' ),
-                                'cls' => __( 'CLS', 'fp-digital-marketing' ),
-                                'kpi_info_hint' => __( 'Mostra spiegazioni aggiuntive su questo KPI', 'fp-digital-marketing' ),
-                                'kpi_groups' => [
-                                        'audience' => __( 'Pubblico', 'fp-digital-marketing' ),
-                                        'awareness' => __( 'Visibilità', 'fp-digital-marketing' ),
-                                        'engagement' => __( 'Coinvolgimento', 'fp-digital-marketing' ),
-                                        'monetization' => __( 'Entrate', 'fp-digital-marketing' ),
-                                        'insight' => __( 'Approfondimento', 'fp-digital-marketing' ),
-                                ],
-                                'sources' => [
-                                        'single' => __( '%d sorgente collegata', 'fp-digital-marketing' ),
-                                        'multiple' => __( '%d sorgenti collegate', 'fp-digital-marketing' ),
-                                        'demo' => __( 'Dati dimostrativi', 'fp-digital-marketing' ),
-                                ],
-                                'good' => __( 'Buono', 'fp-digital-marketing' ),
-                                'needs_improvement' => __( 'Da migliorare', 'fp-digital-marketing' ),
-                                'poor' => __( 'Scarso', 'fp-digital-marketing' ),
-                                'recommendations' => __( 'Raccomandazioni', 'fp-digital-marketing' ),
-                                'performance_score' => __( 'Punteggio Performance', 'fp-digital-marketing' ),
-                                'theme' => [
-                                        'system' => __( 'Tema: sistema', 'fp-digital-marketing' ),
-                                        'dark' => __( 'Tema: scuro', 'fp-digital-marketing' ),
-                                        'light' => __( 'Tema: chiaro', 'fp-digital-marketing' ),
-                                        'switch_to_dark' => __( 'Attiva il tema scuro', 'fp-digital-marketing' ),
-                                        'switch_to_light' => __( 'Attiva il tema chiaro', 'fp-digital-marketing' ),
-                                        'switch_to_system' => __( 'Segui il tema di sistema', 'fp-digital-marketing' ),
-                                        'status_system' => __( 'Tema basato sulle impostazioni di sistema', 'fp-digital-marketing' ),
-                                        'status_dark' => __( 'Tema scuro attivo', 'fp-digital-marketing' ),
-                                        'status_light' => __( 'Tema chiaro attivo', 'fp-digital-marketing' ),
-                                        'reset_hint' => __( 'Shift + clic per tornare al tema di sistema', 'fp-digital-marketing' ),
-                                ],
-                        ],
-                ] );
+				// Localize script for AJAX
+		wp_localize_script(
+			'fp-dms-dashboard',
+			'fpDmsDashboard',
+			[
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce'    => wp_create_nonce( 'fp_dms_dashboard' ),
+				'strings'  => [
+					'loading'           => __( 'Loading...', 'fp-digital-marketing' ),
+					'error'             => __( 'Error loading data', 'fp-digital-marketing' ),
+					'no_data'           => __( 'No data available', 'fp-digital-marketing' ),
+					'sessions'          => __( 'Sessions', 'fp-digital-marketing' ),
+					'users'             => __( 'Users', 'fp-digital-marketing' ),
+					'impressions'       => __( 'Impressions', 'fp-digital-marketing' ),
+					'clicks'            => __( 'Clicks', 'fp-digital-marketing' ),
+					'ctr'               => __( 'CTR', 'fp-digital-marketing' ),
+					'revenue'           => __( 'Revenue', 'fp-digital-marketing' ),
+					'lcp'               => __( 'LCP', 'fp-digital-marketing' ),
+					'inp'               => __( 'INP', 'fp-digital-marketing' ),
+					'cls'               => __( 'CLS', 'fp-digital-marketing' ),
+					'kpi_info_hint'     => __( 'Mostra spiegazioni aggiuntive su questo KPI', 'fp-digital-marketing' ),
+					'kpi_groups'        => [
+						'audience'     => __( 'Pubblico', 'fp-digital-marketing' ),
+						'awareness'    => __( 'Visibilità', 'fp-digital-marketing' ),
+						'engagement'   => __( 'Coinvolgimento', 'fp-digital-marketing' ),
+						'monetization' => __( 'Entrate', 'fp-digital-marketing' ),
+						'insight'      => __( 'Approfondimento', 'fp-digital-marketing' ),
+					],
+					'sources'           => [
+						'single'   => __( '%d sorgente collegata', 'fp-digital-marketing' ),
+						'multiple' => __( '%d sorgenti collegate', 'fp-digital-marketing' ),
+						'demo'     => __( 'Dati dimostrativi', 'fp-digital-marketing' ),
+					],
+					'good'              => __( 'Buono', 'fp-digital-marketing' ),
+					'needs_improvement' => __( 'Da migliorare', 'fp-digital-marketing' ),
+					'poor'              => __( 'Scarso', 'fp-digital-marketing' ),
+					'recommendations'   => __( 'Raccomandazioni', 'fp-digital-marketing' ),
+					'performance_score' => __( 'Punteggio Performance', 'fp-digital-marketing' ),
+					'theme'             => [
+						'system'           => __( 'Tema: sistema', 'fp-digital-marketing' ),
+						'dark'             => __( 'Tema: scuro', 'fp-digital-marketing' ),
+						'light'            => __( 'Tema: chiaro', 'fp-digital-marketing' ),
+						'switch_to_dark'   => __( 'Attiva il tema scuro', 'fp-digital-marketing' ),
+						'switch_to_light'  => __( 'Attiva il tema chiaro', 'fp-digital-marketing' ),
+						'switch_to_system' => __( 'Segui il tema di sistema', 'fp-digital-marketing' ),
+						'status_system'    => __( 'Tema basato sulle impostazioni di sistema', 'fp-digital-marketing' ),
+						'status_dark'      => __( 'Tema scuro attivo', 'fp-digital-marketing' ),
+						'status_light'     => __( 'Tema chiaro attivo', 'fp-digital-marketing' ),
+						'reset_hint'       => __( 'Shift + clic per tornare al tema di sistema', 'fp-digital-marketing' ),
+					],
+				],
+			]
+		);
 
 		// Localize script for Core Web Vitals client-side collection
-		wp_localize_script( 'fp-dms-dashboard', 'fpDmsVitals', [
-			'nonce' => wp_create_nonce( 'fp_dms_client_vitals' ),
-		] );
+		wp_localize_script(
+			'fp-dms-dashboard',
+			'fpDmsVitals',
+			[
+				'nonce' => wp_create_nonce( 'fp_dms_client_vitals' ),
+			]
+		);
 	}
 
 	/**
@@ -260,14 +268,14 @@ class Dashboard {
 				return;
 			}
 
-			$client_id = intval( $_GET['client_id'] ?? 0 );
+			$client_id    = intval( $_GET['client_id'] ?? 0 );
 			$period_start = sanitize_text_field( $_GET['period_start'] ?? '' );
-			$period_end = sanitize_text_field( $_GET['period_end'] ?? '' );
-			$sources = isset( $_GET['sources'] ) ? array_map( 'sanitize_text_field', $_GET['sources'] ) : [];
+			$period_end   = sanitize_text_field( $_GET['period_end'] ?? '' );
+			$sources      = isset( $_GET['sources'] ) ? array_map( 'sanitize_text_field', $_GET['sources'] ) : [];
 
 			// Default to last 30 days if no period specified
 			if ( empty( $period_start ) || empty( $period_end ) ) {
-				$period_end = date( 'Y-m-d H:i:s' );
+				$period_end   = date( 'Y-m-d H:i:s' );
 				$period_start = date( 'Y-m-d H:i:s', strtotime( '-30 days' ) );
 			}
 
@@ -301,15 +309,15 @@ class Dashboard {
 				return;
 			}
 
-			$metric = sanitize_text_field( $_GET['metric'] ?? 'sessions' );
-			$client_id = intval( $_GET['client_id'] ?? 0 );
+			$metric       = sanitize_text_field( $_GET['metric'] ?? 'sessions' );
+			$client_id    = intval( $_GET['client_id'] ?? 0 );
 			$period_start = sanitize_text_field( $_GET['period_start'] ?? '' );
-			$period_end = sanitize_text_field( $_GET['period_end'] ?? '' );
-			$sources = isset( $_GET['sources'] ) ? array_map( 'sanitize_text_field', $_GET['sources'] ) : [];
+			$period_end   = sanitize_text_field( $_GET['period_end'] ?? '' );
+			$sources      = isset( $_GET['sources'] ) ? array_map( 'sanitize_text_field', $_GET['sources'] ) : [];
 
 			// Default to last 30 days if no period specified
 			if ( empty( $period_start ) || empty( $period_end ) ) {
-				$period_end = date( 'Y-m-d H:i:s' );
+				$period_end   = date( 'Y-m-d H:i:s' );
 				$period_start = date( 'Y-m-d H:i:s', strtotime( '-30 days' ) );
 			}
 
@@ -328,10 +336,10 @@ class Dashboard {
 	/**
 	 * Get dashboard data
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date
 	 * @param string $period_end End date
-	 * @param array $sources Data sources filter
+	 * @param array  $sources Data sources filter
 	 * @return array Dashboard data
 	 */
 	private function get_dashboard_data( int $client_id, string $period_start, string $period_end, array $sources = [] ): array {
@@ -339,34 +347,34 @@ class Dashboard {
 		$kpi_summary = MetricsAggregator::get_kpi_summary( $client_id, $period_start, $period_end );
 
 		// Get sync status
-		$sync_stats = SyncLog::get_sync_stats( 7 );
+		$sync_stats    = SyncLog::get_sync_stats( 7 );
 		$recent_errors = SyncLog::get_error_logs( 5 );
 
 		// Get available data sources
 		$available_sources = DataSources::get_data_sources_by_status( 'available' );
 
 		// Calculate period comparison (previous period)
-		$period_duration = strtotime( $period_end ) - strtotime( $period_start );
+		$period_duration   = strtotime( $period_end ) - strtotime( $period_start );
 		$prev_period_start = date( 'Y-m-d H:i:s', strtotime( $period_start ) - $period_duration );
-		$prev_period_end = $period_start;
-		
-		$comparison_data = MetricsAggregator::get_period_comparison( 
-			$client_id, 
-			$period_start, 
-			$period_end, 
-			$prev_period_start, 
-			$prev_period_end 
+		$prev_period_end   = $period_start;
+
+		$comparison_data = MetricsAggregator::get_period_comparison(
+			$client_id,
+			$period_start,
+			$period_end,
+			$prev_period_start,
+			$prev_period_end
 		);
 
 		return [
-			'kpis' => $kpi_summary,
-			'sync_status' => $sync_stats,
-			'recent_errors' => $recent_errors,
+			'kpis'              => $kpi_summary,
+			'sync_status'       => $sync_stats,
+			'recent_errors'     => $recent_errors,
 			'available_sources' => $available_sources,
-			'comparison' => $comparison_data,
-			'period' => [
+			'comparison'        => $comparison_data,
+			'period'            => [
 				'start' => $period_start,
-				'end' => $period_end,
+				'end'   => $period_end,
 			],
 		];
 	}
@@ -375,41 +383,41 @@ class Dashboard {
 	 * Get chart data for specific metric
 	 *
 	 * @param string $metric Metric name
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $period_start Start date
 	 * @param string $period_end End date
-	 * @param array $sources Data sources filter
+	 * @param array  $sources Data sources filter
 	 * @return array Chart data
 	 */
 	private function get_chart_data( string $metric, int $client_id, string $period_start, string $period_end, array $sources = [] ): array {
 		// Generate daily data points for the period
 		$start_time = strtotime( $period_start );
-		$end_time = strtotime( $period_end );
-		$dates = [];
-		$values = [];
+		$end_time   = strtotime( $period_end );
+		$dates      = [];
+		$values     = [];
 
 		// For demo purposes, generate mock trend data
 		// In production, this would query actual daily metrics
-                $current_time = $start_time;
-                $time_range   = $end_time - $start_time;
-                while ( $current_time <= $end_time ) {
-                        $dates[] = date( 'Y-m-d', $current_time );
-                        // Generate realistic mock data with trend
-                        $base_value = $this->get_base_value_for_metric( $metric );
-                        if ( 0 === $time_range ) {
-                                $trend_factor = 0;
-                        } else {
-                                $trend_factor = ( $current_time - $start_time ) / $time_range;
-                        }
-                        $random_factor = 0.8 + ( rand( 0, 40 ) / 100 ); // ±20% variation
-                        $values[] = round( $base_value * ( 1 + $trend_factor * 0.2 ) * $random_factor );
+				$current_time = $start_time;
+				$time_range   = $end_time - $start_time;
+		while ( $current_time <= $end_time ) {
+				$dates[] = date( 'Y-m-d', $current_time );
+				// Generate realistic mock data with trend
+				$base_value = $this->get_base_value_for_metric( $metric );
+			if ( 0 === $time_range ) {
+						$trend_factor = 0;
+			} else {
+							$trend_factor = ( $current_time - $start_time ) / $time_range;
+			}
+							$random_factor = 0.8 + ( rand( 0, 40 ) / 100 ); // ±20% variation
+							$values[]      = round( $base_value * ( 1 + $trend_factor * 0.2 ) * $random_factor );
 
-                        $current_time += 86400; // Add 1 day
-                }
+							$current_time += 86400; // Add 1 day
+		}
 
 		return [
 			'labels' => $dates,
-			'data' => $values,
+			'data'   => $values,
 			'metric' => $metric,
 		];
 	}
@@ -422,14 +430,14 @@ class Dashboard {
 	 */
 	private function get_base_value_for_metric( string $metric ): int {
 		$base_values = [
-			'sessions' => 1500,
-			'users' => 1200,
-			'pageviews' => 4500,
-			'impressions' => 25000,
-			'clicks' => 850,
-			'conversions' => 45,
-			'revenue' => 2500,
-			'organic_clicks' => 650,
+			'sessions'            => 1500,
+			'users'               => 1200,
+			'pageviews'           => 4500,
+			'impressions'         => 25000,
+			'clicks'              => 850,
+			'conversions'         => 45,
+			'revenue'             => 2500,
+			'organic_clicks'      => 650,
 			'organic_impressions' => 15000,
 		];
 
@@ -448,119 +456,145 @@ class Dashboard {
 		}
 
 		// Get clients for filter
-		$clients = get_posts( [
-			'post_type'      => 'cliente',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'orderby'        => 'title',
-			'order'          => 'ASC',
-		] );
+		$clients = get_posts(
+			[
+				'post_type'      => 'cliente',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			]
+		);
 
 		// Get available data sources
 		$available_sources = DataSources::get_data_sources_by_status( 'available' );
 
 		?>
 		<div class="wrap fp-dms-dashboard">
-                        <div class="fp-dms-page-header">
-                                <div class="fp-dms-page-header-content">
-                                        <span class="fp-dms-page-badge">
-                                                <?php esc_html_e( 'Panoramica marketing', 'fp-digital-marketing' ); ?>
-                                        </span>
-                                        <h1><?php esc_html_e( 'FP Digital Marketing Suite', 'fp-digital-marketing' ); ?></h1>
-                                        <p class="description"><?php esc_html_e( 'Dashboard principale per il monitoraggio e la gestione delle attività di digital marketing', 'fp-digital-marketing' ); ?></p>
-                                        <p class="fp-dms-page-subtitle"><?php esc_html_e( 'Personalizza i KPI selezionando cliente, intervallo temporale e sorgenti dati per ottenere insight aggiornati.', 'fp-digital-marketing' ); ?></p>
-                                </div>
-                                <div class="fp-dms-page-toolbar" role="toolbar" aria-label="<?php esc_attr_e( 'Azioni dashboard', 'fp-digital-marketing' ); ?>">
-                                        <button type="button" id="fp-dms-theme-toggle" class="fp-dms-theme-toggle" data-mode="system" aria-describedby="fp-dms-theme-status">
-                                                <span class="fp-dms-theme-toggle-icon" aria-hidden="true">🖥️</span>
-                                                <span class="fp-dms-theme-toggle-label"><?php esc_html_e( 'Tema: sistema', 'fp-digital-marketing' ); ?></span>
-                                                <span class="screen-reader-text fp-dms-theme-toggle-status" id="fp-dms-theme-status" role="status" aria-live="polite"><?php esc_html_e( 'Tema basato sulle impostazioni di sistema', 'fp-digital-marketing' ); ?></span>
-                                        </button>
-                                </div>
-                        </div>
+						<div class="fp-dms-page-header">
+								<div class="fp-dms-page-header-content">
+										<span class="fp-dms-page-badge">
+												<?php esc_html_e( 'Panoramica marketing', 'fp-digital-marketing' ); ?>
+										</span>
+										<h1><?php esc_html_e( 'FP Digital Marketing Suite', 'fp-digital-marketing' ); ?></h1>
+										<p class="description"><?php esc_html_e( 'Dashboard principale per il monitoraggio e la gestione delle attività di digital marketing', 'fp-digital-marketing' ); ?></p>
+										<p class="fp-dms-page-subtitle"><?php esc_html_e( 'Personalizza i KPI selezionando cliente, intervallo temporale e sorgenti dati per ottenere insight aggiornati.', 'fp-digital-marketing' ); ?></p>
+								</div>
+								<div class="fp-dms-page-toolbar" role="toolbar" aria-label="<?php esc_attr_e( 'Azioni dashboard', 'fp-digital-marketing' ); ?>">
+										<button type="button" id="fp-dms-theme-toggle" class="fp-dms-theme-toggle" data-mode="system" aria-describedby="fp-dms-theme-status">
+												<span class="fp-dms-theme-toggle-icon" aria-hidden="true">🖥️</span>
+												<span class="fp-dms-theme-toggle-label"><?php esc_html_e( 'Tema: sistema', 'fp-digital-marketing' ); ?></span>
+												<span class="screen-reader-text fp-dms-theme-toggle-status" id="fp-dms-theme-status" role="status" aria-live="polite"><?php esc_html_e( 'Tema basato sulle impostazioni di sistema', 'fp-digital-marketing' ); ?></span>
+										</button>
+								</div>
+						</div>
 
 			<!-- Global Filters -->
 			<div class="fp-dms-filters">
 				<div class="fp-dms-filter-row">
 					<div class="fp-dms-filter-group">
-                                                <label for="client-filter"><?php esc_html_e( 'Cliente:', 'fp-digital-marketing' ); ?></label>
-                                                <select id="client-filter" class="fp-dms-filter-select" aria-describedby="fp-dms-client-filter-hint">
-                                                        <option value="0"><?php esc_html_e( 'Tutti i clienti', 'fp-digital-marketing' ); ?></option>
-                                                        <?php foreach ( $clients as $client ) : ?>
-                                                                <option value="<?php echo esc_attr( $client->ID ); ?>">
-                                                                        <?php echo esc_html( $client->post_title ); ?>
-                                                                </option>
-                                                        <?php endforeach; ?>
-                                                </select>
-                                                <small id="fp-dms-client-filter-hint" class="fp-dms-filter-hint"><?php esc_html_e( 'Limita l’analisi alle performance di un singolo cliente.', 'fp-digital-marketing' ); ?></small>
-                                        </div>
+												<label for="client-filter"><?php esc_html_e( 'Cliente:', 'fp-digital-marketing' ); ?></label>
+												<select id="client-filter" class="fp-dms-filter-select" aria-describedby="fp-dms-client-filter-hint">
+														<option value="0"><?php esc_html_e( 'Tutti i clienti', 'fp-digital-marketing' ); ?></option>
+														<?php foreach ( $clients as $client ) : ?>
+																<option value="<?php echo esc_attr( $client->ID ); ?>">
+																		<?php echo esc_html( $client->post_title ); ?>
+																</option>
+														<?php endforeach; ?>
+												</select>
+												<small id="fp-dms-client-filter-hint" class="fp-dms-filter-hint"><?php esc_html_e( 'Limita l’analisi alle performance di un singolo cliente.', 'fp-digital-marketing' ); ?></small>
+										</div>
 
-                                        <div class="fp-dms-filter-group">
-                                                <label for="date-start"><?php esc_html_e( 'Data inizio:', 'fp-digital-marketing' ); ?></label>
-                                                <input type="date" id="date-start" class="fp-dms-filter-input" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( '-30 days' ) ) ); ?>" aria-describedby="fp-dms-date-range-hint">
-                                        </div>
+										<div class="fp-dms-filter-group">
+												<label for="date-start"><?php esc_html_e( 'Data inizio:', 'fp-digital-marketing' ); ?></label>
+												<input type="date" id="date-start" class="fp-dms-filter-input" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( '-30 days' ) ) ); ?>" aria-describedby="fp-dms-date-range-hint">
+										</div>
 
-                                        <div class="fp-dms-filter-group">
-                                                <label for="date-end"><?php esc_html_e( 'Data fine:', 'fp-digital-marketing' ); ?></label>
-                                                <input type="date" id="date-end" class="fp-dms-filter-input" value="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>" aria-describedby="fp-dms-date-range-hint">
-                                                <small id="fp-dms-date-range-hint" class="fp-dms-filter-hint"><?php esc_html_e( 'Definisci l’intervallo temporale per i grafici e le metriche mostrati.', 'fp-digital-marketing' ); ?></small>
-                                        </div>
+										<div class="fp-dms-filter-group">
+												<label for="date-end"><?php esc_html_e( 'Data fine:', 'fp-digital-marketing' ); ?></label>
+												<input type="date" id="date-end" class="fp-dms-filter-input" value="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>" aria-describedby="fp-dms-date-range-hint">
+												<small id="fp-dms-date-range-hint" class="fp-dms-filter-hint"><?php esc_html_e( 'Definisci l’intervallo temporale per i grafici e le metriche mostrati.', 'fp-digital-marketing' ); ?></small>
+										</div>
 
-                                        <div class="fp-dms-filter-group">
-                                                <label for="source-filter"><?php esc_html_e( 'Sorgente:', 'fp-digital-marketing' ); ?></label>
-                                                <select id="source-filter" class="fp-dms-filter-select" multiple aria-describedby="fp-dms-source-filter-hint">
-                                                        <?php foreach ( $available_sources as $source_id => $source ) : ?>
-                                                                <option value="<?php echo esc_attr( $source_id ); ?>">
-                                                                        <?php echo esc_html( $source['name'] ); ?>
-                                                                </option>
-                                                        <?php endforeach; ?>
-                                                </select>
-                                                <small id="fp-dms-source-filter-hint" class="fp-dms-filter-hint"><?php esc_html_e( 'Seleziona una o più sorgenti per confrontare le performance delle integrazioni attive.', 'fp-digital-marketing' ); ?></small>
-                                        </div>
+										<div class="fp-dms-filter-group">
+												<label for="source-filter"><?php esc_html_e( 'Sorgente:', 'fp-digital-marketing' ); ?></label>
+												<select id="source-filter" class="fp-dms-filter-select" multiple aria-describedby="fp-dms-source-filter-hint">
+														<?php foreach ( $available_sources as $source_id => $source ) : ?>
+																<option value="<?php echo esc_attr( $source_id ); ?>">
+																		<?php echo esc_html( $source['name'] ); ?>
+																</option>
+														<?php endforeach; ?>
+												</select>
+												<small id="fp-dms-source-filter-hint" class="fp-dms-filter-hint"><?php esc_html_e( 'Seleziona una o più sorgenti per confrontare le performance delle integrazioni attive.', 'fp-digital-marketing' ); ?></small>
+										</div>
 
-                                        <div class="fp-dms-filter-group fp-dms-filter-actions">
-                                                <button type="button" id="apply-filters" class="button button-primary" title="<?php esc_attr_e( 'Aggiorna i dati con i filtri correnti', 'fp-digital-marketing' ); ?>">
-                                                        <?php esc_html_e( 'Applica filtri', 'fp-digital-marketing' ); ?>
-                                                </button>
-                                                <button type="button" id="reset-filters" class="button button-secondary" title="<?php esc_attr_e( 'Ripristina i filtri iniziali', 'fp-digital-marketing' ); ?>">
-                                                        <?php esc_html_e( 'Reimposta', 'fp-digital-marketing' ); ?>
-                                                </button>
-                                        </div>
-                                </div>
-                        </div>
+										<div class="fp-dms-filter-group fp-dms-filter-actions">
+												<button type="button" id="apply-filters" class="button button-primary" title="<?php esc_attr_e( 'Aggiorna i dati con i filtri correnti', 'fp-digital-marketing' ); ?>">
+														<?php esc_html_e( 'Applica filtri', 'fp-digital-marketing' ); ?>
+												</button>
+												<button type="button" id="reset-filters" class="button button-secondary" title="<?php esc_attr_e( 'Ripristina i filtri iniziali', 'fp-digital-marketing' ); ?>">
+														<?php esc_html_e( 'Reimposta', 'fp-digital-marketing' ); ?>
+												</button>
+										</div>
+								</div>
+						</div>
 
-                        <!-- Loading State -->
-                        <div id="dashboard-loading" class="fp-dms-loading" role="status" aria-live="polite">
-                                <div class="fp-dms-skeleton-grid">
-                                        <?php
-                                        $skeleton_variants = [
-                                                [ 'title' => '58%', 'value' => '78%', 'change' => '36%' ],
-                                                [ 'title' => '64%', 'value' => '86%', 'change' => '42%' ],
-                                                [ 'title' => '52%', 'value' => '72%', 'change' => '48%' ],
-                                                [ 'title' => '68%', 'value' => '90%', 'change' => '38%' ],
-                                                [ 'title' => '60%', 'value' => '84%', 'change' => '44%' ],
-                                                [ 'title' => '55%', 'value' => '76%', 'change' => '40%' ],
-                                        ];
+						<!-- Loading State -->
+						<div id="dashboard-loading" class="fp-dms-loading" role="status" aria-live="polite">
+								<div class="fp-dms-skeleton-grid">
+										<?php
+										$skeleton_variants = [
+											[
+												'title'  => '58%',
+												'value'  => '78%',
+												'change' => '36%',
+											],
+											[
+												'title'  => '64%',
+												'value'  => '86%',
+												'change' => '42%',
+											],
+											[
+												'title'  => '52%',
+												'value'  => '72%',
+												'change' => '48%',
+											],
+											[
+												'title'  => '68%',
+												'value'  => '90%',
+												'change' => '38%',
+											],
+											[
+												'title'  => '60%',
+												'value'  => '84%',
+												'change' => '44%',
+											],
+											[
+												'title'  => '55%',
+												'value'  => '76%',
+												'change' => '40%',
+											],
+										];
 
-                                        foreach ( $skeleton_variants as $variant ) :
-                                                $style = sprintf(
-                                                        '--fp-dms-skeleton-title-width:%s; --fp-dms-skeleton-value-width:%s; --fp-dms-skeleton-change-width:%s;',
-                                                        $variant['title'],
-                                                        $variant['value'],
-                                                        $variant['change']
-                                                );
-                                                ?>
-                                                <div class="fp-dms-skeleton-card" style="<?php echo esc_attr( $style ); ?>">
-                                                        <div class="fp-dms-skeleton-title"></div>
-                                                        <div class="fp-dms-skeleton-value"></div>
-                                                        <div class="fp-dms-skeleton-change"></div>
-                                                </div>
-                                        <?php endforeach; ?>
-                                </div>
-                        </div>
+										foreach ( $skeleton_variants as $variant ) :
+												$style = sprintf(
+													'--fp-dms-skeleton-title-width:%s; --fp-dms-skeleton-value-width:%s; --fp-dms-skeleton-change-width:%s;',
+													$variant['title'],
+													$variant['value'],
+													$variant['change']
+												);
+											?>
+												<div class="fp-dms-skeleton-card" style="<?php echo esc_attr( $style ); ?>">
+														<div class="fp-dms-skeleton-title"></div>
+														<div class="fp-dms-skeleton-value"></div>
+														<div class="fp-dms-skeleton-change"></div>
+												</div>
+										<?php endforeach; ?>
+								</div>
+						</div>
 
 			<!-- Dashboard Content -->
-                        <div id="dashboard-content" class="fp-dms-dashboard-content" style="display: none;" role="region" aria-live="polite">
+						<div id="dashboard-content" class="fp-dms-dashboard-content" style="display: none;" role="region" aria-live="polite">
 				
 				<!-- KPI Cards -->
 				<div class="fp-dms-kpi-grid" id="kpi-cards">
@@ -573,21 +607,21 @@ class Dashboard {
 						<h2><?php esc_html_e( 'Trend Metriche', 'fp-digital-marketing' ); ?></h2>
 						<div class="fp-dms-chart-controls">
 							<label for="chart-metric"><?php esc_html_e( 'Metrica:', 'fp-digital-marketing' ); ?></label>
-                                                        <select id="chart-metric" class="fp-dms-metric-select" aria-describedby="fp-dms-chart-metric-hint">
-                                                                <option value="sessions"><?php esc_html_e( 'Sessioni', 'fp-digital-marketing' ); ?></option>
-                                                                <option value="users"><?php esc_html_e( 'Utenti', 'fp-digital-marketing' ); ?></option>
-                                                                <option value="pageviews"><?php esc_html_e( 'Visualizzazioni Pagina', 'fp-digital-marketing' ); ?></option>
-                                                                <option value="impressions"><?php esc_html_e( 'Impressioni', 'fp-digital-marketing' ); ?></option>
-                                                                <option value="clicks"><?php esc_html_e( 'Click', 'fp-digital-marketing' ); ?></option>
+														<select id="chart-metric" class="fp-dms-metric-select" aria-describedby="fp-dms-chart-metric-hint">
+																<option value="sessions"><?php esc_html_e( 'Sessioni', 'fp-digital-marketing' ); ?></option>
+																<option value="users"><?php esc_html_e( 'Utenti', 'fp-digital-marketing' ); ?></option>
+																<option value="pageviews"><?php esc_html_e( 'Visualizzazioni Pagina', 'fp-digital-marketing' ); ?></option>
+																<option value="impressions"><?php esc_html_e( 'Impressioni', 'fp-digital-marketing' ); ?></option>
+																<option value="clicks"><?php esc_html_e( 'Click', 'fp-digital-marketing' ); ?></option>
 								<option value="conversions"><?php esc_html_e( 'Conversioni', 'fp-digital-marketing' ); ?></option>
 								<option value="revenue"><?php esc_html_e( 'Fatturato', 'fp-digital-marketing' ); ?></option>
 								<option value="lcp"><?php esc_html_e( 'LCP (ms)', 'fp-digital-marketing' ); ?></option>
-                                                                <option value="inp"><?php esc_html_e( 'INP (ms)', 'fp-digital-marketing' ); ?></option>
-                                                                <option value="cls"><?php esc_html_e( 'CLS', 'fp-digital-marketing' ); ?></option>
-                                                        </select>
-                                                        <p id="fp-dms-chart-metric-hint" class="fp-dms-chart-hint"><?php esc_html_e( 'Scegli la metrica da visualizzare: il grafico adatta automaticamente colori, scala e descrizioni accessibili.', 'fp-digital-marketing' ); ?></p>
-                                                </div>
-                                        </div>
+																<option value="inp"><?php esc_html_e( 'INP (ms)', 'fp-digital-marketing' ); ?></option>
+																<option value="cls"><?php esc_html_e( 'CLS', 'fp-digital-marketing' ); ?></option>
+														</select>
+														<p id="fp-dms-chart-metric-hint" class="fp-dms-chart-hint"><?php esc_html_e( 'Scegli la metrica da visualizzare: il grafico adatta automaticamente colori, scala e descrizioni accessibili.', 'fp-digital-marketing' ); ?></p>
+												</div>
+										</div>
 					<div class="fp-dms-chart-container">
 						<canvas id="trend-chart" aria-label="<?php esc_attr_e( 'Grafico trend metriche', 'fp-digital-marketing' ); ?>"></canvas>
 					</div>
@@ -618,28 +652,28 @@ class Dashboard {
 			</div>
 
 			<!-- Empty State -->
-                        <div id="dashboard-empty" class="fp-dms-empty-state" style="display: none;" role="region" aria-live="polite">
-                                <div class="fp-dms-empty-illustration" aria-hidden="true">
-                                        <span class="fp-dms-empty-icon">📊</span>
-                                </div>
-                                <h3><?php esc_html_e( 'Nessun dato disponibile', 'fp-digital-marketing' ); ?></h3>
-                                <p><?php esc_html_e( 'Non sono stati trovati dati per il periodo e i filtri selezionati.', 'fp-digital-marketing' ); ?></p>
-                                <p><?php esc_html_e( 'Verifica che le sorgenti dati siano configurate correttamente.', 'fp-digital-marketing' ); ?></p>
-                                <p class="fp-dms-empty-message" role="alert" aria-live="polite"></p>
-                                <ul class="fp-dms-empty-tips">
-                                        <li><?php esc_html_e( 'Controlla che l’intervallo temporale includa giorni con campagne attive o traffico rilevante.', 'fp-digital-marketing' ); ?></li>
-                                        <li><?php esc_html_e( 'Apri le impostazioni delle integrazioni per assicurarti che le credenziali e i permessi siano aggiornati.', 'fp-digital-marketing' ); ?></li>
-                                        <li><?php esc_html_e( 'Utilizza il pulsante “Riprova caricamento” per forzare una nuova sincronizzazione dei dati.', 'fp-digital-marketing' ); ?></li>
-                                </ul>
-                                <div class="fp-dms-empty-actions">
-                                        <a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=fp-dms-settings' ) ); ?>">
-                                                <?php esc_html_e( 'Configura le sorgenti', 'fp-digital-marketing' ); ?>
-                                        </a>
-                                        <button type="button" id="fp-dms-empty-refresh" class="button button-secondary">
-                                                <?php esc_html_e( 'Riprova caricamento', 'fp-digital-marketing' ); ?>
-                                        </button>
-                                </div>
-                        </div>
+						<div id="dashboard-empty" class="fp-dms-empty-state" style="display: none;" role="region" aria-live="polite">
+								<div class="fp-dms-empty-illustration" aria-hidden="true">
+										<span class="fp-dms-empty-icon">📊</span>
+								</div>
+								<h3><?php esc_html_e( 'Nessun dato disponibile', 'fp-digital-marketing' ); ?></h3>
+								<p><?php esc_html_e( 'Non sono stati trovati dati per il periodo e i filtri selezionati.', 'fp-digital-marketing' ); ?></p>
+								<p><?php esc_html_e( 'Verifica che le sorgenti dati siano configurate correttamente.', 'fp-digital-marketing' ); ?></p>
+								<p class="fp-dms-empty-message" role="alert" aria-live="polite"></p>
+								<ul class="fp-dms-empty-tips">
+										<li><?php esc_html_e( 'Controlla che l’intervallo temporale includa giorni con campagne attive o traffico rilevante.', 'fp-digital-marketing' ); ?></li>
+										<li><?php esc_html_e( 'Apri le impostazioni delle integrazioni per assicurarti che le credenziali e i permessi siano aggiornati.', 'fp-digital-marketing' ); ?></li>
+										<li><?php esc_html_e( 'Utilizza il pulsante “Riprova caricamento” per forzare una nuova sincronizzazione dei dati.', 'fp-digital-marketing' ); ?></li>
+								</ul>
+								<div class="fp-dms-empty-actions">
+										<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=fp-dms-settings' ) ); ?>">
+												<?php esc_html_e( 'Configura le sorgenti', 'fp-digital-marketing' ); ?>
+										</a>
+										<button type="button" id="fp-dms-empty-refresh" class="button button-secondary">
+												<?php esc_html_e( 'Riprova caricamento', 'fp-digital-marketing' ); ?>
+										</button>
+								</div>
+						</div>
 
 		</div>
 		<?php
@@ -663,12 +697,12 @@ class Dashboard {
 				return;
 			}
 
-			$client_id = intval( $_GET['client_id'] ?? 0 );
+			$client_id  = intval( $_GET['client_id'] ?? 0 );
 			$origin_url = sanitize_url( $_GET['origin_url'] ?? get_site_url() );
 
 			// Get Core Web Vitals data with error handling
-			$cwv = new CoreWebVitals( $origin_url );
-			$period_end = date( 'Y-m-d H:i:s' );
+			$cwv          = new CoreWebVitals( $origin_url );
+			$period_end   = date( 'Y-m-d H:i:s' );
 			$period_start = date( 'Y-m-d H:i:s', strtotime( '-28 days' ) );
 
 			$metrics = $cwv->fetch_metrics( $client_id, $period_start, $period_end );
@@ -676,30 +710,32 @@ class Dashboard {
 			if ( $metrics ) {
 				// Get performance recommendations
 				$recommendations = CoreWebVitalsHelper::get_performance_recommendations( $metrics );
-				
+
 				// Calculate performance score
 				$score = CoreWebVitalsHelper::calculate_performance_score( $metrics );
 
 				// Get status for each metric
 				$statuses = [];
 				foreach ( $metrics as $metric => $value ) {
-					$kpi = MetricsSchema::normalize_metric_name( 'core_web_vitals', $metric );
+					$kpi                 = MetricsSchema::normalize_metric_name( 'core_web_vitals', $metric );
 					$statuses[ $metric ] = [
-						'status' => MetricsSchema::get_performance_status( $kpi, (float) $value ),
-						'color' => MetricsSchema::get_performance_color( 
+						'status'          => MetricsSchema::get_performance_status( $kpi, (float) $value ),
+						'color'           => MetricsSchema::get_performance_color(
 							MetricsSchema::get_performance_status( $kpi, (float) $value )
 						),
 						'formatted_value' => CoreWebVitalsHelper::format_metric_value( $metric, $value ),
 					];
 				}
 
-				wp_send_json_success([
-					'metrics' => $metrics,
-					'statuses' => $statuses,
-					'recommendations' => $recommendations,
-					'score' => $score,
-					'origin_url' => $origin_url,
-				]);
+				wp_send_json_success(
+					[
+						'metrics'         => $metrics,
+						'statuses'        => $statuses,
+						'recommendations' => $recommendations,
+						'score'           => $score,
+						'origin_url'      => $origin_url,
+					]
+				);
 			} else {
 				wp_send_json_error( __( 'Unable to fetch Core Web Vitals data', 'fp-digital-marketing' ) );
 			}
@@ -726,19 +762,21 @@ class Dashboard {
 			}
 
 			$metric = sanitize_text_field( $_POST['metric'] ?? '' );
-			$value = (float) ( $_POST['value'] ?? 0 );
-			$url = sanitize_url( $_POST['url'] ?? '' );
+			$value  = (float) ( $_POST['value'] ?? 0 );
+			$url    = sanitize_url( $_POST['url'] ?? '' );
 
 			// Store client-side vital in database
 			if ( in_array( $metric, [ 'lcp', 'inp', 'cls', 'fid' ], true ) && $value > 0 ) {
 				// You could store this in a separate table for real-time monitoring
 				// For now, we'll just log it
-				error_log( sprintf( 
-					'Client-side vital: %s = %s on %s', 
-					$metric, 
-					$value, 
-					$url 
-				) );
+				error_log(
+					sprintf(
+						'Client-side vital: %s = %s on %s',
+						$metric,
+						$value,
+						$url
+					)
+				);
 
 				wp_send_json_success( [ 'recorded' => true ] );
 			} else {
@@ -755,81 +793,81 @@ class Dashboard {
 
 	/**
 	 * Verify menu structure is working correctly
-	 * 
+	 *
 	 * @return void
 	 */
-       public function verify_menu_structure(): void {
-               $debug_enabled = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || (bool) get_option( 'fp_dms_enable_menu_debug', false );
-               $debug_enabled = (bool) apply_filters( 'fp_dms_menu_debug_enabled', $debug_enabled );
+	public function verify_menu_structure(): void {
+			$debug_enabled = ( defined( 'WP_DEBUG' ) && WP_DEBUG ) || (bool) get_option( 'fp_dms_enable_menu_debug', false );
+			$debug_enabled = (bool) apply_filters( 'fp_dms_menu_debug_enabled', $debug_enabled );
 
-               if ( ! $debug_enabled ) {
-                       return;
-               }
+		if ( ! $debug_enabled ) {
+				return;
+		}
 
-               $screen = get_current_screen();
-               if ( ! $screen || $screen->id !== 'toplevel_page_' . self::PAGE_SLUG || ! current_user_can( 'manage_options' ) ) {
-                       return;
-               }
+			$screen = get_current_screen();
+		if ( ! $screen || $screen->id !== 'toplevel_page_' . self::PAGE_SLUG || ! current_user_can( 'manage_options' ) ) {
+					return;
+		}
 
-               $should_display_notice = (bool) get_transient( self::MENU_NOTICE_TRANSIENT );
-               $should_display_notice = (bool) apply_filters( 'fp_dms_should_show_menu_structure_notice', $should_display_notice );
+			$should_display_notice = (bool) get_transient( self::MENU_NOTICE_TRANSIENT );
+			$should_display_notice = (bool) apply_filters( 'fp_dms_should_show_menu_structure_notice', $should_display_notice );
 
-               if ( ! $should_display_notice ) {
-                       return;
-               }
+		if ( ! $should_display_notice ) {
+					return;
+		}
 
-               // Check if we have the expected submenus
-               global $submenu;
-               $menu_items = $submenu[ self::PAGE_SLUG ] ?? [];
-               $menu_item_count = count( $menu_items );
+				// Check if we have the expected submenus
+				global $submenu;
+				$menu_items      = $submenu[ self::PAGE_SLUG ] ?? [];
+				$menu_item_count = count( $menu_items );
 
-               if ( $menu_item_count >= 8 ) { // Expect at least 8 submenu items
-                       $message = sprintf(
-                               /* translators: %s: number of submenu items detected. */
-                               esc_html__( 'Menu structure successfully reorganized! Found %s menu items.', 'fp-digital-marketing' ),
-                               number_format_i18n( $menu_item_count )
-                       );
-                       $notice_class = 'notice notice-success is-dismissible';
-               } else {
-                       $message = sprintf(
-                               /* translators: %s: number of submenu items detected. */
-                               esc_html__( 'Menu structure not reorganized as expected. Found %s menu items.', 'fp-digital-marketing' ),
-                               number_format_i18n( $menu_item_count )
-                       );
-                       $notice_class = 'notice notice-warning is-dismissible';
-               }
+		if ( $menu_item_count >= 8 ) { // Expect at least 8 submenu items
+				$message = sprintf(
+						/* translators: %s: number of submenu items detected. */
+					esc_html__( 'Menu structure successfully reorganized! Found %s menu items.', 'fp-digital-marketing' ),
+					number_format_i18n( $menu_item_count )
+				);
+				$notice_class = 'notice notice-success is-dismissible';
+		} else {
+				$message = sprintf(
+						/* translators: %s: number of submenu items detected. */
+					esc_html__( 'Menu structure not reorganized as expected. Found %s menu items.', 'fp-digital-marketing' ),
+					number_format_i18n( $menu_item_count )
+				);
+				$notice_class = 'notice notice-warning is-dismissible';
+		}
 
-               $notice_markup = sprintf(
-                       '<div class="%1$s"><p><strong>%2$s</strong> %3$s</p></div>',
-                       esc_attr( $notice_class ),
-                       esc_html__( 'FP Digital Marketing:', 'fp-digital-marketing' ),
-                       esc_html( $message )
-               );
+				$notice_markup = sprintf(
+					'<div class="%1$s"><p><strong>%2$s</strong> %3$s</p></div>',
+					esc_attr( $notice_class ),
+					esc_html__( 'FP Digital Marketing:', 'fp-digital-marketing' ),
+					esc_html( $message )
+				);
 
-               echo $notice_markup;
+			echo $notice_markup;
 
-               delete_transient( self::MENU_NOTICE_TRANSIENT );
-       }
+			delete_transient( self::MENU_NOTICE_TRANSIENT );
+	}
 
 	/**
 	 * Add performance dashboard widget to WordPress dashboard
 	 *
 	 * @return void
 	 */
-        public function add_performance_dashboard_widget(): void {
-                if ( ! current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
-                        return;
-                }
+	public function add_performance_dashboard_widget(): void {
+		if ( ! current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
+				return;
+		}
 
-                if ( null === $this->optimizations && function_exists( 'error_log' ) ) {
-                        error_log( 'FP Digital Marketing Dashboard: Optimizations helper unavailable for dashboard widget.' );
-                }
+		if ( null === $this->optimizations && function_exists( 'error_log' ) ) {
+				error_log( 'FP Digital Marketing Dashboard: Optimizations helper unavailable for dashboard widget.' );
+		}
 
-                wp_add_dashboard_widget(
-                        'fp_dms_performance_widget',
-                        __( 'FP Digital Marketing - Performance', 'fp-digital-marketing' ),
-                        [ $this, 'render_performance_dashboard_widget' ]
-                );
+			wp_add_dashboard_widget(
+				'fp_dms_performance_widget',
+				__( 'FP Digital Marketing - Performance', 'fp-digital-marketing' ),
+				[ $this, 'render_performance_dashboard_widget' ]
+			);
 	}
 
 	/**
@@ -837,63 +875,63 @@ class Dashboard {
 	 *
 	 * @return void
 	 */
-        public function render_performance_dashboard_widget(): void {
-                $performance_data = [
-                        'avg_load_time' => 0,
-                        'error_count' => 0,
-                        'metrics_count' => 0,
-                        'recommendations' => [],
-                ];
+	public function render_performance_dashboard_widget(): void {
+			$performance_data = [
+				'avg_load_time'   => 0,
+				'error_count'     => 0,
+				'metrics_count'   => 0,
+				'recommendations' => [],
+			];
 
-                $has_optimizations = $this->optimizations instanceof AdminOptimizations;
+			$has_optimizations = $this->optimizations instanceof AdminOptimizations;
 
-                if ( $has_optimizations ) {
-                        try {
-                                $fetched_data = $this->optimizations->get_performance_widget_data();
+			if ( $has_optimizations ) {
+				try {
+						$fetched_data = $this->optimizations->get_performance_widget_data();
 
-                                if ( is_array( $fetched_data ) ) {
-                                        foreach ( array_keys( $performance_data ) as $key ) {
-                                                if ( array_key_exists( $key, $fetched_data ) ) {
-                                                        $performance_data[ $key ] = $fetched_data[ $key ];
-                                                }
-                                        }
-                                }
-                        } catch ( \Throwable $e ) {
-                                $has_optimizations = false;
+					if ( is_array( $fetched_data ) ) {
+						foreach ( array_keys( $performance_data ) as $key ) {
+							if ( array_key_exists( $key, $fetched_data ) ) {
+								$performance_data[ $key ] = $fetched_data[ $key ];
+							}
+						}
+					}
+				} catch ( \Throwable $e ) {
+						$has_optimizations = false;
 
-                                if ( function_exists( 'error_log' ) ) {
-                                        error_log( 'FP Digital Marketing Dashboard: Failed to render performance widget - ' . $e->getMessage() );
-                                }
-                        }
-                }
+					if ( function_exists( 'error_log' ) ) {
+							error_log( 'FP Digital Marketing Dashboard: Failed to render performance widget - ' . $e->getMessage() );
+					}
+				}
+			}
 
-                $recommendations = [];
-                if ( isset( $performance_data['recommendations'] ) && is_array( $performance_data['recommendations'] ) ) {
-                        $recommendations = $performance_data['recommendations'];
-                }
+			$recommendations = [];
+			if ( isset( $performance_data['recommendations'] ) && is_array( $performance_data['recommendations'] ) ) {
+					$recommendations = $performance_data['recommendations'];
+			}
 
-                $fallback_notice = '';
-                if ( ! $has_optimizations ) {
-                        $notice_message = 'Performance data temporarily unavailable. Please refresh later.';
-                        if ( function_exists( '__' ) ) {
-                                $notice_message = __( 'Performance data temporarily unavailable. Please refresh later.', 'fp-digital-marketing' );
-                        }
-                        $fallback_notice = $notice_message;
-                }
+			$fallback_notice = '';
+			if ( ! $has_optimizations ) {
+					$notice_message = 'Performance data temporarily unavailable. Please refresh later.';
+				if ( function_exists( '__' ) ) {
+						$notice_message = __( 'Performance data temporarily unavailable. Please refresh later.', 'fp-digital-marketing' );
+				}
+					$fallback_notice = $notice_message;
+			}
 
-                ?>
-                <div class="fp-dms-performance-widget">
-                        <?php if ( ! empty( $fallback_notice ) ) : ?>
-                                <div class="notice notice-warning fp-dms-widget-notice">
-                                        <?php echo esc_html( $fallback_notice ); ?>
-                                </div>
-                        <?php endif; ?>
+			?>
+				<div class="fp-dms-performance-widget">
+					<?php if ( ! empty( $fallback_notice ) ) : ?>
+								<div class="notice notice-warning fp-dms-widget-notice">
+										<?php echo esc_html( $fallback_notice ); ?>
+								</div>
+						<?php endif; ?>
 
-                        <div class="fp-dms-performance-stats">
-                                <div class="fp-dms-stat">
-                                        <span class="fp-dms-stat-value"><?php echo esc_html( $performance_data['avg_load_time'] ); ?>s</span>
-                                        <span class="fp-dms-stat-label"><?php esc_html_e( 'Avg Load Time', 'fp-digital-marketing' ); ?></span>
-                                </div>
+						<div class="fp-dms-performance-stats">
+								<div class="fp-dms-stat">
+										<span class="fp-dms-stat-value"><?php echo esc_html( $performance_data['avg_load_time'] ); ?>s</span>
+										<span class="fp-dms-stat-label"><?php esc_html_e( 'Avg Load Time', 'fp-digital-marketing' ); ?></span>
+								</div>
 				<div class="fp-dms-stat">
 					<span class="fp-dms-stat-value"><?php echo esc_html( $performance_data['error_count'] ); ?></span>
 					<span class="fp-dms-stat-label"><?php esc_html_e( 'JS Errors (7d)', 'fp-digital-marketing' ); ?></span>
@@ -918,10 +956,10 @@ class Dashboard {
 
 			<div class="fp-dms-widget-actions">
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ); ?>" class="button button-primary">
-					<?php esc_html_e( 'View Full Dashboard', 'fp-digital-marketing' ); ?>
+				<?php esc_html_e( 'View Full Dashboard', 'fp-digital-marketing' ); ?>
 				</a>
 				<button type="button" class="button" onclick="location.reload();">
-					<?php esc_html_e( 'Refresh', 'fp-digital-marketing' ); ?>
+				<?php esc_html_e( 'Refresh', 'fp-digital-marketing' ); ?>
 				</button>
 			</div>
 		</div>
