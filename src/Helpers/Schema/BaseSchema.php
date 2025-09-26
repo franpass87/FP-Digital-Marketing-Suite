@@ -45,7 +45,7 @@ abstract class BaseSchema {
 	protected static function create_base_schema( string $type, array $data = [] ): array {
 		$schema = [
 			'@context' => self::SCHEMA_CONTEXT,
-			'@type' => $type
+			'@type'    => $type,
 		];
 
 		return array_merge( $schema, $data );
@@ -58,58 +58,58 @@ abstract class BaseSchema {
 	 */
 	protected static function get_site_info(): array {
 		return [
-			'name' => get_bloginfo( 'name' ),
-			'url' => home_url(),
-			'description' => get_bloginfo( 'description' )
+			'name'        => get_bloginfo( 'name' ),
+			'url'         => home_url(),
+			'description' => get_bloginfo( 'description' ),
 		];
 	}
 
 	/**
 	 * Get current post data
 	 *
-         * @return object|null Current post or null
-         */
-        protected static function get_current_post(): ?object {
-                global $post;
+	 * @return object|null Current post or null
+	 */
+	protected static function get_current_post(): ?object {
+			global $post;
 
-                if ( ! is_singular() ) {
-                        return null;
-                }
+		if ( ! is_singular() ) {
+				return null;
+		}
 
-                if ( $post instanceof \WP_Post ) {
-                        return $post;
-                }
+		if ( $post instanceof \WP_Post ) {
+				return $post;
+		}
 
-                if ( is_object( $post ) && isset( $post->ID ) ) {
-                        return $post;
-                }
+		if ( is_object( $post ) && isset( $post->ID ) ) {
+				return $post;
+		}
 
-                return null;
-        }
+			return null;
+	}
 
 	/**
 	 * Get author information for a post
 	 *
-         * @param object $post Post object
-         * @return array Author information
-         */
-        protected static function get_author_info( object $post ): array {
-                if ( ! isset( $post->post_author ) ) {
-                        return [];
-                }
+	 * @param object $post Post object
+	 * @return array Author information
+	 */
+	protected static function get_author_info( object $post ): array {
+		if ( ! isset( $post->post_author ) ) {
+				return [];
+		}
 
-                $author_id = (int) $post->post_author;
-                $author = get_userdata( $author_id );
+			$author_id = (int) $post->post_author;
+			$author    = get_userdata( $author_id );
 
-                if ( ! $author ) {
-                        return [];
-                }
+		if ( ! $author ) {
+				return [];
+		}
 
-                return [
-			'@type' => 'Person',
-			'name' => $author->display_name,
-			'url' => get_author_posts_url( $author_id )
-		];
+			return [
+				'@type' => 'Person',
+				'name'  => $author->display_name,
+				'url'   => get_author_posts_url( $author_id ),
+			];
 	}
 
 	/**
@@ -118,13 +118,13 @@ abstract class BaseSchema {
 	 * @return array Organization schema
 	 */
 	protected static function get_organization_schema(): array {
-		$settings = get_option( 'fp_digital_marketing_schema_settings', [] );
+		$settings  = get_option( 'fp_digital_marketing_schema_settings', [] );
 		$site_info = self::get_site_info();
 
 		$organization = [
 			'@type' => 'Organization',
-			'name' => $settings['organization_name'] ?? $site_info['name'],
-			'url' => $settings['organization_url'] ?? $site_info['url']
+			'name'  => $settings['organization_name'] ?? $site_info['name'],
+			'url'   => $settings['organization_url'] ?? $site_info['url'],
 		];
 
 		if ( ! empty( $settings['organization_description'] ) ) {
@@ -134,7 +134,7 @@ abstract class BaseSchema {
 		if ( ! empty( $settings['organization_logo'] ) ) {
 			$organization['logo'] = [
 				'@type' => 'ImageObject',
-				'url' => $settings['organization_logo']
+				'url'   => $settings['organization_logo'],
 			];
 		}
 
@@ -147,27 +147,27 @@ abstract class BaseSchema {
 	 * @param string $date Date string
 	 * @return string ISO 8601 formatted date
 	 */
-        protected static function format_date( string $date ): string {
-                if ( empty( $date ) ) {
-                        return '';
-                }
+	protected static function format_date( string $date ): string {
+		if ( empty( $date ) ) {
+				return '';
+		}
 
-                $timestamp = strtotime( $date );
+			$timestamp = strtotime( $date );
 
-                if ( false === $timestamp ) {
-                        return '';
-                }
+		if ( false === $timestamp ) {
+				return '';
+		}
 
-                return date( 'c', $timestamp );
-        }
+			return date( 'c', $timestamp );
+	}
 
-        /**
-         * Get permalink for a post
-         *
-         * @param int|object $post Post ID or object
-         * @return string Post permalink
-         */
-        protected static function get_permalink( $post ): string {
-                return get_permalink( $post ) ?: '';
-        }
+		/**
+		 * Get permalink for a post
+		 *
+		 * @param int|object $post Post ID or object
+		 * @return string Post permalink
+		 */
+	protected static function get_permalink( $post ): string {
+			return get_permalink( $post ) ?: '';
+	}
 }

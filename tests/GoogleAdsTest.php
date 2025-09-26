@@ -61,8 +61,8 @@ class GoogleAdsTest extends TestCase {
 	 */
 	public function test_fetch_metrics_structure(): void {
 		$google_ads = new GoogleAds( '123-456-7890', 'dev_token_123' );
-		
-		// Since this is a mock implementation, we expect it to return false 
+
+		// Since this is a mock implementation, we expect it to return false
 		// when not properly connected (which it won't be in tests)
 		$result = $google_ads->fetch_metrics( 1, '2024-01-01', '2024-01-31' );
 		$this->assertFalse( $result );
@@ -81,8 +81,8 @@ class GoogleAdsTest extends TestCase {
 	 */
 	public function test_oauth_authorization_url(): void {
 		$google_ads = new GoogleAds( '123-456-7890', 'dev_token_123' );
-		$auth_url = $google_ads->get_authorization_url();
-		
+		$auth_url   = $google_ads->get_authorization_url();
+
 		// Should return empty string when not configured
 		$this->assertEquals( '', $auth_url );
 	}
@@ -92,7 +92,7 @@ class GoogleAdsTest extends TestCase {
 	 */
 	public function test_oauth_callback_handling(): void {
 		$google_ads = new GoogleAds( '123-456-7890', 'dev_token_123' );
-		
+
 		// Should return false with invalid/empty code
 		$result = $google_ads->handle_oauth_callback( '' );
 		$this->assertFalse( $result );
@@ -103,7 +103,7 @@ class GoogleAdsTest extends TestCase {
 	 */
 	public function test_campaigns_utm_not_connected(): void {
 		$google_ads = new GoogleAds();
-		$campaigns = $google_ads->get_campaigns_with_utm( 1, '2024-01-01', '2024-01-31' );
+		$campaigns  = $google_ads->get_campaigns_with_utm( 1, '2024-01-01', '2024-01-31' );
 		$this->assertIsArray( $campaigns );
 		$this->assertEmpty( $campaigns );
 	}
@@ -115,14 +115,14 @@ class GoogleAdsTest extends TestCase {
 		// Use reflection to test private method
 		$google_ads = new GoogleAds();
 		$reflection = new \ReflectionClass( $google_ads );
-		$method = $reflection->getMethod( 'sanitize_utm_campaign' );
+		$method     = $reflection->getMethod( 'sanitize_utm_campaign' );
 		$method->setAccessible( true );
 
 		$test_cases = [
-			'Summer Sale 2024!' => 'summer_sale_2024',
-			'Brand-Awareness Q4' => 'brand-awareness_q4',
+			'Summer Sale 2024!'   => 'summer_sale_2024',
+			'Brand-Awareness Q4'  => 'brand-awareness_q4',
 			'  Special   Offer  ' => 'special_offer',
-			'Email#Campaign@123' => 'email_campaign_123',
+			'Email#Campaign@123'  => 'email_campaign_123',
 		];
 
 		foreach ( $test_cases as $input => $expected ) {
@@ -138,14 +138,14 @@ class GoogleAdsTest extends TestCase {
 		// Use reflection to test private method
 		$google_ads = new GoogleAds();
 		$reflection = new \ReflectionClass( $google_ads );
-		$method = $reflection->getMethod( 'normalize_currency' );
+		$method     = $reflection->getMethod( 'normalize_currency' );
 		$method->setAccessible( true );
 
 		$test_cases = [
-			'1000000' => '1.00',        // $1
+			'1000000'   => '1.00',        // $1
 			'150000000' => '150.00',    // $150
-			'50500000' => '50.50',      // $50.50
-			'0' => '0.00',              // $0
+			'50500000'  => '50.50',      // $50.50
+			'0'         => '0.00',              // $0
 		];
 
 		foreach ( $test_cases as $input => $expected ) {

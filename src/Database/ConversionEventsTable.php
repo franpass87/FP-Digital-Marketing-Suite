@@ -13,70 +13,70 @@ use FP\DigitalMarketing\Database\DatabaseUtils;
 
 /**
  * Conversion Events Table class
- * 
+ *
  * Manages the database table for storing conversion events and goals.
  */
 class ConversionEventsTable {
 
-        /**
-         * Option key used when the database table is not available.
-         */
-        private const OPTION_KEY = 'fp_dms_conversion_events';
+		/**
+		 * Option key used when the database table is not available.
+		 */
+	private const OPTION_KEY = 'fp_dms_conversion_events';
 
-        /**
-         * Cached flag indicating if the wpdb connection is usable.
-         *
-         * @var bool|null
-         */
-        private static ?bool $use_option_storage = null;
+		/**
+		 * Cached flag indicating if the wpdb connection is usable.
+		 *
+		 * @var bool|null
+		 */
+	private static ?bool $use_option_storage = null;
 
-        /**
-         * Table name
-         */
-        public const TABLE_NAME = 'fp_conversion_events';
+		/**
+		 * Table name
+		 */
+	public const TABLE_NAME = 'fp_conversion_events';
 
-        /**
-         * Determine if the conversion events table is using option storage.
-         *
-         * @return bool
-         */
-        public static function is_using_option_storage(): bool {
-                return self::using_option_storage();
-        }
+		/**
+		 * Determine if the conversion events table is using option storage.
+		 *
+		 * @return bool
+		 */
+	public static function is_using_option_storage(): bool {
+			return self::using_option_storage();
+	}
 
 	/**
 	 * Get full table name with WordPress prefix
 	 *
 	 * @return string Full table name
 	 */
-        public static function get_table_name(): string {
-                global $wpdb;
-                return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
-        }
+	public static function get_table_name(): string {
+			global $wpdb;
+			return DatabaseUtils::resolve_table_name( $wpdb, self::TABLE_NAME );
+	}
 
 	/**
 	 * Create the conversion events table
 	 *
 	 * @return bool True on success, false on failure
 	 */
-        public static function create_table(): bool {
-                if ( self::using_option_storage() ) {
-                        // Ensure the option storage bucket exists so that site health checks
-                        // can verify the "table" availability even before any conversion
-                        // has been recorded.
-                        if ( null === get_option( self::OPTION_KEY, null ) ) {
-                                update_option( self::OPTION_KEY, [], false );
-                        }
+	public static function create_table(): bool {
+		if ( self::using_option_storage() ) {
+				// Ensure the option storage bucket exists so that site health checks
+				// can verify the "table" availability even before any conversion
+				// has been recorded.
+			if ( null === get_option( self::OPTION_KEY, null ) ) {
+				update_option( self::OPTION_KEY, [], false );
+			}
 
-                        return true;
-                }
+				return true;
+		}
 
-                global $wpdb;
+			global $wpdb;
 
-                $table_name      = self::get_table_name();
-                $charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
+			$table_name      = self::get_table_name();
+			$charset_collate = DatabaseUtils::get_charset_collate( $wpdb );
 
-                $sql = "CREATE TABLE $table_name (
+			$sql = "CREATE TABLE $table_name (
                         id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
                         event_id varchar(255) NOT NULL,
                         event_type varchar(100) NOT NULL,
@@ -112,99 +112,99 @@ class ConversionEventsTable {
                         PRIMARY KEY (id)
                 ) $charset_collate;";
 
-                return DatabaseUtils::run_schema_delta( $sql, $wpdb );
-        }
+			return DatabaseUtils::run_schema_delta( $sql, $wpdb );
+	}
 
 	/**
 	 * Check if table exists
 	 *
 	 * @return bool True if table exists
 	 */
-        public static function table_exists(): bool {
-                if ( self::using_option_storage() ) {
-                        $records = get_option( self::OPTION_KEY, null );
+	public static function table_exists(): bool {
+		if ( self::using_option_storage() ) {
+				$records = get_option( self::OPTION_KEY, null );
 
-                        if ( null === $records ) {
-                                update_option( self::OPTION_KEY, [], false );
-                                $records = [];
-                        }
+			if ( null === $records ) {
+				update_option( self::OPTION_KEY, [], false );
+				$records = [];
+			}
 
-                        return is_array( $records );
-                }
+				return is_array( $records );
+		}
 
-                global $wpdb;
-                $table_name = self::get_table_name();
+			global $wpdb;
+			$table_name = self::get_table_name();
 
-                if ( ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
-                        return false;
-                }
+		if ( ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
+				return false;
+		}
 
-                $result = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
-                return $result === $table_name;
-        }
+			$result = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+			return $result === $table_name;
+	}
 
-        /**
-         * Determine if the physical database table exists regardless of fallback mode.
-         *
-         * The plugin can fall back to option storage in limited environments, but the
-         * Site Health checks should still verify the original database table so that
-         * administrators can address missing schema issues.
-         *
-         * @return bool True when the physical table is present.
-         */
-        public static function database_table_exists(): bool {
-                global $wpdb;
+		/**
+		 * Determine if the physical database table exists regardless of fallback mode.
+		 *
+		 * The plugin can fall back to option storage in limited environments, but the
+		 * Site Health checks should still verify the original database table so that
+		 * administrators can address missing schema issues.
+		 *
+		 * @return bool True when the physical table is present.
+		 */
+	public static function database_table_exists(): bool {
+			global $wpdb;
 
-                if ( ! is_object( $wpdb ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
-                        return false;
-                }
+		if ( ! is_object( $wpdb ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
+				return false;
+		}
 
-                $table_name = self::get_table_name();
-                $result     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
+			$table_name = self::get_table_name();
+			$result     = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) );
 
-                return $result === $table_name;
-        }
+			return $result === $table_name;
+	}
 
-        /**
-         * Provide a human readable storage identifier for health checks and diagnostics.
-         *
-         * When the plugin cannot rely on a proper wpdb instance it stores conversion
-         * events inside the options table. Site health checks need to reference the
-         * correct storage backend to avoid reporting false positives.
-         *
-         * @return string Storage identifier (table name or option key).
-         */
-        public static function get_storage_identifier(): string {
-                $table_name = self::get_table_name();
+		/**
+		 * Provide a human readable storage identifier for health checks and diagnostics.
+		 *
+		 * When the plugin cannot rely on a proper wpdb instance it stores conversion
+		 * events inside the options table. Site health checks need to reference the
+		 * correct storage backend to avoid reporting false positives.
+		 *
+		 * @return string Storage identifier (table name or option key).
+		 */
+	public static function get_storage_identifier(): string {
+			$table_name = self::get_table_name();
 
-                if ( self::using_option_storage() ) {
-                        return $table_name . ' (option storage)';
-                }
+		if ( self::using_option_storage() ) {
+				return $table_name . ' (option storage)';
+		}
 
-                return $table_name;
-        }
+			return $table_name;
+	}
 
 	/**
 	 * Drop the table (for uninstall)
 	 *
 	 * @return bool True on success
 	 */
-        public static function drop_table(): bool {
-                if ( self::using_option_storage() ) {
-                        delete_option( self::OPTION_KEY );
-                        return true;
-                }
+	public static function drop_table(): bool {
+		if ( self::using_option_storage() ) {
+				delete_option( self::OPTION_KEY );
+				return true;
+		}
 
-		global $wpdb;
-		$table_name = self::get_table_name();
+			global $wpdb;
+			$table_name = self::get_table_name();
 
 		if ( ! method_exists( $wpdb, 'query' ) ) {
 			return false;
 		}
 
-		$result = $wpdb->query( "DROP TABLE IF EXISTS $table_name" );
-		return $result !== false;
-        }
+			$result = $wpdb->query( "DROP TABLE IF EXISTS $table_name" );
+			return $result !== false;
+	}
 
 	/**
 	 * Insert a new conversion event
@@ -212,36 +212,39 @@ class ConversionEventsTable {
 	 * @param array $event_data Event data array
 	 * @return int|false Event ID on success, false on failure
 	 */
-        public static function insert_event( array $event_data ): int|false {
-                $data = wp_parse_args( $event_data, [
-                        'event_value'  => 0.00,
-                        'currency'     => 'EUR',
-                        'is_duplicate' => 0,
-                        'created_at'   => current_time( 'mysql' ),
-                        'event_name'   => '',
-			'processed_at' => null,
-                ] );
+	public static function insert_event( array $event_data ): int|false {
+			$data = wp_parse_args(
+				$event_data,
+				[
+					'event_value'  => 0.00,
+					'currency'     => 'EUR',
+					'is_duplicate' => 0,
+					'created_at'   => current_time( 'mysql' ),
+					'event_name'   => '',
+					'processed_at' => null,
+				]
+			);
 
-                if ( self::using_option_storage() ) {
-                        return self::insert_event_into_option_storage( $data );
-                }
+		if ( self::using_option_storage() ) {
+				return self::insert_event_into_option_storage( $data );
+		}
 
-                global $wpdb;
+			global $wpdb;
 
-                $table_name = self::get_table_name();
+			$table_name = self::get_table_name();
 
-                if ( isset( $data['event_attributes'] ) && is_array( $data['event_attributes'] ) ) {
-                        $data['event_attributes'] = wp_json_encode( $data['event_attributes'] );
-                }
+		if ( isset( $data['event_attributes'] ) && is_array( $data['event_attributes'] ) ) {
+				$data['event_attributes'] = wp_json_encode( $data['event_attributes'] );
+		}
 
 		if ( ! method_exists( $wpdb, 'insert' ) ) {
 			return false;
 		}
 
-                $result = $wpdb->insert( $table_name, $data );
+			$result = $wpdb->insert( $table_name, $data );
 
-                return $result ? $wpdb->insert_id : false;
-        }
+			return $result ? $wpdb->insert_id : false;
+	}
 
 	/**
 	 * Update an existing conversion event
@@ -250,209 +253,209 @@ class ConversionEventsTable {
 	 * @param array $event_data Event data to update
 	 * @return bool True on success, false on failure
 	 */
-        public static function update_event( int $event_id, array $event_data ): bool {
-                if ( self::using_option_storage() ) {
-                        return self::update_option_storage_event( $event_id, $event_data );
-                }
+	public static function update_event( int $event_id, array $event_data ): bool {
+		if ( self::using_option_storage() ) {
+				return self::update_option_storage_event( $event_id, $event_data );
+		}
 
-                global $wpdb;
+			global $wpdb;
 
-                $table_name = self::get_table_name();
+			$table_name = self::get_table_name();
 
-                if ( isset( $event_data['event_attributes'] ) && is_array( $event_data['event_attributes'] ) ) {
-                        $event_data['event_attributes'] = wp_json_encode( $event_data['event_attributes'] );
-                }
+		if ( isset( $event_data['event_attributes'] ) && is_array( $event_data['event_attributes'] ) ) {
+				$event_data['event_attributes'] = wp_json_encode( $event_data['event_attributes'] );
+		}
 
 		if ( ! method_exists( $wpdb, 'update' ) ) {
 			return false;
 		}
 
-                $result = $wpdb->update(
-                        $table_name,
-                        $event_data,
-                        [ 'id' => $event_id ],
-                        null,
-                        [ '%d' ]
-                );
+			$result = $wpdb->update(
+				$table_name,
+				$event_data,
+				[ 'id' => $event_id ],
+				null,
+				[ '%d' ]
+			);
 
-                return $result !== false;
-        }
+			return $result !== false;
+	}
 
-        /**
-         * Get a single conversion event by ID
-         *
-         * @param int $event_id Event ID
-         * @return array|null Event data array or null if not found
-         */
-        public static function get_event_by_id( int $event_id ): ?array {
-                if ( self::using_option_storage() ) {
-                        foreach ( self::get_option_events() as $event ) {
-                                if ( (int) $event['id'] === $event_id ) {
-                                        return $event;
-                                }
-                        }
+		/**
+		 * Get a single conversion event by ID
+		 *
+		 * @param int $event_id Event ID
+		 * @return array|null Event data array or null if not found
+		 */
+	public static function get_event_by_id( int $event_id ): ?array {
+		if ( self::using_option_storage() ) {
+			foreach ( self::get_option_events() as $event ) {
+				if ( (int) $event['id'] === $event_id ) {
+						return $event;
+				}
+			}
 
-                        return null;
-                }
+				return null;
+		}
 
-		global $wpdb;
+			global $wpdb;
 
 		if ( ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_row' ) ) {
 			return null;
 		}
 
-                $table_name = self::get_table_name();
-                $sql        = $wpdb->prepare(
-                        "SELECT * FROM $table_name WHERE id = %d LIMIT 1",
-                        $event_id
-                );
+			$table_name = self::get_table_name();
+			$sql        = $wpdb->prepare(
+				"SELECT * FROM $table_name WHERE id = %d LIMIT 1",
+				$event_id
+			);
 
-                $result = $wpdb->get_row( $sql, ARRAY_A );
+			$result = $wpdb->get_row( $sql, ARRAY_A );
 
-                if ( ! $result ) {
-                        return null;
-                }
+		if ( ! $result ) {
+				return null;
+		}
 
-                if ( isset( $result['event_attributes'] ) && is_string( $result['event_attributes'] ) && '' !== $result['event_attributes'] ) {
-                        $decoded_attributes = json_decode( $result['event_attributes'], true );
+		if ( isset( $result['event_attributes'] ) && is_string( $result['event_attributes'] ) && '' !== $result['event_attributes'] ) {
+				$decoded_attributes = json_decode( $result['event_attributes'], true );
 
-                        if ( is_array( $decoded_attributes ) ) {
-                                $result['event_attributes'] = $decoded_attributes;
-                        }
-                }
+			if ( is_array( $decoded_attributes ) ) {
+					$result['event_attributes'] = $decoded_attributes;
+			}
+		}
 
-                return $result;
-        }
+			return $result;
+	}
 
-        /**
-         * Get conversion events with filtering
-         *
-         * @param array $criteria Filter criteria
-	 * @param int   $limit Results limit
-	 * @param int   $offset Results offset
-	 * @return array Array of event objects
-	 */
-        public static function get_events( array $criteria = [], int $limit = 50, int $offset = 0 ): array {
-                if ( self::using_option_storage() ) {
-                        return self::get_events_from_option_storage( $criteria, $limit, $offset );
-                }
+		/**
+		 * Get conversion events with filtering
+		 *
+		 * @param array $criteria Filter criteria
+		 * @param int   $limit Results limit
+		 * @param int   $offset Results offset
+		 * @return array Array of event objects
+		 */
+	public static function get_events( array $criteria = [], int $limit = 50, int $offset = 0 ): array {
+		if ( self::using_option_storage() ) {
+				return self::get_events_from_option_storage( $criteria, $limit, $offset );
+		}
 
-		global $wpdb;
+			global $wpdb;
 
 		if ( ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_results' ) ) {
 			return [];
 		}
 
-                $table_name    = self::get_table_name();
-                $where_clauses = [];
-                $where_values  = [];
+			$table_name    = self::get_table_name();
+			$where_clauses = [];
+			$where_values  = [];
 
-                if ( isset( $criteria['client_id'] ) ) {
-                        $where_clauses[] = 'client_id = %d';
-                        $where_values[]  = $criteria['client_id'];
-                }
+		if ( isset( $criteria['client_id'] ) ) {
+				$where_clauses[] = 'client_id = %d';
+				$where_values[]  = $criteria['client_id'];
+		}
 
-                if ( isset( $criteria['event_type'] ) ) {
-                        if ( is_array( $criteria['event_type'] ) ) {
-                                $placeholders   = implode( ',', array_fill( 0, count( $criteria['event_type'] ), '%s' ) );
-                                $where_clauses[] = "event_type IN ($placeholders)";
-                                $where_values    = array_merge( $where_values, $criteria['event_type'] );
-                        } else {
-                                $where_clauses[] = 'event_type = %s';
-                                $where_values[]  = $criteria['event_type'];
-                        }
-                }
+		if ( isset( $criteria['event_type'] ) ) {
+			if ( is_array( $criteria['event_type'] ) ) {
+					$placeholders    = implode( ',', array_fill( 0, count( $criteria['event_type'] ), '%s' ) );
+					$where_clauses[] = "event_type IN ($placeholders)";
+					$where_values    = array_merge( $where_values, $criteria['event_type'] );
+			} else {
+					$where_clauses[] = 'event_type = %s';
+					$where_values[]  = $criteria['event_type'];
+			}
+		}
 
-                if ( isset( $criteria['user_id'] ) ) {
-                        if ( is_array( $criteria['user_id'] ) ) {
-                                $user_ids = array_map(
-                                        static function ( $user_id ) {
-                                                return sanitize_text_field( (string) $user_id );
-                                        },
-                                        $criteria['user_id']
-                                );
+		if ( isset( $criteria['user_id'] ) ) {
+			if ( is_array( $criteria['user_id'] ) ) {
+					$user_ids = array_map(
+						static function ( $user_id ) {
+									return sanitize_text_field( (string) $user_id );
+						},
+						$criteria['user_id']
+					);
 
-                                if ( empty( $user_ids ) ) {
-                                        $where_clauses[] = '1=0';
-                                } else {
-                                        $placeholders   = implode( ',', array_fill( 0, count( $user_ids ), '%s' ) );
-                                        $where_clauses[] = "user_id IN ($placeholders)";
-                                        $where_values    = array_merge( $where_values, $user_ids );
-                                }
-                        } else {
-                                $where_clauses[] = 'user_id = %s';
-                                $where_values[]  = sanitize_text_field( (string) $criteria['user_id'] );
-                        }
-                }
+				if ( empty( $user_ids ) ) {
+					$where_clauses[] = '1=0';
+				} else {
+					$placeholders    = implode( ',', array_fill( 0, count( $user_ids ), '%s' ) );
+					$where_clauses[] = "user_id IN ($placeholders)";
+					$where_values    = array_merge( $where_values, $user_ids );
+				}
+			} else {
+					$where_clauses[] = 'user_id = %s';
+					$where_values[]  = sanitize_text_field( (string) $criteria['user_id'] );
+			}
+		}
 
-                if ( isset( $criteria['source'] ) ) {
-                        if ( is_array( $criteria['source'] ) ) {
-                                $placeholders   = implode( ',', array_fill( 0, count( $criteria['source'] ), '%s' ) );
-                                $where_clauses[] = "source IN ($placeholders)";
-                                $where_values    = array_merge( $where_values, $criteria['source'] );
-                        } else {
-                                $where_clauses[] = 'source = %s';
-                                $where_values[]  = $criteria['source'];
-                        }
-                }
+		if ( isset( $criteria['source'] ) ) {
+			if ( is_array( $criteria['source'] ) ) {
+					$placeholders    = implode( ',', array_fill( 0, count( $criteria['source'] ), '%s' ) );
+					$where_clauses[] = "source IN ($placeholders)";
+					$where_values    = array_merge( $where_values, $criteria['source'] );
+			} else {
+					$where_clauses[] = 'source = %s';
+					$where_values[]  = $criteria['source'];
+			}
+		}
 
-                if ( isset( $criteria['event_id'] ) ) {
-                        $where_clauses[] = 'event_id = %s';
-                        $where_values[]  = $criteria['event_id'];
-                }
+		if ( isset( $criteria['event_id'] ) ) {
+				$where_clauses[] = 'event_id = %s';
+				$where_values[]  = $criteria['event_id'];
+		}
 
-                if ( isset( $criteria['source_event_id'] ) ) {
-                        $where_clauses[] = 'source_event_id = %s';
-                        $where_values[]  = $criteria['source_event_id'];
-                }
+		if ( isset( $criteria['source_event_id'] ) ) {
+				$where_clauses[] = 'source_event_id = %s';
+				$where_values[]  = $criteria['source_event_id'];
+		}
 
-                if ( isset( $criteria['period_start'] ) ) {
-                        $where_clauses[] = 'created_at >= %s';
-                        $where_values[]  = $criteria['period_start'];
-                }
+		if ( isset( $criteria['period_start'] ) ) {
+				$where_clauses[] = 'created_at >= %s';
+				$where_values[]  = $criteria['period_start'];
+		}
 
-                if ( isset( $criteria['period_end'] ) ) {
-                        $where_clauses[] = 'created_at <= %s';
-                        $where_values[]  = $criteria['period_end'];
-                }
+		if ( isset( $criteria['period_end'] ) ) {
+				$where_clauses[] = 'created_at <= %s';
+				$where_values[]  = $criteria['period_end'];
+		}
 
-                if ( isset( $criteria['utm_campaign'] ) ) {
-                        $where_clauses[] = 'utm_campaign = %s';
-                        $where_values[]  = $criteria['utm_campaign'];
-                }
+		if ( isset( $criteria['utm_campaign'] ) ) {
+				$where_clauses[] = 'utm_campaign = %s';
+				$where_values[]  = $criteria['utm_campaign'];
+		}
 
-                if ( isset( $criteria['exclude_duplicates'] ) && $criteria['exclude_duplicates'] ) {
-                        $where_clauses[] = 'is_duplicate = 0';
-                }
+		if ( isset( $criteria['exclude_duplicates'] ) && $criteria['exclude_duplicates'] ) {
+				$where_clauses[] = 'is_duplicate = 0';
+		}
 
-                $where_sql      = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
-                $sql            = "SELECT * FROM $table_name $where_sql ORDER BY created_at DESC LIMIT %d OFFSET %d";
-                $where_values[] = $limit;
-                $where_values[] = $offset;
+			$where_sql      = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
+			$sql            = "SELECT * FROM $table_name $where_sql ORDER BY created_at DESC LIMIT %d OFFSET %d";
+			$where_values[] = $limit;
+			$where_values[] = $offset;
 
-                if ( ! empty( $where_values ) ) {
-                        $sql = $wpdb->prepare( $sql, ...$where_values );
-                }
+		if ( ! empty( $where_values ) ) {
+				$sql = $wpdb->prepare( $sql, ...$where_values );
+		}
 
-                $results = $wpdb->get_results( $sql, ARRAY_A );
+			$results = $wpdb->get_results( $sql, ARRAY_A );
 
-                if ( ! is_array( $results ) || empty( $results ) ) {
-                        return [];
-                }
+		if ( ! is_array( $results ) || empty( $results ) ) {
+				return [];
+		}
 
-                foreach ( $results as &$result ) {
-                        if ( ! empty( $result['event_attributes'] ) ) {
-                                $decoded_attributes = json_decode( $result['event_attributes'], true );
+		foreach ( $results as &$result ) {
+			if ( ! empty( $result['event_attributes'] ) ) {
+					$decoded_attributes = json_decode( $result['event_attributes'], true );
 
-                                if ( is_array( $decoded_attributes ) ) {
-                                        $result['event_attributes'] = $decoded_attributes;
-                                }
-                        }
-                }
-                unset( $result );
+				if ( is_array( $decoded_attributes ) ) {
+					$result['event_attributes'] = $decoded_attributes;
+				}
+			}
+		}
+			unset( $result );
 
-                return $results;
-        }
+			return $results;
+	}
 
 	/**
 	 * Get event count with filtering
@@ -460,108 +463,108 @@ class ConversionEventsTable {
 	 * @param array $criteria Filter criteria
 	 * @return int Total count
 	 */
-        public static function get_events_count( array $criteria = [] ): int {
-                if ( self::using_option_storage() ) {
-                        return count( self::get_events_from_option_storage( $criteria, PHP_INT_MAX, 0 ) );
-                }
+	public static function get_events_count( array $criteria = [] ): int {
+		if ( self::using_option_storage() ) {
+				return count( self::get_events_from_option_storage( $criteria, PHP_INT_MAX, 0 ) );
+		}
 
-		global $wpdb;
+			global $wpdb;
 
 		if ( ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
 			return 0;
 		}
 
-                $table_name    = self::get_table_name();
-                $where_clauses = [];
-                $where_values  = [];
+			$table_name    = self::get_table_name();
+			$where_clauses = [];
+			$where_values  = [];
 
-                if ( isset( $criteria['client_id'] ) ) {
-                        $where_clauses[] = 'client_id = %d';
-                        $where_values[]  = $criteria['client_id'];
-                }
+		if ( isset( $criteria['client_id'] ) ) {
+				$where_clauses[] = 'client_id = %d';
+				$where_values[]  = $criteria['client_id'];
+		}
 
-                if ( isset( $criteria['event_type'] ) ) {
-                        if ( is_array( $criteria['event_type'] ) ) {
-                                $placeholders   = implode( ',', array_fill( 0, count( $criteria['event_type'] ), '%s' ) );
-                                $where_clauses[] = "event_type IN ($placeholders)";
-                                $where_values    = array_merge( $where_values, $criteria['event_type'] );
-                        } else {
-                                $where_clauses[] = 'event_type = %s';
-                                $where_values[]  = $criteria['event_type'];
-                        }
-                }
+		if ( isset( $criteria['event_type'] ) ) {
+			if ( is_array( $criteria['event_type'] ) ) {
+					$placeholders    = implode( ',', array_fill( 0, count( $criteria['event_type'] ), '%s' ) );
+					$where_clauses[] = "event_type IN ($placeholders)";
+					$where_values    = array_merge( $where_values, $criteria['event_type'] );
+			} else {
+					$where_clauses[] = 'event_type = %s';
+					$where_values[]  = $criteria['event_type'];
+			}
+		}
 
-                if ( isset( $criteria['user_id'] ) ) {
-                        if ( is_array( $criteria['user_id'] ) ) {
-                                $user_ids = array_map(
-                                        static function ( $user_id ) {
-                                                return sanitize_text_field( (string) $user_id );
-                                        },
-                                        $criteria['user_id']
-                                );
+		if ( isset( $criteria['user_id'] ) ) {
+			if ( is_array( $criteria['user_id'] ) ) {
+					$user_ids = array_map(
+						static function ( $user_id ) {
+									return sanitize_text_field( (string) $user_id );
+						},
+						$criteria['user_id']
+					);
 
-                                if ( empty( $user_ids ) ) {
-                                        $where_clauses[] = '1=0';
-                                } else {
-                                        $placeholders   = implode( ',', array_fill( 0, count( $user_ids ), '%s' ) );
-                                        $where_clauses[] = "user_id IN ($placeholders)";
-                                        $where_values    = array_merge( $where_values, $user_ids );
-                                }
-                        } else {
-                                $where_clauses[] = 'user_id = %s';
-                                $where_values[]  = sanitize_text_field( (string) $criteria['user_id'] );
-                        }
-                }
+				if ( empty( $user_ids ) ) {
+					$where_clauses[] = '1=0';
+				} else {
+					$placeholders    = implode( ',', array_fill( 0, count( $user_ids ), '%s' ) );
+					$where_clauses[] = "user_id IN ($placeholders)";
+					$where_values    = array_merge( $where_values, $user_ids );
+				}
+			} else {
+					$where_clauses[] = 'user_id = %s';
+					$where_values[]  = sanitize_text_field( (string) $criteria['user_id'] );
+			}
+		}
 
-                if ( isset( $criteria['source'] ) ) {
-                        if ( is_array( $criteria['source'] ) ) {
-                                $placeholders   = implode( ',', array_fill( 0, count( $criteria['source'] ), '%s' ) );
-                                $where_clauses[] = "source IN ($placeholders)";
-                                $where_values    = array_merge( $where_values, $criteria['source'] );
-                        } else {
-                                $where_clauses[] = 'source = %s';
-                                $where_values[]  = $criteria['source'];
-                        }
-                }
+		if ( isset( $criteria['source'] ) ) {
+			if ( is_array( $criteria['source'] ) ) {
+					$placeholders    = implode( ',', array_fill( 0, count( $criteria['source'] ), '%s' ) );
+					$where_clauses[] = "source IN ($placeholders)";
+					$where_values    = array_merge( $where_values, $criteria['source'] );
+			} else {
+					$where_clauses[] = 'source = %s';
+					$where_values[]  = $criteria['source'];
+			}
+		}
 
-                if ( isset( $criteria['event_id'] ) ) {
-                        $where_clauses[] = 'event_id = %s';
-                        $where_values[]  = $criteria['event_id'];
-                }
+		if ( isset( $criteria['event_id'] ) ) {
+				$where_clauses[] = 'event_id = %s';
+				$where_values[]  = $criteria['event_id'];
+		}
 
-                if ( isset( $criteria['source_event_id'] ) ) {
-                        $where_clauses[] = 'source_event_id = %s';
-                        $where_values[]  = $criteria['source_event_id'];
-                }
+		if ( isset( $criteria['source_event_id'] ) ) {
+				$where_clauses[] = 'source_event_id = %s';
+				$where_values[]  = $criteria['source_event_id'];
+		}
 
-                if ( isset( $criteria['period_start'] ) ) {
-                        $where_clauses[] = 'created_at >= %s';
-                        $where_values[]  = $criteria['period_start'];
-                }
+		if ( isset( $criteria['period_start'] ) ) {
+				$where_clauses[] = 'created_at >= %s';
+				$where_values[]  = $criteria['period_start'];
+		}
 
-                if ( isset( $criteria['period_end'] ) ) {
-                        $where_clauses[] = 'created_at <= %s';
-                        $where_values[]  = $criteria['period_end'];
-                }
+		if ( isset( $criteria['period_end'] ) ) {
+				$where_clauses[] = 'created_at <= %s';
+				$where_values[]  = $criteria['period_end'];
+		}
 
-                if ( isset( $criteria['utm_campaign'] ) ) {
-                        $where_clauses[] = 'utm_campaign = %s';
-                        $where_values[]  = $criteria['utm_campaign'];
-                }
+		if ( isset( $criteria['utm_campaign'] ) ) {
+				$where_clauses[] = 'utm_campaign = %s';
+				$where_values[]  = $criteria['utm_campaign'];
+		}
 
-                if ( isset( $criteria['exclude_duplicates'] ) && $criteria['exclude_duplicates'] ) {
-                        $where_clauses[] = 'is_duplicate = 0';
-                }
+		if ( isset( $criteria['exclude_duplicates'] ) && $criteria['exclude_duplicates'] ) {
+				$where_clauses[] = 'is_duplicate = 0';
+		}
 
-                $where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
-                $sql       = "SELECT COUNT(*) FROM $table_name $where_sql";
+			$where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
+			$sql       = "SELECT COUNT(*) FROM $table_name $where_sql";
 
-                if ( ! empty( $where_values ) ) {
-                        $sql = $wpdb->prepare( $sql, ...$where_values );
-                }
+		if ( ! empty( $where_values ) ) {
+				$sql = $wpdb->prepare( $sql, ...$where_values );
+		}
 
-                return (int) $wpdb->get_var( $sql );
-        }
+			return (int) $wpdb->get_var( $sql );
+	}
 
 	/**
 	 * Mark event as duplicate
@@ -579,34 +582,34 @@ class ConversionEventsTable {
 	 * @param int $event_id Event ID
 	 * @return bool True on success
 	 */
-        public static function delete_event( int $event_id ): bool {
-                if ( self::using_option_storage() ) {
-                        $events         = self::get_option_events();
-                        $original_count = count( $events );
+	public static function delete_event( int $event_id ): bool {
+		if ( self::using_option_storage() ) {
+				$events         = self::get_option_events();
+				$original_count = count( $events );
 
-                        $events = array_filter(
-                                $events,
-                                static function ( $event ) use ( $event_id ) {
-                                        return (int) $event['id'] !== $event_id;
-                                }
-                        );
+				$events = array_filter(
+					$events,
+					static function ( $event ) use ( $event_id ) {
+								return (int) $event['id'] !== $event_id;
+					}
+				);
 
-                        self::store_option_events( array_values( $events ) );
+				self::store_option_events( array_values( $events ) );
 
-                        return $original_count !== count( $events );
-                }
+				return $original_count !== count( $events );
+		}
 
-		global $wpdb;
+			global $wpdb;
 
 		if ( ! method_exists( $wpdb, 'delete' ) ) {
 			return false;
 		}
 
-                $table_name = self::get_table_name();
-                $result     = $wpdb->delete( $table_name, [ 'id' => $event_id ], [ '%d' ] );
+			$table_name = self::get_table_name();
+			$result     = $wpdb->delete( $table_name, [ 'id' => $event_id ], [ '%d' ] );
 
-                return $result !== false;
-        }
+			return $result !== false;
+	}
 
 	/**
 	 * Determine whether option storage must be used for persistence.
@@ -679,7 +682,7 @@ class ConversionEventsTable {
 		}
 
 		$event_data['id'] = $next_id;
-		$events[]       = self::normalise_option_event( $event_data );
+		$events[]         = self::normalise_option_event( $event_data );
 
 		self::store_option_events( $events );
 
@@ -852,4 +855,3 @@ class ConversionEventsTable {
 		return $payload;
 	}
 }
-

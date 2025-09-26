@@ -18,27 +18,36 @@ class MetricsCacheIntegrationTest extends TestCase {
 	 * Test saving and retrieving Google Analytics metrics
 	 */
 	public function test_google_analytics_metrics_workflow(): void {
-		$client_id = 123;
-		$source = 'google_analytics_4';
+		$client_id    = 123;
+		$source       = 'google_analytics_4';
 		$period_start = '2024-01-01 00:00:00';
-		$period_end = '2024-01-31 23:59:59';
+		$period_end   = '2024-01-31 23:59:59';
 
 		// Save different metrics for the same client and period
 		$metrics_data = [
 			[
 				'metric' => 'sessions',
-				'value' => '1500',
-				'meta' => [ 'device' => 'desktop', 'region' => 'Italy' ],
+				'value'  => '1500',
+				'meta'   => [
+					'device' => 'desktop',
+					'region' => 'Italy',
+				],
 			],
 			[
 				'metric' => 'pageviews',
-				'value' => '4500',
-				'meta' => [ 'device' => 'desktop', 'region' => 'Italy' ],
+				'value'  => '4500',
+				'meta'   => [
+					'device' => 'desktop',
+					'region' => 'Italy',
+				],
 			],
 			[
 				'metric' => 'bounce_rate',
-				'value' => '0.65',
-				'meta' => [ 'device' => 'desktop', 'region' => 'Italy' ],
+				'value'  => '0.65',
+				'meta'   => [
+					'device' => 'desktop',
+					'region' => 'Italy',
+				],
 			],
 		];
 
@@ -58,19 +67,23 @@ class MetricsCacheIntegrationTest extends TestCase {
 		}
 
 		// Retrieve all metrics for this client
-		$retrieved_metrics = MetricsCache::get_metrics( [
-			'client_id' => $client_id,
-			'source' => $source,
-		] );
+		$retrieved_metrics = MetricsCache::get_metrics(
+			[
+				'client_id' => $client_id,
+				'source'    => $source,
+			]
+		);
 
 		$this->assertCount( 3, $retrieved_metrics );
 
 		// Test filtering by specific metric
-		$sessions_metrics = MetricsCache::get_metrics( [
-			'client_id' => $client_id,
-			'source' => $source,
-			'metric' => 'sessions',
-		] );
+		$sessions_metrics = MetricsCache::get_metrics(
+			[
+				'client_id' => $client_id,
+				'source'    => $source,
+				'metric'    => 'sessions',
+			]
+		);
 
 		$this->assertCount( 1, $sessions_metrics );
 		$this->assertEquals( 'sessions', $sessions_metrics[0]->metric );
@@ -81,26 +94,26 @@ class MetricsCacheIntegrationTest extends TestCase {
 	 * Test working with multiple data sources
 	 */
 	public function test_multiple_data_sources(): void {
-		$client_id = 456;
+		$client_id    = 456;
 		$period_start = '2024-02-01 00:00:00';
-		$period_end = '2024-02-29 23:59:59';
+		$period_end   = '2024-02-29 23:59:59';
 
 		// Save metrics from different sources
 		$sources_data = [
 			[
 				'source' => 'google_analytics_4',
 				'metric' => 'users',
-				'value' => '850',
+				'value'  => '850',
 			],
 			[
 				'source' => 'facebook_ads',
 				'metric' => 'impressions',
-				'value' => '25000',
+				'value'  => '25000',
 			],
 			[
 				'source' => 'google_ads',
 				'metric' => 'clicks',
-				'value' => '420',
+				'value'  => '420',
 			],
 		];
 
@@ -121,10 +134,12 @@ class MetricsCacheIntegrationTest extends TestCase {
 		$this->assertCount( 3, $all_metrics );
 
 		// Get metrics from specific source
-		$ga_metrics = MetricsCache::get_metrics( [
-			'client_id' => $client_id,
-			'source' => 'google_analytics_4',
-		] );
+		$ga_metrics = MetricsCache::get_metrics(
+			[
+				'client_id' => $client_id,
+				'source'    => 'google_analytics_4',
+			]
+		);
 		$this->assertCount( 1, $ga_metrics );
 		$this->assertEquals( 'users', $ga_metrics[0]->metric );
 	}
@@ -133,11 +148,11 @@ class MetricsCacheIntegrationTest extends TestCase {
 	 * Test updating cached metrics
 	 */
 	public function test_update_cached_metrics(): void {
-		$client_id = 789;
-		$source = 'mailchimp';
-		$metric = 'open_rate';
+		$client_id    = 789;
+		$source       = 'mailchimp';
+		$metric       = 'open_rate';
 		$period_start = '2024-03-01 00:00:00';
-		$period_end = '2024-03-31 23:59:59';
+		$period_end   = '2024-03-31 23:59:59';
 
 		// Save initial metric
 		$id = MetricsCache::save(
@@ -153,13 +168,16 @@ class MetricsCacheIntegrationTest extends TestCase {
 		$this->assertIsInt( $id );
 
 		// Update the metric value and metadata
-		$update_result = MetricsCache::update( $id, [
-			'value' => '0.28',
-			'meta' => [
-				'campaign_type' => 'newsletter',
-				'segment' => 'premium_customers',
-			],
-		] );
+		$update_result = MetricsCache::update(
+			$id,
+			[
+				'value' => '0.28',
+				'meta'  => [
+					'campaign_type' => 'newsletter',
+					'segment'       => 'premium_customers',
+				],
+			]
+		);
 
 		$this->assertTrue( $update_result );
 
@@ -174,13 +192,22 @@ class MetricsCacheIntegrationTest extends TestCase {
 	 */
 	public function test_bulk_operations(): void {
 		$client_id = 999;
-		$source = 'google_search_console';
+		$source    = 'google_search_console';
 
 		// Save multiple metrics
 		$keywords_data = [
-			[ 'metric' => 'impressions_keyword_1', 'value' => '1250' ],
-			[ 'metric' => 'impressions_keyword_2', 'value' => '980' ],
-			[ 'metric' => 'impressions_keyword_3', 'value' => '750' ],
+			[
+				'metric' => 'impressions_keyword_1',
+				'value'  => '1250',
+			],
+			[
+				'metric' => 'impressions_keyword_2',
+				'value'  => '980',
+			],
+			[
+				'metric' => 'impressions_keyword_3',
+				'value'  => '750',
+			],
 		];
 
 		foreach ( $keywords_data as $keyword_data ) {
@@ -195,24 +222,30 @@ class MetricsCacheIntegrationTest extends TestCase {
 		}
 
 		// Count metrics for this client
-		$count = MetricsCache::count( [
-			'client_id' => $client_id,
-			'source' => $source,
-		] );
+		$count = MetricsCache::count(
+			[
+				'client_id' => $client_id,
+				'source'    => $source,
+			]
+		);
 		$this->assertEquals( 3, $count );
 
 		// Delete all metrics for this client and source
-		$deleted_count = MetricsCache::delete_by_criteria( [
-			'client_id' => $client_id,
-			'source' => $source,
-		] );
+		$deleted_count = MetricsCache::delete_by_criteria(
+			[
+				'client_id' => $client_id,
+				'source'    => $source,
+			]
+		);
 		$this->assertEquals( 3, $deleted_count );
 
 		// Verify deletion
-		$remaining_count = MetricsCache::count( [
-			'client_id' => $client_id,
-			'source' => $source,
-		] );
+		$remaining_count = MetricsCache::count(
+			[
+				'client_id' => $client_id,
+				'source'    => $source,
+			]
+		);
 		$this->assertEquals( 0, $remaining_count );
 	}
 }

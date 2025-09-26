@@ -21,7 +21,7 @@ class SchemaGeneratorTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		
+
 		// Include the class files
 		require_once __DIR__ . '/bootstrap.php';
 		require_once __DIR__ . '/../src/Helpers/SchemaGenerator.php';
@@ -44,7 +44,7 @@ class SchemaGeneratorTest extends TestCase {
 	 */
 	public function test_get_schema_types(): void {
 		$types = FP\DigitalMarketing\Helpers\SchemaGenerator::get_schema_types();
-		
+
 		$this->assertIsArray( $types );
 		$this->assertArrayHasKey( 'website', $types );
 		$this->assertArrayHasKey( 'organization', $types );
@@ -69,7 +69,7 @@ class SchemaGeneratorTest extends TestCase {
 	public function test_get_enabled_schema_types(): void {
 		// Mock get_option to return specific enabled types
 		global $wp_mock_functions;
-		$wp_mock_functions['get_option'] = function( $option, $default = false ) {
+		$wp_mock_functions['get_option'] = function ( $option, $default = false ) {
 			if ( $option === 'fp_digital_marketing_schema_settings' ) {
 				return [ 'enabled_types' => [ 'website', 'article' ] ];
 			}
@@ -77,7 +77,7 @@ class SchemaGeneratorTest extends TestCase {
 		};
 
 		$enabled_types = FP\DigitalMarketing\Helpers\SchemaGenerator::get_enabled_schema_types();
-		
+
 		$this->assertIsArray( $enabled_types );
 		$this->assertContains( 'website', $enabled_types );
 		$this->assertContains( 'article', $enabled_types );
@@ -92,7 +92,7 @@ class SchemaGeneratorTest extends TestCase {
 	public function test_is_schema_type_enabled(): void {
 		// Mock get_option
 		global $wp_mock_functions;
-		$wp_mock_functions['get_option'] = function( $option, $default = false ) {
+		$wp_mock_functions['get_option'] = function ( $option, $default = false ) {
 			if ( $option === 'fp_digital_marketing_schema_settings' ) {
 				return [ 'enabled_types' => [ 'website', 'article' ] ];
 			}
@@ -111,15 +111,15 @@ class SchemaGeneratorTest extends TestCase {
 	 */
 	public function test_sanitize_schema_data(): void {
 		$input = [
-			'@context' => 'https://schema.org',
-			'@type' => 'WebSite',
-			'name' => 'Test Site <script>alert("xss")</script>',
+			'@context'    => 'https://schema.org',
+			'@type'       => 'WebSite',
+			'name'        => 'Test Site <script>alert("xss")</script>',
 			'description' => 'Site description with <b>HTML</b> tags',
-			'nested' => [
+			'nested'      => [
 				'property' => 'Value with <em>markup</em>',
-				'number' => 123,
-				'boolean' => true
-			]
+				'number'   => 123,
+				'boolean'  => true,
+			],
 		];
 
 		$sanitized = FP\DigitalMarketing\Helpers\SchemaGenerator::sanitize_schema_data( $input );
@@ -142,8 +142,8 @@ class SchemaGeneratorTest extends TestCase {
 		// Valid schema
 		$valid_schema = [
 			'@context' => 'https://schema.org',
-			'@type' => 'WebSite',
-			'name' => 'Test Site'
+			'@type'    => 'WebSite',
+			'name'     => 'Test Site',
 		];
 
 		$this->assertTrue( FP\DigitalMarketing\Helpers\SchemaGenerator::validate_schema( $valid_schema ) );
@@ -151,7 +151,7 @@ class SchemaGeneratorTest extends TestCase {
 		// Invalid schema - missing @context
 		$invalid_schema1 = [
 			'@type' => 'WebSite',
-			'name' => 'Test Site'
+			'name'  => 'Test Site',
 		];
 
 		$this->assertFalse( FP\DigitalMarketing\Helpers\SchemaGenerator::validate_schema( $invalid_schema1 ) );
@@ -159,7 +159,7 @@ class SchemaGeneratorTest extends TestCase {
 		// Invalid schema - missing @type
 		$invalid_schema2 = [
 			'@context' => 'https://schema.org',
-			'name' => 'Test Site'
+			'name'     => 'Test Site',
 		];
 
 		$this->assertFalse( FP\DigitalMarketing\Helpers\SchemaGenerator::validate_schema( $invalid_schema2 ) );
@@ -167,8 +167,8 @@ class SchemaGeneratorTest extends TestCase {
 		// Invalid schema - wrong @context
 		$invalid_schema3 = [
 			'@context' => 'https://wrong-context.com',
-			'@type' => 'WebSite',
-			'name' => 'Test Site'
+			'@type'    => 'WebSite',
+			'name'     => 'Test Site',
 		];
 
 		$this->assertFalse( FP\DigitalMarketing\Helpers\SchemaGenerator::validate_schema( $invalid_schema3 ) );
@@ -182,7 +182,7 @@ class SchemaGeneratorTest extends TestCase {
 	public function test_get_default_settings(): void {
 		// Mock WordPress functions
 		global $wp_mock_functions;
-		$wp_mock_functions['get_bloginfo'] = function( $show = '' ) {
+		$wp_mock_functions['get_bloginfo'] = function ( $show = '' ) {
 			switch ( $show ) {
 				case 'name':
 					return 'Test Blog';
@@ -192,7 +192,7 @@ class SchemaGeneratorTest extends TestCase {
 					return '';
 			}
 		};
-		$wp_mock_functions['home_url'] = function() {
+		$wp_mock_functions['home_url']     = function () {
 			return 'https://example.com';
 		};
 
@@ -220,7 +220,7 @@ class SchemaGeneratorTest extends TestCase {
 	public function test_generate_schema(): void {
 		// Mock WordPress functions for WebSite schema
 		global $wp_mock_functions;
-		$wp_mock_functions['get_bloginfo'] = function( $show = '' ) {
+		$wp_mock_functions['get_bloginfo']  = function ( $show = '' ) {
 			switch ( $show ) {
 				case 'name':
 					return 'Test Site';
@@ -230,19 +230,19 @@ class SchemaGeneratorTest extends TestCase {
 					return '';
 			}
 		};
-		$wp_mock_functions['home_url'] = function() {
+		$wp_mock_functions['home_url']      = function () {
 			return 'https://example.com';
 		};
-		$wp_mock_functions['is_home'] = function() {
+		$wp_mock_functions['is_home']       = function () {
 			return true;
 		};
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return true;
 		};
 
 		// Test WebSite schema generation
 		$website_schema = FP\DigitalMarketing\Helpers\SchemaGenerator::generate_schema( 'website' );
-		
+
 		$this->assertIsArray( $website_schema );
 		$this->assertEquals( 'https://schema.org', $website_schema['@context'] );
 		$this->assertEquals( 'WebSite', $website_schema['@type'] );
@@ -262,15 +262,15 @@ class SchemaGeneratorTest extends TestCase {
 	 */
 	public function test_schema_json_escaping(): void {
 		$schema_data = [
-			'@context' => 'https://schema.org',
-			'@type' => 'WebSite',
-			'name' => 'Test & Co "Quotes" \'Single\'',
-			'description' => 'Description with / slashes and unicode: àáâã'
+			'@context'    => 'https://schema.org',
+			'@type'       => 'WebSite',
+			'name'        => 'Test & Co "Quotes" \'Single\'',
+			'description' => 'Description with / slashes and unicode: àáâã',
 		];
 
 		// Test that sanitization removes HTML but preserves special characters appropriately
 		$sanitized = FP\DigitalMarketing\Helpers\SchemaGenerator::sanitize_schema_data( $schema_data );
-		
+
 		$this->assertEquals( 'Test & Co "Quotes" \'Single\'', $sanitized['name'] );
 		$this->assertEquals( 'Description with / slashes and unicode: àáâã', $sanitized['description'] );
 
@@ -291,7 +291,7 @@ class SchemaGeneratorTest extends TestCase {
 	public function test_generate_schemas_integration(): void {
 		// Mock enabled types
 		global $wp_mock_functions;
-		$wp_mock_functions['get_option'] = function( $option, $default = false ) {
+		$wp_mock_functions['get_option'] = function ( $option, $default = false ) {
 			if ( $option === 'fp_digital_marketing_schema_settings' ) {
 				return [ 'enabled_types' => [ 'website' ] ];
 			}
@@ -299,16 +299,16 @@ class SchemaGeneratorTest extends TestCase {
 		};
 
 		// Mock WordPress functions
-		$wp_mock_functions['get_bloginfo'] = function( $show = '' ) {
+		$wp_mock_functions['get_bloginfo']  = function ( $show = '' ) {
 			return $show === 'name' ? 'Test Site' : 'Test Description';
 		};
-		$wp_mock_functions['home_url'] = function() {
+		$wp_mock_functions['home_url']      = function () {
 			return 'https://example.com';
 		};
-		$wp_mock_functions['is_home'] = function() {
+		$wp_mock_functions['is_home']       = function () {
 			return true;
 		};
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return true;
 		};
 
@@ -327,7 +327,7 @@ class SchemaGeneratorTest extends TestCase {
 	public function test_empty_schema_generation(): void {
 		// Mock no enabled types
 		global $wp_mock_functions;
-		$wp_mock_functions['get_option'] = function( $option, $default = false ) {
+		$wp_mock_functions['get_option'] = function ( $option, $default = false ) {
 			if ( $option === 'fp_digital_marketing_schema_settings' ) {
 				return [ 'enabled_types' => [] ];
 			}
@@ -348,7 +348,7 @@ class SchemaGeneratorTest extends TestCase {
 	public function test_schema_duplication_prevention(): void {
 		// Mock multiple enabled types that could generate similar schemas
 		global $wp_mock_functions;
-		$wp_mock_functions['get_option'] = function( $option, $default = false ) {
+		$wp_mock_functions['get_option'] = function ( $option, $default = false ) {
 			if ( $option === 'fp_digital_marketing_schema_settings' ) {
 				return [ 'enabled_types' => [ 'website', 'organization' ] ];
 			}
@@ -356,16 +356,16 @@ class SchemaGeneratorTest extends TestCase {
 		};
 
 		// Mock WordPress functions
-		$wp_mock_functions['get_bloginfo'] = function( $show = '' ) {
+		$wp_mock_functions['get_bloginfo']  = function ( $show = '' ) {
 			return $show === 'name' ? 'Test Site' : 'Test Description';
 		};
-		$wp_mock_functions['home_url'] = function() {
+		$wp_mock_functions['home_url']      = function () {
 			return 'https://example.com';
 		};
-		$wp_mock_functions['is_home'] = function() {
+		$wp_mock_functions['is_home']       = function () {
 			return true;
 		};
-		$wp_mock_functions['is_front_page'] = function() {
+		$wp_mock_functions['is_front_page'] = function () {
 			return true;
 		};
 
@@ -374,7 +374,7 @@ class SchemaGeneratorTest extends TestCase {
 		// Should have both WebSite and Organization schemas
 		$this->assertIsArray( $schemas );
 		$this->assertGreaterThanOrEqual( 1, count( $schemas ) );
-		
+
 		// Check that each schema has proper @type
 		foreach ( $schemas as $schema ) {
 			$this->assertArrayHasKey( '@type', $schema );

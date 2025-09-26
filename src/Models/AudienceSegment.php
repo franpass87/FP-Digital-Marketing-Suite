@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Database\AudienceSegmentTable;
 
 /**
  * Audience Segment model class
- * 
+ *
  * Represents a dynamic audience segment with rules and criteria for user/lead segmentation.
  */
 class AudienceSegment {
@@ -117,7 +117,7 @@ class AudienceSegment {
 	 */
 	public static function load_by_id( int $segment_id ): ?self {
 		$segments = AudienceSegmentTable::get_segments( [ 'id' => $segment_id ], 1, 0 );
-		
+
 		if ( ! empty( $segments ) ) {
 			return new self( $segments[0] );
 		}
@@ -132,20 +132,20 @@ class AudienceSegment {
 	 * @return void
 	 */
 	private function populate_from_array( array $data ): void {
-		$this->id = isset( $data['id'] ) ? (int) $data['id'] : null;
-		$this->name = sanitize_text_field( $data['name'] ?? '' );
+		$this->id          = isset( $data['id'] ) ? (int) $data['id'] : null;
+		$this->name        = sanitize_text_field( $data['name'] ?? '' );
 		$this->description = sanitize_textarea_field( $data['description'] ?? '' );
-		$this->client_id = isset( $data['client_id'] ) ? (int) $data['client_id'] : 0;
-                $raw_rules = isset( $data['rules'] ) && is_array( $data['rules'] )
-                        ? $data['rules']
-                        : ( isset( $data['rules'] ) ? json_decode( $data['rules'], true ) ?: [] : [] );
+		$this->client_id   = isset( $data['client_id'] ) ? (int) $data['client_id'] : 0;
+				$raw_rules = isset( $data['rules'] ) && is_array( $data['rules'] )
+						? $data['rules']
+						: ( isset( $data['rules'] ) ? json_decode( $data['rules'], true ) ?: [] : [] );
 
-                $this->rules = $this->sanitize_rules_array( $raw_rules );
-		$this->is_active = isset( $data['is_active'] ) ? (bool) $data['is_active'] : true;
+				$this->rules     = $this->sanitize_rules_array( $raw_rules );
+		$this->is_active         = isset( $data['is_active'] ) ? (bool) $data['is_active'] : true;
 		$this->last_evaluated_at = $data['last_evaluated_at'] ?? null;
-		$this->member_count = isset( $data['member_count'] ) ? (int) $data['member_count'] : 0;
-		$this->created_at = $data['created_at'] ?? null;
-		$this->updated_at = $data['updated_at'] ?? null;
+		$this->member_count      = isset( $data['member_count'] ) ? (int) $data['member_count'] : 0;
+		$this->created_at        = $data['created_at'] ?? null;
+		$this->updated_at        = $data['updated_at'] ?? null;
 	}
 
 	/**
@@ -165,7 +165,7 @@ class AudienceSegment {
 			// Insert new segment
 			$data['created_at'] = current_time( 'mysql' );
 			$data['updated_at'] = current_time( 'mysql' );
-			$insert_id = AudienceSegmentTable::insert_segment( $data );
+			$insert_id          = AudienceSegmentTable::insert_segment( $data );
 			if ( $insert_id ) {
 				$this->id = $insert_id;
 				return true;
@@ -193,9 +193,9 @@ class AudienceSegment {
 	 * @param array $rule Rule configuration
 	 * @return void
 	 */
-        public function add_rule( array $rule ): void {
-                $this->rules[] = $this->sanitize_rules_array( $rule );
-        }
+	public function add_rule( array $rule ): void {
+			$this->rules[] = $this->sanitize_rules_array( $rule );
+	}
 
 	/**
 	 * Set all rules at once
@@ -203,9 +203,9 @@ class AudienceSegment {
 	 * @param array $rules Array of rule configurations
 	 * @return void
 	 */
-        public function set_rules( array $rules ): void {
-                $this->rules = $this->sanitize_rules_array( $rules );
-        }
+	public function set_rules( array $rules ): void {
+			$this->rules = $this->sanitize_rules_array( $rules );
+	}
 
 	/**
 	 * Get rule by index
@@ -256,62 +256,76 @@ class AudienceSegment {
 	 */
 	public function to_array(): array {
 		return [
-			'id' => $this->id,
-			'name' => $this->name,
-			'description' => $this->description,
-			'client_id' => $this->client_id,
-			'rules' => $this->rules,
-			'is_active' => $this->is_active,
+			'id'                => $this->id,
+			'name'              => $this->name,
+			'description'       => $this->description,
+			'client_id'         => $this->client_id,
+			'rules'             => $this->rules,
+			'is_active'         => $this->is_active,
 			'last_evaluated_at' => $this->last_evaluated_at,
-			'member_count' => $this->member_count,
-			'created_at' => $this->created_at,
-			'updated_at' => $this->updated_at,
+			'member_count'      => $this->member_count,
+			'created_at'        => $this->created_at,
+			'updated_at'        => $this->updated_at,
 		];
 	}
 
 	// Getters
-	public function get_id(): ?int { return $this->id; }
-	public function get_name(): string { return $this->name; }
-	public function get_description(): string { return $this->description; }
-	public function get_client_id(): int { return $this->client_id; }
-	public function get_rules(): array { return $this->rules; }
-	public function is_active(): bool { return $this->is_active; }
-	public function get_last_evaluated_at(): ?string { return $this->last_evaluated_at; }
-	public function get_member_count(): int { return $this->member_count; }
-	public function get_created_at(): ?string { return $this->created_at; }
-	public function get_updated_at(): ?string { return $this->updated_at; }
+	public function get_id(): ?int {
+		return $this->id; }
+	public function get_name(): string {
+		return $this->name; }
+	public function get_description(): string {
+		return $this->description; }
+	public function get_client_id(): int {
+		return $this->client_id; }
+	public function get_rules(): array {
+		return $this->rules; }
+	public function is_active(): bool {
+		return $this->is_active; }
+	public function get_last_evaluated_at(): ?string {
+		return $this->last_evaluated_at; }
+	public function get_member_count(): int {
+		return $this->member_count; }
+	public function get_created_at(): ?string {
+		return $this->created_at; }
+	public function get_updated_at(): ?string {
+		return $this->updated_at; }
 
 	// Setters
-        public function set_name( string $name ): void { $this->name = $name; }
-        public function set_description( string $description ): void { $this->description = $description; }
-        public function set_client_id( int $client_id ): void { $this->client_id = $client_id; }
-        public function set_active( bool $is_active ): void { $this->is_active = $is_active; }
+	public function set_name( string $name ): void {
+		$this->name = $name; }
+	public function set_description( string $description ): void {
+		$this->description = $description; }
+	public function set_client_id( int $client_id ): void {
+		$this->client_id = $client_id; }
+	public function set_active( bool $is_active ): void {
+		$this->is_active = $is_active; }
 
-        /**
-         * Recursively sanitize rules array values.
-         *
-         * @param array $rules Rules array to sanitize.
-         * @return array Sanitized rules array.
-         */
-        private function sanitize_rules_array( array $rules ): array {
-                $sanitized_rules = [];
+		/**
+		 * Recursively sanitize rules array values.
+		 *
+		 * @param array $rules Rules array to sanitize.
+		 * @return array Sanitized rules array.
+		 */
+	private function sanitize_rules_array( array $rules ): array {
+			$sanitized_rules = [];
 
-                foreach ( $rules as $key => $value ) {
-                        $sanitized_key = is_string( $key ) ? sanitize_key( $key ) : $key;
+		foreach ( $rules as $key => $value ) {
+				$sanitized_key = is_string( $key ) ? sanitize_key( $key ) : $key;
 
-                        if ( is_array( $value ) ) {
-                                $sanitized_value = $this->sanitize_rules_array( $value );
-                        } elseif ( is_string( $value ) ) {
-                                $sanitized_value = sanitize_text_field( $value );
-                        } elseif ( is_bool( $value ) || is_int( $value ) || is_float( $value ) ) {
-                                $sanitized_value = $value;
-                        } else {
-                                $sanitized_value = sanitize_text_field( (string) $value );
-                        }
+			if ( is_array( $value ) ) {
+				$sanitized_value = $this->sanitize_rules_array( $value );
+			} elseif ( is_string( $value ) ) {
+						$sanitized_value = sanitize_text_field( $value );
+			} elseif ( is_bool( $value ) || is_int( $value ) || is_float( $value ) ) {
+					$sanitized_value = $value;
+			} else {
+					$sanitized_value = sanitize_text_field( (string) $value );
+			}
 
-                        $sanitized_rules[ $sanitized_key ] = $sanitized_value;
-                }
+				$sanitized_rules[ $sanitized_key ] = $sanitized_value;
+		}
 
-                return $sanitized_rules;
-        }
+			return $sanitized_rules;
+	}
 }

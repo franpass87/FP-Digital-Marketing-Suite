@@ -20,18 +20,18 @@ class UTMCampaignTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		
+
 		// Mock WordPress globals and functions
-                global $wpdb;
-                $wpdb = $this->getMockBuilder( stdClass::class )
-                        ->addMethods( [ 'prepare', 'update', 'insert', 'get_var' ] )
-                        ->getMock();
-                $wpdb->prefix = 'wp_';
-                $wpdb->method( 'prepare' )->willReturnCallback(
-                        static function ( $query ) {
-                                return $query;
-                        }
-                );
+				global $wpdb;
+				$wpdb         = $this->getMockBuilder( stdClass::class )
+						->addMethods( [ 'prepare', 'update', 'insert', 'get_var' ] )
+						->getMock();
+				$wpdb->prefix = 'wp_';
+				$wpdb->method( 'prepare' )->willReturnCallback(
+					static function ( $query ) {
+								return $query;
+					}
+				);
 
 		// Mock WordPress functions
 		if ( ! function_exists( 'sanitize_text_field' ) ) {
@@ -93,7 +93,7 @@ class UTMCampaignTest extends TestCase {
 	 */
 	public function test_populate_campaign_data(): void {
 		$campaign = new UTMCampaign();
-		
+
 		$data = [
 			'id'            => 123,
 			'campaign_name' => 'Updated Campaign',
@@ -130,7 +130,7 @@ class UTMCampaignTest extends TestCase {
 		];
 
 		$campaign = new UTMCampaign( $data );
-		$array = $campaign->to_array();
+		$array    = $campaign->to_array();
 
 		$this->assertIsArray( $array );
 		$this->assertEquals( 'Test Campaign', $array['campaign_name'] );
@@ -152,7 +152,7 @@ class UTMCampaignTest extends TestCase {
 			'base_url'     => 'https://example.com',
 		];
 
-		$campaign = new UTMCampaign( $data );
+		$campaign  = new UTMCampaign( $data );
 		$final_url = $campaign->get_final_url();
 
 		$this->assertStringContainsString( 'utm_source=newsletter', $final_url );
@@ -174,7 +174,7 @@ class UTMCampaignTest extends TestCase {
 			'base_url'     => 'https://example.com',
 		];
 
-		$campaign = new UTMCampaign( $data );
+		$campaign  = new UTMCampaign( $data );
 		$final_url = $campaign->get_final_url();
 
 		$this->assertStringContainsString( 'utm_term=keyword', $final_url );
@@ -192,7 +192,7 @@ class UTMCampaignTest extends TestCase {
 			'base_url'     => 'https://example.com',
 		];
 
-		$campaign = new UTMCampaign( $data );
+		$campaign  = new UTMCampaign( $data );
 		$final_url = $campaign->get_final_url();
 
 		$this->assertStringNotContainsString( 'utm_term=', $final_url );
@@ -204,7 +204,7 @@ class UTMCampaignTest extends TestCase {
 	 */
 	public function test_update_performance(): void {
 		global $wpdb;
-		
+
 		// Mock successful update
 		$wpdb->method( 'update' )->willReturn( 1 );
 		$wpdb->method( 'prepare' )->willReturn( 'query' );
@@ -223,7 +223,7 @@ class UTMCampaignTest extends TestCase {
 		];
 
 		$campaign = new UTMCampaign( $data );
-		
+
 		// Update performance
 		$result = $campaign->update_performance( 5, 1, 25.0 );
 
@@ -237,11 +237,11 @@ class UTMCampaignTest extends TestCase {
 	 */
 	public function test_short_url_functionality(): void {
 		$campaign = new UTMCampaign();
-		
+
 		$this->assertNull( $campaign->get_short_url() );
-		
+
 		$campaign->set_short_url( 'https://short.ly/abc123' );
-		
+
 		$this->assertEquals( 'https://short.ly/abc123', $campaign->get_short_url() );
 	}
 
@@ -258,7 +258,7 @@ class UTMCampaignTest extends TestCase {
 		];
 
 		$campaign = new UTMCampaign( $data );
-		$array = $campaign->to_array();
+		$array    = $campaign->to_array();
 
 		// Data should be sanitized
 		$this->assertStringNotContainsString( '<script>', $array['campaign_name'] );
@@ -281,7 +281,7 @@ class UTMCampaignTest extends TestCase {
 		];
 
 		$campaign = new UTMCampaign( $data );
-		$array = $campaign->to_array();
+		$array    = $campaign->to_array();
 
 		$this->assertEquals( 'email_newsletter', $array['preset_used'] );
 	}
@@ -319,7 +319,7 @@ class UTMCampaignTest extends TestCase {
 		];
 
 		$campaign = new UTMCampaign( $data );
-		
+
 		// Should handle invalid URLs gracefully
 		$this->assertIsString( $campaign->get_final_url() );
 	}
@@ -328,7 +328,7 @@ class UTMCampaignTest extends TestCase {
 	 * Test campaign timestamps
 	 */
 	public function test_campaign_timestamps(): void {
-		$now = date( 'Y-m-d H:i:s' );
+		$now  = date( 'Y-m-d H:i:s' );
 		$data = [
 			'campaign_name' => 'Test Campaign',
 			'utm_source'    => 'test',
@@ -340,7 +340,7 @@ class UTMCampaignTest extends TestCase {
 		];
 
 		$campaign = new UTMCampaign( $data );
-		$array = $campaign->to_array();
+		$array    = $campaign->to_array();
 
 		$this->assertEquals( $now, $array['created_at'] );
 		$this->assertEquals( $now, $array['updated_at'] );

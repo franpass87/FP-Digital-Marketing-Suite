@@ -18,118 +18,118 @@ use FP\DigitalMarketing\Helpers\AlertEngine;
  */
 class SyncEngine {
 
-        /**
-         * Cron hook name for sync operations
-         */
-        private const CRON_HOOK = 'fp_dms_sync_data_sources';
+		/**
+		 * Cron hook name for sync operations
+		 */
+	private const CRON_HOOK = 'fp_dms_sync_data_sources';
 
-        /**
-         * Default sync frequency option key.
-         */
-        private const DEFAULT_SYNC_OPTION = 'hourly';
+		/**
+		 * Default sync frequency option key.
+		 */
+	private const DEFAULT_SYNC_OPTION = 'hourly';
 
-        /**
-         * Supported sync frequency definitions.
-         *
-         * @var array<string, array{interval:int, slug:string}>
-         */
-        private const SYNC_FREQUENCIES = [
-                'every_15_minutes' => [
-                        'interval' => 900,
-                        'slug'     => 'fp_dms_every_15_minutes',
-                ],
-                'every_30_minutes' => [
-                        'interval' => 1800,
-                        'slug'     => 'fp_dms_every_30_minutes',
-                ],
-                'hourly' => [
-                        'interval' => 3600,
-                        'slug'     => 'hourly',
-                ],
-                'twice_daily' => [
-                        'interval' => 43200,
-                        'slug'     => 'twicedaily',
-                ],
-                'daily' => [
-                        'interval' => 86400,
-                        'slug'     => 'daily',
-                ],
-        ];
+		/**
+		 * Supported sync frequency definitions.
+		 *
+		 * @var array<string, array{interval:int, slug:string}>
+		 */
+	private const SYNC_FREQUENCIES = [
+		'every_15_minutes' => [
+			'interval' => 900,
+			'slug'     => 'fp_dms_every_15_minutes',
+		],
+		'every_30_minutes' => [
+			'interval' => 1800,
+			'slug'     => 'fp_dms_every_30_minutes',
+		],
+		'hourly'           => [
+			'interval' => 3600,
+			'slug'     => 'hourly',
+		],
+		'twice_daily'      => [
+			'interval' => 43200,
+			'slug'     => 'twicedaily',
+		],
+		'daily'            => [
+			'interval' => 86400,
+			'slug'     => 'daily',
+		],
+	];
 
-        /**
-         * Initialize sync engine
-         *
-         * @return void
-         */
-        public static function init(): void {
-                add_filter( 'cron_schedules', [ self::class, 'register_custom_cron_schedules' ] );
-                add_action( 'init', [ self::class, 'schedule_sync' ] );
-                add_action( self::CRON_HOOK, [ self::class, 'run_sync' ] );
-        }
+		/**
+		 * Initialize sync engine
+		 *
+		 * @return void
+		 */
+	public static function init(): void {
+			add_filter( 'cron_schedules', [ self::class, 'register_custom_cron_schedules' ] );
+			add_action( 'init', [ self::class, 'schedule_sync' ] );
+			add_action( self::CRON_HOOK, [ self::class, 'run_sync' ] );
+	}
 
-        /**
-         * Schedule sync if not already scheduled
-         *
-         * @return void
-         */
-        public static function schedule_sync(): void {
-                $settings = get_option( 'fp_digital_marketing_sync_settings', [] );
+		/**
+		 * Schedule sync if not already scheduled
+		 *
+		 * @return void
+		 */
+	public static function schedule_sync(): void {
+			$settings = get_option( 'fp_digital_marketing_sync_settings', [] );
 
-                if ( ! is_array( $settings ) ) {
-                        $settings = [];
-                }
+		if ( ! is_array( $settings ) ) {
+				$settings = [];
+		}
 
-                self::schedule_sync_with_settings( $settings );
-        }
+			self::schedule_sync_with_settings( $settings );
+	}
 
-        /**
-         * Schedule sync using provided settings.
-         *
-         * @param array $settings Sync settings array.
-         * @return void
-         */
-        public static function schedule_sync_with_settings( array $settings ): void {
-                if ( empty( $settings['enable_sync'] ) ) {
-                        return;
-                }
+		/**
+		 * Schedule sync using provided settings.
+		 *
+		 * @param array $settings Sync settings array.
+		 * @return void
+		 */
+	public static function schedule_sync_with_settings( array $settings ): void {
+		if ( empty( $settings['enable_sync'] ) ) {
+				return;
+		}
 
-                if ( wp_next_scheduled( self::CRON_HOOK ) ) {
-                        return;
-                }
+		if ( wp_next_scheduled( self::CRON_HOOK ) ) {
+				return;
+		}
 
-                $frequency = self::get_sync_frequency( $settings );
+			$frequency = self::get_sync_frequency( $settings );
 
-                wp_schedule_event(
-                        time() + $frequency['interval'],
-                        $frequency['slug'],
-                        self::CRON_HOOK
-                );
-        }
+			wp_schedule_event(
+				time() + $frequency['interval'],
+				$frequency['slug'],
+				self::CRON_HOOK
+			);
+	}
 
-        /**
-         * Register custom cron schedules used by the sync engine.
-         *
-         * @param array $schedules Existing cron schedules.
-         * @return array Modified cron schedules.
-         */
-        public static function register_custom_cron_schedules( array $schedules ): array {
-                $custom_frequencies = [
-                        'every_15_minutes' => __( 'Every 15 Minutes (FP DMS)', 'fp-digital-marketing' ),
-                        'every_30_minutes' => __( 'Every 30 Minutes (FP DMS)', 'fp-digital-marketing' ),
-                ];
+		/**
+		 * Register custom cron schedules used by the sync engine.
+		 *
+		 * @param array $schedules Existing cron schedules.
+		 * @return array Modified cron schedules.
+		 */
+	public static function register_custom_cron_schedules( array $schedules ): array {
+			$custom_frequencies = [
+				'every_15_minutes' => __( 'Every 15 Minutes (FP DMS)', 'fp-digital-marketing' ),
+				'every_30_minutes' => __( 'Every 30 Minutes (FP DMS)', 'fp-digital-marketing' ),
+			];
 
-                foreach ( $custom_frequencies as $key => $label ) {
-                        if ( isset( self::SYNC_FREQUENCIES[ $key ] ) ) {
-                                $definition = self::SYNC_FREQUENCIES[ $key ];
-                                $schedules[ $definition['slug'] ] = [
-                                        'interval' => $definition['interval'],
-                                        'display'  => $label,
-                                ];
-                        }
-                }
+			foreach ( $custom_frequencies as $key => $label ) {
+				if ( isset( self::SYNC_FREQUENCIES[ $key ] ) ) {
+						$definition                       = self::SYNC_FREQUENCIES[ $key ];
+						$schedules[ $definition['slug'] ] = [
+							'interval' => $definition['interval'],
+							'display'  => $label,
+						];
+				}
+			}
 
-                return $schedules;
-        }
+			return $schedules;
+	}
 
 	/**
 	 * Unschedule sync operations
@@ -150,8 +150,8 @@ class SyncEngine {
 	 */
 	public static function run_sync(): void {
 		$sync_start = microtime( true );
-		$sync_id = self::log_sync_start();
-		
+		$sync_id    = self::log_sync_start();
+
 		try {
 			// Check if sync is enabled
 			if ( ! self::is_sync_enabled() ) {
@@ -160,10 +160,10 @@ class SyncEngine {
 			}
 
 			$results = self::sync_all_data_sources();
-			
+
 			$sync_end = microtime( true );
 			$duration = round( $sync_end - $sync_start, 2 );
-			
+
 			$message = sprintf(
 				'Sync completed. Sources: %d, Records updated: %d, Errors: %d, Duration: %ss',
 				$results['sources_count'],
@@ -179,31 +179,32 @@ class SyncEngine {
 				try {
 					// Run combined monitoring (threshold alerts + anomaly detection)
 					$monitoring_results = AlertEngine::check_all_monitoring();
-					
+
 					// Log monitoring results if any alerts were triggered
 					if ( $monitoring_results['total_triggered'] > 0 ) {
-						error_log( sprintf(
-							'FP DMS Monitoring Check: %d threshold alerts, %d anomalies detected, %d total notifications sent',
-							$monitoring_results['threshold_alerts']['triggered'],
-							$monitoring_results['anomaly_detection']['anomalies_detected'],
-							$monitoring_results['total_notifications']
-						) );
+						error_log(
+							sprintf(
+								'FP DMS Monitoring Check: %d threshold alerts, %d anomalies detected, %d total notifications sent',
+								$monitoring_results['threshold_alerts']['triggered'],
+								$monitoring_results['anomaly_detection']['anomalies_detected'],
+								$monitoring_results['total_notifications']
+							)
+						);
 					}
 				} catch ( \Exception $e ) {
 					error_log( 'FP DMS Monitoring Check Error: ' . $e->getMessage() );
 				}
 			}
-
 		} catch ( \Exception $e ) {
 			$sync_end = microtime( true );
 			$duration = round( $sync_end - $sync_start, 2 );
-			
+
 			$error_message = sprintf(
 				'Sync failed: %s (Duration: %ss)',
 				$e->getMessage(),
 				$duration
 			);
-			
+
 			self::log_sync_complete( $sync_id, 'error', $error_message );
 			error_log( 'FP DMS Sync Error: ' . $e->getMessage() );
 		}
@@ -215,13 +216,13 @@ class SyncEngine {
 	 * @return array Sync results summary
 	 */
 	private static function sync_all_data_sources(): array {
-		$sources = DataSources::get_data_sources();
+		$sources           = DataSources::get_data_sources();
 		$available_sources = DataSources::get_data_sources_by_status( 'available' );
-		
+
 		$results = [
-			'sources_count' => 0,
+			'sources_count'   => 0,
 			'records_updated' => 0,
-			'errors_count' => 0,
+			'errors_count'    => 0,
 		];
 
 		// Get all clients with active sync
@@ -231,16 +232,18 @@ class SyncEngine {
 			foreach ( $available_sources as $source ) {
 				try {
 					$source_results = self::sync_data_source( $client->ID, $source );
-					$results['sources_count']++;
+					++$results['sources_count'];
 					$results['records_updated'] += $source_results['records_updated'];
 				} catch ( \Exception $e ) {
-					$results['errors_count']++;
-					error_log( sprintf(
-						'FP DMS Sync Error for client %d, source %s: %s',
-						$client->ID,
-						$source['id'],
-						$e->getMessage()
-					) );
+					++$results['errors_count'];
+					error_log(
+						sprintf(
+							'FP DMS Sync Error for client %d, source %s: %s',
+							$client->ID,
+							$source['id'],
+							$e->getMessage()
+						)
+					);
 				}
 			}
 		}
@@ -289,27 +292,29 @@ class SyncEngine {
 	 */
 	private static function sync_ga4_data( int $client_id ): int {
 		$records = 0;
-		
+
 		// Generate demo GA4 metrics for the last 30 days
-		$end_date = current_time( 'Y-m-d' );
+		$end_date   = current_time( 'Y-m-d' );
 		$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
-		
+
 		$metrics = [
-			'sessions' => rand( 1000, 5000 ),
-			'users' => rand( 800, 4000 ),
-			'pageviews' => rand( 2000, 10000 ),
-			'bounce_rate' => round( rand( 20, 80 ) / 100, 2 ),
+			'sessions'             => rand( 1000, 5000 ),
+			'users'                => rand( 800, 4000 ),
+			'pageviews'            => rand( 2000, 10000 ),
+			'bounce_rate'          => round( rand( 20, 80 ) / 100, 2 ),
 			'avg_session_duration' => rand( 60, 300 ),
 		];
 
 		foreach ( $metrics as $metric => $value ) {
-			$existing = MetricsCache::get_metrics( [
-				'client_id' => $client_id,
-				'source' => 'google_analytics_4',
-				'metric' => $metric,
-				'period_start' => $start_date . ' 00:00:00',
-				'period_end' => $end_date . ' 23:59:59',
-			] );
+			$existing = MetricsCache::get_metrics(
+				[
+					'client_id'    => $client_id,
+					'source'       => 'google_analytics_4',
+					'metric'       => $metric,
+					'period_start' => $start_date . ' 00:00:00',
+					'period_end'   => $end_date . ' 23:59:59',
+				]
+			);
 
 			if ( empty( $existing ) ) {
 				MetricsCache::save(
@@ -319,21 +324,27 @@ class SyncEngine {
 					$start_date . ' 00:00:00',
 					$end_date . ' 23:59:59',
 					$value,
-					[ 'sync_type' => 'automatic', 'sync_timestamp' => current_time( 'mysql' ) ]
+					[
+						'sync_type'      => 'automatic',
+						'sync_timestamp' => current_time( 'mysql' ),
+					]
 				);
-				$records++;
+				++$records;
 			} else {
 				// Update existing record with new value
-				MetricsCache::update( $existing[0]->id, [
-					'value' => (string) $value,
-					'meta' => [
-						'sync_type' => 'automatic',
-						'sync_timestamp' => current_time( 'mysql' ),
-						'updated' => true,
-					],
-					'fetched_at' => current_time( 'mysql' ),
-				] );
-				$records++;
+				MetricsCache::update(
+					$existing[0]->id,
+					[
+						'value'      => (string) $value,
+						'meta'       => [
+							'sync_type'      => 'automatic',
+							'sync_timestamp' => current_time( 'mysql' ),
+							'updated'        => true,
+						],
+						'fetched_at' => current_time( 'mysql' ),
+					]
+				);
+				++$records;
 			}
 		}
 
@@ -348,15 +359,15 @@ class SyncEngine {
 	 */
 	private static function sync_gsc_data( int $client_id ): int {
 		$records = 0;
-		
-		$end_date = current_time( 'Y-m-d' );
+
+		$end_date   = current_time( 'Y-m-d' );
 		$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
-		
+
 		$metrics = [
-			'clicks' => rand( 500, 2000 ),
+			'clicks'      => rand( 500, 2000 ),
 			'impressions' => rand( 5000, 20000 ),
-			'ctr' => round( rand( 5, 15 ) / 100, 3 ),
-			'position' => round( rand( 10, 50 ), 1 ),
+			'ctr'         => round( rand( 5, 15 ) / 100, 3 ),
+			'position'    => round( rand( 10, 50 ), 1 ),
 		];
 
 		foreach ( $metrics as $metric => $value ) {
@@ -367,9 +378,12 @@ class SyncEngine {
 				$start_date . ' 00:00:00',
 				$end_date . ' 23:59:59',
 				$value,
-				[ 'sync_type' => 'automatic', 'sync_timestamp' => current_time( 'mysql' ) ]
+				[
+					'sync_type'      => 'automatic',
+					'sync_timestamp' => current_time( 'mysql' ),
+				]
 			);
-			$records++;
+			++$records;
 		}
 
 		return $records;
@@ -383,16 +397,16 @@ class SyncEngine {
 	 */
 	private static function sync_facebook_data( int $client_id ): int {
 		$records = 0;
-		
-		$end_date = current_time( 'Y-m-d' );
+
+		$end_date   = current_time( 'Y-m-d' );
 		$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
-		
+
 		$metrics = [
-			'reach' => rand( 10000, 50000 ),
+			'reach'       => rand( 10000, 50000 ),
 			'impressions' => rand( 15000, 75000 ),
-			'clicks' => rand( 300, 1500 ),
-			'spend' => round( rand( 100, 1000 ), 2 ),
-			'cpm' => round( rand( 5, 25 ), 2 ),
+			'clicks'      => rand( 300, 1500 ),
+			'spend'       => round( rand( 100, 1000 ), 2 ),
+			'cpm'         => round( rand( 5, 25 ), 2 ),
 		];
 
 		foreach ( $metrics as $metric => $value ) {
@@ -403,9 +417,12 @@ class SyncEngine {
 				$start_date . ' 00:00:00',
 				$end_date . ' 23:59:59',
 				$value,
-				[ 'sync_type' => 'automatic', 'sync_timestamp' => current_time( 'mysql' ) ]
+				[
+					'sync_type'      => 'automatic',
+					'sync_timestamp' => current_time( 'mysql' ),
+				]
 			);
-			$records++;
+			++$records;
 		}
 
 		return $records;
@@ -419,9 +436,9 @@ class SyncEngine {
 	 * @return int Number of records updated
 	 */
 	private static function sync_demo_data( int $client_id, string $source_id ): int {
-		$end_date = current_time( 'Y-m-d' );
+		$end_date   = current_time( 'Y-m-d' );
 		$start_date = date( 'Y-m-d', strtotime( '-30 days' ) );
-		
+
 		// Generic demo metric
 		MetricsCache::save(
 			$client_id,
@@ -430,7 +447,10 @@ class SyncEngine {
 			$start_date . ' 00:00:00',
 			$end_date . ' 23:59:59',
 			rand( 100, 1000 ),
-			[ 'sync_type' => 'automatic', 'sync_timestamp' => current_time( 'mysql' ) ]
+			[
+				'sync_type'      => 'automatic',
+				'sync_timestamp' => current_time( 'mysql' ),
+			]
 		);
 
 		return 1;
@@ -442,18 +462,20 @@ class SyncEngine {
 	 * @return array Array of client post objects
 	 */
 	private static function get_sync_enabled_clients(): array {
-		return get_posts( [
-			'post_type'      => 'cliente',
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'meta_query'     => [
-				[
-					'key'     => '_fp_auto_sync',
-					'value'   => '1',
-					'compare' => '=',
+		return get_posts(
+			[
+				'post_type'      => 'cliente',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'meta_query'     => [
+					[
+						'key'     => '_fp_auto_sync',
+						'value'   => '1',
+						'compare' => '=',
+					],
 				],
-			],
-		] );
+			]
+		);
 	}
 
 	/**
@@ -466,29 +488,29 @@ class SyncEngine {
 		return ! empty( $settings['enable_sync'] );
 	}
 
-        /**
-         * Get sync frequency definition from settings.
-         *
-         * @param array|null $settings Optional settings array to evaluate.
-         * @return array{interval:int, slug:string} Sync frequency definition.
-         */
-        public static function get_sync_frequency( ?array $settings = null ): array {
-                if ( null === $settings ) {
-                        $settings = get_option( 'fp_digital_marketing_sync_settings', [] );
-                }
+		/**
+		 * Get sync frequency definition from settings.
+		 *
+		 * @param array|null $settings Optional settings array to evaluate.
+		 * @return array{interval:int, slug:string} Sync frequency definition.
+		 */
+	public static function get_sync_frequency( ?array $settings = null ): array {
+		if ( null === $settings ) {
+				$settings = get_option( 'fp_digital_marketing_sync_settings', [] );
+		}
 
-                if ( ! is_array( $settings ) ) {
-                        $settings = [];
-                }
+		if ( ! is_array( $settings ) ) {
+				$settings = [];
+		}
 
-                $frequency_key = $settings['sync_frequency'] ?? self::DEFAULT_SYNC_OPTION;
+			$frequency_key = $settings['sync_frequency'] ?? self::DEFAULT_SYNC_OPTION;
 
-                if ( isset( self::SYNC_FREQUENCIES[ $frequency_key ] ) ) {
-                        return self::SYNC_FREQUENCIES[ $frequency_key ];
-                }
+		if ( isset( self::SYNC_FREQUENCIES[ $frequency_key ] ) ) {
+				return self::SYNC_FREQUENCIES[ $frequency_key ];
+		}
 
-                return self::SYNC_FREQUENCIES[ self::DEFAULT_SYNC_OPTION ];
-        }
+			return self::SYNC_FREQUENCIES[ self::DEFAULT_SYNC_OPTION ];
+	}
 
 	/**
 	 * Check if sync is scheduled
@@ -517,46 +539,46 @@ class SyncEngine {
 	 *
 	 * @return array Sync results
 	 */
-        public static function trigger_manual_sync(): array {
-                $sync_start = microtime( true );
-                $sync_id = self::log_sync_start( 'manual' );
+	public static function trigger_manual_sync(): array {
+			$sync_start = microtime( true );
+			$sync_id    = self::log_sync_start( 'manual' );
 
-                try {
-                        $results = self::sync_all_data_sources();
-                        $sync_end = microtime( true );
-                        $results['duration'] = round( $sync_end - $sync_start, 2 );
-                        $results['status'] = 'success';
+		try {
+				$results             = self::sync_all_data_sources();
+				$sync_end            = microtime( true );
+				$results['duration'] = round( $sync_end - $sync_start, 2 );
+				$results['status']   = 'success';
 
-                        self::log_sync_complete(
-                                $sync_id,
-                                'success',
-                                sprintf(
-                                        'Manual sync completed. Sources: %d, Records updated: %d',
-                                        $results['sources_count'],
-                                        $results['records_updated']
-                                )
-                        );
+				self::log_sync_complete(
+					$sync_id,
+					'success',
+					sprintf(
+						'Manual sync completed. Sources: %d, Records updated: %d',
+						$results['sources_count'],
+						$results['records_updated']
+					)
+				);
 
-                        return $results;
+				return $results;
 
-                } catch ( \Exception $e ) {
-                        if ( $sync_id > 0 ) {
-                                self::log_sync_complete(
-                                        $sync_id,
-                                        'error',
-                                        'Manual sync failed: ' . $e->getMessage()
-                                );
-                        } else {
-                                error_log( 'FP DMS Manual Sync Error: ' . $e->getMessage() );
-                        }
+		} catch ( \Exception $e ) {
+			if ( $sync_id > 0 ) {
+					self::log_sync_complete(
+						$sync_id,
+						'error',
+						'Manual sync failed: ' . $e->getMessage()
+					);
+			} else {
+					error_log( 'FP DMS Manual Sync Error: ' . $e->getMessage() );
+			}
 
-                        return [
-                                'status' => 'error',
-                                'message' => $e->getMessage(),
-                                'sources_count' => 0,
-                                'records_updated' => 0,
-				'errors_count' => 1,
-			];
+				return [
+					'status'          => 'error',
+					'message'         => $e->getMessage(),
+					'sources_count'   => 0,
+					'records_updated' => 0,
+					'errors_count'    => 1,
+				];
 		}
 	}
 
@@ -568,20 +590,24 @@ class SyncEngine {
 	 */
 	private static function log_sync_start( string $type = 'automatic' ): int {
 		if ( class_exists( 'FP\DigitalMarketing\Models\SyncLog' ) ) {
-			return SyncLog::create( [
-				'sync_type' => $type,
-				'status' => 'running',
-				'started_at' => current_time( 'mysql' ),
-			] );
+			return SyncLog::create(
+				[
+					'sync_type'  => $type,
+					'status'     => 'running',
+					'started_at' => current_time( 'mysql' ),
+				]
+			);
 		}
-		
+
 		// Fallback to error_log if SyncLog is not available
-		error_log( sprintf(
-			'FP DMS Sync Started - Type: %s, Time: %s',
-			$type,
-			current_time( 'mysql' )
-		) );
-		
+		error_log(
+			sprintf(
+				'FP DMS Sync Started - Type: %s, Time: %s',
+				$type,
+				current_time( 'mysql' )
+			)
+		);
+
 		return 0;
 	}
 
@@ -595,19 +621,24 @@ class SyncEngine {
 	 */
 	private static function log_sync_complete( int $sync_id, string $status, string $message ): void {
 		if ( class_exists( 'FP\DigitalMarketing\Models\SyncLog' ) && $sync_id > 0 ) {
-			SyncLog::update( $sync_id, [
-				'status' => $status,
-				'message' => $message,
-				'completed_at' => current_time( 'mysql' ),
-			] );
+			SyncLog::update(
+				$sync_id,
+				[
+					'status'       => $status,
+					'message'      => $message,
+					'completed_at' => current_time( 'mysql' ),
+				]
+			);
 		}
-		
+
 		// Always log to error_log for now
-		error_log( sprintf(
-			'FP DMS Sync Completed - Status: %s, Message: %s, Time: %s',
-			$status,
-			$message,
-			current_time( 'mysql' )
-		) );
+		error_log(
+			sprintf(
+				'FP DMS Sync Completed - Status: %s, Message: %s, Time: %s',
+				$status,
+				$message,
+				current_time( 'mysql' )
+			)
+		);
 	}
 }

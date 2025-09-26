@@ -1,0 +1,214 @@
+
+
+Code Coverage Report:         
+  2025-09-26 17:43:04         
+                              
+ Summary:                     
+  Classes:  0.98% (1/102)     
+  Methods: 19.91% (316/1587)  
+  Lines:   22.37% (5672/25357)
+
+FP\DigitalMarketing\API\SegmentationAPI
+  Methods:   0.00% ( 0/14)   Lines:   0.00% (  0/279)
+FP\DigitalMarketing\Admin\AlertingAdmin
+  Methods:   0.00% ( 0/15)   Lines:   0.00% (  0/384)
+FP\DigitalMarketing\Admin\AnomalyDetectionAdmin
+  Methods:   0.00% ( 0/17)   Lines:   0.00% (  0/579)
+FP\DigitalMarketing\Admin\AnomalyRadar
+  Methods:   6.67% ( 1/15)   Lines:   0.49% (  2/411)
+FP\DigitalMarketing\Admin\CachePerformance
+  Methods:   0.00% ( 0/18)   Lines:   0.00% (  0/294)
+FP\DigitalMarketing\Admin\ClienteMeta
+  Methods:   0.00% ( 0/11)   Lines:   0.00% (  0/128)
+FP\DigitalMarketing\Admin\ConversionEventsAdmin
+  Methods:   0.00% ( 0/22)   Lines:   0.00% (  0/397)
+FP\DigitalMarketing\Admin\Dashboard
+  Methods:   0.00% ( 0/14)   Lines:  15.58% ( 91/584)
+FP\DigitalMarketing\Admin\FunnelAnalysisAdmin
+  Methods:   0.00% ( 0/22)   Lines:   0.00% (  0/727)
+FP\DigitalMarketing\Admin\MenuManager
+  Methods:  11.76% ( 2/17)   Lines:   5.78% ( 13/225)
+FP\DigitalMarketing\Admin\MenuRegistry
+  Methods:  50.00% ( 6/12)   Lines:  85.23% (150/176)
+FP\DigitalMarketing\Admin\OnboardingWizard
+  Methods:   5.71% ( 2/35)   Lines:   1.22% (  6/493)
+FP\DigitalMarketing\Admin\PlatformConnections
+  Methods:   0.00% ( 0/10)   Lines:   0.00% (  0/394)
+FP\DigitalMarketing\Admin\Reports
+  Methods:   3.33% ( 1/30)   Lines:   0.61% ( 10/1642)
+FP\DigitalMarketing\Admin\SecurityAdmin
+  Methods:   0.00% ( 0/ 7)   Lines:   0.00% (  0/128)
+FP\DigitalMarketing\Admin\SegmentationAdmin
+  Methods:   0.00% ( 0/25)   Lines:   1.61% (  9/559)
+FP\DigitalMarketing\Admin\SeoMeta
+  Methods:   0.00% ( 0/10)   Lines:   0.00% (  0/447)
+FP\DigitalMarketing\Admin\Settings
+  Methods:   2.50% ( 1/40)   Lines:   0.63% ( 10/1587)
+FP\DigitalMarketing\Admin\UTMCampaignManager
+  Methods:   0.00% ( 0/17)   Lines:   0.00% (  0/458)
+FP\DigitalMarketing\DataSources\CoreWebVitals
+  Methods:  33.33% ( 3/ 9)   Lines:  30.08% ( 37/123)
+FP\DigitalMarketing\DataSources\GoogleAds
+  Methods:  52.63% (10/19)   Lines:  20.75% ( 22/106)
+FP\DigitalMarketing\DataSources\GoogleAnalytics4
+  Methods:  20.00% ( 3/15)   Lines:   9.66% ( 14/145)
+FP\DigitalMarketing\DataSources\GoogleOAuth
+  Methods:  23.08% ( 3/13)   Lines:  34.12% ( 72/211)
+FP\DigitalMarketing\DataSources\GoogleReviews
+  Methods:   0.00% ( 0/ 3)   Lines:   0.00% (  0/ 75)
+FP\DigitalMarketing\DataSources\GoogleSearchConsole
+  Methods:  37.50% ( 6/16)   Lines:  17.33% ( 13/ 75)
+FP\DigitalMarketing\DataSources\MicrosoftClarity
+  Methods:  70.00% ( 7/10)   Lines:  94.53% (121/128)
+FP\DigitalMarketing\Database\AlertRulesTable
+  Methods:   0.00% ( 0/ 4)   Lines:   0.00% (  0/ 14)
+FP\DigitalMarketing\Database\AnomalyRulesTable
+  Methods:   0.00% ( 0/ 4)   Lines:   0.00% (  0/ 14)
+FP\DigitalMarketing\Database\AudienceSegmentTable
+  Methods:  21.05% ( 4/19)   Lines:  20.28% ( 29/143)
+FP\DigitalMarketing\Database\ConversionEventsTable
+  Methods:  23.81% ( 5/21)   Lines:  35.29% (114/323)
+FP\DigitalMarketing\Database\CustomReportsTable
+  Methods:   6.25% ( 1/16)   Lines:  33.82% ( 70/207)
+FP\DigitalMarketing\Database\CustomerJourneyTable
+  Methods:   0.00% ( 0/16)   Lines:   0.00% (  0/294)
+FP\DigitalMarketing\Database\DatabaseUtils
+  Methods:  33.33% ( 1/ 3)   Lines:  43.75% ( 14/ 32)
+FP\DigitalMarketing\Database\DetectedAnomaliesTable
+  Methods:   0.00% ( 0/ 4)   Lines:   0.00% (  0/ 14)
+FP\DigitalMarketing\Database\FunnelTable
+  Methods:   0.00% ( 0/19)   Lines:   0.00% (  0/149)
+FP\DigitalMarketing\Database\MetricsCacheTable
+  Methods:  25.00% ( 1/ 4)   Lines:   7.14% (  1/ 14)
+FP\DigitalMarketing\Database\SocialSentimentTable
+  Methods:   5.00% ( 1/20)   Lines:   9.84% ( 48/488)
+FP\DigitalMarketing\Database\UTMCampaignsTable
+  Methods:  80.00% ( 4/ 5)   Lines:  94.12% ( 16/ 17)
+FP\DigitalMarketing\DigitalMarketingSuite
+  Methods:   0.00% ( 0/53)   Lines:   0.00% (  0/429)
+FP\DigitalMarketing\Helpers\AdminOptimizations
+  Methods:   0.00% ( 0/16)   Lines:   1.34% (  4/298)
+FP\DigitalMarketing\Helpers\AlertEngine
+  Methods:   9.09% ( 2/22)   Lines:  18.92% ( 63/333)
+FP\DigitalMarketing\Helpers\AnomalyDetector
+  Methods:  41.67% ( 5/12)   Lines:  81.55% (137/168)
+FP\DigitalMarketing\Helpers\AnomalySuggestionEngine
+  Methods:   0.00% ( 0/12)   Lines:   0.00% (  0/390)
+FP\DigitalMarketing\Helpers\CacheBenchmark
+  Methods:  38.46% ( 5/13)   Lines:  82.57% (251/304)
+FP\DigitalMarketing\Helpers\Capabilities
+  Methods:  35.71% ( 5/14)   Lines:  58.50% ( 86/147)
+FP\DigitalMarketing\Helpers\ConnectionManager
+  Methods:  15.38% ( 2/13)   Lines:  20.79% ( 58/279)
+FP\DigitalMarketing\Helpers\ContentSeoAnalyzer
+  Methods:  37.50% ( 6/16)   Lines:  90.60% (270/298)
+FP\DigitalMarketing\Helpers\ConversionEventManager
+  Methods:  25.00% ( 3/12)   Lines:  59.79% (168/281)
+FP\DigitalMarketing\Helpers\ConversionEventRegistry
+  Methods:  52.94% ( 9/17)   Lines:  84.95% (237/279)
+FP\DigitalMarketing\Helpers\CoreWebVitalsHelper
+  Methods:   0.00% ( 0/ 6)   Lines:   0.00% (  0/164)
+FP\DigitalMarketing\Helpers\DashboardWidgets
+  Methods:  16.67% ( 1/ 6)   Lines:   3.06% (  7/229)
+FP\DigitalMarketing\Helpers\DataExporter
+  Methods:  20.83% ( 5/24)   Lines:  22.82% (102/447)
+FP\DigitalMarketing\Helpers\DataSources
+  Methods: 100.00% ( 5/ 5)   Lines: 100.00% (194/194)
+FP\DigitalMarketing\Helpers\EmailNotifications
+  Methods:   7.41% ( 2/27)   Lines:   4.76% ( 15/315)
+FP\DigitalMarketing\Helpers\FAQBlock
+  Methods:   0.00% ( 0/ 6)   Lines:   0.00% (  0/ 76)
+FP\DigitalMarketing\Helpers\FrontendTracking
+  Methods:   0.00% ( 0/ 3)   Lines:   0.00% (  0/  5)
+FP\DigitalMarketing\Helpers\MenuMigration
+  Methods:   0.00% ( 0/ 3)   Lines:   0.00% (  0/ 54)
+FP\DigitalMarketing\Helpers\MenuOrganizer
+  Methods:   0.00% ( 0/ 3)   Lines:   0.00% (  0/ 92)
+FP\DigitalMarketing\Helpers\MetricsAggregator
+  Methods:  40.62% (13/32)   Lines:  46.30% (288/622)
+FP\DigitalMarketing\Helpers\MetricsSchema
+  Methods:  80.00% ( 8/10)   Lines:  93.80% (242/258)
+FP\DigitalMarketing\Helpers\PerformanceCache
+  Methods:  43.18% (19/44)   Lines:  75.15% (369/491)
+FP\DigitalMarketing\Helpers\ReportGenerator
+  Methods:  68.75% (11/16)   Lines:  88.89% (248/279)
+FP\DigitalMarketing\Helpers\ReportScheduler
+  Methods:   0.00% ( 0/ 8)   Lines:   0.00% (  0/ 85)
+FP\DigitalMarketing\Helpers\RuntimeLogger
+  Methods:   0.00% ( 0/12)   Lines:   0.00% (  0/109)
+FP\DigitalMarketing\Helpers\SchemaGenerator
+  Methods:  54.55% ( 6/11)   Lines:  78.26% ( 54/ 69)
+FP\DigitalMarketing\Helpers\Schema\ArticleSchema
+  Methods:  37.50% ( 3/ 8)   Lines:  92.47% ( 86/ 93)
+FP\DigitalMarketing\Helpers\Schema\BaseSchema
+  Methods:  37.50% ( 3/ 8)   Lines:  76.47% ( 39/ 51)
+FP\DigitalMarketing\Helpers\Schema\BreadcrumbListSchema
+  Methods:   0.00% ( 0/ 8)   Lines:   0.00% (  0/155)
+FP\DigitalMarketing\Helpers\Schema\FAQSchema
+  Methods:   0.00% ( 0/13)   Lines:   0.00% (  0/114)
+FP\DigitalMarketing\Helpers\Schema\OrganizationSchema
+  Methods:  20.00% ( 1/ 5)   Lines:  78.85% ( 41/ 52)
+FP\DigitalMarketing\Helpers\Schema\WebSiteSchema
+  Methods:  66.67% ( 2/ 3)   Lines:  93.10% ( 27/ 29)
+FP\DigitalMarketing\Helpers\SecretsManager
+  Methods:   0.00% ( 0/ 6)   Lines:  14.94% ( 13/ 87)
+FP\DigitalMarketing\Helpers\Security
+  Methods:  50.00% ( 9/18)   Lines:  71.65% (182/254)
+FP\DigitalMarketing\Helpers\SegmentationEngine
+  Methods:   7.41% ( 2/27)   Lines:   8.14% ( 28/344)
+FP\DigitalMarketing\Helpers\SegmentationRulesValidator
+  Methods:   0.00% ( 0/ 2)   Lines:  51.28% ( 60/117)
+FP\DigitalMarketing\Helpers\SeoFrontendOutput
+  Methods:   0.00% ( 0/ 6)   Lines:   0.00% (  0/ 93)
+FP\DigitalMarketing\Helpers\SeoMetadata
+  Methods:  29.41% ( 5/17)   Lines:  43.22% ( 86/199)
+FP\DigitalMarketing\Helpers\SiteHealth
+  Methods:  33.33% ( 2/ 6)   Lines:  89.39% (160/179)
+FP\DigitalMarketing\Helpers\SyncEngine
+  Methods:  15.00% ( 3/20)   Lines:  21.84% ( 69/316)
+FP\DigitalMarketing\Helpers\URLShortener
+  Methods:   0.00% ( 0/22)   Lines:   0.00% (  0/172)
+FP\DigitalMarketing\Helpers\UTMGenerator
+  Methods:  77.78% ( 7/ 9)   Lines:  97.53% ( 79/ 81)
+FP\DigitalMarketing\Helpers\XmlSitemap
+  Methods:  54.55% (12/22)   Lines:  72.60% (151/208)
+FP\DigitalMarketing\Models\AlertRule
+  Methods:  22.22% ( 2/ 9)   Lines:  13.71% ( 17/124)
+FP\DigitalMarketing\Models\AnomalyRule
+  Methods:   0.00% ( 0/11)   Lines:   0.00% (  0/165)
+FP\DigitalMarketing\Models\AudienceSegment
+  Methods:  67.86% (19/28)   Lines:  72.84% ( 59/ 81)
+FP\DigitalMarketing\Models\ConversionEvent
+  Methods:  30.00% (18/60)   Lines:  52.56% (113/215)
+FP\DigitalMarketing\Models\CoreWebVitals
+  Methods:  10.00% ( 1/10)   Lines:  77.30% (126/163)
+FP\DigitalMarketing\Models\CustomReport
+  Methods:   0.00% ( 0/32)   Lines:   0.00% (  0/243)
+FP\DigitalMarketing\Models\CustomerJourney
+  Methods:  23.81% ( 5/21)   Lines:  25.12% ( 54/215)
+FP\DigitalMarketing\Models\DetectedAnomaly
+  Methods:   0.00% ( 0/ 8)   Lines:   0.00% (  0/167)
+FP\DigitalMarketing\Models\Funnel
+  Methods:  33.33% (11/33)   Lines:  21.05% ( 40/190)
+FP\DigitalMarketing\Models\MetricsCache
+  Methods:  58.62% (17/29)   Lines:  86.42% (331/383)
+FP\DigitalMarketing\Models\SocialSentiment
+  Methods:   0.00% ( 0/39)   Lines:   0.00% (  0/291)
+FP\DigitalMarketing\Models\SyncLog
+  Methods:  10.00% ( 2/20)   Lines:  27.19% ( 62/228)
+FP\DigitalMarketing\Models\UTMCampaign
+  Methods:  69.57% (16/23)   Lines:  60.00% (117/195)
+FP\DigitalMarketing\Performance\BenchmarkMath
+  Methods:  33.33% ( 2/ 6)   Lines:  80.00% ( 20/ 25)
+FP\DigitalMarketing\PostTypes\ClientePostType
+  Methods:   0.00% ( 0/ 2)   Lines:   0.00% (  0/ 44)
+FP\DigitalMarketing\Setup\SettingsManager
+  Methods:  25.00% ( 4/16)   Lines:  34.17% ( 41/120)
+FP\DigitalMarketing\Setup\SetupWizard
+  Methods:   0.00% ( 0/19)   Lines:   0.00% (  0/316)
+FP\DigitalMarketing\Tools\Exports\ConversionsExporter
+  Methods:   0.00% ( 0/ 9)   Lines:   0.00% (  0/102)
+FP\DigitalMarketing\Tools\Exports\CsvExporter
+  Methods:  25.00% ( 1/ 4)   Lines:  48.48% ( 16/ 33)
+FP\DigitalMarketing\Tools\MigrationTools
+  Methods:   0.00% ( 0/21)   Lines:   0.00% (  0/352)

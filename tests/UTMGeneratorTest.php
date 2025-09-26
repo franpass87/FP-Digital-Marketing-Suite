@@ -19,7 +19,7 @@ class UTMGeneratorTest extends TestCase {
 	 * Test URL generation with valid parameters
 	 */
 	public function test_generate_utm_url_valid_parameters(): void {
-		$base_url = 'https://example.com/landing-page';
+		$base_url   = 'https://example.com/landing-page';
 		$utm_params = [
 			'source'   => 'google',
 			'medium'   => 'cpc',
@@ -42,7 +42,7 @@ class UTMGeneratorTest extends TestCase {
 	 * Test URL generation with only required parameters
 	 */
 	public function test_generate_utm_url_required_only(): void {
-		$base_url = 'https://example.com';
+		$base_url   = 'https://example.com';
 		$utm_params = [
 			'source'   => 'facebook',
 			'medium'   => 'social',
@@ -62,7 +62,7 @@ class UTMGeneratorTest extends TestCase {
 	 * Test URL generation with missing required parameters
 	 */
 	public function test_generate_utm_url_missing_required(): void {
-		$base_url = 'https://example.com';
+		$base_url   = 'https://example.com';
 		$utm_params = [
 			'source' => 'google',
 			'medium' => 'cpc',
@@ -78,7 +78,7 @@ class UTMGeneratorTest extends TestCase {
 	 * Test URL generation with invalid base URL
 	 */
 	public function test_generate_utm_url_invalid_base_url(): void {
-		$base_url = '';
+		$base_url   = '';
 		$utm_params = [
 			'source'   => 'google',
 			'medium'   => 'cpc',
@@ -94,7 +94,7 @@ class UTMGeneratorTest extends TestCase {
 	 * Test URL generation with existing query parameters
 	 */
 	public function test_generate_utm_url_with_existing_params(): void {
-		$base_url = 'https://example.com/page?existing=param&another=value';
+		$base_url   = 'https://example.com/page?existing=param&another=value';
 		$utm_params = [
 			'source'   => 'newsletter',
 			'medium'   => 'email',
@@ -114,7 +114,7 @@ class UTMGeneratorTest extends TestCase {
 	 * Test URL generation removes existing UTM parameters
 	 */
 	public function test_generate_utm_url_removes_existing_utm(): void {
-		$base_url = 'https://example.com?utm_source=old&utm_medium=old&other=keep';
+		$base_url   = 'https://example.com?utm_source=old&utm_medium=old&other=keep';
 		$utm_params = [
 			'source'   => 'new',
 			'medium'   => 'new',
@@ -309,7 +309,7 @@ class UTMGeneratorTest extends TestCase {
 	 * Test parameter sanitization
 	 */
 	public function test_utm_parameter_sanitization(): void {
-		$base_url = 'https://example.com';
+		$base_url   = 'https://example.com';
 		$utm_params = [
 			'source'   => 'Google Ads',
 			'medium'   => 'CPC Campaign',
@@ -328,7 +328,7 @@ class UTMGeneratorTest extends TestCase {
 	 * Test URL with fragment
 	 */
 	public function test_generate_utm_url_with_fragment(): void {
-		$base_url = 'https://example.com/page#section';
+		$base_url   = 'https://example.com/page#section';
 		$utm_params = [
 			'source'   => 'test',
 			'medium'   => 'test',

@@ -1,8 +1,15 @@
+# === Build artifacts ===
+dist/
+*.zip
+*.tar.gz
+*.sha256
+
 # Dependency directories
 /vendor/
 /node_modules/
 
 # Composer
+dependency.lock
 composer.lock
 
 # IDE files
@@ -23,6 +30,7 @@ Thumbs.db
 
 # Log files
 *.log
+!docs/audit/runtime-issues.log
 logs/
 
 # Cache directories
@@ -31,14 +39,6 @@ tmp/
 
 # Build directories
 build/
-dist/
-
-# Release packages
-*.zip
-*.tar.gz
-*.sha256
-release-notes.md
-wordpress-deployment.md
 
 # Environment files
 .env
@@ -67,6 +67,7 @@ coverage/
 .coverage/
 coverage.xml
 clover.xml
+!docs/coverage/
 
 # Temporary i18n generation scripts (not part of the plugin)
 /tmp/generate-pot.php

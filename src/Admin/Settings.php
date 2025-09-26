@@ -138,32 +138,32 @@ class Settings {
 			add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
 		}
 		add_action( 'admin_init', [ $this, 'handle_cache_actions' ] );
-                add_action( 'admin_init', [ $this, 'register_settings' ] );
-                add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );
-                add_action( 'admin_init', [ $this, 'handle_gsc_oauth_callback' ] );
-                add_action( 'wp_ajax_fp_clear_sitemap_cache', [ $this, 'handle_clear_sitemap_cache' ] );
-                add_action( 'wp_ajax_fp_warmup_cache', [ $this, 'handle_cache_warmup' ] );
-                add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
-                add_action( 'fp_dms_cache_warmup', [ $this, 'scheduled_cache_warmup' ] );
-                add_action(
-                        'update_option_' . self::OPTION_SYNC,
-                        [ $this, 'handle_sync_settings_update' ],
-                        10,
-                        3
-                );
-        }
+				add_action( 'admin_init', [ $this, 'register_settings' ] );
+				add_action( 'admin_init', [ $this, 'handle_ga4_oauth_callback' ] );
+				add_action( 'admin_init', [ $this, 'handle_gsc_oauth_callback' ] );
+				add_action( 'wp_ajax_fp_clear_sitemap_cache', [ $this, 'handle_clear_sitemap_cache' ] );
+				add_action( 'wp_ajax_fp_warmup_cache', [ $this, 'handle_cache_warmup' ] );
+				add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
+				add_action( 'fp_dms_cache_warmup', [ $this, 'scheduled_cache_warmup' ] );
+				add_action(
+					'update_option_' . self::OPTION_SYNC,
+					[ $this, 'handle_sync_settings_update' ],
+					10,
+					3
+				);
+	}
 
 	/**
 	 * Add admin menu page
-	 * 
+	 *
 	 * Note: This method is disabled when MenuManager is active to prevent
 	 * duplicate menu registrations in the rationalized menu structure.
 	 *
 	 * @return void
 	 */
 	public function add_admin_menu(): void {
-                // Check if centralized MenuManager is active
-                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+				// Check if centralized MenuManager is active
+		if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
 			// MenuManager will handle menu registration
 			return;
 		}
@@ -214,13 +214,13 @@ class Settings {
 			'fpDmsSettings',
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce' => wp_create_nonce( 'fp_dms_settings_nonce' ),
+				'nonce'   => wp_create_nonce( 'fp_dms_settings_nonce' ),
 				'strings' => [
-					'loading' => __( 'Caricamento...', 'fp-digital-marketing' ),
-					'saved' => __( 'Impostazioni salvate con successo!', 'fp-digital-marketing' ),
-					'error' => __( 'Errore durante il salvataggio delle impostazioni.', 'fp-digital-marketing' ),
+					'loading'      => __( 'Caricamento...', 'fp-digital-marketing' ),
+					'saved'        => __( 'Impostazioni salvate con successo!', 'fp-digital-marketing' ),
+					'error'        => __( 'Errore durante il salvataggio delle impostazioni.', 'fp-digital-marketing' ),
 					'confirmReset' => __( 'Sei sicuro di voler ripristinare le impostazioni predefinite?', 'fp-digital-marketing' ),
-				]
+				],
 			]
 		);
 	}
@@ -482,25 +482,25 @@ class Settings {
 					);
 					break;
 
-                                case 'invalid_nonce':
-                                        add_settings_error(
-                                                'cache_settings',
-                                                'invalid_nonce',
-                                                __( 'Impossibile verificare la richiesta. Riprova.', 'fp-digital-marketing' ),
-                                                'error'
-                                        );
-                                        break;
+				case 'invalid_nonce':
+						add_settings_error(
+							'cache_settings',
+							'invalid_nonce',
+							__( 'Impossibile verificare la richiesta. Riprova.', 'fp-digital-marketing' ),
+							'error'
+						);
+					break;
 
-                                case 'insufficient_permissions':
-                                        add_settings_error(
-                                                'cache_settings',
-                                                'insufficient_permissions',
-                                                __( 'Non hai i permessi per eseguire questa operazione.', 'fp-digital-marketing' ),
-                                                'error'
-                                        );
-                                        break;
-                        }
-                }
+				case 'insufficient_permissions':
+						add_settings_error(
+							'cache_settings',
+							'insufficient_permissions',
+							__( 'Non hai i permessi per eseguire questa operazione.', 'fp-digital-marketing' ),
+							'error'
+						);
+					break;
+			}
+		}
 
 		?>
 		<div class="wrap">
@@ -618,33 +618,33 @@ class Settings {
 	 * @return void
 	 */
 	public function render_api_keys_field(): void {
-               $api_keys = SecretsManager::get_api_keys();
-               $display_context = SecretsManager::prepare_for_display( $api_keys );
-               $display_api_keys = $display_context['values'];
-               $decryption_errors = $display_context['errors'];
+				$api_keys          = SecretsManager::get_api_keys();
+				$display_context   = SecretsManager::prepare_for_display( $api_keys );
+				$display_api_keys  = $display_context['values'];
+				$decryption_errors = $display_context['errors'];
 
-               $oauth = new GoogleOAuth();
-               $connection_status = $oauth->get_connection_status();
-               ?>
-               <div class="ga4-configuration">
-                       <h4><?php esc_html_e( 'Google Analytics 4', 'fp-digital-marketing' ); ?></h4>
+				$oauth             = new GoogleOAuth();
+				$connection_status = $oauth->get_connection_status();
+		?>
+				<div class="ga4-configuration">
+						<h4><?php esc_html_e( 'Google Analytics 4', 'fp-digital-marketing' ); ?></h4>
 
-                       <?php if ( ! empty( $decryption_errors ) ) : ?>
-                               <div class="notice notice-warning inline">
-                                       <p>
-                                               <?php esc_html_e( 'Impossibile decifrare alcune chiavi sensibili. Inserisci nuovamente i valori e salvali.', 'fp-digital-marketing' ); ?>
-                                       </p>
-                               </div>
-                       <?php endif; ?>
+						<?php if ( ! empty( $decryption_errors ) ) : ?>
+								<div class="notice notice-warning inline">
+										<p>
+												<?php esc_html_e( 'Impossibile decifrare alcune chiavi sensibili. Inserisci nuovamente i valori e salvali.', 'fp-digital-marketing' ); ?>
+										</p>
+								</div>
+						<?php endif; ?>
 
-                       <table class="form-table">
+						<table class="form-table">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Client ID', 'fp-digital-marketing' ); ?></th>
 					<td>
-		                                <input
-		                                        type="text"
-		                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_id]"
-		                                        value="<?php echo esc_attr( $display_api_keys['google_client_id'] ?? '' ); ?>"
+										<input
+												type="text"
+												name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_id]"
+												value="<?php echo esc_attr( $display_api_keys['google_client_id'] ?? '' ); ?>"
 							class="regular-text"
 							placeholder="<?php esc_attr_e( 'Google OAuth Client ID', 'fp-digital-marketing' ); ?>"
 						/>
@@ -656,10 +656,10 @@ class Settings {
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Client Secret', 'fp-digital-marketing' ); ?></th>
 					<td>
-		                                <input
-		                                        type="password"
-		                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_secret]"
-		                                        value="<?php echo esc_attr( $display_api_keys['google_client_secret'] ?? '' ); ?>"
+										<input
+												type="password"
+												name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_client_secret]"
+												value="<?php echo esc_attr( $display_api_keys['google_client_secret'] ?? '' ); ?>"
 							class="regular-text"
 							placeholder="<?php esc_attr_e( 'Google OAuth Client Secret', 'fp-digital-marketing' ); ?>"
 						/>
@@ -671,10 +671,10 @@ class Settings {
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Property ID', 'fp-digital-marketing' ); ?></th>
 					<td>
-		                                <input
-		                                        type="text"
-		                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[ga4_property_id]"
-		                                        value="<?php echo esc_attr( $display_api_keys['ga4_property_id'] ?? '' ); ?>"
+										<input
+												type="text"
+												name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[ga4_property_id]"
+												value="<?php echo esc_attr( $display_api_keys['ga4_property_id'] ?? '' ); ?>"
 							class="regular-text"
 							placeholder="<?php esc_attr_e( 'GA4 Property ID (es: 123456789)', 'fp-digital-marketing' ); ?>"
 						/>
@@ -692,12 +692,12 @@ class Settings {
 					<?php echo esc_html( $connection_status['status'] ); ?>
 				</p>
 
-				<?php if ( $oauth->is_configured() ): ?>
-					<?php if ( ! $connection_status['connected'] ): ?>
+				<?php if ( $oauth->is_configured() ) : ?>
+					<?php if ( ! $connection_status['connected'] ) : ?>
 						<a href="<?php echo esc_url( $oauth->get_authorization_url() ); ?>" class="button button-primary">
 							<?php esc_html_e( 'Connetti a Google Analytics', 'fp-digital-marketing' ); ?>
 						</a>
-					<?php else: ?>
+					<?php else : ?>
 						<form method="post" style="display: inline;">
 							<?php wp_nonce_field( 'ga4_disconnect', 'ga4_disconnect_nonce' ); ?>
 							<input type="hidden" name="action" value="ga4_disconnect">
@@ -705,18 +705,18 @@ class Settings {
 								<?php esc_html_e( 'Disconnetti', 'fp-digital-marketing' ); ?>
 							</button>
 						</form>
-						<?php if ( isset( $connection_status['expires_at'] ) ): ?>
+						<?php if ( isset( $connection_status['expires_at'] ) ) : ?>
 							<p class="description">
-								<?php 
-								printf( 
+								<?php
+								printf(
 									esc_html__( 'Token scade il: %s', 'fp-digital-marketing' ),
 									esc_html( $connection_status['expires_at'] )
-								); 
+								);
 								?>
 							</p>
 						<?php endif; ?>
 					<?php endif; ?>
-				<?php else: ?>
+				<?php else : ?>
 					<p class="description">
 						<?php esc_html_e( 'Salva prima le credenziali Client ID e Client Secret per abilitare la connessione.', 'fp-digital-marketing' ); ?>
 					</p>
@@ -737,19 +737,19 @@ class Settings {
 			</style>
 		</div>
 
-                <div class="gsc-configuration">
-                        <h4><?php esc_html_e( 'Google Search Console', 'fp-digital-marketing' ); ?></h4>
+				<div class="gsc-configuration">
+						<h4><?php esc_html_e( 'Google Search Console', 'fp-digital-marketing' ); ?></h4>
 			
 			<table class="form-table">
 				<tr>
 					<th scope="row"><?php esc_html_e( 'Site URL', 'fp-digital-marketing' ); ?></th>
 					<td>
-		                                <input
-		                                        type="url"
-		                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[gsc_site_url]"
-		                                        value="<?php echo esc_attr( $display_api_keys['gsc_site_url'] ?? '' ); ?>"
+										<input
+												type="url"
+												name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[gsc_site_url]"
+												value="<?php echo esc_attr( $display_api_keys['gsc_site_url'] ?? '' ); ?>"
 							class="regular-text"
-							placeholder="<?php printf( esc_attr__( '%s o sc-domain:%s', 'fp-digital-marketing' ), get_site_url() . '/', parse_url( get_site_url(), PHP_URL_HOST ) ); ?>"
+							placeholder="<?php printf( esc_attr__( '%1$s o sc-domain:%2$s', 'fp-digital-marketing' ), get_site_url() . '/', parse_url( get_site_url(), PHP_URL_HOST ) ); ?>"
 						/>
 						<p class="description">
 							<?php esc_html_e( 'URL del sito o dominio configurato in Search Console', 'fp-digital-marketing' ); ?>
@@ -762,7 +762,7 @@ class Settings {
 				<h4><?php esc_html_e( 'Stato Connessione Search Console', 'fp-digital-marketing' ); ?></h4>
 				<p class="gsc-status <?php echo esc_attr( $connection_status['class'] ); ?>">
 					<span class="status-indicator"></span>
-					<?php 
+					<?php
 					if ( ! empty( $api_keys['gsc_site_url'] ) && $oauth->is_authenticated() ) {
 						esc_html_e( 'Connesso', 'fp-digital-marketing' );
 					} else {
@@ -771,59 +771,59 @@ class Settings {
 					?>
 				</p>
 
-				<?php if ( $oauth->is_authenticated() && ! empty( $api_keys['gsc_site_url'] ) ): ?>
+				<?php if ( $oauth->is_authenticated() && ! empty( $api_keys['gsc_site_url'] ) ) : ?>
 					<p class="description">
 						<?php esc_html_e( 'Search Console è configurato e pronto per raccogliere dati.', 'fp-digital-marketing' ); ?>
 					</p>
-				<?php else: ?>
+				<?php else : ?>
 					<p class="description">
 						<?php esc_html_e( 'Configura prima Google Analytics 4 per abilitare Search Console (stesse credenziali OAuth).', 'fp-digital-marketing' ); ?>
 					</p>
 				<?php endif; ?>
 			</div>
-                </div>
+				</div>
 
-                <div class="google-reviews-configuration">
-                        <h4><?php esc_html_e( 'Google Reviews', 'fp-digital-marketing' ); ?></h4>
+				<div class="google-reviews-configuration">
+						<h4><?php esc_html_e( 'Google Reviews', 'fp-digital-marketing' ); ?></h4>
 
-                        <table class="form-table">
-                                <tr>
-                                        <th scope="row"><?php esc_html_e( 'API Key', 'fp-digital-marketing' ); ?></th>
-                                        <td>
-                                                <input
-                                                        type="password"
-                                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_reviews_api_key]"
-                                                        value="<?php echo esc_attr( $display_api_keys['google_reviews_api_key'] ?? '' ); ?>"
-                                                        class="regular-text"
-                                                        placeholder="<?php esc_attr_e( 'Google Places API Key', 'fp-digital-marketing' ); ?>"
-                                                />
-                                                <p class="description">
-                                                        <?php esc_html_e( 'Chiave API di Google Places utilizzata per scaricare le recensioni reali dei clienti.', 'fp-digital-marketing' ); ?>
-                                                </p>
-                                        </td>
-                                </tr>
-                                <tr>
-                                        <th scope="row"><?php esc_html_e( 'Place ID predefinito', 'fp-digital-marketing' ); ?></th>
-                                        <td>
-                                                <input
-                                                        type="text"
-                                                        name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_reviews_place_id]"
-                                                        value="<?php echo esc_attr( $display_api_keys['google_reviews_place_id'] ?? '' ); ?>"
-                                                        class="regular-text"
-                                                        placeholder="<?php esc_attr_e( 'es: ChIJN1t_tDeuEmsRUsoyG83frY4', 'fp-digital-marketing' ); ?>"
-                                                />
-                                                <p class="description">
-                                                        <?php esc_html_e( 'Utilizzato come fallback quando un cliente non ha un Place ID specificato nella propria scheda.', 'fp-digital-marketing' ); ?>
-                                                </p>
-                                                <p class="description">
-                                                        <?php esc_html_e( 'Ogni cliente può definire un Place ID personalizzato nella sezione "Informazioni Cliente".', 'fp-digital-marketing' ); ?>
-                                                </p>
-                                        </td>
-                                </tr>
-                        </table>
-                </div>
+						<table class="form-table">
+								<tr>
+										<th scope="row"><?php esc_html_e( 'API Key', 'fp-digital-marketing' ); ?></th>
+										<td>
+												<input
+														type="password"
+														name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_reviews_api_key]"
+														value="<?php echo esc_attr( $display_api_keys['google_reviews_api_key'] ?? '' ); ?>"
+														class="regular-text"
+														placeholder="<?php esc_attr_e( 'Google Places API Key', 'fp-digital-marketing' ); ?>"
+												/>
+												<p class="description">
+														<?php esc_html_e( 'Chiave API di Google Places utilizzata per scaricare le recensioni reali dei clienti.', 'fp-digital-marketing' ); ?>
+												</p>
+										</td>
+								</tr>
+								<tr>
+										<th scope="row"><?php esc_html_e( 'Place ID predefinito', 'fp-digital-marketing' ); ?></th>
+										<td>
+												<input
+														type="text"
+														name="<?php echo esc_attr( self::OPTION_API_KEYS ); ?>[google_reviews_place_id]"
+														value="<?php echo esc_attr( $display_api_keys['google_reviews_place_id'] ?? '' ); ?>"
+														class="regular-text"
+														placeholder="<?php esc_attr_e( 'es: ChIJN1t_tDeuEmsRUsoyG83frY4', 'fp-digital-marketing' ); ?>"
+												/>
+												<p class="description">
+														<?php esc_html_e( 'Utilizzato come fallback quando un cliente non ha un Place ID specificato nella propria scheda.', 'fp-digital-marketing' ); ?>
+												</p>
+												<p class="description">
+														<?php esc_html_e( 'Ogni cliente può definire un Place ID personalizzato nella sezione "Informazioni Cliente".', 'fp-digital-marketing' ); ?>
+												</p>
+										</td>
+								</tr>
+						</table>
+				</div>
 
-                <div class="clarity-configuration">
+				<div class="clarity-configuration">
 			<h4><?php esc_html_e( 'Microsoft Clarity', 'fp-digital-marketing' ); ?></h4>
 			
 			<div class="notice notice-info inline">
@@ -856,26 +856,28 @@ class Settings {
 
 			<div class="clarity-connection-status">
 				<h4><?php esc_html_e( 'Stato Configurazione Clarity', 'fp-digital-marketing' ); ?></h4>
-				<?php 
+				<?php
 				// Check how many clients have Clarity configured
-				$clients_with_clarity = get_posts([
-					'post_type' => 'cliente',
-					'meta_query' => [
-						[
-							'key' => \FP\DigitalMarketing\Admin\ClienteMeta::META_CLARITY_PROJECT_ID,
-							'value' => '',
-							'compare' => '!='
-						]
-					],
-					'fields' => 'ids'
-				]);
-				
+				$clients_with_clarity = get_posts(
+					[
+						'post_type'  => 'cliente',
+						'meta_query' => [
+							[
+								'key'     => \FP\DigitalMarketing\Admin\ClienteMeta::META_CLARITY_PROJECT_ID,
+								'value'   => '',
+								'compare' => '!=',
+							],
+						],
+						'fields'     => 'ids',
+					]
+				);
+
 				$clarity_status = count( $clients_with_clarity ) > 0 ? 'connected' : 'disconnected';
-				$clarity_count = count( $clients_with_clarity );
+				$clarity_count  = count( $clients_with_clarity );
 				?>
 				<p class="clarity-status <?php echo esc_attr( $clarity_status ); ?>">
 					<span class="status-indicator"></span>
-					<?php 
+					<?php
 					if ( $clarity_count > 0 ) {
 						/* translators: %d: number of clients with Clarity configured */
 						echo esc_html( sprintf( _n( '%d cliente configurato', '%d clienti configurati', $clarity_count, 'fp-digital-marketing' ), $clarity_count ) );
@@ -885,11 +887,11 @@ class Settings {
 					?>
 				</p>
 
-				<?php if ( $clarity_count > 0 ): ?>
+				<?php if ( $clarity_count > 0 ) : ?>
 					<p class="description">
 						<?php esc_html_e( 'Microsoft Clarity è configurato e pronto per raccogliere dati dai siti web dei clienti.', 'fp-digital-marketing' ); ?>
 					</p>
-				<?php else: ?>
+				<?php else : ?>
 					<p class="description">
 						<?php esc_html_e( 'Configura Microsoft Clarity per i tuoi clienti per iniziare a monitorare i loro siti web.', 'fp-digital-marketing' ); ?>
 					</p>
@@ -919,81 +921,85 @@ class Settings {
 	 * @param mixed $input The input data.
 	 * @return array Sanitized and encrypted API keys array.
 	 */
-        public function sanitize_api_keys( $input ): array {
-                if ( ! is_array( $input ) ) {
-                        return [];
-                }
+	public function sanitize_api_keys( $input ): array {
+		if ( ! is_array( $input ) ) {
+				return [];
+		}
 
-                $current_keys = SecretsManager::get_api_keys();
+			$current_keys = SecretsManager::get_api_keys();
 
-                if ( ! isset( $_REQUEST['_wpnonce_settings'] ) ) {
-                        return $current_keys;
-                }
+		if ( ! isset( $_REQUEST['_wpnonce_settings'] ) ) {
+				return $current_keys;
+		}
 
-                if ( ! Security::verify_nonce_with_logging( self::NONCE_ACTION, '_wpnonce_settings' ) ) {
-                        add_settings_error(
-                                self::OPTION_API_KEYS,
-                                'invalid_nonce',
-                                __( 'Impossibile verificare la richiesta. Riprova.', 'fp-digital-marketing' ),
-                                'error'
-                        );
+		if ( ! Security::verify_nonce_with_logging( self::NONCE_ACTION, '_wpnonce_settings' ) ) {
+				add_settings_error(
+					self::OPTION_API_KEYS,
+					'invalid_nonce',
+					__( 'Impossibile verificare la richiesta. Riprova.', 'fp-digital-marketing' ),
+					'error'
+				);
 
-                        return $current_keys;
-                }
+				return $current_keys;
+		}
 
-                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ) {
-                        add_settings_error(
-                                self::OPTION_API_KEYS,
-                                'insufficient_permissions',
-                                __( 'Non sei autorizzato a modificare queste impostazioni.', 'fp-digital-marketing' ),
-                                'error'
-                        );
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ) {
+				add_settings_error(
+					self::OPTION_API_KEYS,
+					'insufficient_permissions',
+					__( 'Non sei autorizzato a modificare queste impostazioni.', 'fp-digital-marketing' ),
+					'error'
+				);
 
-                        return $current_keys;
-                }
+				return $current_keys;
+		}
 
-                $sanitized = [];
+			$sanitized = [];
 
-                foreach ( $input as $key => $value ) {
-                        $sanitized_key = sanitize_key( $key );
+		foreach ( $input as $key => $value ) {
+				$sanitized_key = sanitize_key( $key );
 
-                        if ( '' === $sanitized_key ) {
-                                continue;
-                        }
+			if ( '' === $sanitized_key ) {
+					continue;
+			}
 
-                        if ( is_array( $value ) ) {
-                                continue;
-                        }
+			if ( is_array( $value ) ) {
+					continue;
+			}
 
-                        $scalar_value    = is_scalar( $value ) ? (string) $value : '';
-                        $sanitized_value = sanitize_text_field( wp_unslash( $scalar_value ) );
+				$scalar_value    = is_scalar( $value ) ? (string) $value : '';
+				$sanitized_value = sanitize_text_field( wp_unslash( $scalar_value ) );
 
-                        $sanitized[ $sanitized_key ] = $sanitized_value;
-                }
+				$sanitized[ $sanitized_key ] = $sanitized_value;
+		}
 
-                $prepared = SecretsManager::prepare_for_storage( $sanitized, $current_keys );
+			$prepared = SecretsManager::prepare_for_storage( $sanitized, $current_keys );
 
-                foreach ( $prepared['updated_sensitive_keys'] as $updated_key ) {
-                        if ( isset( $sanitized[ $updated_key ] ) && '' !== $sanitized[ $updated_key ] ) {
-                                error_log( sprintf(
-                                        'FP Digital Marketing: API key %s updated by user %d',
-                                        $updated_key,
-                                        get_current_user_id()
-                                ) );
-                        }
-                }
+		foreach ( $prepared['updated_sensitive_keys'] as $updated_key ) {
+			if ( isset( $sanitized[ $updated_key ] ) && '' !== $sanitized[ $updated_key ] ) {
+					error_log(
+						sprintf(
+							'FP Digital Marketing: API key %s updated by user %d',
+							$updated_key,
+							get_current_user_id()
+						)
+					);
+			}
+		}
 
-                if ( ! empty( $prepared['errors'] ) ) {
-                        foreach ( $prepared['errors'] as $error_key ) {
-                                error_log( sprintf(
-                                        'FP Digital Marketing: unable to decrypt stored secret for %s during save. Re-encrypting with the provided value.',
-                                        $error_key
-                                ) );
-                        }
-                }
+		if ( ! empty( $prepared['errors'] ) ) {
+			foreach ( $prepared['errors'] as $error_key ) {
+					error_log(
+						sprintf(
+							'FP Digital Marketing: unable to decrypt stored secret for %s during save. Re-encrypting with the provided value.',
+							$error_key
+						)
+					);
+			}
+		}
 
-                return $prepared['values'];
-        }
+			return $prepared['values'];
+	}
 
 	/**
 	 * Get demo option value
@@ -1010,104 +1016,104 @@ class Settings {
 	 * @param bool $decrypt_sensitive Whether to decrypt sensitive keys for display.
 	 * @return array The API keys array with sensitive values decrypted if requested.
 	 */
-        public function get_api_keys( bool $decrypt_sensitive = true ): array {
-                return SecretsManager::get_api_keys( $decrypt_sensitive );
-        }
+	public function get_api_keys( bool $decrypt_sensitive = true ): array {
+			return SecretsManager::get_api_keys( $decrypt_sensitive );
+	}
 
 	/**
 	 * Handle cache actions triggered via GET requests.
 	 *
 	 * @return void
 	 */
-        public function handle_cache_actions(): void {
-                if ( ! isset( $_GET['page'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
-                        return;
-                }
+	public function handle_cache_actions(): void {
+		if ( ! isset( $_GET['page'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
+				return;
+		}
 
-                if ( empty( $_GET['action'] ) ) {
-                        return;
-                }
+		if ( empty( $_GET['action'] ) ) {
+				return;
+		}
 
-                $action = sanitize_key( wp_unslash( $_GET['action'] ) );
+			$action = sanitize_key( wp_unslash( $_GET['action'] ) );
 
-                if ( ! in_array( $action, [ 'invalidate_cache', 'clear_cache_stats' ], true ) ) {
-                        return;
-                }
+		if ( ! in_array( $action, [ 'invalidate_cache', 'clear_cache_stats' ], true ) ) {
+				return;
+		}
 
-                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
-                        Security::log_security_event(
-                                'cache_action_denied',
-                                [
-                                        'action'  => $action,
-                                        'user_id' => get_current_user_id(),
-                                        'ip'      => Security::get_client_ip(),
-                                ]
-                        );
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+				Security::log_security_event(
+					'cache_action_denied',
+					[
+						'action'  => $action,
+						'user_id' => get_current_user_id(),
+						'ip'      => Security::get_client_ip(),
+					]
+				);
 
-                        $redirect_url = add_query_arg(
-                                [
-                                        'page'         => self::PAGE_SLUG,
-                                        'cache_status' => 'insufficient_permissions',
-                                ],
-                                admin_url( 'admin.php' )
-                        );
+				$redirect_url = add_query_arg(
+					[
+						'page'         => self::PAGE_SLUG,
+						'cache_status' => 'insufficient_permissions',
+					],
+					admin_url( 'admin.php' )
+				);
 
-                        wp_safe_redirect( $redirect_url );
-                        exit;
-                }
+				wp_safe_redirect( $redirect_url );
+				exit;
+		}
 
-                if ( empty( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), self::CACHE_ACTION_NONCE ) ) {
-                        $redirect_url = add_query_arg(
-                                [
-                                        'page'         => self::PAGE_SLUG,
-					'cache_status' => 'invalid_nonce',
-				],
-				admin_url( 'admin.php' )
-			);
+		if ( empty( $_GET['_wpnonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), self::CACHE_ACTION_NONCE ) ) {
+				$redirect_url = add_query_arg(
+					[
+						'page'         => self::PAGE_SLUG,
+						'cache_status' => 'invalid_nonce',
+					],
+					admin_url( 'admin.php' )
+				);
 
 			wp_safe_redirect( $redirect_url );
 			exit;
 		}
 
-                $status = '';
+			$status = '';
 
-                switch ( $action ) {
-                        case 'invalidate_cache':
-                                PerformanceCache::invalidate_all();
-                                Security::log_security_event(
-                                        'cache_invalidated',
-                                        [
-                                                'user_id' => get_current_user_id(),
-                                                'ip'      => Security::get_client_ip(),
-                                        ]
-                                );
-                                $status = 'cache_invalidated';
-                                break;
+		switch ( $action ) {
+			case 'invalidate_cache':
+					PerformanceCache::invalidate_all();
+					Security::log_security_event(
+						'cache_invalidated',
+						[
+							'user_id' => get_current_user_id(),
+							'ip'      => Security::get_client_ip(),
+						]
+					);
+					$status = 'cache_invalidated';
+				break;
 
-                        case 'clear_cache_stats':
-                                PerformanceCache::clear_stats();
-                                Security::log_security_event(
-                                        'cache_stats_cleared',
-                                        [
-                                                'user_id' => get_current_user_id(),
-                                                'ip'      => Security::get_client_ip(),
-                                        ]
-                                );
-                                $status = 'cache_stats_cleared';
-                                break;
-                }
+			case 'clear_cache_stats':
+					PerformanceCache::clear_stats();
+					Security::log_security_event(
+						'cache_stats_cleared',
+						[
+							'user_id' => get_current_user_id(),
+							'ip'      => Security::get_client_ip(),
+						]
+					);
+					$status = 'cache_stats_cleared';
+				break;
+		}
 
 		if ( '' === $status ) {
 			return;
 		}
 
-		$redirect_url = add_query_arg(
-			[
-				'page'         => self::PAGE_SLUG,
-				'cache_status' => $status,
-			],
-			admin_url( 'admin.php' )
-		);
+			$redirect_url = add_query_arg(
+				[
+					'page'         => self::PAGE_SLUG,
+					'cache_status' => $status,
+				],
+				admin_url( 'admin.php' )
+			);
 
 		wp_safe_redirect( $redirect_url );
 		exit;
@@ -1127,21 +1133,23 @@ class Settings {
 			}
 
 			// Verify state parameter with enhanced security
-			$state = sanitize_text_field( wp_unslash( $_GET['state'] ?? '' ) );
-                        $stored_state = SettingsManager::get_option( SettingsManager::OPTION_OAUTH_STATE, '' );
-			
+			$state                    = sanitize_text_field( wp_unslash( $_GET['state'] ?? '' ) );
+						$stored_state = SettingsManager::get_option( SettingsManager::OPTION_OAUTH_STATE, '' );
+
 			// Enhanced nonce verification
 			if ( ! wp_verify_nonce( $state, 'ga4_oauth_state' ) || $state !== $stored_state ) {
 				// Log security event
-				error_log( sprintf(
-					'FP Digital Marketing Security: Invalid OAuth state from IP %s, User ID: %d',
-					$_SERVER['REMOTE_ADDR'] ?? 'unknown',
-					get_current_user_id()
-				) );
-				
-				add_settings_error( 
-					'ga4_oauth', 
-					'invalid_state', 
+				error_log(
+					sprintf(
+						'FP Digital Marketing Security: Invalid OAuth state from IP %s, User ID: %d',
+						$_SERVER['REMOTE_ADDR'] ?? 'unknown',
+						get_current_user_id()
+					)
+				);
+
+				add_settings_error(
+					'ga4_oauth',
+					'invalid_state',
 					__( 'Errore di sicurezza OAuth. Riprova.', 'fp-digital-marketing' ),
 					'error'
 				);
@@ -1149,30 +1157,30 @@ class Settings {
 			}
 
 			// Clean up state
-                        SettingsManager::delete_option( SettingsManager::OPTION_OAUTH_STATE );
+						SettingsManager::delete_option( SettingsManager::OPTION_OAUTH_STATE );
 
 			if ( isset( $_GET['code'] ) ) {
 				$oauth = new GoogleOAuth();
 				if ( $oauth->exchange_code_for_tokens( $_GET['code'] ) ) {
-					add_settings_error( 
-						'ga4_oauth', 
-						'connection_success', 
+					add_settings_error(
+						'ga4_oauth',
+						'connection_success',
 						__( 'Connessione a Google Analytics 4 completata con successo!', 'fp-digital-marketing' ),
 						'success'
 					);
 				} else {
-					add_settings_error( 
-						'ga4_oauth', 
-						'connection_error', 
+					add_settings_error(
+						'ga4_oauth',
+						'connection_error',
 						__( 'Errore durante la connessione a Google Analytics 4.', 'fp-digital-marketing' ),
 						'error'
 					);
 				}
 			} elseif ( isset( $_GET['error'] ) ) {
-				add_settings_error( 
-					'ga4_oauth', 
-					'oauth_error', 
-					sprintf( 
+				add_settings_error(
+					'ga4_oauth',
+					'oauth_error',
+					sprintf(
 						__( 'Errore OAuth: %s', 'fp-digital-marketing' ),
 						esc_html( $_GET['error'] )
 					),
@@ -1181,46 +1189,46 @@ class Settings {
 			}
 
 			// Redirect to clean URL
-                        wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+						wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
 			exit;
 		}
 
 		// Handle disconnect with enhanced security
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'ga4_disconnect' ) {
-			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) || 
-				 ! Security::verify_nonce_with_logging( 'ga4_disconnect', 'ga4_disconnect_nonce' ) ) {
+			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ||
+				! Security::verify_nonce_with_logging( 'ga4_disconnect', 'ga4_disconnect_nonce' ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}
 
 			$oauth = new GoogleOAuth();
 			if ( $oauth->revoke_access() ) {
-				add_settings_error( 
-					'ga4_oauth', 
-					'disconnect_success', 
+				add_settings_error(
+					'ga4_oauth',
+					'disconnect_success',
 					__( 'Disconnessione da Google Analytics 4 completata.', 'fp-digital-marketing' ),
 					'success'
 				);
 			}
 
-                        wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+						wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
 			exit;
 		}
 
 		// Handle manual sync trigger with enhanced security
 		if ( isset( $_POST['action'] ) && $_POST['action'] === 'trigger_manual_sync' ) {
-			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) || 
-				 ! Security::verify_nonce_with_logging( 'trigger_manual_sync', 'sync_nonce' ) ) {
+			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ||
+				! Security::verify_nonce_with_logging( 'trigger_manual_sync', 'sync_nonce' ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}
 
 			$results = SyncEngine::trigger_manual_sync();
-			
+
 			if ( $results['status'] === 'success' ) {
-				add_settings_error( 
-					'manual_sync', 
-					'sync_success', 
+				add_settings_error(
+					'manual_sync',
+					'sync_success',
 					sprintf(
-						__( 'Sync manuale completato: %d sorgenti, %d record aggiornati in %ss', 'fp-digital-marketing' ),
+						__( 'Sync manuale completato: %1$d sorgenti, %2$d record aggiornati in %3$ss', 'fp-digital-marketing' ),
 						$results['sources_count'],
 						$results['records_updated'],
 						$results['duration']
@@ -1228,15 +1236,15 @@ class Settings {
 					'success'
 				);
 			} else {
-				add_settings_error( 
-					'manual_sync', 
-					'sync_error', 
+				add_settings_error(
+					'manual_sync',
+					'sync_error',
 					sprintf( __( 'Errore sync manuale: %s', 'fp-digital-marketing' ), $results['message'] ),
 					'error'
 				);
 			}
 
-                        wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+						wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
 			exit;
 		}
 	}
@@ -1269,8 +1277,8 @@ class Settings {
 	 * @return void
 	 */
 	public function render_sync_settings_field(): void {
-		$sync_settings = get_option( self::OPTION_SYNC, [] );
-		$sync_enabled = $sync_settings['enable_sync'] ?? false;
+		$sync_settings  = get_option( self::OPTION_SYNC, [] );
+		$sync_enabled   = $sync_settings['enable_sync'] ?? false;
 		$sync_frequency = $sync_settings['sync_frequency'] ?? 'hourly';
 		?>
 		<div class="sync-configuration">
@@ -1349,60 +1357,60 @@ class Settings {
 	 * @param mixed $input The input data.
 	 * @return array Sanitized sync settings array.
 	 */
-        public function sanitize_sync_settings( $input ): array {
-                if ( ! is_array( $input ) ) {
-                        return [];
-                }
+	public function sanitize_sync_settings( $input ): array {
+		if ( ! is_array( $input ) ) {
+				return [];
+		}
 
-		$sanitized = [];
-		
-		// Enable sync checkbox
-		$sanitized['enable_sync'] = ! empty( $input['enable_sync'] );
-		
-		// Sync frequency
-		$allowed_frequencies = [ 'every_15_minutes', 'every_30_minutes', 'hourly', 'twice_daily', 'daily' ];
-		$sanitized['sync_frequency'] = in_array( $input['sync_frequency'] ?? '', $allowed_frequencies, true ) 
-			? $input['sync_frequency'] 
+			$sanitized = [];
+
+			// Enable sync checkbox
+			$sanitized['enable_sync'] = ! empty( $input['enable_sync'] );
+
+			// Sync frequency
+			$allowed_frequencies         = [ 'every_15_minutes', 'every_30_minutes', 'hourly', 'twice_daily', 'daily' ];
+			$sanitized['sync_frequency'] = in_array( $input['sync_frequency'] ?? '', $allowed_frequencies, true )
+			? $input['sync_frequency']
 			: 'hourly';
 
-		// If sync settings changed, reschedule the sync
-		$current_settings = get_option( self::OPTION_SYNC, [] );
-                if ( $sanitized !== $current_settings ) {
-                        // Unschedule existing events; rescheduling is handled after the option update.
-                        SyncEngine::unschedule_sync();
-                }
+			// If sync settings changed, reschedule the sync
+			$current_settings = get_option( self::OPTION_SYNC, [] );
+		if ( $sanitized !== $current_settings ) {
+				// Unschedule existing events; rescheduling is handled after the option update.
+				SyncEngine::unschedule_sync();
+		}
 
-                return $sanitized;
-        }
+			return $sanitized;
+	}
 
-        /**
-         * Handle sync settings updates after they are saved.
-         *
-         * @param mixed  $old_value Previous option value.
-         * @param mixed  $value     New option value.
-         * @param string $option    Option name.
-         * @return void
-         */
-        public function handle_sync_settings_update( $old_value, $value, string $option ): void {
-                if ( ! is_array( $value ) ) {
-                        SyncEngine::unschedule_sync();
-                        return;
-                }
+		/**
+		 * Handle sync settings updates after they are saved.
+		 *
+		 * @param mixed  $old_value Previous option value.
+		 * @param mixed  $value     New option value.
+		 * @param string $option    Option name.
+		 * @return void
+		 */
+	public function handle_sync_settings_update( $old_value, $value, string $option ): void {
+		if ( ! is_array( $value ) ) {
+				SyncEngine::unschedule_sync();
+				return;
+		}
 
-                SyncEngine::unschedule_sync();
+			SyncEngine::unschedule_sync();
 
-                if ( empty( $value['enable_sync'] ) ) {
-                        return;
-                }
+		if ( empty( $value['enable_sync'] ) ) {
+				return;
+		}
 
-                SyncEngine::schedule_sync_with_settings( $value );
-        }
+			SyncEngine::schedule_sync_with_settings( $value );
+	}
 
-        /**
-         * Get sync settings
-         *
-         * @return array The sync settings array.
-         */
+		/**
+		 * Get sync settings
+		 *
+		 * @return array The sync settings array.
+		 */
 	public function get_sync_settings(): array {
 		return get_option( self::OPTION_SYNC, [] );
 	}
@@ -1422,7 +1430,7 @@ class Settings {
 	 * @return void
 	 */
 	public function render_cache_settings_field(): void {
-		$settings = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_settings();
+		$settings           = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_settings();
 		$cache_actions_base = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 		?>
 		<table class="form-table">
@@ -1561,7 +1569,7 @@ class Settings {
 			</tr>
 		</table>
 		
-		<?php if ( $settings['enabled'] ): ?>
+		<?php if ( $settings['enabled'] ) : ?>
 		<h4><?php esc_html_e( 'Azioni Cache', 'fp-digital-marketing' ); ?></h4>
 		<table class="form-table">
 			<tr>
@@ -1578,14 +1586,14 @@ class Settings {
 			<tr>
 				<th scope="row"><?php esc_html_e( 'Gestione Cache', 'fp-digital-marketing' ); ?></th>
 				<td>
-                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', 'invalidate_cache', $cache_actions_base ), self::CACHE_ACTION_NONCE ) ); ?>"
-					   class="button" 
-					   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler invalidare tutta la cache?', 'fp-digital-marketing' ); ?>')">
+										<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', 'invalidate_cache', $cache_actions_base ), self::CACHE_ACTION_NONCE ) ); ?>"
+						class="button" 
+						onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler invalidare tutta la cache?', 'fp-digital-marketing' ); ?>')">
 						<?php esc_html_e( 'Invalida Cache', 'fp-digital-marketing' ); ?>
 					</a>
-                                        <a href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', 'clear_cache_stats', $cache_actions_base ), self::CACHE_ACTION_NONCE ) ); ?>"
-					   class="button" 
-					   onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler cancellare le statistiche?', 'fp-digital-marketing' ); ?>')">
+										<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', 'clear_cache_stats', $cache_actions_base ), self::CACHE_ACTION_NONCE ) ); ?>"
+						class="button" 
+						onclick="return confirm('<?php esc_attr_e( 'Sei sicuro di voler cancellare le statistiche?', 'fp-digital-marketing' ); ?>')">
 						<?php esc_html_e( 'Cancella Statistiche', 'fp-digital-marketing' ); ?>
 					</a>
 				</td>
@@ -1593,9 +1601,9 @@ class Settings {
 		</table>
 
 		<h4><?php esc_html_e( 'Statistiche Cache', 'fp-digital-marketing' ); ?></h4>
-		<?php 
-		$cache_stats = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_statistics();
-		?>
+			<?php
+			$cache_stats = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_statistics();
+			?>
 		<table class="widefat">
 			<tr>
 				<td><?php esc_html_e( 'Object Cache Disponibile:', 'fp-digital-marketing' ); ?></td>
@@ -1608,7 +1616,7 @@ class Settings {
 			<tr>
 				<td><?php esc_html_e( 'Ultimo Pre-caricamento:', 'fp-digital-marketing' ); ?></td>
 				<td>
-					<?php 
+					<?php
 					if ( $cache_stats['last_warmup'] > 0 ) {
 						echo esc_html( date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $cache_stats['last_warmup'] ) );
 					} else {
@@ -1658,10 +1666,10 @@ class Settings {
 		});
 		</script>
 		
-		<?php 
-		$legacy_cache_stats = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_stats();
-		if ( ! empty( $legacy_cache_stats ) ):
-		?>
+			<?php
+			$legacy_cache_stats = \FP\DigitalMarketing\Helpers\PerformanceCache::get_cache_stats();
+			if ( ! empty( $legacy_cache_stats ) ) :
+				?>
 		<h4><?php esc_html_e( 'Performance Cache (Legacy)', 'fp-digital-marketing' ); ?></h4>
 		<table class="widefat">
 			<tr>
@@ -1700,20 +1708,20 @@ class Settings {
 		$sanitized = [];
 
 		// Boolean settings
-		$sanitized['enabled'] = isset( $input['enabled'] ) && $input['enabled'] === '1';
-		$sanitized['use_object_cache'] = isset( $input['use_object_cache'] ) && $input['use_object_cache'] === '1';
-		$sanitized['use_transients'] = isset( $input['use_transients'] ) && $input['use_transients'] === '1';
-		$sanitized['auto_invalidate'] = isset( $input['auto_invalidate'] ) && $input['auto_invalidate'] === '1';
+		$sanitized['enabled']           = isset( $input['enabled'] ) && $input['enabled'] === '1';
+		$sanitized['use_object_cache']  = isset( $input['use_object_cache'] ) && $input['use_object_cache'] === '1';
+		$sanitized['use_transients']    = isset( $input['use_transients'] ) && $input['use_transients'] === '1';
+		$sanitized['auto_invalidate']   = isset( $input['auto_invalidate'] ) && $input['auto_invalidate'] === '1';
 		$sanitized['benchmark_enabled'] = isset( $input['benchmark_enabled'] ) && $input['benchmark_enabled'] === '1';
 
 		// TTL settings with validation
-		$sanitized['default_ttl'] = $this->sanitize_ttl( $input['default_ttl'] ?? 900 );
-		$sanitized['metrics_ttl'] = $this->sanitize_ttl( $input['metrics_ttl'] ?? 900 );
-		$sanitized['reports_ttl'] = $this->sanitize_ttl( $input['reports_ttl'] ?? 3600 );
+		$sanitized['default_ttl']    = $this->sanitize_ttl( $input['default_ttl'] ?? 900 );
+		$sanitized['metrics_ttl']    = $this->sanitize_ttl( $input['metrics_ttl'] ?? 900 );
+		$sanitized['reports_ttl']    = $this->sanitize_ttl( $input['reports_ttl'] ?? 3600 );
 		$sanitized['aggregated_ttl'] = $this->sanitize_ttl( $input['aggregated_ttl'] ?? 300 );
 
-                return $sanitized;
-        }
+				return $sanitized;
+	}
 
 	/**
 	 * Sanitize TTL value
@@ -1723,7 +1731,7 @@ class Settings {
 	 */
 	private function sanitize_ttl( $value ): int {
 		$ttl = intval( $value );
-		
+
 		// Ensure TTL is between 60 seconds and 24 hours
 		return max( 60, min( 86400, $ttl ) );
 	}
@@ -1743,17 +1751,20 @@ class Settings {
 	 * @return void
 	 */
 	public function render_seo_settings_field(): void {
-		$settings = get_option( self::OPTION_SEO, [
-			'site_title_template' => '{title} - {site_name}',
-			'home_title_template' => '{site_name} - {tagline}',
-			'description_fallback_length' => 155,
-			'auto_generate_descriptions' => true,
-			'default_og_image' => '',
-			'twitter_site' => '',
-			'noindex_post_types' => [],
-			'noindex_taxonomies' => [],
-			'enable_breadcrumbs' => false,
-		] );
+		$settings = get_option(
+			self::OPTION_SEO,
+			[
+				'site_title_template'         => '{title} - {site_name}',
+				'home_title_template'         => '{site_name} - {tagline}',
+				'description_fallback_length' => 155,
+				'auto_generate_descriptions'  => true,
+				'default_og_image'            => '',
+				'twitter_site'                => '',
+				'noindex_post_types'          => [],
+				'noindex_taxonomies'          => [],
+				'enable_breadcrumbs'          => false,
+			]
+		);
 
 		$post_types = get_post_types( [ 'public' => true ], 'objects' );
 		$taxonomies = get_taxonomies( [ 'public' => true ], 'objects' );
@@ -1872,7 +1883,7 @@ class Settings {
 					<th scope="row"><?php esc_html_e( 'Tipi di Contenuto da Nascondere', 'fp-digital-marketing' ); ?></th>
 					<td>
 						<fieldset>
-							<?php foreach ( $post_types as $post_type ): ?>
+							<?php foreach ( $post_types as $post_type ) : ?>
 								<label>
 									<input 
 										type="checkbox" 
@@ -1894,7 +1905,7 @@ class Settings {
 					<th scope="row"><?php esc_html_e( 'Tassonomie da Nascondere', 'fp-digital-marketing' ); ?></th>
 					<td>
 						<fieldset>
-							<?php foreach ( $taxonomies as $taxonomy ): ?>
+							<?php foreach ( $taxonomies as $taxonomy ) : ?>
 								<label>
 									<input 
 										type="checkbox" 
@@ -1959,7 +1970,7 @@ class Settings {
 	 */
 	public function render_sitemap_section(): void {
 		echo '<p>' . esc_html__( 'Configura la generazione di sitemap XML modulari per migliorare l\'indicizzazione del sito.', 'fp-digital-marketing' ) . '</p>';
-		
+
 		// Show current sitemap URLs
 		$sitemap_url = home_url( '/sitemap.xml' );
 		echo '<p><strong>' . esc_html__( 'URL Sitemap:', 'fp-digital-marketing' ) . '</strong> ';
@@ -1972,12 +1983,15 @@ class Settings {
 	 * @return void
 	 */
 	public function render_sitemap_settings_field(): void {
-		$settings = get_option( self::OPTION_SITEMAP, [
-			'enabled_post_types' => [ 'post', 'page' ],
-			'ping_search_engines' => true,
-			'exclude_noindex' => true,
-			'max_urls_per_sitemap' => 50000,
-		] );
+		$settings = get_option(
+			self::OPTION_SITEMAP,
+			[
+				'enabled_post_types'   => [ 'post', 'page' ],
+				'ping_search_engines'  => true,
+				'exclude_noindex'      => true,
+				'max_urls_per_sitemap' => 50000,
+			]
+		);
 
 		$available_post_types = XmlSitemap::get_available_post_types();
 		?>
@@ -1989,7 +2003,7 @@ class Settings {
 					</th>
 					<td>
 						<fieldset>
-							<?php foreach ( $available_post_types as $post_type => $post_type_obj ): ?>
+							<?php foreach ( $available_post_types as $post_type => $post_type_obj ) : ?>
 								<label>
 									<input 
 										type="checkbox" 
@@ -2134,16 +2148,16 @@ class Settings {
 		$sanitized = [];
 
 		// Post types array
-		$available_post_types = array_keys( XmlSitemap::get_available_post_types() );
-		$enabled_post_types = $input['enabled_post_types'] ?? [];
-		$sanitized['enabled_post_types'] = array_intersect( 
-			array_map( 'sanitize_key', (array) $enabled_post_types ), 
-			$available_post_types 
+		$available_post_types            = array_keys( XmlSitemap::get_available_post_types() );
+		$enabled_post_types              = $input['enabled_post_types'] ?? [];
+		$sanitized['enabled_post_types'] = array_intersect(
+			array_map( 'sanitize_key', (array) $enabled_post_types ),
+			$available_post_types
 		);
 
 		// Boolean settings
 		$sanitized['ping_search_engines'] = isset( $input['ping_search_engines'] ) && $input['ping_search_engines'] === '1';
-		$sanitized['exclude_noindex'] = isset( $input['exclude_noindex'] ) && $input['exclude_noindex'] === '1';
+		$sanitized['exclude_noindex']     = isset( $input['exclude_noindex'] ) && $input['exclude_noindex'] === '1';
 
 		// Numeric settings
 		$sanitized['max_urls_per_sitemap'] = max( 1000, min( 50000, intval( $input['max_urls_per_sitemap'] ?? 50000 ) ) );
@@ -2159,51 +2173,51 @@ class Settings {
 	 *
 	 * @return void
 	 */
-        public function handle_clear_sitemap_cache(): void {
-                check_ajax_referer( 'fp_clear_sitemap_cache', 'nonce' );
+	public function handle_clear_sitemap_cache(): void {
+			check_ajax_referer( 'fp_clear_sitemap_cache', 'nonce' );
 
-                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
-                        Security::log_security_event(
-                                'sitemap_cache_clear_denied',
-                                [
-                                        'user_id' => get_current_user_id(),
-                                        'ip'      => Security::get_client_ip(),
-                                ]
-                        );
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+				Security::log_security_event(
+					'sitemap_cache_clear_denied',
+					[
+						'user_id' => get_current_user_id(),
+						'ip'      => Security::get_client_ip(),
+					]
+				);
 
-                        wp_send_json_error(
-                                [
-                                        'message' => __( 'Permessi insufficienti per cancellare la cache della sitemap.', 'fp-digital-marketing' ),
-                                ]
-                        );
-                }
+				wp_send_json_error(
+					[
+						'message' => __( 'Permessi insufficienti per cancellare la cache della sitemap.', 'fp-digital-marketing' ),
+					]
+				);
+		}
 
-                try {
-                        XmlSitemap::invalidate_sitemap_cache();
+		try {
+				XmlSitemap::invalidate_sitemap_cache();
 
-                        Security::log_security_event(
-                                'sitemap_cache_cleared',
-                                [
-                                        'user_id' => get_current_user_id(),
-                                        'ip'      => Security::get_client_ip(),
-                                ]
-                        );
+				Security::log_security_event(
+					'sitemap_cache_cleared',
+					[
+						'user_id' => get_current_user_id(),
+						'ip'      => Security::get_client_ip(),
+					]
+				);
 
-                        wp_send_json_success(
-                                [
-                                        'message' => __( 'Cache della sitemap svuotata con successo.', 'fp-digital-marketing' ),
-                                ]
-                        );
-                } catch ( \Throwable $exception ) {
-                        error_log( 'FP Digital Marketing: Failed to clear sitemap cache - ' . $exception->getMessage() );
+				wp_send_json_success(
+					[
+						'message' => __( 'Cache della sitemap svuotata con successo.', 'fp-digital-marketing' ),
+					]
+				);
+		} catch ( \Throwable $exception ) {
+				error_log( 'FP Digital Marketing: Failed to clear sitemap cache - ' . $exception->getMessage() );
 
-                        wp_send_json_error(
-                                [
-                                        'message' => __( 'Errore durante la pulizia della cache della sitemap.', 'fp-digital-marketing' ),
-                                ]
-                        );
-                }
-        }
+				wp_send_json_error(
+					[
+						'message' => __( 'Errore durante la pulizia della cache della sitemap.', 'fp-digital-marketing' ),
+					]
+				);
+		}
+	}
 
 	/**
 	 * Render schema section description
@@ -2222,7 +2236,7 @@ class Settings {
 	 * @return void
 	 */
 	public function render_schema_settings_field(): void {
-		$settings = get_option( self::OPTION_SCHEMA, SchemaGenerator::get_default_settings() );
+		$settings     = get_option( self::OPTION_SCHEMA, SchemaGenerator::get_default_settings() );
 		$schema_types = SchemaGenerator::get_schema_types();
 		?>
 		<table class="form-table">
@@ -2233,7 +2247,7 @@ class Settings {
 					</th>
 					<td>
 						<fieldset>
-							<?php foreach ( $schema_types as $type_id => $type_config ): ?>
+							<?php foreach ( $schema_types as $type_id => $type_config ) : ?>
 								<label>
 									<input 
 										type="checkbox" 
@@ -2345,11 +2359,11 @@ class Settings {
 					</th>
 					<td>
 						<fieldset>
-							<?php 
-							$post_types = get_post_types( [ 'public' => true ], 'objects' );
+							<?php
+							$post_types        = get_post_types( [ 'public' => true ], 'objects' );
 							$enabled_faq_types = $settings['faq_post_types'] ?? [ 'post', 'page' ];
 							?>
-							<?php foreach ( $post_types as $post_type ): ?>
+							<?php foreach ( $post_types as $post_type ) : ?>
 								<label>
 									<input 
 										type="checkbox" 
@@ -2382,16 +2396,16 @@ class Settings {
 
 		// Sanitize enabled types
 		if ( isset( $input['enabled_types'] ) && is_array( $input['enabled_types'] ) ) {
-			$available_types = array_keys( SchemaGenerator::get_schema_types() );
+			$available_types            = array_keys( SchemaGenerator::get_schema_types() );
 			$sanitized['enabled_types'] = array_intersect( $input['enabled_types'], $available_types );
 		} else {
 			$sanitized['enabled_types'] = [];
 		}
 
 		// Sanitize organization fields
-		$sanitized['organization_name'] = sanitize_text_field( $input['organization_name'] ?? '' );
-		$sanitized['organization_url'] = esc_url_raw( $input['organization_url'] ?? '' );
-		$sanitized['organization_logo'] = esc_url_raw( $input['organization_logo'] ?? '' );
+		$sanitized['organization_name']        = sanitize_text_field( $input['organization_name'] ?? '' );
+		$sanitized['organization_url']         = esc_url_raw( $input['organization_url'] ?? '' );
+		$sanitized['organization_logo']        = esc_url_raw( $input['organization_logo'] ?? '' );
 		$sanitized['organization_description'] = sanitize_textarea_field( $input['organization_description'] ?? '' );
 
 		// Sanitize boolean settings
@@ -2399,7 +2413,7 @@ class Settings {
 
 		// Sanitize FAQ post types
 		if ( isset( $input['faq_post_types'] ) && is_array( $input['faq_post_types'] ) ) {
-			$available_post_types = array_keys( get_post_types( [ 'public' => true ] ) );
+			$available_post_types        = array_keys( get_post_types( [ 'public' => true ] ) );
 			$sanitized['faq_post_types'] = array_intersect( $input['faq_post_types'], $available_post_types );
 		} else {
 			$sanitized['faq_post_types'] = [];
@@ -2413,126 +2427,126 @@ class Settings {
 	 *
 	 * @return void
 	 */
-        public function handle_cache_warmup(): void {
-                check_ajax_referer( 'fp_dms_settings_nonce', 'nonce' );
+	public function handle_cache_warmup(): void {
+			check_ajax_referer( 'fp_dms_settings_nonce', 'nonce' );
 
-                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
-                        Security::log_security_event(
-                                'cache_warmup_denied',
-                                [
-                                        'user_id' => get_current_user_id(),
-                                        'ip'      => Security::get_client_ip(),
-                                ]
-                        );
+		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+				Security::log_security_event(
+					'cache_warmup_denied',
+					[
+						'user_id' => get_current_user_id(),
+						'ip'      => Security::get_client_ip(),
+					]
+				);
 
-                        wp_send_json_error(
-                                [
-                                        'message' => __( 'Permessi insufficienti.', 'fp-digital-marketing' ),
-                                ]
-                        );
-                }
+				wp_send_json_error(
+					[
+						'message' => __( 'Permessi insufficienti.', 'fp-digital-marketing' ),
+					]
+				);
+		}
 
-                try {
-                        $warmup_results = PerformanceCache::warmup_cache();
-                } catch ( \Throwable $exception ) {
-                        error_log( 'FP Digital Marketing: Cache warmup error - ' . $exception->getMessage() );
+		try {
+				$warmup_results = PerformanceCache::warmup_cache();
+		} catch ( \Throwable $exception ) {
+				error_log( 'FP Digital Marketing: Cache warmup error - ' . $exception->getMessage() );
 
-                        Security::log_security_event(
-                                'cache_warmup_failed',
-                                [
-                                        'user_id' => get_current_user_id(),
-                                        'ip'      => Security::get_client_ip(),
-                                        'error'   => $exception->getMessage(),
-                                ]
-                        );
+				Security::log_security_event(
+					'cache_warmup_failed',
+					[
+						'user_id' => get_current_user_id(),
+						'ip'      => Security::get_client_ip(),
+						'error'   => $exception->getMessage(),
+					]
+				);
 
-                        wp_send_json_error(
-                                [
-                                        'message' => __( 'Errore durante il pre-caricamento della cache.', 'fp-digital-marketing' ),
-                                ]
-                        );
-                }
+				wp_send_json_error(
+					[
+						'message' => __( 'Errore durante il pre-caricamento della cache.', 'fp-digital-marketing' ),
+					]
+				);
+		}
 
-                $normalized_results = $this->normalize_warmup_results( $warmup_results );
+			$normalized_results = $this->normalize_warmup_results( $warmup_results );
 
-                if ( 'success' === $normalized_results['status'] ) {
-                        Security::log_security_event(
-                                'cache_warmup_completed',
-                                [
-                                        'user_id'      => get_current_user_id(),
-                                        'ip'           => Security::get_client_ip(),
-                                        'warmed_keys'  => $normalized_results['warmed_keys'],
-                                        'failed_keys'  => $normalized_results['failed_keys'],
-                                        'time_seconds' => $normalized_results['execution_time'],
-                                ]
-                        );
+		if ( 'success' === $normalized_results['status'] ) {
+				Security::log_security_event(
+					'cache_warmup_completed',
+					[
+						'user_id'      => get_current_user_id(),
+						'ip'           => Security::get_client_ip(),
+						'warmed_keys'  => $normalized_results['warmed_keys'],
+						'failed_keys'  => $normalized_results['failed_keys'],
+						'time_seconds' => $normalized_results['execution_time'],
+					]
+				);
 
-                        wp_send_json_success(
-                                [
-                                        'message' => sprintf(
-                                                __( 'Cache pre-caricata con successo! %d chiavi caricate, %d fallite in %.2f secondi.', 'fp-digital-marketing' ),
-                                                $normalized_results['warmed_keys'],
-                                                $normalized_results['failed_keys'],
-                                                $normalized_results['execution_time']
-                                        ),
-                                        'results' => $normalized_results,
-                                ]
-                        );
-                }
+				wp_send_json_success(
+					[
+						'message' => sprintf(
+							__( 'Cache pre-caricata con successo! %1$d chiavi caricate, %2$d fallite in %3$.2f secondi.', 'fp-digital-marketing' ),
+							$normalized_results['warmed_keys'],
+							$normalized_results['failed_keys'],
+							$normalized_results['execution_time']
+						),
+						'results' => $normalized_results,
+					]
+				);
+		}
 
-                if ( 'disabled' === $normalized_results['status'] ) {
-                        wp_send_json_error(
-                                [
-                                        'message' => $normalized_results['message'] ?: __( 'La cache è attualmente disabilitata.', 'fp-digital-marketing' ),
-                                        'results' => $normalized_results,
-                                ]
-                        );
-                }
+		if ( 'disabled' === $normalized_results['status'] ) {
+				wp_send_json_error(
+					[
+						'message' => $normalized_results['message'] ?: __( 'La cache è attualmente disabilitata.', 'fp-digital-marketing' ),
+						'results' => $normalized_results,
+					]
+				);
+		}
 
-                wp_send_json_error(
-                        [
-                                'message' => $normalized_results['message'] ?: __( 'Errore durante il pre-caricamento della cache.', 'fp-digital-marketing' ),
-                                'results' => $normalized_results,
-                        ]
-                );
-        }
+			wp_send_json_error(
+				[
+					'message' => $normalized_results['message'] ?: __( 'Errore durante il pre-caricamento della cache.', 'fp-digital-marketing' ),
+					'results' => $normalized_results,
+				]
+			);
+	}
 
-        /**
-         * Normalize warmup results data for safe JSON responses.
-         *
-         * @param array $warmup_results Raw warmup results.
-         * @return array Normalized results array.
-         */
-        private function normalize_warmup_results( array $warmup_results ): array {
-                $status = sanitize_key( $warmup_results['status'] ?? 'error' );
-                $message = sanitize_text_field( (string) ( $warmup_results['message'] ?? '' ) );
+		/**
+		 * Normalize warmup results data for safe JSON responses.
+		 *
+		 * @param array $warmup_results Raw warmup results.
+		 * @return array Normalized results array.
+		 */
+	private function normalize_warmup_results( array $warmup_results ): array {
+			$status  = sanitize_key( $warmup_results['status'] ?? 'error' );
+			$message = sanitize_text_field( (string) ( $warmup_results['message'] ?? '' ) );
 
-                $normalized = [
-                        'status'         => $status ?: 'error',
-                        'message'        => $message,
-                        'warmed_keys'    => isset( $warmup_results['warmed_keys'] ) ? absint( $warmup_results['warmed_keys'] ) : 0,
-                        'failed_keys'    => isset( $warmup_results['failed_keys'] ) ? absint( $warmup_results['failed_keys'] ) : 0,
-                        'execution_time' => isset( $warmup_results['execution_time'] ) ? max( 0, (float) $warmup_results['execution_time'] ) : 0.0,
-                        'details'        => [],
-                ];
+			$normalized = [
+				'status'         => $status ?: 'error',
+				'message'        => $message,
+				'warmed_keys'    => isset( $warmup_results['warmed_keys'] ) ? absint( $warmup_results['warmed_keys'] ) : 0,
+				'failed_keys'    => isset( $warmup_results['failed_keys'] ) ? absint( $warmup_results['failed_keys'] ) : 0,
+				'execution_time' => isset( $warmup_results['execution_time'] ) ? max( 0, (float) $warmup_results['execution_time'] ) : 0.0,
+				'details'        => [],
+			];
 
-                if ( isset( $warmup_results['details'] ) && is_array( $warmup_results['details'] ) ) {
-                        foreach ( $warmup_results['details'] as $detail ) {
-                                if ( ! is_array( $detail ) ) {
-                                        continue;
-                                }
+			if ( isset( $warmup_results['details'] ) && is_array( $warmup_results['details'] ) ) {
+				foreach ( $warmup_results['details'] as $detail ) {
+					if ( ! is_array( $detail ) ) {
+						continue;
+					}
 
-                                $normalized['details'][] = [
-                                        'key'       => isset( $detail['key'] ) ? sanitize_key( (string) $detail['key'] ) : '',
-                                        'status'    => isset( $detail['status'] ) ? sanitize_key( (string) $detail['status'] ) : '',
-                                        'reason'    => isset( $detail['reason'] ) ? sanitize_text_field( (string) $detail['reason'] ) : '',
-                                        'data_size' => isset( $detail['data_size'] ) ? absint( $detail['data_size'] ) : 0,
-                                ];
-                        }
-                }
+						$normalized['details'][] = [
+							'key'       => isset( $detail['key'] ) ? sanitize_key( (string) $detail['key'] ) : '',
+							'status'    => isset( $detail['status'] ) ? sanitize_key( (string) $detail['status'] ) : '',
+							'reason'    => isset( $detail['reason'] ) ? sanitize_text_field( (string) $detail['reason'] ) : '',
+							'data_size' => isset( $detail['data_size'] ) ? absint( $detail['data_size'] ) : 0,
+						];
+				}
+			}
 
-                return $normalized;
-        }
+			return $normalized;
+	}
 
 	/**
 	 * Scheduled cache warmup callback
@@ -2558,17 +2572,20 @@ class Settings {
 	 * @return void
 	 */
 	public function render_email_settings_field(): void {
-		$settings = get_option( self::OPTION_EMAIL, [
-			'alerts_enabled' => true,
-			'reports_enabled' => true,
-			'security_enabled' => true,
-			'system_enabled' => true,
-			'daily_digest_enabled' => false,
-			'alert_recipients' => [],
-			'report_recipients' => [],
-			'security_recipients' => [],
-			'digest_recipients' => [],
-		] );
+		$settings = get_option(
+			self::OPTION_EMAIL,
+			[
+				'alerts_enabled'       => true,
+				'reports_enabled'      => true,
+				'security_enabled'     => true,
+				'system_enabled'       => true,
+				'daily_digest_enabled' => false,
+				'alert_recipients'     => [],
+				'report_recipients'    => [],
+				'security_recipients'  => [],
+				'digest_recipients'    => [],
+			]
+		);
 
 		// Get admin email as default
 		$admin_email = get_option( 'admin_email' );
@@ -2821,10 +2838,10 @@ class Settings {
 		$sanitized = [];
 
 		// Boolean settings
-		$sanitized['alerts_enabled'] = isset( $input['alerts_enabled'] ) && $input['alerts_enabled'] === '1';
-		$sanitized['reports_enabled'] = isset( $input['reports_enabled'] ) && $input['reports_enabled'] === '1';
-		$sanitized['security_enabled'] = isset( $input['security_enabled'] ) && $input['security_enabled'] === '1';
-		$sanitized['system_enabled'] = isset( $input['system_enabled'] ) && $input['system_enabled'] === '1';
+		$sanitized['alerts_enabled']       = isset( $input['alerts_enabled'] ) && $input['alerts_enabled'] === '1';
+		$sanitized['reports_enabled']      = isset( $input['reports_enabled'] ) && $input['reports_enabled'] === '1';
+		$sanitized['security_enabled']     = isset( $input['security_enabled'] ) && $input['security_enabled'] === '1';
+		$sanitized['system_enabled']       = isset( $input['system_enabled'] ) && $input['system_enabled'] === '1';
 		$sanitized['daily_digest_enabled'] = isset( $input['daily_digest_enabled'] ) && $input['daily_digest_enabled'] === '1';
 
 		// Email lists
@@ -2840,12 +2857,12 @@ class Settings {
 					}
 				}
 			}
-			
+
 			// Ensure at least admin email is included
 			if ( empty( $emails ) ) {
 				$emails[] = get_option( 'admin_email' );
 			}
-			
+
 			$sanitized[ $field ] = array_unique( $emails );
 		}
 
@@ -2858,11 +2875,11 @@ class Settings {
 	 * @return void
 	 */
 	private function render_configuration_status(): void {
-		$oauth = new GoogleOAuth();
-		$ga4_status = $oauth->get_connection_status();
-		$cache_settings = PerformanceCache::get_cache_settings();
+		$oauth            = new GoogleOAuth();
+		$ga4_status       = $oauth->get_connection_status();
+		$cache_settings   = PerformanceCache::get_cache_settings();
 		$sitemap_settings = get_option( self::OPTION_SITEMAP, [] );
-		
+
 		// Google Analytics Status
 		$ga4_connected = isset( $ga4_status['status'] ) && $ga4_status['status'] === 'connected';
 		?>
@@ -2891,7 +2908,7 @@ class Settings {
 
 		<!-- SEO Status -->
 		<?php
-		$seo_settings = get_option( self::OPTION_SEO, [] );
+		$seo_settings   = get_option( self::OPTION_SEO, [] );
 		$seo_configured = ! empty( $seo_settings['site_title_template'] ) && ! empty( $seo_settings['home_title_template'] );
 		?>
 		<div class="fp-dms-status-card">

@@ -20,7 +20,7 @@ use FP\DigitalMarketing\Tools\Exports\ConversionsExporter;
 
 /**
  * Conversion Events Admin class
- * 
+ *
  * Provides admin interface for managing conversion events and goals.
  */
 class ConversionEventsAdmin {
@@ -53,22 +53,22 @@ class ConversionEventsAdmin {
 
 	/**
 	 * Add admin menu
-        *
-         * @return void
-         */
-        public function add_admin_menu(): void {
-                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
-                        return;
-                }
+	 *
+	 * @return void
+	 */
+	public function add_admin_menu(): void {
+		if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+				return;
+		}
 
-                add_submenu_page(
-                        'fp-digital-marketing-dashboard',
-                        __( 'Eventi Conversione', 'fp-digital-marketing' ),
-			__( '🎯 Eventi Conversione', 'fp-digital-marketing' ),
-			Capabilities::MANAGE_CONVERSIONS,
-			self::PAGE_SLUG,
-			[ $this, 'render_admin_page' ]
-		);
+			add_submenu_page(
+				'fp-digital-marketing-dashboard',
+				__( 'Eventi Conversione', 'fp-digital-marketing' ),
+				__( '🎯 Eventi Conversione', 'fp-digital-marketing' ),
+				Capabilities::MANAGE_CONVERSIONS,
+				self::PAGE_SLUG,
+				[ $this, 'render_admin_page' ]
+			);
 	}
 
 	/**
@@ -92,16 +92,20 @@ class ConversionEventsAdmin {
 		wp_add_inline_script( 'jquery', $this->get_inline_js() );
 
 		// Localize script for AJAX
-		wp_localize_script( 'jquery', 'fpConversionAjax', [
-			'ajaxurl'   => admin_url( 'admin-ajax.php' ),
-			'nonce'     => wp_create_nonce( self::NONCE_ACTION ),
-			'strings'   => [
-				'confirm_delete' => __( 'Sei sicuro di voler eliminare questo evento?', 'fp-digital-marketing' ),
-				'processing'     => __( 'Elaborazione in corso...', 'fp-digital-marketing' ),
-				'error'          => __( 'Si è verificato un errore. Riprova.', 'fp-digital-marketing' ),
-				'success'        => __( 'Operazione completata con successo.', 'fp-digital-marketing' ),
-			],
-		] );
+		wp_localize_script(
+			'jquery',
+			'fpConversionAjax',
+			[
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
+				'strings' => [
+					'confirm_delete' => __( 'Sei sicuro di voler eliminare questo evento?', 'fp-digital-marketing' ),
+					'processing'     => __( 'Elaborazione in corso...', 'fp-digital-marketing' ),
+					'error'          => __( 'Si è verificato un errore. Riprova.', 'fp-digital-marketing' ),
+					'success'        => __( 'Operazione completata con successo.', 'fp-digital-marketing' ),
+				],
+			]
+		);
 	}
 
 	/**
@@ -185,19 +189,19 @@ class ConversionEventsAdmin {
 
 			<h2 class="nav-tab-wrapper">
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=events' ) ); ?>" 
-				   class="nav-tab <?php echo $current_tab === 'events' ? 'nav-tab-active' : ''; ?>">
+					class="nav-tab <?php echo $current_tab === 'events' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Eventi', 'fp-digital-marketing' ); ?>
 				</a>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=analytics' ) ); ?>" 
-				   class="nav-tab <?php echo $current_tab === 'analytics' ? 'nav-tab-active' : ''; ?>">
+					class="nav-tab <?php echo $current_tab === 'analytics' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Analisi', 'fp-digital-marketing' ); ?>
 				</a>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=funnel' ) ); ?>" 
-				   class="nav-tab <?php echo $current_tab === 'funnel' ? 'nav-tab-active' : ''; ?>">
+					class="nav-tab <?php echo $current_tab === 'funnel' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Funnel', 'fp-digital-marketing' ); ?>
 				</a>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&tab=settings' ) ); ?>" 
-				   class="nav-tab <?php echo $current_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
+					class="nav-tab <?php echo $current_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Impostazioni', 'fp-digital-marketing' ); ?>
 				</a>
 			</h2>
@@ -231,28 +235,38 @@ class ConversionEventsAdmin {
 	 */
 	private function render_events_tab(): void {
 		// Get filter parameters
-		$client_id = isset( $_GET['client_id'] ) ? (int) $_GET['client_id'] : 0;
-		$event_type = isset( $_GET['event_type'] ) ? sanitize_text_field( $_GET['event_type'] ) : '';
-		$source = isset( $_GET['source'] ) ? sanitize_text_field( $_GET['source'] ) : '';
+		$client_id    = isset( $_GET['client_id'] ) ? (int) $_GET['client_id'] : 0;
+		$event_type   = isset( $_GET['event_type'] ) ? sanitize_text_field( $_GET['event_type'] ) : '';
+		$source       = isset( $_GET['source'] ) ? sanitize_text_field( $_GET['source'] ) : '';
 		$period_start = isset( $_GET['period_start'] ) ? sanitize_text_field( $_GET['period_start'] ) : '';
-		$period_end = isset( $_GET['period_end'] ) ? sanitize_text_field( $_GET['period_end'] ) : '';
+		$period_end   = isset( $_GET['period_end'] ) ? sanitize_text_field( $_GET['period_end'] ) : '';
 
 		// Build criteria
 		$criteria = [];
-		if ( $client_id > 0 ) $criteria['client_id'] = $client_id;
-		if ( ! empty( $event_type ) ) $criteria['event_type'] = $event_type;
-		if ( ! empty( $source ) ) $criteria['source'] = $source;
-		if ( ! empty( $period_start ) ) $criteria['period_start'] = $period_start . ' 00:00:00';
-		if ( ! empty( $period_end ) ) $criteria['period_end'] = $period_end . ' 23:59:59';
+		if ( $client_id > 0 ) {
+			$criteria['client_id'] = $client_id;
+		}
+		if ( ! empty( $event_type ) ) {
+			$criteria['event_type'] = $event_type;
+		}
+		if ( ! empty( $source ) ) {
+			$criteria['source'] = $source;
+		}
+		if ( ! empty( $period_start ) ) {
+			$criteria['period_start'] = $period_start . ' 00:00:00';
+		}
+		if ( ! empty( $period_end ) ) {
+			$criteria['period_end'] = $period_end . ' 23:59:59';
+		}
 
 		// Get events
-		$page = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1;
+		$page     = isset( $_GET['paged'] ) ? max( 1, (int) $_GET['paged'] ) : 1;
 		$per_page = 20;
-		$offset = ( $page - 1 ) * $per_page;
+		$offset   = ( $page - 1 ) * $per_page;
 
 		$options = [
-			'limit' => $per_page,
-			'offset' => $offset,
+			'limit'           => $per_page,
+			'offset'          => $offset,
 			'include_summary' => true,
 		];
 
@@ -269,11 +283,13 @@ class ConversionEventsAdmin {
 						<option value="0"><?php esc_html_e( 'Tutti i clienti', 'fp-digital-marketing' ); ?></option>
 						<?php
 						// Get clients (assuming clients are stored as posts)
-						$clients = get_posts( [
-							'post_type' => 'cliente',
-							'numberposts' => -1,
-							'post_status' => 'publish',
-						] );
+						$clients = get_posts(
+							[
+								'post_type'   => 'cliente',
+								'numberposts' => -1,
+								'post_status' => 'publish',
+							]
+						);
 						foreach ( $clients as $client ) {
 							echo '<option value="' . esc_attr( $client->ID ) . '"' . selected( $client_id, $client->ID, false ) . '>' . esc_html( $client->post_title ) . '</option>';
 						}
@@ -405,12 +421,12 @@ class ConversionEventsAdmin {
 				// Pagination
 				if ( $results['page_count'] > 1 ) {
 					$pagination_args = [
-						'base' => add_query_arg( 'paged', '%#%' ),
-						'format' => '',
+						'base'      => add_query_arg( 'paged', '%#%' ),
+						'format'    => '',
 						'prev_text' => __( '&laquo; Precedente' ),
 						'next_text' => __( 'Successivo &raquo;' ),
-						'total' => $results['page_count'],
-						'current' => $page,
+						'total'     => $results['page_count'],
+						'current'   => $page,
 					];
 					echo '<div class="tablenav bottom">';
 					echo '<div class="tablenav-pages">';
@@ -647,24 +663,24 @@ class ConversionEventsAdmin {
 	private function handle_delete_event(): void {
 		$event_id = isset( $_POST['event_id'] ) ? (int) $_POST['event_id'] : 0;
 
-               $referer = esc_url_raw( wp_get_referer() );
-               if ( empty( $referer ) ) {
-                       $referer = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
-               }
+				$referer = esc_url_raw( wp_get_referer() );
+		if ( empty( $referer ) ) {
+				$referer = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+		}
 
-               if ( $event_id <= 0 ) {
-                       wp_safe_redirect( add_query_arg( 'error', 'invalid_id', $referer ) );
-                       exit;
-               }
+		if ( $event_id <= 0 ) {
+				wp_safe_redirect( add_query_arg( 'error', 'invalid_id', $referer ) );
+				exit;
+		}
 
-               $event = ConversionEvent::load_by_id( $event_id );
-               if ( $event && $event->delete() ) {
-                       wp_safe_redirect( add_query_arg( 'message', 'deleted', $referer ) );
-               } else {
-                       wp_safe_redirect( add_query_arg( 'error', 'delete_failed', $referer ) );
-               }
-               exit;
-       }
+				$event = ConversionEvent::load_by_id( $event_id );
+		if ( $event && $event->delete() ) {
+				wp_safe_redirect( add_query_arg( 'message', 'deleted', $referer ) );
+		} else {
+				wp_safe_redirect( add_query_arg( 'error', 'delete_failed', $referer ) );
+		}
+				exit;
+	}
 
 	/**
 	 * Handle mark as duplicate action
@@ -672,26 +688,26 @@ class ConversionEventsAdmin {
 	 * @return void
 	 */
 	private function handle_mark_duplicate(): void {
-               $event_id = isset( $_POST['event_id'] ) ? (int) $_POST['event_id'] : 0;
+				$event_id = isset( $_POST['event_id'] ) ? (int) $_POST['event_id'] : 0;
 
-               $referer = esc_url_raw( wp_get_referer() );
-               if ( empty( $referer ) ) {
-                       $referer = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
-               }
+				$referer = esc_url_raw( wp_get_referer() );
+		if ( empty( $referer ) ) {
+				$referer = admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+		}
 
-               if ( $event_id <= 0 ) {
-                       wp_safe_redirect( add_query_arg( 'error', 'invalid_id', $referer ) );
-                       exit;
-               }
+		if ( $event_id <= 0 ) {
+				wp_safe_redirect( add_query_arg( 'error', 'invalid_id', $referer ) );
+				exit;
+		}
 
-               $event = ConversionEvent::load_by_id( $event_id );
-               if ( $event && $event->mark_as_duplicate() ) {
-                       wp_safe_redirect( add_query_arg( 'message', 'marked_duplicate', $referer ) );
-               } else {
-                       wp_safe_redirect( add_query_arg( 'error', 'mark_failed', $referer ) );
-               }
-               exit;
-       }
+				$event = ConversionEvent::load_by_id( $event_id );
+		if ( $event && $event->mark_as_duplicate() ) {
+				wp_safe_redirect( add_query_arg( 'message', 'marked_duplicate', $referer ) );
+		} else {
+				wp_safe_redirect( add_query_arg( 'error', 'mark_failed', $referer ) );
+		}
+				exit;
+	}
 
 	/**
 	 * Handle bulk actions
@@ -700,7 +716,7 @@ class ConversionEventsAdmin {
 	 */
 	private function handle_bulk_action(): void {
 		$bulk_action = isset( $_POST['bulk_action'] ) ? sanitize_text_field( $_POST['bulk_action'] ) : '';
-		$event_ids = isset( $_POST['event_ids'] ) ? array_map( 'intval', $_POST['event_ids'] ) : [];
+		$event_ids   = isset( $_POST['event_ids'] ) ? array_map( 'intval', $_POST['event_ids'] ) : [];
 
 		if ( empty( $bulk_action ) || empty( $event_ids ) ) {
 			wp_redirect( add_query_arg( 'error', 'no_selection', wp_get_referer() ) );
@@ -718,21 +734,26 @@ class ConversionEventsAdmin {
 			switch ( $bulk_action ) {
 				case 'delete':
 					if ( $event->delete() ) {
-						$success_count++;
+						++$success_count;
 					}
 					break;
 				case 'mark_duplicate':
 					if ( $event->mark_as_duplicate() ) {
-						$success_count++;
+						++$success_count;
 					}
 					break;
 			}
 		}
 
-		wp_redirect( add_query_arg( [
-			'message' => 'bulk_action_completed',
-			'count' => $success_count,
-		], wp_get_referer() ) );
+		wp_redirect(
+			add_query_arg(
+				[
+					'message' => 'bulk_action_completed',
+					'count'   => $success_count,
+				],
+				wp_get_referer()
+			)
+		);
 		exit;
 	}
 
@@ -762,7 +783,7 @@ class ConversionEventsAdmin {
 	 * @return void
 	 */
 	private function ajax_get_funnel_data(): void {
-		$client_id = isset( $_POST['client_id'] ) ? (int) $_POST['client_id'] : 0;
+		$client_id    = isset( $_POST['client_id'] ) ? (int) $_POST['client_id'] : 0;
 		$funnel_steps = isset( $_POST['funnel_steps'] ) ? array_map( 'sanitize_text_field', $_POST['funnel_steps'] ) : [];
 
 		if ( $client_id <= 0 || empty( $funnel_steps ) ) {
@@ -780,57 +801,62 @@ class ConversionEventsAdmin {
 	 */
 	private function ajax_export_events(): void {
 		$criteria = isset( $_POST['criteria'] ) ? $_POST['criteria'] : [];
-		
+
 		try {
 			// Sanitize export criteria
-			$client_id = isset( $criteria['client_id'] ) ? (int) $criteria['client_id'] : 0;
+			$client_id  = isset( $criteria['client_id'] ) ? (int) $criteria['client_id'] : 0;
 			$event_type = isset( $criteria['event_type'] ) ? sanitize_text_field( $criteria['event_type'] ) : '';
 			$start_date = isset( $criteria['start_date'] ) ? sanitize_text_field( $criteria['start_date'] ) : '';
-			$end_date = isset( $criteria['end_date'] ) ? sanitize_text_field( $criteria['end_date'] ) : '';
+			$end_date   = isset( $criteria['end_date'] ) ? sanitize_text_field( $criteria['end_date'] ) : '';
 
-                        // Generate unique filename
-                        $filename = 'conversion_events_' . date( 'Y-m-d_H-i-s' ) . '.csv';
-			$upload_dir = wp_upload_dir();
-			$exports_dir = $upload_dir['basedir'] . '/fp-dms-exports/';
-			
+						// Generate unique filename
+						$filename = 'conversion_events_' . date( 'Y-m-d_H-i-s' ) . '.csv';
+			$upload_dir           = wp_upload_dir();
+			$exports_dir          = $upload_dir['basedir'] . '/fp-dms-exports/';
+
 			// Create exports directory if it doesn't exist
 			if ( ! file_exists( $exports_dir ) ) {
 				wp_mkdir_p( $exports_dir );
 				// Add .htaccess to protect directory
 				file_put_contents( $exports_dir . '.htaccess', "Deny from all\n" );
 			}
-			
+
 			$file_path = $exports_dir . $filename;
-			
+
 			// Get events based on criteria
-                        $events = $this->get_events_for_export( $client_id, $event_type, $start_date, $end_date );
-			
+						$events = $this->get_events_for_export( $client_id, $event_type, $start_date, $end_date );
+
 			// Generate CSV content
 			$csv_content = $this->generate_csv_content( $events );
-			
+
 			// Write to file
 			if ( file_put_contents( $file_path, $csv_content ) === false ) {
 				wp_send_json_error( __( 'Errore nella creazione del file CSV.', 'fp-digital-marketing' ) );
 				return;
 			}
-			
+
 			// Generate download URL with security token
-			$token = wp_create_nonce( 'fp_dms_export_' . $filename );
-			$download_url = add_query_arg( [
-				'action' => 'fp_dms_download_export',
-				'file' => $filename,
-				'token' => $token,
-			], admin_url( 'admin-ajax.php' ) );
-			
+			$token        = wp_create_nonce( 'fp_dms_export_' . $filename );
+			$download_url = add_query_arg(
+				[
+					'action' => 'fp_dms_download_export',
+					'file'   => $filename,
+					'token'  => $token,
+				],
+				admin_url( 'admin-ajax.php' )
+			);
+
 			// Schedule file cleanup (remove after 1 hour)
 			wp_schedule_single_event( time() + 3600, 'fp_dms_cleanup_export_file', [ $file_path ] );
-			
-			wp_send_json_success( [ 
-				'download_url' => $download_url,
-				'filename' => $filename,
-				'count' => count( $events ),
-			] );
-			
+
+			wp_send_json_success(
+				[
+					'download_url' => $download_url,
+					'filename'     => $filename,
+					'count'        => count( $events ),
+				]
+			);
+
 		} catch ( \Throwable $e ) {
 			if ( function_exists( 'error_log' ) ) {
 				error_log( 'FP Digital Marketing: Export error - ' . $e->getMessage() );
@@ -838,27 +864,29 @@ class ConversionEventsAdmin {
 			wp_send_json_error( __( 'Si è verificato un errore durante l\'esportazione.', 'fp-digital-marketing' ) );
 		}
 	}
-	
-        /**
-         * Get events for export based on criteria
-         *
-         * @param int    $client_id Client ID filter
-         * @param string $event_type Event type filter
-         * @param string $start_date Start date filter
-         * @param string $end_date End date filter
-         * @return array Events data
-         */
-        private function get_events_for_export( int $client_id, string $event_type, string $start_date, string $end_date ): array {
-                // This would typically query your ConversionEvent model with the criteria
-                // For now, we'll use a mock implementation that shows the structure
-                return ConversionEvent::get_events_for_export( [
-                        'client_id' => $client_id,
-                        'event_type' => $event_type,
-                        'start_date' => $start_date,
-                        'end_date' => $end_date,
-                ] );
-        }
-	
+
+		/**
+		 * Get events for export based on criteria
+		 *
+		 * @param int    $client_id Client ID filter
+		 * @param string $event_type Event type filter
+		 * @param string $start_date Start date filter
+		 * @param string $end_date End date filter
+		 * @return array Events data
+		 */
+	private function get_events_for_export( int $client_id, string $event_type, string $start_date, string $end_date ): array {
+			// This would typically query your ConversionEvent model with the criteria
+			// For now, we'll use a mock implementation that shows the structure
+			return ConversionEvent::get_events_for_export(
+				[
+					'client_id'  => $client_id,
+					'event_type' => $event_type,
+					'start_date' => $start_date,
+					'end_date'   => $end_date,
+				]
+			);
+	}
+
 	/**
 	 * Generate CSV content from events data
 	 *
@@ -874,11 +902,11 @@ class ConversionEventsAdmin {
 
 		fwrite( $handle, "\xEF\xBB\xBF" );
 
-                CsvExporter::write_row( $handle, ConversionsExporter::get_headers() );
+				CsvExporter::write_row( $handle, ConversionsExporter::get_headers() );
 
-                foreach ( ConversionsExporter::build_rows( $events ) as $row ) {
-                        CsvExporter::write_row( $handle, $row );
-                }
+		foreach ( ConversionsExporter::build_rows( $events ) as $row ) {
+				CsvExporter::write_row( $handle, $row );
+		}
 
 		rewind( $handle );
 		$content = stream_get_contents( $handle );
@@ -886,7 +914,7 @@ class ConversionEventsAdmin {
 
 		return is_string( $content ) ? $content : '';
 	}
-	
+
 	/**
 	 * Handle export file download
 	 *
@@ -897,39 +925,39 @@ class ConversionEventsAdmin {
 		if ( ! current_user_can( Capabilities::MANAGE_CONVERSIONS ) ) {
 			wp_die( __( 'Non hai i permessi per accedere a questo file.', 'fp-digital-marketing' ) );
 		}
-		
+
 		$filename = sanitize_file_name( $_GET['file'] ?? '' );
-		$token = sanitize_text_field( $_GET['token'] ?? '' );
-		
+		$token    = sanitize_text_field( $_GET['token'] ?? '' );
+
 		// Verify security token
 		if ( ! wp_verify_nonce( $token, 'fp_dms_export_' . $filename ) ) {
 			wp_die( __( 'Token di sicurezza non valido.', 'fp-digital-marketing' ) );
 		}
-		
+
 		$upload_dir = wp_upload_dir();
-		$file_path = $upload_dir['basedir'] . '/fp-dms-exports/' . $filename;
-		
+		$file_path  = $upload_dir['basedir'] . '/fp-dms-exports/' . $filename;
+
 		// Check if file exists
 		if ( ! file_exists( $file_path ) ) {
 			wp_die( __( 'File non trovato o scaduto.', 'fp-digital-marketing' ) );
 		}
-		
+
 		// Set headers for download
 		header( 'Content-Type: text/csv; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
 		header( 'Content-Length: ' . filesize( $file_path ) );
 		header( 'Cache-Control: no-cache, must-revalidate' );
 		header( 'Expires: Sat, 26 Jul 1997 05:00:00 GMT' );
-		
+
 		// Output file content
 		readfile( $file_path );
-		
+
 		// Clean up file after download
 		unlink( $file_path );
-		
+
 		exit;
 	}
-	
+
 	/**
 	 * Cleanup export file (scheduled task)
 	 *

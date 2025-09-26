@@ -23,12 +23,12 @@ class SecretsManager {
 		/**
 		 * Keys that should be treated as sensitive and stored encrypted.
 		 */
-        public const SENSITIVE_KEYS = [
-                'google_client_secret',
-                'google_reviews_api_key',
-                'api_token',
-                'secret_key',
-        ];
+	public const SENSITIVE_KEYS = [
+		'google_client_secret',
+		'google_reviews_api_key',
+		'api_token',
+		'secret_key',
+	];
 
 		/**
 		 * Retrieve stored API keys.

@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
  * Dashboard Widgets class
- * 
+ *
  * This class provides WordPress dashboard widgets for the FP Digital Marketing Suite
  */
 class DashboardWidgets {
@@ -72,7 +72,7 @@ class DashboardWidgets {
 		$performance_data = PerformanceCache::get(
 			'dashboard_performance',
 			PerformanceCache::CACHE_GROUP_REPORTS,
-			function() {
+			function () {
 				return self::get_performance_data();
 			},
 			900 // 15 minutes cache
@@ -101,11 +101,11 @@ class DashboardWidgets {
 
 			<div class="fp-dms-widget-footer">
 				<p class="fp-dms-last-updated">
-					<?php 
-					printf( 
+					<?php
+					printf(
 						esc_html__( 'Ultimo aggiornamento: %s', 'fp-digital-marketing' ),
 						esc_html( date_i18n( get_option( 'time_format' ), $performance_data['last_updated'] ) )
-					); 
+					);
 					?>
 				</p>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ); ?>" class="button button-primary">
@@ -192,7 +192,7 @@ class DashboardWidgets {
 				</a>
 			</div>
 
-			<?php if ( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ): ?>
+			<?php if ( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) : ?>
 			<div class="fp-dms-admin-actions">
 				<button type="button" class="button" id="fp-dms-quick-cache-clear">
 					<?php esc_html_e( 'Svuota Cache', 'fp-digital-marketing' ); ?>
@@ -246,10 +246,10 @@ class DashboardWidgets {
 		<script type="text/javascript">
 		jQuery(document).ready(function($) {
 			$('#fp-dms-quick-cache-clear').on('click', function() {
-                                if (confirm('<?php esc_html_e( 'Svuotare la cache?', 'fp-digital-marketing' ); ?>')) {
-                                        window.location.href = '<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', 'invalidate_cache', admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ), 'fp_dms_cache_action' ) ); ?>';
-                                }
-                        });
+								if (confirm('<?php esc_html_e( 'Svuotare la cache?', 'fp-digital-marketing' ); ?>')) {
+										window.location.href = '<?php echo esc_url( wp_nonce_url( add_query_arg( 'action', 'invalidate_cache', admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ), 'fp_dms_cache_action' ) ); ?>';
+								}
+						});
 
 			$('#fp-dms-quick-cache-warmup').on('click', function() {
 				const $button = $(this);
@@ -288,7 +288,7 @@ class DashboardWidgets {
 	 * @return void
 	 */
 	public static function render_cache_status_widget(): void {
-		$cache_stats = PerformanceCache::get_cache_statistics();
+		$cache_stats    = PerformanceCache::get_cache_statistics();
 		$cache_settings = PerformanceCache::get_cache_settings();
 
 		?>
@@ -316,7 +316,7 @@ class DashboardWidgets {
 				<div class="fp-dms-status-item">
 					<span class="fp-dms-status-label"><?php esc_html_e( 'Ultimo Warmup:', 'fp-digital-marketing' ); ?></span>
 					<span class="fp-dms-status-value">
-						<?php 
+						<?php
 						if ( $cache_stats['last_warmup'] > 0 ) {
 							echo esc_html( human_time_diff( $cache_stats['last_warmup'] ) . ' fa' );
 						} else {
@@ -368,10 +368,10 @@ class DashboardWidgets {
 		// This would typically fetch real data from analytics APIs
 		// For now, return demo data
 		return [
-			'sessions' => rand( 800, 1200 ),
-			'users' => rand( 600, 900 ),
-			'pageviews' => rand( 2000, 3000 ),
-			'bounce_rate' => rand( 35, 55 ) + ( rand( 0, 9 ) / 10 ),
+			'sessions'     => rand( 800, 1200 ),
+			'users'        => rand( 600, 900 ),
+			'pageviews'    => rand( 2000, 3000 ),
+			'bounce_rate'  => rand( 35, 55 ) + ( rand( 0, 9 ) / 10 ),
 			'last_updated' => time(),
 		];
 	}

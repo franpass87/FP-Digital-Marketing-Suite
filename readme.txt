@@ -4,7 +4,7 @@ Tags: digital marketing, analytics, google analytics, seo, marketing automation
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -14,30 +14,36 @@ A comprehensive digital marketing toolkit with advanced client intelligence, omn
 
 FP Digital Marketing Suite delivers a unified operating system for agencies and growth teams. Manage client relationships, orchestrate campaigns, connect analytics sources and automate reporting from a single WordPress plugin maintained by Francesco Passeri.
 
-= Key Features in 1.1.0 =
+= Key Features in 1.2.0 =
 
-**Client Intelligence Hub**
-* Enhanced Cliente post type with lifecycle tagging, attachments and relationship history
-* Capability-driven access control for analysts, editors and account managers
+**Resilient Upgrade Engine**
+* Network-aware version tracking with automated option migrations across single and multisite installs
+* Structured upgrade registry with safe execution wrappers for menu state, cache schemas and follow-up routines
 
-**Unified Analytics & Integrations**
-* Google Analytics 4, Google Ads, Google Search Console and Microsoft Clarity connectors
-* Core Web Vitals insights and a normalization pipeline across analytics sources
+**Cache Reliability & Hygiene**
+* Normalizes cache settings, TTLs and indexes while persisting schema metadata for observability
+* Forces PerformanceCache, WordPress object cache and OPcache purges after upgrades to prevent stale analytics
 
-**Marketing Automation & Alerts**
-* Multi-step funnel automation, UTM campaign management and conversion orchestration
-* Proactive alerting engine with anomaly detection, SLA tracking and acknowledgement workflow
+**Operational Readiness**
+* Timestamped migration markers and schema versions for wizard UI state and cache payloads
+* Updated developer tooling to keep phpstan, PHPUnit and runtime helpers aware of the new release version
 
-**Reporting Workspace**
-* PDF/CSV scheduled reports, collaborative dashboards and historical trending library
-* Extensible metrics query API for internal tools and client portals
+= Installation =
 
-**Performance & Compliance**
-* Layered caching, batched aggregations and admin UI optimizations for large portfolios
-* GDPR-ready data governance with consent, retention and export tooling
+1. Download `dist/fp-digital-marketing-suite-1.2.0.zip`.
+2. In WordPress go to **Plugins → Add New → Upload Plugin**, choose the ZIP and activate it.
+3. Alternatively, extract the archive into `wp-content/plugins/` via SFTP or the command line and activate it from the plugins list.
+4. Visit **Tools → FP DMS Diagnostics** to run `verify-deployment.php` and confirm the hosting environment meets the documented requirements.
+
+= Quality Assurance =
+
+* Automated tests: `php phpunit.phar --configuration phpunit.xml`
+* Static analysis: `vendor/bin/phpstan analyse --memory-limit=1G`
+* Coding standards: `vendor/bin/phpcs --report=summary`
 
 = Release Timeline =
 
+* **1.2.0** – Hardened upgrade engine, cache schema migrations and automated runtime cache purges
 * **1.1.0** – Reporting workspace, alert center, documentation refresh and new author branding
 * **1.0.1** – Metrics aggregation pipeline, onboarding wizard and performance optimizations
 * **1.0.0** – Initial public release with client management, analytics integrations and SEO suite
@@ -135,6 +141,12 @@ Yes, extensive documentation is included:
 
 == Changelog ==
 
+= 1.2.0 =
+* Added multisite-safe upgrade routines for menu state schema and performance cache configuration
+* Enforced cache TTL minimums, schema metadata and normalized indexes for consistent cache invalidation
+* Automated PerformanceCache, object cache and OPcache flushes after upgrades to avoid stale dashboards
+* Versioned wizard menu state payloads with sanitized slug registries and timestamped updates
+
 = 1.1.0 =
 * Added advanced reporting workspace with scheduled exports and shared dashboards
 * Introduced Alert Center for anomaly detection, SLA tracking and acknowledgement logging
@@ -156,8 +168,9 @@ Yes, extensive documentation is included:
 
 == Upgrade Notice ==
 
-= 1.1.0 =
-Documentation refresh and alerting/reporting enhancements. Review new automation toggles after updating.
+= 1.2.0 =
+Run the plugin upgrade process during low-traffic windows so cache purges can complete. All cached analytics and wizard menu
+state will be regenerated automatically after update.
 
 = 1.0.1 =
 Performance and onboarding improvements. Revisit caching settings if you customized cron schedules.

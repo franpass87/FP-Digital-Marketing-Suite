@@ -19,7 +19,7 @@ use FP\DigitalMarketing\Helpers\Capabilities;
 
 /**
  * Funnel Analysis admin class
- * 
+ *
  * Handles the admin interface for funnel analysis and customer journey tracking.
  */
 class FunnelAnalysisAdmin {
@@ -46,7 +46,7 @@ class FunnelAnalysisAdmin {
 
 	/**
 	 * Add admin menu page
-	 * 
+	 *
 	 * Note: This method is disabled when MenuManager is active to prevent
 	 * duplicate menu registrations in the rationalized menu structure.
 	 *
@@ -60,14 +60,14 @@ class FunnelAnalysisAdmin {
 		}
 
 		// Legacy menu registration (fallback)
-               add_submenu_page(
-                       'fp-digital-marketing-dashboard',
-			__( 'Funnel Analysis', 'fp-digital-marketing' ),
-			__( '📈 Funnel Analysis', 'fp-digital-marketing' ),
-			Capabilities::FUNNEL_ANALYSIS,
-			self::PAGE_SLUG,
-			[ $this, 'render_admin_page' ]
-		);
+				add_submenu_page(
+					'fp-digital-marketing-dashboard',
+					__( 'Funnel Analysis', 'fp-digital-marketing' ),
+					__( '📈 Funnel Analysis', 'fp-digital-marketing' ),
+					Capabilities::FUNNEL_ANALYSIS,
+					self::PAGE_SLUG,
+					[ $this, 'render_admin_page' ]
+				);
 	}
 
 	/**
@@ -113,37 +113,46 @@ class FunnelAnalysisAdmin {
 	 */
 	private function handle_create_funnel(): void {
 		$funnel_data = [
-			'name' => sanitize_text_field( $_POST['funnel_name'] ?? '' ),
-			'description' => sanitize_textarea_field( $_POST['funnel_description'] ?? '' ),
-			'client_id' => (int) ( $_POST['client_id'] ?? 0 ),
-			'status' => sanitize_text_field( $_POST['funnel_status'] ?? 'draft' ),
+			'name'                   => sanitize_text_field( $_POST['funnel_name'] ?? '' ),
+			'description'            => sanitize_textarea_field( $_POST['funnel_description'] ?? '' ),
+			'client_id'              => (int) ( $_POST['client_id'] ?? 0 ),
+			'status'                 => sanitize_text_field( $_POST['funnel_status'] ?? 'draft' ),
 			'conversion_window_days' => (int) ( $_POST['conversion_window_days'] ?? 30 ),
-			'attribution_model' => sanitize_text_field( $_POST['attribution_model'] ?? 'last_click' ),
+			'attribution_model'      => sanitize_text_field( $_POST['attribution_model'] ?? 'last_click' ),
 		];
 
 		if ( empty( $funnel_data['name'] ) || empty( $funnel_data['client_id'] ) ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>' . 
-					esc_html__( 'Funnel name and client selection are required.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' .
+					esc_html__( 'Funnel name and client selection are required.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 			return;
 		}
 
 		$funnel = new Funnel( $funnel_data );
-		
+
 		if ( $funnel->save() ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-success"><p>' . 
-					esc_html__( 'Funnel created successfully.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-success"><p>' .
+					esc_html__( 'Funnel created successfully.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 		} else {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>' . 
-					esc_html__( 'Failed to create funnel.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' .
+					esc_html__( 'Failed to create funnel.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 		}
 	}
 
@@ -154,14 +163,17 @@ class FunnelAnalysisAdmin {
 	 */
 	private function handle_update_funnel(): void {
 		$funnel_id = (int) ( $_POST['funnel_id'] ?? 0 );
-		$funnel = Funnel::load_by_id( $funnel_id );
+		$funnel    = Funnel::load_by_id( $funnel_id );
 
 		if ( ! $funnel ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>' . 
-					esc_html__( 'Funnel not found.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' .
+					esc_html__( 'Funnel not found.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 			return;
 		}
 
@@ -172,17 +184,23 @@ class FunnelAnalysisAdmin {
 		$funnel->set_attribution_model( sanitize_text_field( $_POST['attribution_model'] ?? 'last_click' ) );
 
 		if ( $funnel->save() ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-success"><p>' . 
-					esc_html__( 'Funnel updated successfully.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-success"><p>' .
+					esc_html__( 'Funnel updated successfully.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 		} else {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>' . 
-					esc_html__( 'Failed to update funnel.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' .
+					esc_html__( 'Failed to update funnel.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 		}
 	}
 
@@ -193,29 +211,38 @@ class FunnelAnalysisAdmin {
 	 */
 	private function handle_delete_funnel(): void {
 		$funnel_id = (int) ( $_POST['funnel_id'] ?? 0 );
-		$funnel = Funnel::load_by_id( $funnel_id );
+		$funnel    = Funnel::load_by_id( $funnel_id );
 
 		if ( ! $funnel ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>' . 
-					esc_html__( 'Funnel not found.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' .
+					esc_html__( 'Funnel not found.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 			return;
 		}
 
 		if ( $funnel->delete() ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-success"><p>' . 
-					esc_html__( 'Funnel deleted successfully.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-success"><p>' .
+					esc_html__( 'Funnel deleted successfully.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 		} else {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>' . 
-					esc_html__( 'Failed to delete funnel.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' .
+					esc_html__( 'Failed to delete funnel.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 		}
 	}
 
@@ -226,46 +253,58 @@ class FunnelAnalysisAdmin {
 	 */
 	private function handle_add_stage(): void {
 		$funnel_id = (int) ( $_POST['funnel_id'] ?? 0 );
-		$funnel = Funnel::load_by_id( $funnel_id );
+		$funnel    = Funnel::load_by_id( $funnel_id );
 
 		if ( ! $funnel ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>' . 
-					esc_html__( 'Funnel not found.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' .
+					esc_html__( 'Funnel not found.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 			return;
 		}
 
 		$stage_data = [
-			'name' => sanitize_text_field( $_POST['stage_name'] ?? '' ),
-			'description' => sanitize_textarea_field( $_POST['stage_description'] ?? '' ),
-			'event_type' => sanitize_text_field( $_POST['stage_event_type'] ?? '' ),
-			'event_conditions' => $_POST['stage_conditions'] ?? [],
+			'name'                => sanitize_text_field( $_POST['stage_name'] ?? '' ),
+			'description'         => sanitize_textarea_field( $_POST['stage_description'] ?? '' ),
+			'event_type'          => sanitize_text_field( $_POST['stage_event_type'] ?? '' ),
+			'event_conditions'    => $_POST['stage_conditions'] ?? [],
 			'required_attributes' => $_POST['stage_attributes'] ?? [],
 		];
 
 		if ( empty( $stage_data['name'] ) || empty( $stage_data['event_type'] ) ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>' . 
-					esc_html__( 'Stage name and event type are required.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' .
+					esc_html__( 'Stage name and event type are required.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 			return;
 		}
 
 		if ( $funnel->add_stage( $stage_data ) ) {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-success"><p>' . 
-					esc_html__( 'Stage added successfully.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-success"><p>' .
+					esc_html__( 'Stage added successfully.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 		} else {
-			add_action( 'admin_notices', function() {
-				echo '<div class="notice notice-error"><p>' . 
-					esc_html__( 'Failed to add stage.', 'fp-digital-marketing' ) . 
+			add_action(
+				'admin_notices',
+				function () {
+					echo '<div class="notice notice-error"><p>' .
+					esc_html__( 'Failed to add stage.', 'fp-digital-marketing' ) .
 					'</p></div>';
-			} );
+				}
+			);
 		}
 	}
 
@@ -289,10 +328,14 @@ class FunnelAnalysisAdmin {
 			true
 		);
 
-		wp_localize_script( 'fp-dms-funnel-analysis', 'fpDmsFunnelAjax', [
-			'ajaxurl' => admin_url( 'admin-ajax.php' ),
-			'nonce' => wp_create_nonce( 'fp_dms_funnel_ajax' ),
-		] );
+		wp_localize_script(
+			'fp-dms-funnel-analysis',
+			'fpDmsFunnelAjax',
+			[
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'fp_dms_funnel_ajax' ),
+			]
+		);
 
 		wp_enqueue_style(
 			'fp-dms-funnel-analysis',
@@ -316,12 +359,12 @@ class FunnelAnalysisAdmin {
 			wp_send_json_error( 'Insufficient permissions' );
 		}
 
-		$funnel_id = (int) ( $_POST['funnel_id'] ?? 0 );
+		$funnel_id  = (int) ( $_POST['funnel_id'] ?? 0 );
 		$start_date = sanitize_text_field( $_POST['start_date'] ?? '' );
-		$end_date = sanitize_text_field( $_POST['end_date'] ?? '' );
+		$end_date   = sanitize_text_field( $_POST['end_date'] ?? '' );
 
 		$funnel = Funnel::load_by_id( $funnel_id );
-		
+
 		if ( ! $funnel ) {
 			wp_send_json_error( 'Funnel not found' );
 		}
@@ -335,14 +378,16 @@ class FunnelAnalysisAdmin {
 		}
 
 		$conversion_data = $funnel->get_conversion_analysis( $filters );
-		$dropoff_data = $funnel->get_dropoff_analysis( $filters );
-		$time_analysis = $funnel->get_time_analysis( $filters );
+		$dropoff_data    = $funnel->get_dropoff_analysis( $filters );
+		$time_analysis   = $funnel->get_time_analysis( $filters );
 
-		wp_send_json_success( [
-			'conversion_data' => $conversion_data,
-			'dropoff_data' => $dropoff_data,
-			'time_analysis' => $time_analysis,
-		] );
+		wp_send_json_success(
+			[
+				'conversion_data' => $conversion_data,
+				'dropoff_data'    => $dropoff_data,
+				'time_analysis'   => $time_analysis,
+			]
+		);
 	}
 
 	/**
@@ -360,14 +405,14 @@ class FunnelAnalysisAdmin {
 		}
 
 		$session_id = sanitize_text_field( $_POST['session_id'] ?? '' );
-		$client_id = (int) ( $_POST['client_id'] ?? 0 );
+		$client_id  = (int) ( $_POST['client_id'] ?? 0 );
 
 		if ( empty( $session_id ) || empty( $client_id ) ) {
 			wp_send_json_error( 'Session ID and Client ID are required' );
 		}
 
 		$journey = CustomerJourney::load_by_session( $session_id, $client_id );
-		
+
 		if ( ! $journey ) {
 			wp_send_json_error( 'Journey not found' );
 		}
@@ -382,22 +427,22 @@ class FunnelAnalysisAdmin {
 	 */
 	public function render_admin_page(): void {
 		$current_tab = sanitize_text_field( $_GET['tab'] ?? 'funnels' );
-		
+
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Funnel Analysis & Customer Journey', 'fp-digital-marketing' ); ?></h1>
 			
 			<nav class="nav-tab-wrapper">
 				<a href="?page=<?php echo esc_attr( self::PAGE_SLUG ); ?>&tab=funnels" 
-				   class="nav-tab <?php echo $current_tab === 'funnels' ? 'nav-tab-active' : ''; ?>">
+					class="nav-tab <?php echo $current_tab === 'funnels' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Funnels', 'fp-digital-marketing' ); ?>
 				</a>
 				<a href="?page=<?php echo esc_attr( self::PAGE_SLUG ); ?>&tab=journeys" 
-				   class="nav-tab <?php echo $current_tab === 'journeys' ? 'nav-tab-active' : ''; ?>">
+					class="nav-tab <?php echo $current_tab === 'journeys' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Customer Journeys', 'fp-digital-marketing' ); ?>
 				</a>
 				<a href="?page=<?php echo esc_attr( self::PAGE_SLUG ); ?>&tab=analytics" 
-				   class="nav-tab <?php echo $current_tab === 'analytics' ? 'nav-tab-active' : ''; ?>">
+					class="nav-tab <?php echo $current_tab === 'analytics' ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Analytics', 'fp-digital-marketing' ); ?>
 				</a>
 			</nav>
@@ -427,7 +472,7 @@ class FunnelAnalysisAdmin {
 	 * @return void
 	 */
 	private function render_funnels_tab(): void {
-		$action = sanitize_text_field( $_GET['action'] ?? 'list' );
+		$action    = sanitize_text_field( $_GET['action'] ?? 'list' );
 		$funnel_id = (int) ( $_GET['funnel_id'] ?? 0 );
 
 		switch ( $action ) {
@@ -450,14 +495,16 @@ class FunnelAnalysisAdmin {
 	 */
 	private function render_funnels_list(): void {
 		// Get all clients for filtering
-		$clients = get_posts( [
-			'post_type' => 'cliente',
-			'post_status' => 'publish',
-			'numberposts' => -1,
-		] );
+		$clients = get_posts(
+			[
+				'post_type'   => 'cliente',
+				'post_status' => 'publish',
+				'numberposts' => -1,
+			]
+		);
 
 		$selected_client = (int) ( $_GET['client_id'] ?? 0 );
-		$funnels = [];
+		$funnels         = [];
 
 		if ( $selected_client ) {
 			$funnels = Funnel::get_client_funnels( $selected_client );
@@ -470,7 +517,7 @@ class FunnelAnalysisAdmin {
 			</div>
 			<div class="alignright">
 				<a href="?page=<?php echo esc_attr( self::PAGE_SLUG ); ?>&tab=funnels&action=create" 
-				   class="button button-primary">
+					class="button button-primary">
 					<?php esc_html_e( 'Create New Funnel', 'fp-digital-marketing' ); ?>
 				</a>
 			</div>
@@ -524,7 +571,7 @@ class FunnelAnalysisAdmin {
 							<td><?php echo esc_html( date( 'Y-m-d H:i', strtotime( $funnel->get_created_at() ) ) ); ?></td>
 							<td>
 								<a href="?page=<?php echo esc_attr( self::PAGE_SLUG ); ?>&tab=funnels&action=edit&funnel_id=<?php echo esc_attr( $funnel->get_id() ); ?>" 
-								   class="button button-small">
+									class="button button-small">
 									<?php esc_html_e( 'Edit', 'fp-digital-marketing' ); ?>
 								</a>
 								<button type="button" class="button button-small view-funnel-analysis" 
@@ -587,11 +634,13 @@ class FunnelAnalysisAdmin {
 	 * @return void
 	 */
 	private function render_create_funnel_form(): void {
-		$clients = get_posts( [
-			'post_type' => 'cliente',
-			'post_status' => 'publish',
-			'numberposts' => -1,
-		] );
+		$clients = get_posts(
+			[
+				'post_type'   => 'cliente',
+				'post_status' => 'publish',
+				'numberposts' => -1,
+			]
+		);
 
 		?>
 		<h2><?php esc_html_e( 'Create New Funnel', 'fp-digital-marketing' ); ?></h2>
@@ -688,7 +737,7 @@ class FunnelAnalysisAdmin {
 	 */
 	private function render_edit_funnel_form( int $funnel_id ): void {
 		$funnel = Funnel::load_by_id( $funnel_id );
-		
+
 		if ( ! $funnel ) {
 			echo '<p>' . esc_html__( 'Funnel not found.', 'fp-digital-marketing' ) . '</p>';
 			return;
@@ -709,7 +758,7 @@ class FunnelAnalysisAdmin {
 					</th>
 					<td>
 						<input type="text" id="funnel_name" name="funnel_name" class="regular-text" 
-							   value="<?php echo esc_attr( $funnel->get_name() ); ?>" required>
+								value="<?php echo esc_attr( $funnel->get_name() ); ?>" required>
 					</td>
 				</tr>
 				<tr>
@@ -741,7 +790,7 @@ class FunnelAnalysisAdmin {
 					</th>
 					<td>
 						<input type="number" id="conversion_window_days" name="conversion_window_days" 
-							   value="<?php echo esc_attr( $funnel->get_conversion_window_days() ); ?>" min="1" max="365">
+								value="<?php echo esc_attr( $funnel->get_conversion_window_days() ); ?>" min="1" max="365">
 					</td>
 				</tr>
 				<tr>
@@ -795,12 +844,12 @@ class FunnelAnalysisAdmin {
 							<td><?php echo esc_html( $stage['event_type'] ); ?></td>
 							<td>
 								<form method="post" style="display: inline;" 
-									  onsubmit="return confirm('<?php esc_attr_e( 'Are you sure you want to delete this stage?', 'fp-digital-marketing' ); ?>');">
+										onsubmit="return confirm('<?php esc_attr_e( 'Are you sure you want to delete this stage?', 'fp-digital-marketing' ); ?>');">
 									<?php wp_nonce_field( 'fp_dms_funnel_action', 'fp_dms_nonce' ); ?>
 									<input type="hidden" name="fp_dms_funnel_action" value="delete_stage">
 									<input type="hidden" name="stage_id" value="<?php echo esc_attr( $stage['id'] ); ?>">
 									<input type="submit" class="button button-small button-link-delete" 
-										   value="<?php esc_attr_e( 'Delete', 'fp-digital-marketing' ); ?>">
+											value="<?php esc_attr_e( 'Delete', 'fp-digital-marketing' ); ?>">
 								</form>
 							</td>
 						</tr>
@@ -866,15 +915,17 @@ class FunnelAnalysisAdmin {
 	 */
 	private function render_journeys_tab(): void {
 		// Get all clients for filtering
-		$clients = get_posts( [
-			'post_type' => 'cliente',
-			'post_status' => 'publish',
-			'numberposts' => -1,
-		] );
+		$clients = get_posts(
+			[
+				'post_type'   => 'cliente',
+				'post_status' => 'publish',
+				'numberposts' => -1,
+			]
+		);
 
 		$selected_client = (int) ( $_GET['client_id'] ?? 0 );
-		$start_date = sanitize_text_field( $_GET['start_date'] ?? date( 'Y-m-d', strtotime( '-7 days' ) ) );
-		$end_date = sanitize_text_field( $_GET['end_date'] ?? date( 'Y-m-d' ) );
+		$start_date      = sanitize_text_field( $_GET['start_date'] ?? date( 'Y-m-d', strtotime( '-7 days' ) ) );
+		$end_date        = sanitize_text_field( $_GET['end_date'] ?? date( 'Y-m-d' ) );
 
 		?>
 		<h2><?php esc_html_e( 'Customer Journeys', 'fp-digital-marketing' ); ?></h2>
@@ -925,11 +976,14 @@ class FunnelAnalysisAdmin {
 
 		<?php if ( $selected_client ) : ?>
 			<?php
-			$sessions = CustomerJourneyTable::get_journey_sessions( [
-				'client_id' => $selected_client,
-				'start_date' => $start_date,
-				'end_date' => $end_date,
-			], 50 );
+			$sessions = CustomerJourneyTable::get_journey_sessions(
+				[
+					'client_id'  => $selected_client,
+					'start_date' => $start_date,
+					'end_date'   => $end_date,
+				],
+				50
+			);
 			?>
 			
 			<?php if ( ! empty( $sessions ) ) : ?>
@@ -1041,20 +1095,20 @@ class FunnelAnalysisAdmin {
 	 */
 	private function render_funnel_performance_widget(): void {
 		try {
-			$total_funnels = FunnelTable::count_funnels();
-			$active_funnels = FunnelTable::count_active_funnels();
+			$total_funnels   = FunnelTable::count_funnels();
+			$active_funnels  = FunnelTable::count_active_funnels();
 			$conversion_rate = $this->calculate_average_conversion_rate();
 		} catch ( \Throwable $e ) {
 			// Fallback to default values if database operation fails
-			$total_funnels = 0;
-			$active_funnels = 0;
+			$total_funnels   = 0;
+			$active_funnels  = 0;
 			$conversion_rate = 0.0;
-			
+
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				error_log( 'FP Digital Marketing FunnelAnalysisAdmin: Failed to load funnel stats - ' . $e->getMessage() );
 			}
 		}
-		
+
 		?>
 		<div class="funnel-stats">
 			<div class="stat-item">
@@ -1073,7 +1127,7 @@ class FunnelAnalysisAdmin {
 		<p class="description">
 			<?php esc_html_e( 'Overview of your funnel performance metrics. Create new funnels to track user journeys and optimize conversion rates.', 'fp-digital-marketing' ); ?>
 		</p>
-		<?php if ( $total_funnels === 0 ): ?>
+		<?php if ( $total_funnels === 0 ) : ?>
 		<div class="notice notice-info inline">
 			<p><?php esc_html_e( 'No funnels found. Create your first funnel to start tracking conversion paths.', 'fp-digital-marketing' ); ?></p>
 		</div>
@@ -1089,17 +1143,17 @@ class FunnelAnalysisAdmin {
 	private function render_customer_journey_widget(): void {
 		try {
 			$recent_journeys = CustomerJourneyTable::get_recent_journeys( 5 );
-			$total_sessions = CustomerJourneyTable::count_total_sessions();
+			$total_sessions  = CustomerJourneyTable::count_total_sessions();
 		} catch ( \Throwable $e ) {
 			// Fallback to empty data if database operation fails
 			$recent_journeys = [];
-			$total_sessions = 0;
-			
+			$total_sessions  = 0;
+
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 				error_log( 'FP Digital Marketing FunnelAnalysisAdmin: Failed to load journey stats - ' . $e->getMessage() );
 			}
 		}
-		
+
 		?>
 		<div class="journey-stats">
 			<div class="stat-item">
@@ -1121,18 +1175,20 @@ class FunnelAnalysisAdmin {
 					<?php foreach ( $recent_journeys as $journey ) : ?>
 						<li>
 							<?php
-							echo esc_html( sprintf(
-								__( 'Journey #%d - %s steps - %s', 'fp-digital-marketing' ),
-								$journey->get_id(),
-								count( $journey->get_touchpoints() ),
-								$journey->get_created_at()
-							) );
+							echo esc_html(
+								sprintf(
+									__( 'Journey #%1$d - %2$s steps - %3$s', 'fp-digital-marketing' ),
+									$journey->get_id(),
+									count( $journey->get_touchpoints() ),
+									$journey->get_created_at()
+								)
+							);
 							?>
 						</li>
 					<?php endforeach; ?>
 				</ul>
 			</div>
-		<?php else: ?>
+		<?php else : ?>
 			<div class="notice notice-info inline">
 				<p><?php esc_html_e( 'No customer journeys tracked yet. Journey data will appear as users interact with your funnels.', 'fp-digital-marketing' ); ?></p>
 			</div>
@@ -1147,7 +1203,7 @@ class FunnelAnalysisAdmin {
 	 */
 	private function render_attribution_analysis_widget(): void {
 		$attribution_data = $this->get_attribution_summary();
-		
+
 		?>
 		<div class="attribution-stats">
 			<div class="stat-item">
@@ -1189,28 +1245,28 @@ class FunnelAnalysisAdmin {
 	private function calculate_average_conversion_rate(): float {
 		try {
 			$funnels = FunnelTable::get_all_funnels();
-			
+
 			if ( empty( $funnels ) ) {
 				return 0.0;
 			}
-			
+
 			$total_rate = 0.0;
-			$count = 0;
-			
+			$count      = 0;
+
 			foreach ( $funnels as $funnel ) {
 				try {
 					$funnel_obj = new Funnel( $funnel );
-					$rate = $funnel_obj->calculate_conversion_rate();
+					$rate       = $funnel_obj->calculate_conversion_rate();
 					if ( $rate > 0 ) {
 						$total_rate += $rate;
-						$count++;
+						++$count;
 					}
 				} catch ( \Throwable $e ) {
 					// Skip this funnel if it can't be processed
 					continue;
 				}
 			}
-			
+
 			return $count > 0 ? ( $total_rate / $count ) : 0.0;
 		} catch ( \Throwable $e ) {
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
@@ -1230,8 +1286,8 @@ class FunnelAnalysisAdmin {
 		// For now, providing sample structure
 		return [
 			'total_conversions' => 0,
-			'top_channel' => __( 'N/A', 'fp-digital-marketing' ),
-			'channels' => []
+			'top_channel'       => __( 'N/A', 'fp-digital-marketing' ),
+			'channels'          => [],
 		];
 	}
 }

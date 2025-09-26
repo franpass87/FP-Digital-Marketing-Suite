@@ -59,6 +59,44 @@ jobs:
           echo "No src or tests directories found, skipping PHPStan"
         fi
 
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: [7.4, 8.1, 8.2]
+        wordpress: ['6.5', '6.6']
+
+    name: PHP ${{ matrix.php-version }} / WP ${{ matrix.wordpress }} - Unit Tests
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        tools: composer:v2
+        coverage: none
+
+    - name: Cache Composer packages
+      id: unit-composer-cache
+      uses: actions/cache@v4
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ matrix.php-version }}-unit-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-${{ matrix.php-version }}-unit-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress
+
+    - name: Run PHPUnit
+      env:
+        FP_DMS_WP_VERSION: ${{ matrix.wordpress }}
+      run: vendor/bin/phpunit
+
   dependency-security:
     runs-on: ubuntu-latest
     name: Security Check

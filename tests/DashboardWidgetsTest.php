@@ -21,7 +21,7 @@ class DashboardWidgetsTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		
+
 		// Mock WordPress functions if needed
 		if ( ! function_exists( 'wp_add_dashboard_widget' ) ) {
 			function wp_add_dashboard_widget( $widget_id, $widget_name, $callback ) {
@@ -90,10 +90,10 @@ class DashboardWidgetsTest extends TestCase {
 	public function test_cache_warmup_functionality(): void {
 		// Test that warmup_cache method exists
 		$this->assertTrue( method_exists( PerformanceCache::class, 'warmup_cache' ) );
-		
+
 		// Test warmup with empty keys
 		$result = PerformanceCache::warmup_cache( [] );
-		
+
 		// Should return proper structure
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'status', $result );
@@ -110,9 +110,9 @@ class DashboardWidgetsTest extends TestCase {
 	public function test_cache_statistics(): void {
 		// Test that get_cache_statistics method exists
 		$this->assertTrue( method_exists( PerformanceCache::class, 'get_cache_statistics' ) );
-		
+
 		$stats = PerformanceCache::get_cache_statistics();
-		
+
 		// Should return proper structure
 		$this->assertIsArray( $stats );
 		$this->assertArrayHasKey( 'last_warmup', $stats );
@@ -129,11 +129,11 @@ class DashboardWidgetsTest extends TestCase {
 	public function test_performance_data_generation(): void {
 		// Use reflection to access private method
 		$reflection = new ReflectionClass( DashboardWidgets::class );
-		$method = $reflection->getMethod( 'get_performance_data' );
+		$method     = $reflection->getMethod( 'get_performance_data' );
 		$method->setAccessible( true );
-		
+
 		$data = $method->invoke( null );
-		
+
 		// Should return proper structure
 		$this->assertIsArray( $data );
 		$this->assertArrayHasKey( 'sessions', $data );
@@ -141,14 +141,14 @@ class DashboardWidgetsTest extends TestCase {
 		$this->assertArrayHasKey( 'pageviews', $data );
 		$this->assertArrayHasKey( 'bounce_rate', $data );
 		$this->assertArrayHasKey( 'last_updated', $data );
-		
+
 		// Validate data types
 		$this->assertIsInt( $data['sessions'] );
 		$this->assertIsInt( $data['users'] );
 		$this->assertIsInt( $data['pageviews'] );
 		$this->assertIsFloat( $data['bounce_rate'] );
 		$this->assertIsInt( $data['last_updated'] );
-		
+
 		// Validate reasonable ranges
 		$this->assertGreaterThan( 0, $data['sessions'] );
 		$this->assertGreaterThan( 0, $data['users'] );
@@ -166,15 +166,15 @@ class DashboardWidgetsTest extends TestCase {
 		$methods = [
 			'render_performance_widget',
 			'render_quick_actions_widget',
-			'render_cache_status_widget'
+			'render_cache_status_widget',
 		];
 
 		foreach ( $methods as $method ) {
-			$this->assertTrue( 
+			$this->assertTrue(
 				method_exists( DashboardWidgets::class, $method ),
 				"Method {$method} should exist"
 			);
-			$this->assertTrue( 
+			$this->assertTrue(
 				is_callable( [ DashboardWidgets::class, $method ] ),
 				"Method {$method} should be callable"
 			);
@@ -189,13 +189,13 @@ class DashboardWidgetsTest extends TestCase {
 	public function test_cache_warmup_with_custom_keys(): void {
 		$warmup_keys = [
 			[
-				'key' => 'test_key',
-				'group' => 'test_group',
-				'callback' => function() {
+				'key'      => 'test_key',
+				'group'    => 'test_group',
+				'callback' => function () {
 					return [ 'test' => 'data' ];
 				},
-				'ttl' => 300
-			]
+				'ttl'      => 300,
+			],
 		];
 
 		$result = PerformanceCache::warmup_cache( $warmup_keys );
@@ -217,11 +217,11 @@ class DashboardWidgetsTest extends TestCase {
 	public function test_cache_warmup_with_invalid_callback(): void {
 		$warmup_keys = [
 			[
-				'key' => 'invalid_key',
-				'group' => 'test_group',
+				'key'      => 'invalid_key',
+				'group'    => 'test_group',
 				'callback' => null, // Invalid callback
-				'ttl' => 300
-			]
+				'ttl'      => 300,
+			],
 		];
 
 		$result = PerformanceCache::warmup_cache( $warmup_keys );

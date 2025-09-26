@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Models\MetricsCache;
 
 /**
  * Google Search Console data source integration class
- * 
+ *
  * This class handles the integration with Google Search Console API,
  * including OAuth authentication, data fetching, and normalization.
  */
@@ -58,7 +58,7 @@ class GoogleSearchConsole {
 	 * @param string $site_url Site URL (property)
 	 */
 	public function __construct( string $site_url = '' ) {
-		$this->site_url = $site_url;
+		$this->site_url     = $site_url;
 		$this->oauth_client = new GoogleOAuth();
 	}
 
@@ -110,9 +110,9 @@ class GoogleSearchConsole {
 
 			$metrics = [
 				'impressions' => $this->fetch_impressions( $start_date, $end_date, $filters ),
-				'clicks' => $this->fetch_clicks( $start_date, $end_date, $filters ),
-				'ctr' => $this->fetch_ctr( $start_date, $end_date, $filters ),
-				'position' => $this->fetch_avg_position( $start_date, $end_date, $filters ),
+				'clicks'      => $this->fetch_clicks( $start_date, $end_date, $filters ),
+				'ctr'         => $this->fetch_ctr( $start_date, $end_date, $filters ),
+				'position'    => $this->fetch_avg_position( $start_date, $end_date, $filters ),
 			];
 
 			// Store metrics in cache
@@ -192,14 +192,14 @@ class GoogleSearchConsole {
 				// For demo purposes, return mock data
 				// In production, this would make an actual API call
 				$result = $this->execute_api_call( $metric, $start_date, $end_date, $filters );
-				
+
 				// Reset backoff on success
 				$this->backoff_delay = 1;
 				return $result;
 
 			} catch ( \Exception $e ) {
-				$retry_count++;
-				
+				++$retry_count;
+
 				// Check for rate limiting
 				if ( strpos( $e->getMessage(), '429' ) !== false || strpos( $e->getMessage(), 'quota' ) !== false ) {
 					if ( $retry_count < $max_retries ) {
@@ -209,7 +209,7 @@ class GoogleSearchConsole {
 						continue;
 					}
 				}
-				
+
 				// For other errors, don't retry
 				error_log( 'GSC API error: ' . $e->getMessage() );
 				break;
@@ -233,9 +233,9 @@ class GoogleSearchConsole {
 		// In production, this would make actual API calls to GSC
 		$mock_data = [
 			'impressions' => (string) rand( 5000, 50000 ),
-			'clicks' => (string) rand( 200, 2000 ),
-			'ctr' => number_format( rand( 200, 800 ) / 100, 2 ), // 2.00 - 8.00%
-			'position' => number_format( rand( 300, 1500 ) / 100, 1 ), // 3.0 - 15.0
+			'clicks'      => (string) rand( 200, 2000 ),
+			'ctr'         => number_format( rand( 200, 800 ) / 100, 2 ), // 2.00 - 8.00%
+			'position'    => number_format( rand( 300, 1500 ) / 100, 1 ), // 3.0 - 15.0
 		];
 
 		return $mock_data[ $metric ] ?? '0';
@@ -253,7 +253,7 @@ class GoogleSearchConsole {
 	 */
 	private function store_metrics_in_cache( int $client_id, array $metrics, string $start_date, string $end_date, array $filters = [] ): void {
 		$period_start = $start_date . ' 00:00:00';
-		$period_end = $end_date . ' 23:59:59';
+		$period_end   = $end_date . ' 23:59:59';
 
 		foreach ( $metrics as $metric_name => $value ) {
 			MetricsCache::save(
@@ -264,8 +264,8 @@ class GoogleSearchConsole {
 				$period_end,
 				$value,
 				[
-					'site_url' => $this->site_url,
-					'filters' => $filters,
+					'site_url'   => $this->site_url,
+					'filters'    => $filters,
 					'fetch_date' => current_time( 'mysql' ),
 				]
 			);
@@ -303,10 +303,10 @@ class GoogleSearchConsole {
 
 		// Mock implementation - in production would fetch from API
 		$site_url = get_site_url();
-		$domain = parse_url( $site_url, PHP_URL_HOST );
-		
+		$domain   = parse_url( $site_url, PHP_URL_HOST );
+
 		return [
-			$site_url . '/' => sprintf( 'URL Prefix - %s', $domain ),
+			$site_url . '/'        => sprintf( 'URL Prefix - %s', $domain ),
 			'sc-domain:' . $domain => sprintf( 'Domain Property - %s', $domain ),
 		];
 	}

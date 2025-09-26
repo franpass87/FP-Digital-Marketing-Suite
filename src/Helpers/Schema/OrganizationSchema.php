@@ -20,7 +20,7 @@ class OrganizationSchema extends BaseSchema {
 	 * @return array|null Organization schema or null
 	 */
 	public static function generate(): ?array {
-		$schema = self::create_base_schema( 'Organization' );
+		$schema            = self::create_base_schema( 'Organization' );
 		$organization_data = self::get_organization_schema();
 
 		// Merge organization data
@@ -65,7 +65,7 @@ class OrganizationSchema extends BaseSchema {
 			'twitter_url',
 			'instagram_url',
 			'linkedin_url',
-			'youtube_url'
+			'youtube_url',
 		];
 
 		foreach ( $social_fields as $field ) {
@@ -83,7 +83,7 @@ class OrganizationSchema extends BaseSchema {
 	 * @return array Contact information schema
 	 */
 	private static function get_contact_info(): array {
-		$settings = get_option( 'fp_digital_marketing_schema_settings', [] );
+		$settings     = get_option( 'fp_digital_marketing_schema_settings', [] );
 		$contact_info = [];
 
 		// Add telephone if available
@@ -114,11 +114,11 @@ class OrganizationSchema extends BaseSchema {
 		$settings = get_option( 'fp_digital_marketing_schema_settings', [] );
 
 		$address_fields = [
-			'street_address' => 'streetAddress',
+			'street_address'   => 'streetAddress',
 			'address_locality' => 'addressLocality',
-			'address_region' => 'addressRegion',
-			'postal_code' => 'postalCode',
-			'address_country' => 'addressCountry'
+			'address_region'   => 'addressRegion',
+			'postal_code'      => 'postalCode',
+			'address_country'  => 'addressCountry',
 		];
 
 		$address_data = [];

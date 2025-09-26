@@ -38,22 +38,22 @@ class SecurityAdmin {
 
 	/**
 	 * Add security admin menu
-        *
-         * @return void
-         */
-        public function add_admin_menu(): void {
-                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
-                        return;
-                }
+	 *
+	 * @return void
+	 */
+	public function add_admin_menu(): void {
+		if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+				return;
+		}
 
-                add_submenu_page(
-                        'fp-digital-marketing-dashboard',
-                        __( 'Security Settings', 'fp-digital-marketing' ),
-			__( '🔒 Security', 'fp-digital-marketing' ),
-			Capabilities::MANAGE_SETTINGS,
-			self::PAGE_SLUG,
-			[ $this, 'render_security_page' ]
-		);
+			add_submenu_page(
+				'fp-digital-marketing-dashboard',
+				__( 'Security Settings', 'fp-digital-marketing' ),
+				__( '🔒 Security', 'fp-digital-marketing' ),
+				Capabilities::MANAGE_SETTINGS,
+				self::PAGE_SLUG,
+				[ $this, 'render_security_page' ]
+			);
 	}
 
 	/**
@@ -70,15 +70,15 @@ class SecurityAdmin {
 
 		switch ( $action ) {
 			case 'run_security_audit':
-				if ( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) && 
-					 Security::verify_nonce_with_logging( 'run_security_audit' ) ) {
+				if ( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) &&
+					Security::verify_nonce_with_logging( 'run_security_audit' ) ) {
 					$this->run_security_audit();
 				}
 				break;
 
 			case 'clear_security_logs':
-				if ( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) && 
-					 Security::verify_nonce_with_logging( 'clear_security_logs' ) ) {
+				if ( Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) &&
+					Security::verify_nonce_with_logging( 'clear_security_logs' ) ) {
 					$this->clear_security_logs();
 				}
 				break;
@@ -96,7 +96,10 @@ class SecurityAdmin {
 			return;
 		}
 
-		wp_enqueue_style( 'fp-dms-security-admin', 'data:text/css;base64,' . base64_encode('
+		wp_enqueue_style(
+			'fp-dms-security-admin',
+			'data:text/css;base64,' . base64_encode(
+				'
 			.fp-security-dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
 			.fp-security-card { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px; }
 			.fp-security-score { font-size: 48px; font-weight: bold; text-align: center; margin: 20px 0; }
@@ -110,7 +113,9 @@ class SecurityAdmin {
 			.fp-security-log { font-family: monospace; font-size: 12px; background: #f9f9f9; padding: 10px; margin: 5px 0; border-radius: 3px; }
 			.fp-security-actions { margin: 20px 0; }
 			.fp-security-actions .button { margin-right: 10px; }
-		') );
+		'
+			)
+		);
 	}
 
 	/**
@@ -239,7 +244,7 @@ class SecurityAdmin {
 		set_transient( 'fp_dms_security_audit', $results, HOUR_IN_SECONDS );
 
 		$message = sprintf(
-			__( 'Audit di sicurezza completato. Punteggio: %d%% - %d problemi critici, %d avvisi', 'fp-digital-marketing' ),
+			__( 'Audit di sicurezza completato. Punteggio: %1$d%% - %2$d problemi critici, %3$d avvisi', 'fp-digital-marketing' ),
 			$results['overall_score'],
 			$results['critical_issues'],
 			$results['warnings']
@@ -262,11 +267,11 @@ class SecurityAdmin {
 	 */
 	private function clear_security_logs(): void {
 		Security::clear_security_logs();
-		add_settings_error( 
-			'fp_security_logs', 
-			'logs_cleared', 
-			__( 'Log di sicurezza cancellati con successo.', 'fp-digital-marketing' ), 
-			'success' 
+		add_settings_error(
+			'fp_security_logs',
+			'logs_cleared',
+			__( 'Log di sicurezza cancellati con successo.', 'fp-digital-marketing' ),
+			'success'
 		);
 	}
 }

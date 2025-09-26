@@ -16,7 +16,7 @@ use FP\DigitalMarketing\Helpers\PerformanceCache;
 
 /**
  * Conversion Event Manager class
- * 
+ *
  * Provides high-level methods for managing conversion events, including
  * ingestion, deduplication, and querying with aggregation support.
  */
@@ -53,7 +53,7 @@ class ConversionEventManager {
 		if ( $event->save() ) {
 			// Clear relevant caches
 			self::clear_related_caches( $client_id, $event_data['event_type'] );
-			
+
 			return $event;
 		}
 
@@ -70,28 +70,28 @@ class ConversionEventManager {
 	 */
 	public static function bulk_ingest_events( string $source, array $events_data, int $client_id ): array {
 		$results = [
-			'total' => count( $events_data ),
-			'success' => 0,
+			'total'      => count( $events_data ),
+			'success'    => 0,
 			'duplicates' => 0,
-			'failed' => 0,
-			'errors' => [],
+			'failed'     => 0,
+			'errors'     => [],
 		];
 
 		foreach ( $events_data as $source_data ) {
 			try {
 				$event = self::ingest_event( $source, $source_data, $client_id );
-				
+
 				if ( $event ) {
 					if ( $event->is_duplicate() ) {
-						$results['duplicates']++;
+						++$results['duplicates'];
 					} else {
-						$results['success']++;
+						++$results['success'];
 					}
 				} else {
-					$results['failed']++;
+					++$results['failed'];
 				}
 			} catch ( \Exception $e ) {
-				$results['failed']++;
+				++$results['failed'];
 				$results['errors'][] = $e->getMessage();
 			}
 		}
@@ -107,49 +107,49 @@ class ConversionEventManager {
 	 */
 	private static function check_for_duplicate( array $event_data ): ?ConversionEvent {
 		// Check by source event ID first
-                $existing = null;
+				$existing = null;
 
-                if ( ! empty( $event_data['source_event_id'] ) ) {
-                        $existing = ConversionEvent::load_by_source_event_id( $event_data['source_event_id'], $event_data['source'] );
-                }
-
-                if ( ! $existing && ! empty( $event_data['event_id'] ) ) {
-                        $existing = ConversionEvent::load_by_event_id( $event_data['event_id'], $event_data['source'] );
-                }
-
-                if ( $existing ) {
-                        return $existing;
-                }
-
-                // Check by multiple criteria for potential duplicates
-                $criteria = [
-                        'client_id' => $event_data['client_id'],
-                        'event_type' => $event_data['event_type'],
-			'source' => $event_data['source'],
-		];
-
-		// Add user identification if available
-		if ( ! empty( $event_data['user_id'] ) ) {
-			$criteria['user_id'] = $event_data['user_id'];
+		if ( ! empty( $event_data['source_event_id'] ) ) {
+				$existing = ConversionEvent::load_by_source_event_id( $event_data['source_event_id'], $event_data['source'] );
 		}
 
-		// Check within a time window (5 minutes)
-		if ( ! empty( $event_data['created_at'] ) ) {
-			$timestamp = strtotime( $event_data['created_at'] );
-			$criteria['period_start'] = date( 'Y-m-d H:i:s', $timestamp - 300 ); // 5 minutes before
-			$criteria['period_end'] = date( 'Y-m-d H:i:s', $timestamp + 300 );   // 5 minutes after
+		if ( ! $existing && ! empty( $event_data['event_id'] ) ) {
+				$existing = ConversionEvent::load_by_event_id( $event_data['event_id'], $event_data['source'] );
 		}
 
-		$potential_duplicates = ConversionEventsTable::get_events( $criteria, 10, 0 );
-
-		// Check each potential duplicate for similarity
-		foreach ( $potential_duplicates as $duplicate_data ) {
-			if ( self::are_events_similar( $event_data, $duplicate_data ) ) {
-				return new ConversionEvent( $duplicate_data );
-			}
+		if ( $existing ) {
+				return $existing;
 		}
 
-		return null;
+				// Check by multiple criteria for potential duplicates
+				$criteria = [
+					'client_id'  => $event_data['client_id'],
+					'event_type' => $event_data['event_type'],
+					'source'     => $event_data['source'],
+				];
+
+				// Add user identification if available
+				if ( ! empty( $event_data['user_id'] ) ) {
+					$criteria['user_id'] = $event_data['user_id'];
+				}
+
+				// Check within a time window (5 minutes)
+				if ( ! empty( $event_data['created_at'] ) ) {
+					$timestamp                = strtotime( $event_data['created_at'] );
+					$criteria['period_start'] = date( 'Y-m-d H:i:s', $timestamp - 300 ); // 5 minutes before
+					$criteria['period_end']   = date( 'Y-m-d H:i:s', $timestamp + 300 );   // 5 minutes after
+				}
+
+				$potential_duplicates = ConversionEventsTable::get_events( $criteria, 10, 0 );
+
+				// Check each potential duplicate for similarity
+				foreach ( $potential_duplicates as $duplicate_data ) {
+					if ( self::are_events_similar( $event_data, $duplicate_data ) ) {
+						return new ConversionEvent( $duplicate_data );
+					}
+				}
+
+				return null;
 	}
 
 	/**
@@ -235,10 +235,10 @@ class ConversionEventManager {
 
 		// Event attributes
 		if ( ! empty( $event_data['event_attributes'] ) ) {
-			$attributes = is_array( $event_data['event_attributes'] ) 
-				? $event_data['event_attributes'] 
+			$attributes = is_array( $event_data['event_attributes'] )
+				? $event_data['event_attributes']
 				: json_decode( $event_data['event_attributes'], true );
-			$score += count( $attributes ) * 2;
+			$score     += count( $attributes ) * 2;
 		}
 
 		return $score;
@@ -253,15 +253,18 @@ class ConversionEventManager {
 	 */
 	public static function query_events( array $criteria = [], array $options = [] ): array {
 		// Set defaults
-		$options = wp_parse_args( $options, [
-			'limit' => 50,
-			'offset' => 0,
-			'exclude_duplicates' => true,
-			'include_summary' => false,
-			'group_by' => null,
-			'sort_by' => 'created_at',
-			'sort_order' => 'DESC',
-		] );
+		$options = wp_parse_args(
+			$options,
+			[
+				'limit'              => 50,
+				'offset'             => 0,
+				'exclude_duplicates' => true,
+				'include_summary'    => false,
+				'group_by'           => null,
+				'sort_by'            => 'created_at',
+				'sort_order'         => 'DESC',
+			]
+		);
 
 		// Add exclude duplicates to criteria if requested
 		if ( $options['exclude_duplicates'] ) {
@@ -269,13 +272,13 @@ class ConversionEventManager {
 		}
 
 		// Get events
-		$events = ConversionEventsTable::get_events( $criteria, $options['limit'], $options['offset'] );
+		$events      = ConversionEventsTable::get_events( $criteria, $options['limit'], $options['offset'] );
 		$total_count = ConversionEventsTable::get_events_count( $criteria );
 
 		$results = [
-			'events' => $events,
-			'total_count' => $total_count,
-			'page_count' => ceil( $total_count / $options['limit'] ),
+			'events'       => $events,
+			'total_count'  => $total_count,
+			'page_count'   => ceil( $total_count / $options['limit'] ),
 			'current_page' => floor( $options['offset'] / $options['limit'] ) + 1,
 		];
 
@@ -298,130 +301,130 @@ class ConversionEventManager {
 	 * @param array $criteria Filter criteria
 	 * @return array Summary statistics
 	 */
-	        public static function get_events_summary( array $criteria = [] ): array {
-                $default_summary = [
-                        'total_events'       => 0,
-                        'unique_event_types' => 0,
-                        'unique_sources'     => 0,
-                        'total_value'        => 0.0,
-                        'avg_value'          => 0.0,
-                        'duplicate_count'    => 0,
-                        'breakdown_by_type'  => [],
-                ];
+	public static function get_events_summary( array $criteria = [] ): array {
+		$default_summary = [
+			'total_events'       => 0,
+			'unique_event_types' => 0,
+			'unique_sources'     => 0,
+			'total_value'        => 0.0,
+			'avg_value'          => 0.0,
+			'duplicate_count'    => 0,
+			'breakdown_by_type'  => [],
+		];
 
-                if ( ConversionEventsTable::is_using_option_storage() ) {
-                        $events = ConversionEventsTable::get_events( $criteria, PHP_INT_MAX, 0 );
+		if ( ConversionEventsTable::is_using_option_storage() ) {
+				$events = ConversionEventsTable::get_events( $criteria, PHP_INT_MAX, 0 );
 
-                        if ( empty( $events ) ) {
-                                return $default_summary;
-                        }
+			if ( empty( $events ) ) {
+						return $default_summary;
+			}
 
-                        $total_value     = 0.0;
-                        $duplicate_count = 0;
-                        $types_breakdown = [];
-                        $sources         = [];
+				$total_value     = 0.0;
+				$duplicate_count = 0;
+				$types_breakdown = [];
+				$sources         = [];
 
-                        foreach ( $events as $event ) {
-                                $value              = (float) ( $event['event_value'] ?? 0 );
-                                $total_value       += $value;
-                                $source             = (string) ( $event['source'] ?? '' );
-                                $sources[ $source ] = true;
+			foreach ( $events as $event ) {
+							$value              = (float) ( $event['event_value'] ?? 0 );
+							$total_value       += $value;
+							$source             = (string) ( $event['source'] ?? '' );
+							$sources[ $source ] = true;
 
-                                if ( ! empty( $event['is_duplicate'] ) ) {
-                                        ++$duplicate_count;
-                                }
+				if ( ! empty( $event['is_duplicate'] ) ) {
+						++$duplicate_count;
+				}
 
-                                $event_type = (string) ( $event['event_type'] ?? '' );
+							$event_type = (string) ( $event['event_type'] ?? '' );
 
-                                if ( ! isset( $types_breakdown[ $event_type ] ) ) {
-                                        $types_breakdown[ $event_type ] = [
-                                                'event_type'  => $event_type,
-                                                'count'       => 0,
-                                                'total_value' => 0.0,
-                                        ];
-                                }
+				if ( ! isset( $types_breakdown[ $event_type ] ) ) {
+						$types_breakdown[ $event_type ] = [
+							'event_type'  => $event_type,
+							'count'       => 0,
+							'total_value' => 0.0,
+						];
+				}
 
-                                ++$types_breakdown[ $event_type ]['count'];
-                                $types_breakdown[ $event_type ]['total_value'] += $value;
-                        }
+							++$types_breakdown[ $event_type ]['count'];
+							$types_breakdown[ $event_type ]['total_value'] += $value;
+			}
 
-                        $types_breakdown = array_values( $types_breakdown );
+							$types_breakdown = array_values( $types_breakdown );
 
-                        usort(
-                                $types_breakdown,
-                                static function ( array $a, array $b ) {
-                                        return $b['count'] <=> $a['count'];
-                                }
-                        );
+							usort(
+								$types_breakdown,
+								static function ( array $a, array $b ) {
+										return $b['count'] <=> $a['count'];
+								}
+							);
 
-                        $types_breakdown = array_map(
-                                static function ( array $type_summary ) {
-                                        $type_summary['total_value'] = round( (float) $type_summary['total_value'], 2 );
+				$types_breakdown = array_map(
+					static function ( array $type_summary ) {
+								$type_summary['total_value'] = round( (float) $type_summary['total_value'], 2 );
 
-                                        return $type_summary;
-                                },
-                                $types_breakdown
-                        );
+								return $type_summary;
+					},
+					$types_breakdown
+				);
 
-                        $total_events = count( $events );
-                        $avg_value    = $total_events > 0 ? round( $total_value / $total_events, 2 ) : 0.0;
+				$total_events = count( $events );
+				$avg_value    = $total_events > 0 ? round( $total_value / $total_events, 2 ) : 0.0;
 
-                        return [
-                                'total_events'       => $total_events,
-                                'unique_event_types' => count( $types_breakdown ),
-                                'unique_sources'     => count( $sources ),
-                                'total_value'        => round( $total_value, 2 ),
-                                'avg_value'          => $avg_value,
-                                'duplicate_count'    => $duplicate_count,
-                                'breakdown_by_type'  => $types_breakdown,
-                        ];
-                }
+				return [
+					'total_events'       => $total_events,
+					'unique_event_types' => count( $types_breakdown ),
+					'unique_sources'     => count( $sources ),
+					'total_value'        => round( $total_value, 2 ),
+					'avg_value'          => $avg_value,
+					'duplicate_count'    => $duplicate_count,
+					'breakdown_by_type'  => $types_breakdown,
+				];
+		}
 
-                global $wpdb;
+		global $wpdb;
 
-                if ( ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_row' ) || ! method_exists( $wpdb, 'get_results' ) ) {
-                        return $default_summary;
-                }
+		if ( ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_row' ) || ! method_exists( $wpdb, 'get_results' ) ) {
+				return $default_summary;
+		}
 
-                $table_name    = ConversionEventsTable::get_table_name();
-                $where_clauses = [];
-                $where_values  = [];
+		$table_name    = ConversionEventsTable::get_table_name();
+		$where_clauses = [];
+		$where_values  = [];
 
-                // Build WHERE clause.
-                if ( isset( $criteria['client_id'] ) ) {
-                        $where_clauses[] = 'client_id = %d';
-                        $where_values[]  = $criteria['client_id'];
-                }
+		// Build WHERE clause.
+		if ( isset( $criteria['client_id'] ) ) {
+				$where_clauses[] = 'client_id = %d';
+				$where_values[]  = $criteria['client_id'];
+		}
 
-                if ( isset( $criteria['event_type'] ) ) {
-                        if ( is_array( $criteria['event_type'] ) ) {
-                                $placeholders    = implode( ',', array_fill( 0, count( $criteria['event_type'] ), '%s' ) );
-                                $where_clauses[] = "event_type IN ($placeholders)";
-                                $where_values    = array_merge( $where_values, $criteria['event_type'] );
-                        } else {
-                                $where_clauses[] = 'event_type = %s';
-                                $where_values[]  = $criteria['event_type'];
-                        }
-                }
+		if ( isset( $criteria['event_type'] ) ) {
+			if ( is_array( $criteria['event_type'] ) ) {
+						$placeholders    = implode( ',', array_fill( 0, count( $criteria['event_type'] ), '%s' ) );
+						$where_clauses[] = "event_type IN ($placeholders)";
+						$where_values    = array_merge( $where_values, $criteria['event_type'] );
+			} else {
+							$where_clauses[] = 'event_type = %s';
+							$where_values[]  = $criteria['event_type'];
+			}
+		}
 
-                if ( isset( $criteria['period_start'] ) ) {
-                        $where_clauses[] = 'created_at >= %s';
-                        $where_values[]  = $criteria['period_start'];
-                }
+		if ( isset( $criteria['period_start'] ) ) {
+				$where_clauses[] = 'created_at >= %s';
+				$where_values[]  = $criteria['period_start'];
+		}
 
-                if ( isset( $criteria['period_end'] ) ) {
-                        $where_clauses[] = 'created_at <= %s';
-                        $where_values[]  = $criteria['period_end'];
-                }
+		if ( isset( $criteria['period_end'] ) ) {
+				$where_clauses[] = 'created_at <= %s';
+				$where_values[]  = $criteria['period_end'];
+		}
 
-                if ( isset( $criteria['exclude_duplicates'] ) && $criteria['exclude_duplicates'] ) {
-                        $where_clauses[] = 'is_duplicate = 0';
-                }
+		if ( isset( $criteria['exclude_duplicates'] ) && $criteria['exclude_duplicates'] ) {
+				$where_clauses[] = 'is_duplicate = 0';
+		}
 
-                $where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
+		$where_sql = ! empty( $where_clauses ) ? 'WHERE ' . implode( ' AND ', $where_clauses ) : '';
 
-                // Get summary statistics.
-                $sql = "SELECT
+		// Get summary statistics.
+		$sql = "SELECT
                         COUNT(*) as total_events,
                         COUNT(DISTINCT event_type) as unique_event_types,
                         COUNT(DISTINCT source) as unique_sources,
@@ -430,53 +433,53 @@ class ConversionEventManager {
                         SUM(CASE WHEN is_duplicate = 1 THEN 1 ELSE 0 END) as duplicate_count
                         FROM $table_name $where_sql";
 
-                if ( ! empty( $where_values ) ) {
-                        $sql = $wpdb->prepare( $sql, ...$where_values );
-                }
+		if ( ! empty( $where_values ) ) {
+				$sql = $wpdb->prepare( $sql, ...$where_values );
+		}
 
-                $summary = $wpdb->get_row( $sql, ARRAY_A );
+		$summary = $wpdb->get_row( $sql, ARRAY_A );
 
-                if ( ! $summary ) {
-                        return $default_summary;
-                }
+		if ( ! $summary ) {
+				return $default_summary;
+		}
 
-                // Get breakdown by event type.
-                $type_sql = "SELECT event_type, COUNT(*) as count, SUM(event_value) as total_value
+		// Get breakdown by event type.
+		$type_sql = "SELECT event_type, COUNT(*) as count, SUM(event_value) as total_value
                         FROM $table_name $where_sql
                         GROUP BY event_type
                         ORDER BY count DESC";
 
-                if ( ! empty( $where_values ) ) {
-                        $type_sql = $wpdb->prepare( $type_sql, ...$where_values );
-                }
+		if ( ! empty( $where_values ) ) {
+				$type_sql = $wpdb->prepare( $type_sql, ...$where_values );
+		}
 
-                $breakdown = $wpdb->get_results( $type_sql, ARRAY_A );
+		$breakdown = $wpdb->get_results( $type_sql, ARRAY_A );
 
-                $summary = [
-                        'total_events'       => (int) ( $summary['total_events'] ?? 0 ),
-                        'unique_event_types' => (int) ( $summary['unique_event_types'] ?? 0 ),
-                        'unique_sources'     => (int) ( $summary['unique_sources'] ?? 0 ),
-                        'total_value'        => round( (float) ( $summary['total_value'] ?? 0 ), 2 ),
-                        'avg_value'          => round( (float) ( $summary['avg_value'] ?? 0 ), 2 ),
-                        'duplicate_count'    => (int) ( $summary['duplicate_count'] ?? 0 ),
-                        'breakdown_by_type'  => [],
-                ];
+		$summary = [
+			'total_events'       => (int) ( $summary['total_events'] ?? 0 ),
+			'unique_event_types' => (int) ( $summary['unique_event_types'] ?? 0 ),
+			'unique_sources'     => (int) ( $summary['unique_sources'] ?? 0 ),
+			'total_value'        => round( (float) ( $summary['total_value'] ?? 0 ), 2 ),
+			'avg_value'          => round( (float) ( $summary['avg_value'] ?? 0 ), 2 ),
+			'duplicate_count'    => (int) ( $summary['duplicate_count'] ?? 0 ),
+			'breakdown_by_type'  => [],
+		];
 
-                if ( is_array( $breakdown ) ) {
-                        $summary['breakdown_by_type'] = array_map(
-                                static function ( array $row ) {
-                                        return [
-                                                'event_type'  => (string) ( $row['event_type'] ?? '' ),
-                                                'count'       => (int) ( $row['count'] ?? 0 ),
-                                                'total_value' => round( (float) ( $row['total_value'] ?? 0 ), 2 ),
-                                        ];
-                                },
-                                $breakdown
-                        );
-                }
+		if ( is_array( $breakdown ) ) {
+				$summary['breakdown_by_type'] = array_map(
+					static function ( array $row ) {
+								return [
+									'event_type'  => (string) ( $row['event_type'] ?? '' ),
+									'count'       => (int) ( $row['count'] ?? 0 ),
+									'total_value' => round( (float) ( $row['total_value'] ?? 0 ), 2 ),
+								];
+					},
+					$breakdown
+				);
+		}
 
-                return $summary;
-        }
+		return $summary;
+	}
 
 
 	/**
@@ -493,14 +496,14 @@ class ConversionEventManager {
 			$group_key = $event[ $field ] ?? 'unknown';
 			if ( ! isset( $grouped[ $group_key ] ) ) {
 				$grouped[ $group_key ] = [
-					'events' => [],
-					'count' => 0,
+					'events'      => [],
+					'count'       => 0,
 					'total_value' => 0.0,
 				];
 			}
 
 			$grouped[ $group_key ]['events'][] = $event;
-			$grouped[ $group_key ]['count']++;
+			++$grouped[ $group_key ]['count'];
 			$grouped[ $group_key ]['total_value'] += (float) $event['event_value'];
 		}
 
@@ -514,19 +517,19 @@ class ConversionEventManager {
 	 * @param string $event_type Event type
 	 * @return void
 	 */
-        private static function clear_related_caches( int $client_id, string $event_type ): void {
-                $client_component = $client_id > 0 ? (string) $client_id : 'global';
+	private static function clear_related_caches( int $client_id, string $event_type ): void {
+			$client_component = $client_id > 0 ? (string) $client_id : 'global';
 
-                $patterns_by_group = [
-                        PerformanceCache::CACHE_GROUP_METRICS => sprintf( 'metrics_client_%s_*', $client_component ),
-                        PerformanceCache::CACHE_GROUP_AGGREGATED => sprintf( 'metrics_client_%s_*', $client_component ),
-                        PerformanceCache::CACHE_GROUP_REPORTS => sprintf( 'report_client_%s_*', $client_component ),
-                ];
+			$patterns_by_group = [
+				PerformanceCache::CACHE_GROUP_METRICS    => sprintf( 'metrics_client_%s_*', $client_component ),
+				PerformanceCache::CACHE_GROUP_AGGREGATED => sprintf( 'metrics_client_%s_*', $client_component ),
+				PerformanceCache::CACHE_GROUP_REPORTS    => sprintf( 'report_client_%s_*', $client_component ),
+			];
 
-                foreach ( $patterns_by_group as $cache_group => $pattern ) {
-                        PerformanceCache::clear_cache_by_pattern( $pattern, $cache_group );
-                }
-        }
+			foreach ( $patterns_by_group as $cache_group => $pattern ) {
+					PerformanceCache::clear_cache_by_pattern( $pattern, $cache_group );
+			}
+	}
 
 	/**
 	 * Get conversion funnel analysis
@@ -537,25 +540,25 @@ class ConversionEventManager {
 	 * @return array Funnel analysis data
 	 */
 	public static function get_conversion_funnel( int $client_id, array $funnel_steps, array $criteria = [] ): array {
-		$criteria['client_id'] = $client_id;
+		$criteria['client_id']          = $client_id;
 		$criteria['exclude_duplicates'] = true;
 
 		$funnel_data = [];
 
 		foreach ( $funnel_steps as $step_index => $event_type ) {
 			$step_criteria = array_merge( $criteria, [ 'event_type' => $event_type ] );
-			$step_summary = self::get_events_summary( $step_criteria );
+			$step_summary  = self::get_events_summary( $step_criteria );
 
 			$funnel_data[] = [
-				'step' => $step_index + 1,
-				'event_type' => $event_type,
-				'event_name' => ConversionEventRegistry::get_event_type_name( $event_type ),
-				'count' => $step_summary['total_events'],
-				'total_value' => $step_summary['total_value'],
-				'conversion_rate' => $step_index === 0 ? 100.0 : 
+				'step'            => $step_index + 1,
+				'event_type'      => $event_type,
+				'event_name'      => ConversionEventRegistry::get_event_type_name( $event_type ),
+				'count'           => $step_summary['total_events'],
+				'total_value'     => $step_summary['total_value'],
+				'conversion_rate' => $step_index === 0 ? 100.0 :
 					( $funnel_data[0]['count'] > 0 ? ( $step_summary['total_events'] / $funnel_data[0]['count'] ) * 100 : 0 ),
-				'drop_off_rate' => $step_index === 0 ? 0.0 : 
-					( $funnel_data[ $step_index - 1 ]['count'] > 0 ? 
+				'drop_off_rate'   => $step_index === 0 ? 0.0 :
+					( $funnel_data[ $step_index - 1 ]['count'] > 0 ?
 						( 1 - ( $step_summary['total_events'] / $funnel_data[ $step_index - 1 ]['count'] ) ) * 100 : 0 ),
 			];
 		}
@@ -574,24 +577,24 @@ class ConversionEventManager {
 	public static function get_top_converting_campaigns( int $client_id, array $criteria = [], int $limit = 10 ): array {
 		global $wpdb;
 
-		$table_name = ConversionEventsTable::get_table_name();
+		$table_name    = ConversionEventsTable::get_table_name();
 		$where_clauses = [ 'client_id = %d', 'utm_campaign IS NOT NULL', 'utm_campaign != ""', 'is_duplicate = 0' ];
-		$where_values = [ $client_id ];
+		$where_values  = [ $client_id ];
 
 		// Add additional criteria
 		if ( isset( $criteria['event_type'] ) ) {
 			$where_clauses[] = 'event_type = %s';
-			$where_values[] = $criteria['event_type'];
+			$where_values[]  = $criteria['event_type'];
 		}
 
 		if ( isset( $criteria['period_start'] ) ) {
 			$where_clauses[] = 'created_at >= %s';
-			$where_values[] = $criteria['period_start'];
+			$where_values[]  = $criteria['period_start'];
 		}
 
 		if ( isset( $criteria['period_end'] ) ) {
 			$where_clauses[] = 'created_at <= %s';
-			$where_values[] = $criteria['period_end'];
+			$where_values[]  = $criteria['period_end'];
 		}
 
 		$where_sql = 'WHERE ' . implode( ' AND ', $where_clauses );
@@ -610,7 +613,7 @@ class ConversionEventManager {
 			LIMIT %d";
 
 		$where_values[] = $limit;
-		$sql = $wpdb->prepare( $sql, $where_values );
+		$sql            = $wpdb->prepare( $sql, $where_values );
 
 		return $wpdb->get_results( $sql, ARRAY_A );
 	}

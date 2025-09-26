@@ -27,15 +27,18 @@ class ArticleSchema extends BaseSchema {
 		}
 
 		$schema_type = self::get_schema_type( $post );
-		
-                $schema = self::create_base_schema( $schema_type, [
-                        'headline' => get_the_title( $post ),
-                        'url' => self::get_permalink( $post ),
-                        'datePublished' => isset( $post->post_date ) ? self::format_date( (string) $post->post_date ) : '',
-                        'dateModified' => isset( $post->post_modified ) ? self::format_date( (string) $post->post_modified ) : '',
-                        'author' => self::get_author_info( $post ),
-			'publisher' => self::get_organization_schema()
-		] );
+
+				$schema = self::create_base_schema(
+					$schema_type,
+					[
+						'headline'      => get_the_title( $post ),
+						'url'           => self::get_permalink( $post ),
+						'datePublished' => isset( $post->post_date ) ? self::format_date( (string) $post->post_date ) : '',
+						'dateModified'  => isset( $post->post_modified ) ? self::format_date( (string) $post->post_modified ) : '',
+						'author'        => self::get_author_info( $post ),
+						'publisher'     => self::get_organization_schema(),
+					]
+				);
 
 		// Add description/excerpt
 		$description = self::get_post_description( $post );
@@ -67,8 +70,8 @@ class ArticleSchema extends BaseSchema {
 		}
 
 		// Add article section for categories
-                $post_id = isset( $post->ID ) ? (int) $post->ID : 0;
-                $categories = get_the_category( $post_id );
+				$post_id    = isset( $post->ID ) ? (int) $post->ID : 0;
+				$categories = get_the_category( $post_id );
 		if ( ! empty( $categories ) ) {
 			$schema['articleSection'] = $categories[0]->name;
 		}
@@ -88,11 +91,11 @@ class ArticleSchema extends BaseSchema {
 	/**
 	 * Get appropriate schema type for the post
 	 *
-         * @param object $post Post object
+	 * @param object $post Post object
 	 * @return string Schema type
 	 */
-        private static function get_schema_type( object $post ): string {
-                $post_type = $post->post_type ?? '';
+	private static function get_schema_type( object $post ): string {
+			$post_type = $post->post_type ?? '';
 
 		// Use BlogPosting for blog posts, Article for pages and other content
 		if ( $post_type === 'post' ) {
@@ -106,39 +109,39 @@ class ArticleSchema extends BaseSchema {
 	/**
 	 * Get post description/excerpt
 	 *
-         * @param object $post Post object
+	 * @param object $post Post object
 	 * @return string|null Post description or null
 	 */
-        private static function get_post_description( object $post ): ?string {
+	private static function get_post_description( object $post ): ?string {
 		// Check for custom SEO meta description first
-                $post_id = isset( $post->ID ) ? (int) $post->ID : 0;
-                $seo_description = get_post_meta( $post_id, '_fp_seo_description', true );
+			$post_id         = isset( $post->ID ) ? (int) $post->ID : 0;
+			$seo_description = get_post_meta( $post_id, '_fp_seo_description', true );
 		if ( ! empty( $seo_description ) ) {
 			return wp_strip_all_tags( $seo_description );
 		}
 
 		// Use excerpt if available
-                if ( ! empty( $post->post_excerpt ) ) {
-                        return wp_strip_all_tags( (string) $post->post_excerpt );
-                }
+		if ( ! empty( $post->post_excerpt ) ) {
+				return wp_strip_all_tags( (string) $post->post_excerpt );
+		}
 
-                // Generate excerpt from content
-                $content = isset( $post->post_content ) ? wp_strip_all_tags( (string) $post->post_content ) : '';
-                if ( strlen( $content ) > 160 ) {
-                        $content = substr( $content, 0, 157 ) . '...';
-                }
+			// Generate excerpt from content
+			$content = isset( $post->post_content ) ? wp_strip_all_tags( (string) $post->post_content ) : '';
+		if ( strlen( $content ) > 160 ) {
+				$content = substr( $content, 0, 157 ) . '...';
+		}
 
-		return $content ?: null;
+			return $content ?: null;
 	}
 
 	/**
 	 * Get featured image schema
 	 *
-         * @param object $post Post object
+	 * @param object $post Post object
 	 * @return array|null Image schema or null
 	 */
-        private static function get_featured_image( object $post ): ?array {
-                $thumbnail_id = get_post_thumbnail_id( isset( $post->ID ) ? (int) $post->ID : 0 );
+	private static function get_featured_image( object $post ): ?array {
+			$thumbnail_id = get_post_thumbnail_id( isset( $post->ID ) ? (int) $post->ID : 0 );
 
 		if ( ! $thumbnail_id ) {
 			return null;
@@ -150,13 +153,13 @@ class ArticleSchema extends BaseSchema {
 		}
 
 		$image_meta = wp_get_attachment_metadata( $thumbnail_id );
-		$alt_text = get_post_meta( $thumbnail_id, '_wp_attachment_image_alt', true );
+		$alt_text   = get_post_meta( $thumbnail_id, '_wp_attachment_image_alt', true );
 
 		$image_schema = [
-			'@type' => 'ImageObject',
-			'url' => $image_data[0],
-			'width' => $image_data[1],
-			'height' => $image_data[2]
+			'@type'  => 'ImageObject',
+			'url'    => $image_data[0],
+			'width'  => $image_data[1],
+			'height' => $image_data[2],
 		];
 
 		if ( $alt_text ) {
@@ -164,7 +167,7 @@ class ArticleSchema extends BaseSchema {
 		}
 
 		// Add caption if available
-                $attachment = get_post( $thumbnail_id );
+			$attachment = get_post( $thumbnail_id );
 		if ( $attachment && ! empty( $attachment->post_excerpt ) ) {
 			$image_schema['caption'] = wp_strip_all_tags( $attachment->post_excerpt );
 		}
@@ -175,10 +178,10 @@ class ArticleSchema extends BaseSchema {
 	/**
 	 * Get article body content
 	 *
-         * @param object $post Post object
+	 * @param object $post Post object
 	 * @return string Article body
 	 */
-        private static function get_article_body( object $post ): string {
+	private static function get_article_body( object $post ): string {
 		$content = apply_filters( 'the_content', $post->post_content );
 		return wp_strip_all_tags( $content );
 	}
@@ -186,51 +189,51 @@ class ArticleSchema extends BaseSchema {
 	/**
 	 * Get word count for the post
 	 *
-         * @param object $post Post object
+	 * @param object $post Post object
 	 * @return int Word count
 	 */
-        private static function get_word_count( object $post ): int {
-                $content = isset( $post->post_content ) ? wp_strip_all_tags( (string) $post->post_content ) : '';
+	private static function get_word_count( object $post ): int {
+			$content = isset( $post->post_content ) ? wp_strip_all_tags( (string) $post->post_content ) : '';
 
-                if ( $content === '' ) {
-                        return 0;
-                }
+		if ( $content === '' ) {
+				return 0;
+		}
 
-                $words = str_word_count( $content, 1 );
+			$words = str_word_count( $content, 1 );
 
-                if ( empty( $words ) ) {
-                        return 0;
-                }
+		if ( empty( $words ) ) {
+				return 0;
+		}
 
-                $words = array_filter(
-                        $words,
-                        static function ( $word ): bool {
-                                $length = function_exists( 'mb_strlen' ) ? mb_strlen( $word ) : strlen( $word );
-                                return $length > 1;
-                        }
-                );
+			$words = array_filter(
+				$words,
+				static function ( $word ): bool {
+							$length = function_exists( 'mb_strlen' ) ? mb_strlen( $word ) : strlen( $word );
+							return $length > 1;
+				}
+			);
 
-                return count( $words );
-        }
+			return count( $words );
+	}
 
 	/**
 	 * Get post keywords from categories and tags
 	 *
-         * @param object $post Post object
+	 * @param object $post Post object
 	 * @return array Keywords
 	 */
-        private static function get_post_keywords( object $post ): array {
-                $keywords = [];
-                $post_id = isset( $post->ID ) ? (int) $post->ID : 0;
+	private static function get_post_keywords( object $post ): array {
+			$keywords = [];
+			$post_id  = isset( $post->ID ) ? (int) $post->ID : 0;
 
-                // Get categories
-                $categories = get_the_category( $post_id );
+			// Get categories
+			$categories = get_the_category( $post_id );
 		foreach ( $categories as $category ) {
 			$keywords[] = $category->name;
 		}
 
 		// Get tags
-                $tags = get_the_tags( $post_id );
+			$tags = get_the_tags( $post_id );
 		if ( $tags ) {
 			foreach ( $tags as $tag ) {
 				$keywords[] = $tag->name;

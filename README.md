@@ -1,6 +1,6 @@
 # FP Digital Marketing Suite
 
-The FP Digital Marketing Suite is a comprehensive WordPress toolkit for agencies and growth teams that need dependable client intelligence, actionable analytics and automated marketing workflows. Version 1.1.0 introduces an expanded reporting layer, proactive alerting and a refreshed knowledge base to make onboarding and day-to-day operations faster than ever.
+The FP Digital Marketing Suite is a comprehensive WordPress toolkit for agencies and growth teams that need dependable client intelligence, actionable analytics and automated marketing workflows. Version 1.2.0 hardens the upgrade pipeline with multisite-aware migrations, normalized caches and automated runtime flushes so analytics stay trustworthy immediately after updates.
 
 ## Highlights
 
@@ -17,6 +17,15 @@ The FP Digital Marketing Suite is a comprehensive WordPress toolkit for agencies
 - Composer 2.x
 
 ## Installation
+
+### Using the packaged release (recommended)
+
+1. Download the latest `fp-digital-marketing-suite-1.2.0.zip` archive from the [`dist/`](dist/) directory or the GitHub release.
+2. Upload the ZIP via **Plugins → Add New → Upload Plugin** inside WordPress or extract it into `wp-content/plugins/`.
+3. Activate **FP Digital Marketing Suite** from the plugins list.
+4. Run the included [`verify-deployment.php`](verify-deployment.php) script from wp-admin or WP-CLI to confirm server compatibility.
+
+### From source
 
 1. Clone the repository:
    ```bash
@@ -38,6 +47,16 @@ After activation the suite adds a **Settings → FP Digital Marketing** entry th
 - **General Controls** – Manage organization details, dashboard defaults and automation toggles.
 - **Integrations** – Store credentials for Google Analytics 4, Google Ads, Search Console, Microsoft Clarity and custom data sources.
 - **Permissions** – Map the bundled capabilities to WordPress roles to tailor editorial and analyst access.
+
+### Release Artifacts & Verification
+
+- **Distribution Package** – `dist/fp-digital-marketing-suite-1.2.0.zip`
+- **Checksum** – `dist/fp-digital-marketing-suite-1.2.0.zip.sha256`
+- **Automated Tests** – Run `php phpunit.phar --configuration phpunit.xml`
+- **Static Analysis** – Execute `vendor/bin/phpstan analyse --memory-limit=1G`
+- **Coding Standards** – Execute `vendor/bin/phpcs --report=summary`
+
+See [`docs/audit/release.md`](docs/audit/release.md) for the full release checklist, manual verification steps, and QA outcomes for version 1.2.0.
 
 Settings rely on the WordPress Settings API, enforce nonce validation and sanitize every field before persisting.
 
@@ -352,6 +371,7 @@ For complete API documentation, see [METRICS_QUERY_API.md](METRICS_QUERY_API.md)
 
 | Version | Date       | Highlights |
 |---------|------------|------------|
+| **1.2.0** | 2025-09-26 | Hardened upgrade engine with cache schema migrations, automated runtime cache purges and network-aware version tracking. |
 | **1.1.0** | 2024-04-30 | Advanced reporting workspace, proactive alert center, full documentation refresh, updated author branding. |
 | **1.0.1** | 2024-03-12 | Performance caching layer, unified data aggregation pipeline, onboarding wizard, admin UI optimizations. |
 | **1.0.0** | 2024-01-18 | Initial public release with client management, analytics integrations, marketing automation and SEO tooling. |
@@ -379,3 +399,9 @@ All pull requests must pass the CI pipeline before being merged.
 ## License
 
 This project is licensed under the MIT License.
+
+## Build & Release (CI)
+- Build artifacts (zip) are not tracked in the repository.
+- Pull Request builds generate the plugin zip via CI and expose it as an artifact.
+- Tagging a commit with `v*` triggers a release workflow that attaches the zip and its checksum to the GitHub Release.
+- Local build: `bash scripts/build-plugin-zip.sh` → output in `dist/`.

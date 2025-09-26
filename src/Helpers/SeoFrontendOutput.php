@@ -22,11 +22,11 @@ class SeoFrontendOutput {
 	public static function init(): void {
 		// Hook into wp_head to output meta tags.
 		add_action( 'wp_head', [ self::class, 'output_meta_tags' ], 1 );
-		
+
 		// Remove default WordPress meta tags that we'll replace.
 		remove_action( 'wp_head', '_wp_render_title_tag', 1 );
 		remove_action( 'wp_head', 'wp_generator' );
-		
+
 		// Filter title if needed.
 		add_filter( 'pre_get_document_title', [ self::class, 'filter_document_title' ] );
 		add_filter( 'document_title_separator', [ self::class, 'filter_title_separator' ] );
@@ -101,20 +101,20 @@ class SeoFrontendOutput {
 	 * @return array Array of meta tags.
 	 */
 	private static function generate_home_meta_tags(): array {
-		$meta_tags = [];
+		$meta_tags    = [];
 		$seo_settings = get_option( 'fp_digital_marketing_seo_settings', [] );
 
 		// Title.
 		$site_name = get_bloginfo( 'name' );
-		$tagline = get_bloginfo( 'description' );
-		
+		$tagline   = get_bloginfo( 'description' );
+
 		$title_template = $seo_settings['home_title_template'] ?? '{site_name} - {tagline}';
-		$title = str_replace(
+		$title          = str_replace(
 			[ '{site_name}', '{tagline}' ],
 			[ $site_name, $tagline ],
 			$title_template
 		);
-		
+
 		if ( $title ) {
 			$meta_tags['title'] = wp_strip_all_tags( $title );
 		}
@@ -137,8 +137,8 @@ class SeoFrontendOutput {
 		if ( isset( $meta_tags['description'] ) ) {
 			$meta_tags['og:description'] = $meta_tags['description'];
 		}
-		$meta_tags['og:type'] = 'website';
-		$meta_tags['og:url'] = home_url( '/' );
+		$meta_tags['og:type']      = 'website';
+		$meta_tags['og:url']       = home_url( '/' );
 		$meta_tags['og:site_name'] = $site_name;
 
 		// Default OG image.

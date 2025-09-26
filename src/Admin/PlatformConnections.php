@@ -41,22 +41,22 @@ class PlatformConnections {
 
 	/**
 	 * Add admin menu page
-        *
-         * @return void
-         */
-        public function add_admin_menu(): void {
-                if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
-                        return;
-                }
+	 *
+	 * @return void
+	 */
+	public function add_admin_menu(): void {
+		if ( class_exists( MenuManager::class ) && MenuManager::is_initialized() ) {
+				return;
+		}
 
-                add_submenu_page(
-                        'fp-digital-marketing-dashboard',
-                        __( 'Connessioni Piattaforme', 'fp-digital-marketing' ),
-			__( '🔗 Connessioni', 'fp-digital-marketing' ),
-			Capabilities::MANAGE_SETTINGS,
-			self::PAGE_SLUG,
-			[ $this, 'render_connections_page' ]
-		);
+			add_submenu_page(
+				'fp-digital-marketing-dashboard',
+				__( 'Connessioni Piattaforme', 'fp-digital-marketing' ),
+				__( '🔗 Connessioni', 'fp-digital-marketing' ),
+				Capabilities::MANAGE_SETTINGS,
+				self::PAGE_SLUG,
+				[ $this, 'render_connections_page' ]
+			);
 	}
 
 	/**
@@ -70,25 +70,25 @@ class PlatformConnections {
 			return;
 		}
 
-                wp_enqueue_script(
-                        'fp-platform-connections',
-                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/admin/platform-connections.js',
-                        [ 'jquery', 'wp-util', 'wp-api' ],
-                        FP_DIGITAL_MARKETING_VERSION,
-                        true
-                );
+				wp_enqueue_script(
+					'fp-platform-connections',
+					FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/admin/platform-connections.js',
+					[ 'jquery', 'wp-util', 'wp-api' ],
+					FP_DIGITAL_MARKETING_VERSION,
+					true
+				);
 
 		wp_localize_script(
 			'fp-platform-connections',
 			'fpPlatformConnections',
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce' => wp_create_nonce( 'fp_platform_connections' ),
+				'nonce'   => wp_create_nonce( 'fp_platform_connections' ),
 				'strings' => [
-					'testing' => __( 'Test in corso...', 'fp-digital-marketing' ),
-					'testSuccess' => __( 'Test completato con successo', 'fp-digital-marketing' ),
-					'testFailed' => __( 'Test fallito', 'fp-digital-marketing' ),
-					'refreshing' => __( 'Aggiornamento...', 'fp-digital-marketing' ),
+					'testing'        => __( 'Test in corso...', 'fp-digital-marketing' ),
+					'testSuccess'    => __( 'Test completato con successo', 'fp-digital-marketing' ),
+					'testFailed'     => __( 'Test fallito', 'fp-digital-marketing' ),
+					'refreshing'     => __( 'Aggiornamento...', 'fp-digital-marketing' ),
 					'confirmRefresh' => __( 'Aggiornare lo stato delle connessioni?', 'fp-digital-marketing' ),
 				],
 			]
@@ -107,23 +107,36 @@ class PlatformConnections {
 	 *
 	 * @return void
 	 */
-	public function handle_connection_actions(): void {
-		if ( ! isset( $_GET['page'] ) || $_GET['page'] !== self::PAGE_SLUG ) {
-			return;
-		}
+        public function handle_connection_actions(): void {
+                $page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( (string) $_GET['page'] ) ) : '';
 
-		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
-			return;
-		}
+                if ( self::PAGE_SLUG !== $page ) {
+                        return;
+                }
 
-		// Handle refresh cache action
-		if ( isset( $_GET['action'] ) && $_GET['action'] === 'refresh_cache' && 
-			 wp_verify_nonce( $_GET['_wpnonce'] ?? '', 'refresh_cache' ) ) {
-			ConnectionManager::invalidate_cache();
-			wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG . '&refreshed=1' ) );
-			exit;
-		}
-	}
+                if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+                        return;
+                }
+
+                // Handle refresh cache action
+                $action = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( (string) $_GET['action'] ) ) : '';
+                $nonce  = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['_wpnonce'] ) ) : '';
+
+                if ( 'refresh_cache' === $action && wp_verify_nonce( $nonce, 'refresh_cache' ) ) {
+                        ConnectionManager::invalidate_cache();
+
+                        $redirect_url = add_query_arg(
+                                [
+                                        'page'      => self::PAGE_SLUG,
+                                        'refreshed' => 1,
+                                ],
+                                admin_url( 'admin.php' )
+                        );
+
+                        wp_safe_redirect( $redirect_url );
+                        exit;
+                }
+        }
 
 	/**
 	 * AJAX handler for testing connections
@@ -143,7 +156,10 @@ class PlatformConnections {
 			wp_send_json_error( __( 'Platform ID non specificato', 'fp-digital-marketing' ) );
 		}
 
-		$result = [ 'success' => false, 'message' => __( 'Test non implementato', 'fp-digital-marketing' ) ];
+		$result = [
+			'success' => false,
+			'message' => __( 'Test non implementato', 'fp-digital-marketing' ),
+		];
 
 		switch ( $platform_id ) {
 			case 'google_analytics_4':
@@ -184,13 +200,15 @@ class PlatformConnections {
 
 		ConnectionManager::invalidate_cache();
 		$connections = ConnectionManager::get_all_connections();
-		$health = ConnectionManager::get_connection_health_score();
+		$health      = ConnectionManager::get_connection_health_score();
 
-		wp_send_json_success([
-			'connections' => $connections,
-			'health' => $health,
-			'html' => $this->render_connections_grid( $connections ),
-		]);
+		wp_send_json_success(
+			[
+				'connections' => $connections,
+				'health'      => $health,
+				'html'        => $this->render_connections_grid( $connections ),
+			]
+		);
 	}
 
 	/**
@@ -204,13 +222,13 @@ class PlatformConnections {
 		}
 
 		$connections = ConnectionManager::get_all_connections();
-		$health = ConnectionManager::get_connection_health_score();
+		$health      = ConnectionManager::get_connection_health_score();
 
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Connessioni Piattaforme', 'fp-digital-marketing' ); ?></h1>
 
-			<?php if ( isset( $_GET['refreshed'] ) ): ?>
+			<?php if ( isset( $_GET['refreshed'] ) ) : ?>
 				<div class="notice notice-success is-dismissible">
 					<p><?php esc_html_e( 'Cache delle connessioni aggiornata con successo.', 'fp-digital-marketing' ); ?></p>
 				</div>
@@ -227,12 +245,14 @@ class PlatformConnections {
 					<div class="health-details">
 						<p>
 							<?php
-							echo esc_html( sprintf(
+							echo esc_html(
+								sprintf(
 								/* translators: %1$d: connected platforms, %2$d: total platforms */
-								__( '%1$d di %2$d piattaforme connesse', 'fp-digital-marketing' ),
-								$health['connected_platforms'],
-								$health['total_platforms']
-							) );
+									__( '%1$d di %2$d piattaforme connesse', 'fp-digital-marketing' ),
+									$health['connected_platforms'],
+									$health['total_platforms']
+								)
+							);
 							?>
 						</p>
 						<button type="button" class="button button-secondary" id="refresh-connections">
@@ -243,11 +263,11 @@ class PlatformConnections {
 			</div>
 
 			<!-- Recommendations -->
-			<?php if ( ! empty( $health['recommendations'] ) ): ?>
+			<?php if ( ! empty( $health['recommendations'] ) ) : ?>
 				<div class="fp-recommendations-card">
 					<h3><?php esc_html_e( 'Raccomandazioni', 'fp-digital-marketing' ); ?></h3>
 					<ul class="recommendations-list">
-						<?php foreach ( $health['recommendations'] as $recommendation ): ?>
+						<?php foreach ( $health['recommendations'] as $recommendation ) : ?>
 							<li class="recommendation-item priority-<?php echo esc_attr( $recommendation['priority'] ); ?>">
 								<strong><?php echo esc_html( $recommendation['title'] ); ?></strong>
 								<p><?php echo esc_html( $recommendation['description'] ); ?></p>
@@ -494,10 +514,10 @@ class PlatformConnections {
 	 * @return void
 	 */
 	private function render_connection_card( array $connection ): void {
-		$status_class = 'status-' . $connection['status'];
-		$status_label = $this->get_status_label( $connection['status'] );
+		$status_class    = 'status-' . $connection['status'];
+		$status_label    = $this->get_status_label( $connection['status'] );
 		$has_setup_steps = ! empty( $connection['setup_steps'] );
-		$test_available = $connection['test_available'] ?? false;
+		$test_available  = $connection['test_available'] ?? false;
 		?>
 
 		<div class="connection-card <?php echo esc_attr( $status_class ); ?>">
@@ -512,52 +532,52 @@ class PlatformConnections {
 				<p><strong><?php esc_html_e( 'Stato:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $connection['message'] ); ?></p>
 				<p><small><?php esc_html_e( 'Ultimo controllo:', 'fp-digital-marketing' ); ?> <?php echo esc_html( $connection['last_check'] ); ?></small></p>
 				
-				<?php if ( isset( $connection['client_count'] ) ): ?>
+				<?php if ( isset( $connection['client_count'] ) ) : ?>
 					<p><strong><?php esc_html_e( 'Clienti configurati:', 'fp-digital-marketing' ); ?></strong> <?php echo esc_html( $connection['client_count'] ); ?></p>
 				<?php endif; ?>
 
-				<?php if ( isset( $connection['depends_on'] ) ): ?>
+				<?php if ( isset( $connection['depends_on'] ) ) : ?>
 					<p><em><?php esc_html_e( 'Dipende da:', 'fp-digital-marketing' ); ?> <?php echo esc_html( $connection['depends_on'] ); ?></em></p>
 				<?php endif; ?>
 			</div>
 
 			<div class="connection-actions">
-				<?php if ( $test_available ): ?>
+				<?php if ( $test_available ) : ?>
 					<button type="button" class="button button-secondary test-connection" data-platform="<?php echo esc_attr( $connection['id'] ); ?>">
 						<?php esc_html_e( 'Testa Connessione', 'fp-digital-marketing' ); ?>
 					</button>
 				<?php endif; ?>
 
-				<?php if ( $connection['status'] === ConnectionManager::STATUS_DISCONNECTED && ! ( $connection['coming_soon'] ?? false ) ): ?>
+				<?php if ( $connection['status'] === ConnectionManager::STATUS_DISCONNECTED && ! ( $connection['coming_soon'] ?? false ) ) : ?>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>" class="button button-primary">
 						<?php esc_html_e( 'Configura', 'fp-digital-marketing' ); ?>
 					</a>
 				<?php endif; ?>
 
-				<?php if ( $connection['status'] === ConnectionManager::STATUS_EXPIRED ): ?>
+				<?php if ( $connection['status'] === ConnectionManager::STATUS_EXPIRED ) : ?>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-settings' ) ); ?>" class="button button-primary">
 						<?php esc_html_e( 'Riconnetti', 'fp-digital-marketing' ); ?>
 					</a>
 				<?php endif; ?>
 
-				<?php if ( $connection['id'] === 'microsoft_clarity' ): ?>
+				<?php if ( $connection['id'] === 'microsoft_clarity' ) : ?>
 					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=cliente' ) ); ?>" class="button button-secondary">
 						<?php esc_html_e( 'Configura Clienti', 'fp-digital-marketing' ); ?>
 					</a>
 				<?php endif; ?>
 			</div>
 
-			<?php if ( $has_setup_steps ): ?>
+			<?php if ( $has_setup_steps ) : ?>
 				<div class="setup-steps">
 					<h4><?php esc_html_e( 'Procedura di configurazione:', 'fp-digital-marketing' ); ?></h4>
 					<ol>
-						<?php foreach ( $connection['setup_steps'] as $step ): ?>
+						<?php foreach ( $connection['setup_steps'] as $step ) : ?>
 							<li>
 								<strong><?php echo esc_html( $step['title'] ); ?></strong>
-								<?php if ( ! empty( $step['description'] ) ): ?>
+								<?php if ( ! empty( $step['description'] ) ) : ?>
 									<br><small><?php echo esc_html( $step['description'] ); ?></small>
 								<?php endif; ?>
-								<?php if ( ! empty( $step['url'] ) ): ?>
+								<?php if ( ! empty( $step['url'] ) ) : ?>
 									<br><a href="<?php echo esc_url( $step['url'] ); ?>" target="_blank"><?php esc_html_e( 'Apri link', 'fp-digital-marketing' ); ?> ↗</a>
 								<?php endif; ?>
 							</li>
@@ -566,7 +586,7 @@ class PlatformConnections {
 				</div>
 			<?php endif; ?>
 
-			<?php if ( $connection['coming_soon'] ?? false ): ?>
+			<?php if ( $connection['coming_soon'] ?? false ) : ?>
 				<div class="coming-soon-notice">
 					<p><em><?php esc_html_e( 'Questa integrazione sarà disponibile in una versione futura.', 'fp-digital-marketing' ); ?></em></p>
 				</div>

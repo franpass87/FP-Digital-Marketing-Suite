@@ -19,43 +19,43 @@ use Exception;
  */
 class AnomalyDetector {
 
-        /**
-         * Internal override for supplying historical data during testing.
-         *
-         * @var callable|null
-         * @internal
-         */
-        public static $_test_override = null; // intentionally public for test harness compatibility.
+		/**
+		 * Internal override for supplying historical data during testing.
+		 *
+		 * @var callable|null
+		 * @internal
+		 */
+	public static $_test_override = null; // intentionally public for test harness compatibility.
 
-        /**
-         * Custom historical data provider for dependency injection.
-         *
-         * @var callable|null
-         */
-        /**
-         * @var callable|null
-         */
-        private static $historical_data_provider = null;
+		/**
+		 * Custom historical data provider for dependency injection.
+		 *
+		 * @var callable|null
+		 */
+		/**
+		 * @var callable|null
+		 */
+	private static $historical_data_provider = null;
 
-        /**
-         * Set a custom historical data provider.
-         *
-         * @param callable|null $provider Callback that returns an array of values.
-         * @return void
-         */
-        public static function set_historical_data_provider( ?callable $provider ): void {
-                self::$historical_data_provider = $provider;
-        }
+		/**
+		 * Set a custom historical data provider.
+		 *
+		 * @param callable|null $provider Callback that returns an array of values.
+		 * @return void
+		 */
+	public static function set_historical_data_provider( ?callable $provider ): void {
+			self::$historical_data_provider = $provider;
+	}
 
-        /**
-         * Reset any custom data providers or test overrides.
-         *
-         * @return void
-         */
-        public static function reset_historical_data_provider(): void {
-                self::$historical_data_provider = null;
-                self::$_test_override = null;
-        }
+		/**
+		 * Reset any custom data providers or test overrides.
+		 *
+		 * @return void
+		 */
+	public static function reset_historical_data_provider(): void {
+			self::$historical_data_provider = null;
+			self::$_test_override           = null;
+	}
 
 	/**
 	 * Default number of days to use for historical analysis
@@ -80,72 +80,72 @@ class AnomalyDetector {
 	/**
 	 * Detect anomalies using Z-score analysis
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $metric Metric name
-	 * @param float $current_value Current metric value
-	 * @param array $options Optional parameters (threshold, historical_days)
+	 * @param float  $current_value Current metric value
+	 * @param array  $options Optional parameters (threshold, historical_days)
 	 * @return array Anomaly detection result
 	 */
-        public static function detect_z_score_anomaly( int $client_id, string $metric, float $current_value, array $options = [] ): array {
-                $threshold = $options['threshold'] ?? self::DEFAULT_Z_SCORE_THRESHOLD;
-                $historical_days = $options['historical_days'] ?? self::DEFAULT_HISTORICAL_DAYS;
+	public static function detect_z_score_anomaly( int $client_id, string $metric, float $current_value, array $options = [] ): array {
+			$threshold       = $options['threshold'] ?? self::DEFAULT_Z_SCORE_THRESHOLD;
+			$historical_days = $options['historical_days'] ?? self::DEFAULT_HISTORICAL_DAYS;
 
-                // Get historical data
-                $historical_data = self::get_historical_metric_data( $client_id, $metric, $historical_days );
+			// Get historical data
+			$historical_data = self::get_historical_metric_data( $client_id, $metric, $historical_days );
 
 		if ( count( $historical_data ) < self::MIN_DATA_POINTS ) {
 			return [
-				'is_anomaly' => false,
-				'reason' => 'insufficient_data',
-				'data_points' => count( $historical_data ),
+				'is_anomaly'      => false,
+				'reason'          => 'insufficient_data',
+				'data_points'     => count( $historical_data ),
 				'required_points' => self::MIN_DATA_POINTS,
 			];
 		}
 
 		// Calculate statistics
-		$mean = array_sum( $historical_data ) / count( $historical_data );
+		$mean     = array_sum( $historical_data ) / count( $historical_data );
 		$variance = self::calculate_variance( $historical_data, $mean );
-		$std_dev = sqrt( $variance );
+		$std_dev  = sqrt( $variance );
 
 		// Avoid division by zero
 		if ( $std_dev == 0 ) {
 			return [
 				'is_anomaly' => false,
-				'reason' => 'zero_variance',
-				'mean' => $mean,
-				'std_dev' => $std_dev,
+				'reason'     => 'zero_variance',
+				'mean'       => $mean,
+				'std_dev'    => $std_dev,
 			];
 		}
 
 		// Calculate Z-score
-		$z_score = abs( ( $current_value - $mean ) / $std_dev );
+		$z_score    = abs( ( $current_value - $mean ) / $std_dev );
 		$is_anomaly = $z_score > $threshold;
 
 		return [
-			'is_anomaly' => $is_anomaly,
-			'z_score' => round( $z_score, 4 ),
-			'threshold' => $threshold,
-			'current_value' => $current_value,
-			'mean' => round( $mean, 4 ),
-			'std_dev' => round( $std_dev, 4 ),
+			'is_anomaly'     => $is_anomaly,
+			'z_score'        => round( $z_score, 4 ),
+			'threshold'      => $threshold,
+			'current_value'  => $current_value,
+			'mean'           => round( $mean, 4 ),
+			'std_dev'        => round( $std_dev, 4 ),
 			'deviation_type' => $current_value > $mean ? 'positive' : 'negative',
-			'data_points' => count( $historical_data ),
-			'confidence' => self::calculate_confidence_level( $z_score ),
+			'data_points'    => count( $historical_data ),
+			'confidence'     => self::calculate_confidence_level( $z_score ),
 		];
 	}
 
 	/**
 	 * Detect anomalies using moving average bands
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $metric Metric name
-	 * @param float $current_value Current metric value
-	 * @param array $options Optional parameters (band_deviations, window_size, historical_days)
+	 * @param float  $current_value Current metric value
+	 * @param array  $options Optional parameters (band_deviations, window_size, historical_days)
 	 * @return array Anomaly detection result
 	 */
 	public static function detect_moving_average_anomaly( int $client_id, string $metric, float $current_value, array $options = [] ): array {
 		$band_deviations = $options['band_deviations'] ?? self::DEFAULT_BAND_DEVIATIONS;
-		$window_size = $options['window_size'] ?? 7; // 7-day moving average
+		$window_size     = $options['window_size'] ?? 7; // 7-day moving average
 		$historical_days = $options['historical_days'] ?? self::DEFAULT_HISTORICAL_DAYS;
 
 		// Get historical data
@@ -153,27 +153,27 @@ class AnomalyDetector {
 
 		if ( count( $historical_data ) < max( self::MIN_DATA_POINTS, $window_size ) ) {
 			return [
-				'is_anomaly' => false,
-				'reason' => 'insufficient_data',
-				'data_points' => count( $historical_data ),
+				'is_anomaly'      => false,
+				'reason'          => 'insufficient_data',
+				'data_points'     => count( $historical_data ),
 				'required_points' => max( self::MIN_DATA_POINTS, $window_size ),
 			];
 		}
 
-                // Calculate moving averages and bands
-                $moving_averages = self::calculate_moving_averages( $historical_data, $window_size );
-                $latest_ma = end( $moving_averages );
+				// Calculate moving averages and bands
+				$moving_averages = self::calculate_moving_averages( $historical_data, $window_size );
+				$latest_ma       = end( $moving_averages );
 
-                // Calculate standard deviation using the most recent window of raw values
-                $recent_window = array_slice( $historical_data, -1 * $window_size );
-                $ma_std_dev = self::calculate_standard_deviation( $recent_window );
+				// Calculate standard deviation using the most recent window of raw values
+				$recent_window = array_slice( $historical_data, -1 * $window_size );
+				$ma_std_dev    = self::calculate_standard_deviation( $recent_window );
 
 		if ( $ma_std_dev == 0 ) {
 			return [
-				'is_anomaly' => false,
-				'reason' => 'zero_variance',
+				'is_anomaly'     => false,
+				'reason'         => 'zero_variance',
 				'moving_average' => $latest_ma,
-				'std_dev' => $ma_std_dev,
+				'std_dev'        => $ma_std_dev,
 			];
 		}
 
@@ -186,83 +186,83 @@ class AnomalyDetector {
 
 		// Calculate how far outside the bands (if anomaly)
 		$band_distance = 0;
-		$band_type = 'within';
-		
+		$band_type     = 'within';
+
 		if ( $current_value > $upper_band ) {
 			$band_distance = $current_value - $upper_band;
-			$band_type = 'upper';
+			$band_type     = 'upper';
 		} elseif ( $current_value < $lower_band ) {
 			$band_distance = $lower_band - $current_value;
-			$band_type = 'lower';
+			$band_type     = 'lower';
 		}
 
 		return [
-			'is_anomaly' => $is_anomaly,
-			'current_value' => $current_value,
-			'moving_average' => round( $latest_ma, 4 ),
-			'upper_band' => round( $upper_band, 4 ),
-			'lower_band' => round( $lower_band, 4 ),
-			'band_distance' => round( $band_distance, 4 ),
-			'band_type' => $band_type,
+			'is_anomaly'      => $is_anomaly,
+			'current_value'   => $current_value,
+			'moving_average'  => round( $latest_ma, 4 ),
+			'upper_band'      => round( $upper_band, 4 ),
+			'lower_band'      => round( $lower_band, 4 ),
+			'band_distance'   => round( $band_distance, 4 ),
+			'band_type'       => $band_type,
 			'band_deviations' => $band_deviations,
-			'window_size' => $window_size,
-			'data_points' => count( $historical_data ),
-			'severity' => self::calculate_severity( $band_distance, $ma_std_dev ),
+			'window_size'     => $window_size,
+			'data_points'     => count( $historical_data ),
+			'severity'        => self::calculate_severity( $band_distance, $ma_std_dev ),
 		];
 	}
 
 	/**
 	 * Get historical metric data for analysis
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $metric Metric name
-	 * @param int $days Number of days of historical data
+	 * @param int    $days Number of days of historical data
 	 * @return array Array of daily metric values
 	 */
-        private static function get_historical_metric_data( int $client_id, string $metric, int $days ): array {
-                $provider = self::$historical_data_provider;
+	private static function get_historical_metric_data( int $client_id, string $metric, int $days ): array {
+			$provider = self::$historical_data_provider;
 
-                if ( null !== self::$_test_override ) {
-                        $provider = self::$_test_override;
-                }
+		if ( null !== self::$_test_override ) {
+				$provider = self::$_test_override;
+		}
 
-                if ( null !== $provider ) {
-                        $data = call_user_func( $provider, $client_id, $metric, $days );
-                        if ( is_array( $data ) ) {
-                                $normalized = array_map( 'floatval', $data );
-                                return array_values( array_reverse( $normalized ) );
-                        }
-                }
+		if ( null !== $provider ) {
+				$data = call_user_func( $provider, $client_id, $metric, $days );
+			if ( is_array( $data ) ) {
+					$normalized = array_map( 'floatval', $data );
+					return array_values( array_reverse( $normalized ) );
+			}
+		}
 
-                $historical_data = [];
-                $end_date = current_time( 'mysql' );
+			$historical_data = [];
+			$end_date        = current_time( 'mysql' );
 
-                // Get daily metrics for the specified period
-                for ( $i = 1; $i <= $days; $i++ ) {
-                        $day_end = date( 'Y-m-d 23:59:59', strtotime( "-{$i} days", strtotime( $end_date ) ) );
-                        $day_start = date( 'Y-m-d 00:00:00', strtotime( "-{$i} days", strtotime( $end_date ) ) );
+			// Get daily metrics for the specified period
+		for ( $i = 1; $i <= $days; $i++ ) {
+				$day_end   = date( 'Y-m-d 23:59:59', strtotime( "-{$i} days", strtotime( $end_date ) ) );
+				$day_start = date( 'Y-m-d 00:00:00', strtotime( "-{$i} days", strtotime( $end_date ) ) );
 
-                        try {
-                                $metrics = MetricsAggregator::get_metrics( $client_id, $day_start, $day_end, [ $metric ] );
+			try {
+					$metrics = MetricsAggregator::get_metrics( $client_id, $day_start, $day_end, [ $metric ] );
 
-                                if ( isset( $metrics[ $metric ] ) ) {
-                                        $historical_data[] = (float) $metrics[ $metric ]['total_value'];
-                                } else {
-                                        // Use fallback value if no data available
-                                        $historical_data[] = 0.0;
-                                }
-                        } catch ( Exception $e ) {
-                                // Log error and use fallback value
-                                if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
-                                        error_log( 'FP Digital Marketing Anomaly Detection Error: ' . $e->getMessage() );
-                                }
-                                $historical_data[] = 0.0;
-                        }
-                }
+				if ( isset( $metrics[ $metric ] ) ) {
+					$historical_data[] = (float) $metrics[ $metric ]['total_value'];
+				} else {
+						// Use fallback value if no data available
+						$historical_data[] = 0.0;
+				}
+			} catch ( Exception $e ) {
+					// Log error and use fallback value
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG && function_exists( 'error_log' ) ) {
+						error_log( 'FP Digital Marketing Anomaly Detection Error: ' . $e->getMessage() );
+				}
+					$historical_data[] = 0.0;
+			}
+		}
 
-                // Reverse to get chronological order (oldest first)
-                return array_reverse( $historical_data );
-        }
+			// Reverse to get chronological order (oldest first)
+			return array_reverse( $historical_data );
+	}
 
 	/**
 	 * Calculate variance of a dataset
@@ -273,7 +273,7 @@ class AnomalyDetector {
 	 */
 	private static function calculate_variance( array $data, float $mean ): float {
 		$variance = 0.0;
-		$count = count( $data );
+		$count    = count( $data );
 
 		foreach ( $data as $value ) {
 			$variance += pow( $value - $mean, 2 );
@@ -293,9 +293,9 @@ class AnomalyDetector {
 			return 0.0;
 		}
 
-		$mean = array_sum( $data ) / count( $data );
+		$mean     = array_sum( $data ) / count( $data );
 		$variance = self::calculate_variance( $data, $mean );
-		
+
 		return sqrt( $variance );
 	}
 
@@ -303,15 +303,15 @@ class AnomalyDetector {
 	 * Calculate moving averages for a dataset
 	 *
 	 * @param array $data Dataset
-	 * @param int $window_size Window size for moving average
+	 * @param int   $window_size Window size for moving average
 	 * @return array Array of moving averages
 	 */
 	private static function calculate_moving_averages( array $data, int $window_size ): array {
 		$moving_averages = [];
-		$data_count = count( $data );
+		$data_count      = count( $data );
 
 		for ( $i = $window_size - 1; $i < $data_count; $i++ ) {
-			$window = array_slice( $data, $i - $window_size + 1, $window_size );
+			$window            = array_slice( $data, $i - $window_size + 1, $window_size );
 			$moving_averages[] = array_sum( $window ) / $window_size;
 		}
 
@@ -366,19 +366,19 @@ class AnomalyDetector {
 	/**
 	 * Perform comprehensive anomaly analysis using multiple methods
 	 *
-	 * @param int $client_id Client ID
+	 * @param int    $client_id Client ID
 	 * @param string $metric Metric name
-	 * @param float $current_value Current metric value
-	 * @param array $options Optional parameters
+	 * @param float  $current_value Current metric value
+	 * @param array  $options Optional parameters
 	 * @return array Comprehensive analysis result
 	 */
 	public static function analyze_anomaly( int $client_id, string $metric, float $current_value, array $options = [] ): array {
-		$z_score_result = self::detect_z_score_anomaly( $client_id, $metric, $current_value, $options );
+		$z_score_result    = self::detect_z_score_anomaly( $client_id, $metric, $current_value, $options );
 		$moving_avg_result = self::detect_moving_average_anomaly( $client_id, $metric, $current_value, $options );
 
 		// Determine overall anomaly status
 		$is_anomaly = $z_score_result['is_anomaly'] || $moving_avg_result['is_anomaly'];
-		
+
 		// Calculate combined confidence
 		$combined_confidence = 'normal';
 		if ( $is_anomaly ) {
@@ -390,14 +390,14 @@ class AnomalyDetector {
 		}
 
 		return [
-			'is_anomaly' => $is_anomaly,
-			'current_value' => $current_value,
-			'metric' => $metric,
-			'client_id' => $client_id,
-			'combined_confidence' => $combined_confidence,
-			'z_score_analysis' => $z_score_result,
+			'is_anomaly'              => $is_anomaly,
+			'current_value'           => $current_value,
+			'metric'                  => $metric,
+			'client_id'               => $client_id,
+			'combined_confidence'     => $combined_confidence,
+			'z_score_analysis'        => $z_score_result,
 			'moving_average_analysis' => $moving_avg_result,
-			'timestamp' => current_time( 'mysql' ),
+			'timestamp'               => current_time( 'mysql' ),
 		];
 	}
 

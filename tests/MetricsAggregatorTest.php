@@ -15,85 +15,85 @@ use FP\DigitalMarketing\Models\MetricsCache;
  */
 class WPDBStub {
 
-        /**
-         * Database table prefix.
-         *
-         * @var string
-         */
-        public $prefix = 'wp_';
+		/**
+		 * Database table prefix.
+		 *
+		 * @var string
+		 */
+		public $prefix = 'wp_';
 
-        /**
-         * Mocked query results returned by get_results.
-         *
-         * @var array
-         */
-        public $results = [];
+		/**
+		 * Mocked query results returned by get_results.
+		 *
+		 * @var array
+		 */
+		public $results = [];
 
-        /**
-         * Insert id placeholder for compatibility.
-         *
-         * @var int
-         */
-        public $insert_id = 0;
+		/**
+		 * Insert id placeholder for compatibility.
+		 *
+		 * @var int
+		 */
+		public $insert_id = 0;
 
-        /**
-         * Mimic wpdb::prepare by returning the original query.
-         *
-         * @param string $query SQL query.
-         * @param mixed  ...$args Unused parameters.
-         * @return string Prepared query.
-         */
-        public function prepare( string $query, ...$args ): string { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-                return $query;
-        }
+		/**
+		 * Mimic wpdb::prepare by returning the original query.
+		 *
+		 * @param string $query SQL query.
+		 * @param mixed  ...$args Unused parameters.
+		 * @return string Prepared query.
+		 */
+	public function prepare( string $query, ...$args ): string { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+			return $query;
+	}
 
-        /**
-         * Return the configured mock results for a query.
-         *
-         * @param mixed $query SQL query.
-         * @return array Mocked results.
-         */
-        public function get_results( $query ): array { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-                return $this->results;
-        }
+		/**
+		 * Return the configured mock results for a query.
+		 *
+		 * @param mixed $query SQL query.
+		 * @return array Mocked results.
+		 */
+	public function get_results( $query ): array { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+			return $this->results;
+	}
 
-        /**
-         * Provide compatibility for calls to get_var.
-         *
-         * @param mixed $query SQL query.
-         * @return mixed Null for tests.
-         */
-        public function get_var( $query = null, $x = 0, $y = 0 ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-                return null;
-        }
+		/**
+		 * Provide compatibility for calls to get_var.
+		 *
+		 * @param mixed $query SQL query.
+		 * @return mixed Null for tests.
+		 */
+	public function get_var( $query = null, $x = 0, $y = 0 ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+			return null;
+	}
 
-        /**
-         * Simulate insert operations.
-         *
-         * @return int Always indicates success.
-         */
-        public function insert( ...$args ): int { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-                $this->insert_id++;
-                return 1;
-        }
+		/**
+		 * Simulate insert operations.
+		 *
+		 * @return int Always indicates success.
+		 */
+	public function insert( ...$args ): int { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+			++$this->insert_id;
+			return 1;
+	}
 
-        /**
-         * Provide compatibility for query method.
-         *
-         * @return bool Always success.
-         */
-        public function query( ...$args ): bool { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-                return true;
-        }
+		/**
+		 * Provide compatibility for query method.
+		 *
+		 * @return bool Always success.
+		 */
+	public function query( ...$args ): bool { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+			return true;
+	}
 
-        /**
-         * Return a default charset for table creation helpers.
-         *
-         * @return string Charset string.
-         */
-        public function get_charset_collate(): string {
-                return 'utf8_general_ci';
-        }
+		/**
+		 * Return a default charset for table creation helpers.
+		 *
+		 * @return string Charset string.
+		 */
+	public function get_charset_collate(): string {
+			return 'utf8_general_ci';
+	}
 }
 
 /**
@@ -101,12 +101,12 @@ class WPDBStub {
  */
 class MetricsAggregatorTest extends TestCase {
 
-        /**
-         * Mock wpdb object
-         *
-         * @var WPDBStub
-         */
-        private $wpdb_mock;
+		/**
+		 * Mock wpdb object
+		 *
+		 * @var WPDBStub
+		 */
+		private $wpdb_mock;
 
 	/**
 	 * Set up test environment
@@ -114,21 +114,21 @@ class MetricsAggregatorTest extends TestCase {
 	public function setUp(): void {
 		parent::setUp();
 
-                // Create mock wpdb
-                $this->wpdb_mock = new WPDBStub();
+				// Create mock wpdb
+				$this->wpdb_mock = new WPDBStub();
 
-                // Set global wpdb
-                global $wpdb;
-                $wpdb = $this->wpdb_mock;
-        }
+				// Set global wpdb
+				global $wpdb;
+				$wpdb = $this->wpdb_mock;
+	}
 
 	/**
 	 * Test generating mock data
 	 */
 	public function test_generate_mock_data(): void {
-		$client_id = 123;
+		$client_id    = 123;
 		$period_start = '2024-01-01 00:00:00';
-		$period_end = '2024-01-31 23:59:59';
+		$period_end   = '2024-01-31 23:59:59';
 
 		$mock_data = MetricsAggregator::generate_mock_data( $client_id, $period_start, $period_end );
 
@@ -163,11 +163,11 @@ class MetricsAggregatorTest extends TestCase {
 	/**
 	 * Test getting aggregated metrics with mocked MetricsCache
 	 */
-        public function test_get_aggregated_metrics(): void {
-                // Since we can't easily mock static methods in this setup,
-                // we'll test the core normalization and aggregation logic instead
+	public function test_get_aggregated_metrics(): void {
+			// Since we can't easily mock static methods in this setup,
+			// we'll test the core normalization and aggregation logic instead
 
-                // Test metric normalization
+			// Test metric normalization
 		$normalized_sessions = MetricsSchema::normalize_metric_name( 'google_analytics_4', 'sessions' );
 		$this->assertEquals( MetricsSchema::KPI_SESSIONS, $normalized_sessions );
 
@@ -182,41 +182,41 @@ class MetricsAggregatorTest extends TestCase {
 			(object) [
 				'source' => 'google_analytics_4',
 				'metric' => 'sessions',
-				'value' => '1500',
+				'value'  => '1500',
 			],
 			(object) [
 				'source' => 'google_analytics_4',
 				'metric' => 'users',
-				'value' => '1200',
+				'value'  => '1200',
 			],
 			(object) [
 				'source' => 'facebook_ads',
 				'metric' => 'impressions',
-				'value' => '25000',
+				'value'  => '25000',
 			],
 		];
 
 		// Test aggregation simulation
 		$aggregated = [];
-		
+
 		foreach ( $mock_raw_metrics as $metric ) {
 			$normalized_kpi = MetricsSchema::normalize_metric_name( $metric->source, $metric->metric );
-			
+
 			if ( ! isset( $aggregated[ $normalized_kpi ] ) ) {
 				$aggregated[ $normalized_kpi ] = [
-					'kpi' => $normalized_kpi,
-					'values' => [],
-					'sources' => [],
+					'kpi'         => $normalized_kpi,
+					'values'      => [],
+					'sources'     => [],
 					'total_value' => 0,
-					'count' => 0,
+					'count'       => 0,
 				];
 			}
 
-			$value = is_numeric( $metric->value ) ? (float) $metric->value : 0;
-			$aggregated[ $normalized_kpi ]['values'][] = $value;
+			$value                                      = is_numeric( $metric->value ) ? (float) $metric->value : 0;
+			$aggregated[ $normalized_kpi ]['values'][]  = $value;
 			$aggregated[ $normalized_kpi ]['sources'][] = $metric->source;
-			$aggregated[ $normalized_kpi ]['count']++;
-			
+			++$aggregated[ $normalized_kpi ]['count'];
+
 			// Apply sum aggregation (default)
 			$aggregated[ $normalized_kpi ]['total_value'] += $value;
 		}
@@ -226,127 +226,130 @@ class MetricsAggregatorTest extends TestCase {
 		$this->assertArrayHasKey( MetricsSchema::KPI_USERS, $aggregated );
 		$this->assertArrayHasKey( MetricsSchema::KPI_IMPRESSIONS, $aggregated );
 
-                $this->assertEquals( 1500, $aggregated[ MetricsSchema::KPI_SESSIONS ]['total_value'] );
-                $this->assertEquals( 1200, $aggregated[ MetricsSchema::KPI_USERS ]['total_value'] );
-                $this->assertEquals( 25000, $aggregated[ MetricsSchema::KPI_IMPRESSIONS ]['total_value'] );
-        }
+			$this->assertEquals( 1500, $aggregated[ MetricsSchema::KPI_SESSIONS ]['total_value'] );
+			$this->assertEquals( 1200, $aggregated[ MetricsSchema::KPI_USERS ]['total_value'] );
+			$this->assertEquals( 25000, $aggregated[ MetricsSchema::KPI_IMPRESSIONS ]['total_value'] );
+	}
 
+		/**
+		 * Ensure average and percentile aggregations work for search and Core Web Vitals metrics.
+		 */
         /**
-         * Ensure average and percentile aggregations work for search and Core Web Vitals metrics.
+         * @group integration
          */
         public function test_average_and_percentile_aggregations(): void {
-                $client_id = 456;
-                $period_start = '2024-03-01 00:00:00';
-                $period_end = '2024-03-31 23:59:59';
+			$client_id    = 456;
+			$period_start = '2024-03-01 00:00:00';
+			$period_end   = '2024-03-31 23:59:59';
 
-                $dataset = [
-                        (object) [
-                                'source' => 'google_search_console',
-                                'metric' => 'position',
-                                'value' => '2.5',
-                        ],
-                        (object) [
-                                'source' => 'google_search_console',
-                                'metric' => 'position',
-                                'value' => '3.5',
-                        ],
-                        (object) [
-                                'source' => 'core_web_vitals',
-                                'metric' => 'lcp',
-                                'value' => '1800',
-                        ],
-                        (object) [
-                                'source' => 'core_web_vitals',
-                                'metric' => 'lcp',
-                                'value' => '2600',
-                        ],
-                        (object) [
-                                'source' => 'core_web_vitals',
-                                'metric' => 'lcp',
-                                'value' => '4000',
-                        ],
-                        (object) [
-                                'source' => 'core_web_vitals',
-                                'metric' => 'inp',
-                                'value' => '150',
-                        ],
-                        (object) [
-                                'source' => 'core_web_vitals',
-                                'metric' => 'inp',
-                                'value' => '450',
-                        ],
-                        (object) [
-                                'source' => 'core_web_vitals',
-                                'metric' => 'cls',
-                                'value' => '0.05',
-                        ],
-                        (object) [
-                                'source' => 'core_web_vitals',
-                                'metric' => 'cls',
-                                'value' => '0.12',
-                        ],
-                        (object) [
-                                'source' => 'core_web_vitals',
-                                'metric' => 'cls',
-                                'value' => '0.30',
-                        ],
-                ];
+			$dataset = [
+				(object) [
+					'source' => 'google_search_console',
+					'metric' => 'position',
+					'value'  => '2.5',
+				],
+				(object) [
+					'source' => 'google_search_console',
+					'metric' => 'position',
+					'value'  => '3.5',
+				],
+				(object) [
+					'source' => 'core_web_vitals',
+					'metric' => 'lcp',
+					'value'  => '1800',
+				],
+				(object) [
+					'source' => 'core_web_vitals',
+					'metric' => 'lcp',
+					'value'  => '2600',
+				],
+				(object) [
+					'source' => 'core_web_vitals',
+					'metric' => 'lcp',
+					'value'  => '4000',
+				],
+				(object) [
+					'source' => 'core_web_vitals',
+					'metric' => 'inp',
+					'value'  => '150',
+				],
+				(object) [
+					'source' => 'core_web_vitals',
+					'metric' => 'inp',
+					'value'  => '450',
+				],
+				(object) [
+					'source' => 'core_web_vitals',
+					'metric' => 'cls',
+					'value'  => '0.05',
+				],
+				(object) [
+					'source' => 'core_web_vitals',
+					'metric' => 'cls',
+					'value'  => '0.12',
+				],
+				(object) [
+					'source' => 'core_web_vitals',
+					'metric' => 'cls',
+					'value'  => '0.30',
+				],
+			];
 
-                $this->wpdb_mock->results = $dataset;
+			$this->wpdb_mock->results = $dataset;
 
-                $kpis = [
-                        MetricsSchema::KPI_AVG_POSITION,
-                        MetricsSchema::KPI_LCP,
-                        MetricsSchema::KPI_INP,
-                        MetricsSchema::KPI_CLS,
-                ];
+			$kpis = [
+				MetricsSchema::KPI_AVG_POSITION,
+				MetricsSchema::KPI_LCP,
+				MetricsSchema::KPI_INP,
+				MetricsSchema::KPI_CLS,
+			];
 
-                $aggregated = MetricsAggregator::get_metrics( $client_id, $period_start, $period_end, $kpis );
+			$aggregated = MetricsAggregator::get_metrics( $client_id, $period_start, $period_end, $kpis );
 
-                $this->assertEqualsWithDelta( 3.0, $aggregated[ MetricsSchema::KPI_AVG_POSITION ]['total_value'], 0.0001 );
-                $this->assertEquals( 2, $aggregated[ MetricsSchema::KPI_AVG_POSITION ]['count'] );
+			$this->assertEqualsWithDelta( 3.0, $aggregated[ MetricsSchema::KPI_AVG_POSITION ]['total_value'], 0.0001 );
+			$this->assertEquals( 2, $aggregated[ MetricsSchema::KPI_AVG_POSITION ]['count'] );
 
-                $this->assertEqualsWithDelta( 3300.0, $aggregated[ MetricsSchema::KPI_LCP ]['total_value'], 0.0001 );
-                $this->assertEquals( 3, $aggregated[ MetricsSchema::KPI_LCP ]['count'] );
+			$this->assertEqualsWithDelta( 3300.0, $aggregated[ MetricsSchema::KPI_LCP ]['total_value'], 0.0001 );
+			$this->assertEquals( 3, $aggregated[ MetricsSchema::KPI_LCP ]['count'] );
 
-                $this->assertEqualsWithDelta( 375.0, $aggregated[ MetricsSchema::KPI_INP ]['total_value'], 0.0001 );
-                $this->assertEquals( 2, $aggregated[ MetricsSchema::KPI_INP ]['count'] );
+			$this->assertEqualsWithDelta( 375.0, $aggregated[ MetricsSchema::KPI_INP ]['total_value'], 0.0001 );
+			$this->assertEquals( 2, $aggregated[ MetricsSchema::KPI_INP ]['count'] );
 
-                $this->assertEqualsWithDelta( 0.21, $aggregated[ MetricsSchema::KPI_CLS ]['total_value'], 0.0001 );
-                $this->assertEquals( 3, $aggregated[ MetricsSchema::KPI_CLS ]['count'] );
+			$this->assertEqualsWithDelta( 0.21, $aggregated[ MetricsSchema::KPI_CLS ]['total_value'], 0.0001 );
+			$this->assertEquals( 3, $aggregated[ MetricsSchema::KPI_CLS ]['count'] );
 
-                // Reset dataset for summary call to avoid cache side effects.
-                $this->wpdb_mock->results = $dataset;
+			// Reset dataset for summary call to avoid cache side effects.
+			$this->wpdb_mock->results = $dataset;
 
-                $summary = MetricsAggregator::get_kpi_summary( $client_id, $period_start, $period_end );
+			$summary = MetricsAggregator::get_kpi_summary( $client_id, $period_start, $period_end );
 
-                $this->assertArrayHasKey( MetricsSchema::KPI_AVG_POSITION, $summary );
-                $this->assertEqualsWithDelta( 3.0, $summary[ MetricsSchema::KPI_AVG_POSITION ]['value'], 0.0001 );
-                $this->assertTrue( $summary[ MetricsSchema::KPI_AVG_POSITION ]['has_data'] );
+			$this->assertArrayHasKey( MetricsSchema::KPI_AVG_POSITION, $summary );
+			$this->assertEqualsWithDelta( 3.0, $summary[ MetricsSchema::KPI_AVG_POSITION ]['value'], 0.0001 );
+			$this->assertTrue( $summary[ MetricsSchema::KPI_AVG_POSITION ]['has_data'] );
 
-                $this->assertArrayHasKey( MetricsSchema::KPI_LCP, $summary );
-                $this->assertEqualsWithDelta( 3300.0, $summary[ MetricsSchema::KPI_LCP ]['value'], 0.0001 );
-                $this->assertTrue( $summary[ MetricsSchema::KPI_LCP ]['has_data'] );
+			$this->assertArrayHasKey( MetricsSchema::KPI_LCP, $summary );
+			$this->assertEqualsWithDelta( 3300.0, $summary[ MetricsSchema::KPI_LCP ]['value'], 0.0001 );
+			$this->assertTrue( $summary[ MetricsSchema::KPI_LCP ]['has_data'] );
 
-                $this->assertArrayHasKey( MetricsSchema::KPI_INP, $summary );
-                $this->assertEqualsWithDelta( 375.0, $summary[ MetricsSchema::KPI_INP ]['value'], 0.0001 );
-                $this->assertTrue( $summary[ MetricsSchema::KPI_INP ]['has_data'] );
+			$this->assertArrayHasKey( MetricsSchema::KPI_INP, $summary );
+			$this->assertEqualsWithDelta( 375.0, $summary[ MetricsSchema::KPI_INP ]['value'], 0.0001 );
+			$this->assertTrue( $summary[ MetricsSchema::KPI_INP ]['has_data'] );
 
-                $this->assertArrayHasKey( MetricsSchema::KPI_CLS, $summary );
-                $this->assertEqualsWithDelta( 0.21, $summary[ MetricsSchema::KPI_CLS ]['value'], 0.0001 );
-                $this->assertTrue( $summary[ MetricsSchema::KPI_CLS ]['has_data'] );
-        }
+			$this->assertArrayHasKey( MetricsSchema::KPI_CLS, $summary );
+			$this->assertEqualsWithDelta( 0.21, $summary[ MetricsSchema::KPI_CLS ]['value'], 0.0001 );
+			$this->assertTrue( $summary[ MetricsSchema::KPI_CLS ]['has_data'] );
+	}
 
-        /**
-         * Test fallback application
-         */
-        public function test_fallback_application(): void {
-                // Test with empty data to ensure fallbacks are applied
+		/**
+		 * Test fallback application
+		 */
+	public function test_fallback_application(): void {
+			// Test with empty data to ensure fallbacks are applied
 		$mock_data = MetricsAggregator::generate_mock_data( 123, '2024-01-01 00:00:00', '2024-01-31 23:59:59' );
-		
+
 		// Clear data to test fallbacks
 		$empty_aggregated = [];
-		$requested_kpis = [ MetricsSchema::KPI_SESSIONS, MetricsSchema::KPI_USERS ];
+		$requested_kpis   = [ MetricsSchema::KPI_SESSIONS, MetricsSchema::KPI_USERS ];
 
 		// Simulate fallback application by checking that generate_mock_data includes all expected KPIs
 		$this->assertArrayHasKey( MetricsSchema::KPI_SESSIONS, $mock_data );
@@ -385,19 +388,19 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_query_metrics_advanced(): void {
 		$query_params = [
-			'client_id' => 123,
-			'period_start' => '2024-01-01 00:00:00',
-			'period_end' => '2024-01-31 23:59:59',
-			'kpis' => [ MetricsSchema::KPI_SESSIONS, MetricsSchema::KPI_USERS ],
-			'sources' => [ 'google_analytics_4' ],
-			'source_types' => [ 'analytics' ],
-			'categories' => [ MetricsSchema::CATEGORY_TRAFFIC ],
-			'aggregation' => 'sum',
+			'client_id'      => 123,
+			'period_start'   => '2024-01-01 00:00:00',
+			'period_end'     => '2024-01-31 23:59:59',
+			'kpis'           => [ MetricsSchema::KPI_SESSIONS, MetricsSchema::KPI_USERS ],
+			'sources'        => [ 'google_analytics_4' ],
+			'source_types'   => [ 'analytics' ],
+			'categories'     => [ MetricsSchema::CATEGORY_TRAFFIC ],
+			'aggregation'    => 'sum',
 			'include_trends' => false,
-			'limit' => 10,
-			'offset' => 0,
-			'sort_by' => 'value',
-			'sort_order' => 'desc',
+			'limit'          => 10,
+			'offset'         => 0,
+			'sort_by'        => 'value',
+			'sort_order'     => 'desc',
 		];
 
 		$result = MetricsAggregator::query_metrics( $query_params );
@@ -426,14 +429,14 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_get_metrics_by_type(): void {
 		$metric_types = [ 'traffic', 'conversion' ];
-		
+
 		// Since we can't easily mock the MetricsCache::get_metrics call,
 		// we'll test the method exists and returns an array
-		$result = MetricsAggregator::get_metrics_by_type( 
-			123, 
-			'2024-01-01 00:00:00', 
-			'2024-01-31 23:59:59', 
-			$metric_types 
+		$result = MetricsAggregator::get_metrics_by_type(
+			123,
+			'2024-01-01 00:00:00',
+			'2024-01-31 23:59:59',
+			$metric_types
 		);
 
 		$this->assertIsArray( $result );
@@ -444,12 +447,12 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_get_metrics_by_source_type(): void {
 		$source_types = [ 'analytics', 'advertising' ];
-		
-		$result = MetricsAggregator::get_metrics_by_source_type( 
-			123, 
-			'2024-01-01 00:00:00', 
-			'2024-01-31 23:59:59', 
-			$source_types 
+
+		$result = MetricsAggregator::get_metrics_by_source_type(
+			123,
+			'2024-01-01 00:00:00',
+			'2024-01-31 23:59:59',
+			$source_types
 		);
 
 		$this->assertIsArray( $result );
@@ -459,18 +462,18 @@ class MetricsAggregatorTest extends TestCase {
 	 * Test get_trending_metrics method
 	 */
 	public function test_get_trending_metrics(): void {
-		$result = MetricsAggregator::get_trending_metrics( 
-			123, 
-			'2024-01-01 00:00:00', 
-			'2024-01-31 23:59:59', 
-			4 
+		$result = MetricsAggregator::get_trending_metrics(
+			123,
+			'2024-01-01 00:00:00',
+			'2024-01-31 23:59:59',
+			4
 		);
 
 		$this->assertIsArray( $result );
-		
+
 		// Test structure with mock data
 		$mock_data = MetricsAggregator::generate_mock_data( 123, '2024-01-01 00:00:00', '2024-01-31 23:59:59' );
-		
+
 		// Verify mock data has expected structure that trending analysis would use
 		foreach ( $mock_data as $kpi => $data ) {
 			$this->assertArrayHasKey( 'total_value', $data );
@@ -484,19 +487,19 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_search_metrics(): void {
 		$search_term = 'sessions';
-		
-		$result = MetricsAggregator::search_metrics( 
-			123, 
-			'2024-01-01 00:00:00', 
-			'2024-01-31 23:59:59', 
-			$search_term 
+
+		$result = MetricsAggregator::search_metrics(
+			123,
+			'2024-01-01 00:00:00',
+			'2024-01-31 23:59:59',
+			$search_term
 		);
 
 		$this->assertIsArray( $result );
-		
+
 		// Test the search functionality with mock data
 		$mock_data = MetricsAggregator::generate_mock_data( 123, '2024-01-01 00:00:00', '2024-01-31 23:59:59' );
-		
+
 		// Verify that sessions KPI exists in mock data (it should be searchable)
 		$this->assertArrayHasKey( MetricsSchema::KPI_SESSIONS, $mock_data );
 	}
@@ -506,9 +509,9 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_query_metrics_with_trends(): void {
 		$query_params = [
-			'client_id' => 123,
-			'period_start' => '2024-01-01 00:00:00',
-			'period_end' => '2024-01-31 23:59:59',
+			'client_id'      => 123,
+			'period_start'   => '2024-01-01 00:00:00',
+			'period_end'     => '2024-01-31 23:59:59',
 			'include_trends' => true,
 		];
 
@@ -516,7 +519,7 @@ class MetricsAggregatorTest extends TestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'results', $result );
-		
+
 		// Check if trends would be included (structure test)
 		$this->assertTrue( $query_params['include_trends'] );
 	}
@@ -526,10 +529,10 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_query_metrics_custom_aggregation(): void {
 		$query_params = [
-			'client_id' => 123,
+			'client_id'    => 123,
 			'period_start' => '2024-01-01 00:00:00',
-			'period_end' => '2024-01-31 23:59:59',
-			'aggregation' => 'average',
+			'period_end'   => '2024-01-31 23:59:59',
+			'aggregation'  => 'average',
 		];
 
 		$result = MetricsAggregator::query_metrics( $query_params );
@@ -544,11 +547,11 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_query_metrics_sorting(): void {
 		$query_params = [
-			'client_id' => 123,
+			'client_id'    => 123,
 			'period_start' => '2024-01-01 00:00:00',
-			'period_end' => '2024-01-31 23:59:59',
-			'sort_by' => 'name',
-			'sort_order' => 'asc',
+			'period_end'   => '2024-01-31 23:59:59',
+			'sort_by'      => 'name',
+			'sort_order'   => 'asc',
 		];
 
 		$result = MetricsAggregator::query_metrics( $query_params );
@@ -564,11 +567,11 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_query_metrics_pagination(): void {
 		$query_params = [
-			'client_id' => 123,
+			'client_id'    => 123,
 			'period_start' => '2024-01-01 00:00:00',
-			'period_end' => '2024-01-31 23:59:59',
-			'limit' => 5,
-			'offset' => 10,
+			'period_end'   => '2024-01-31 23:59:59',
+			'limit'        => 5,
+			'offset'       => 10,
 		];
 
 		$result = MetricsAggregator::query_metrics( $query_params );
@@ -585,11 +588,11 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_query_metrics_multiple_filters(): void {
 		$query_params = [
-			'client_id' => 123,
+			'client_id'    => 123,
 			'period_start' => '2024-01-01 00:00:00',
-			'period_end' => '2024-01-31 23:59:59',
-			'kpis' => [ MetricsSchema::KPI_SESSIONS, MetricsSchema::KPI_USERS ],
-			'categories' => [ MetricsSchema::CATEGORY_TRAFFIC ],
+			'period_end'   => '2024-01-31 23:59:59',
+			'kpis'         => [ MetricsSchema::KPI_SESSIONS, MetricsSchema::KPI_USERS ],
+			'categories'   => [ MetricsSchema::CATEGORY_TRAFFIC ],
 			'source_types' => [ 'analytics' ],
 			'metric_types' => [ 'traffic' ],
 		];
@@ -606,9 +609,9 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_query_metrics_empty_params(): void {
 		$query_params = [
-			'client_id' => 0,
+			'client_id'    => 0,
 			'period_start' => '',
-			'period_end' => '',
+			'period_end'   => '',
 		];
 
 		$result = MetricsAggregator::query_metrics( $query_params );
@@ -623,15 +626,15 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_query_metrics_result_structure(): void {
 		$query_params = [
-			'client_id' => 123,
+			'client_id'    => 123,
 			'period_start' => '2024-01-01 00:00:00',
-			'period_end' => '2024-01-31 23:59:59',
+			'period_end'   => '2024-01-31 23:59:59',
 		];
 
 		$result = MetricsAggregator::query_metrics( $query_params );
 
 		$this->assertIsArray( $result );
-		
+
 		// Check top-level structure
 		$this->assertArrayHasKey( 'query_params', $result );
 		$this->assertArrayHasKey( 'results', $result );
@@ -658,17 +661,17 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_period_comparison_calculation(): void {
 		// Test the mathematical logic for period comparison
-		$current_value = 1500;
+		$current_value  = 1500;
 		$previous_value = 1200;
 
-		$change = $current_value - $previous_value;
+		$change            = $current_value - $previous_value;
 		$change_percentage = $previous_value > 0 ? ( $change / $previous_value ) * 100 : 0;
 
 		$this->assertEquals( 300, $change );
 		$this->assertEquals( 25, $change_percentage );
 
 		// Test with zero previous value
-		$previous_value_zero = 0;
+		$previous_value_zero    = 0;
 		$change_percentage_zero = $previous_value_zero > 0 ? ( $change / $previous_value_zero ) * 100 : 0;
 		$this->assertEquals( 0, $change_percentage_zero );
 
@@ -706,17 +709,17 @@ class MetricsAggregatorTest extends TestCase {
 	public function test_aggregation_methods(): void {
 		// Test sum aggregation
 		$values = [ 100, 200, 300 ];
-		$sum = array_sum( $values );
+		$sum    = array_sum( $values );
 		$this->assertEquals( 600, $sum );
 
 		// Test average aggregation
-		$count = count( $values );
+		$count   = count( $values );
 		$average = $sum / $count;
 		$this->assertEquals( 200, $average );
 
 		// Test with single value
-		$single_value = [ 150 ];
-		$single_sum = array_sum( $single_value );
+		$single_value   = [ 150 ];
+		$single_sum     = array_sum( $single_value );
 		$single_average = $single_sum / count( $single_value );
 		$this->assertEquals( 150, $single_sum );
 		$this->assertEquals( 150, $single_average );
@@ -727,10 +730,10 @@ class MetricsAggregatorTest extends TestCase {
 	 */
 	public function test_data_quality_assessment(): void {
 		// Test coverage percentage calculation
-		$total_sources = 5;
-		$active_sources = 3;
+		$total_sources       = 5;
+		$active_sources      = 3;
 		$coverage_percentage = $total_sources > 0 ? round( ( $active_sources / $total_sources ) * 100, 2 ) : 0;
-		
+
 		$this->assertEquals( 60.0, $coverage_percentage );
 
 		// Test with zero sources
@@ -748,31 +751,43 @@ class MetricsAggregatorTest extends TestCase {
 	public function test_metric_source_grouping(): void {
 		// Test grouping metrics by source
 		$mock_metrics = [
-			(object) [ 'source' => 'google_analytics_4', 'metric' => 'sessions', 'value' => '1500' ],
-			(object) [ 'source' => 'google_analytics_4', 'metric' => 'users', 'value' => '1200' ],
-			(object) [ 'source' => 'facebook_ads', 'metric' => 'impressions', 'value' => '25000' ],
+			(object) [
+				'source' => 'google_analytics_4',
+				'metric' => 'sessions',
+				'value'  => '1500',
+			],
+			(object) [
+				'source' => 'google_analytics_4',
+				'metric' => 'users',
+				'value'  => '1200',
+			],
+			(object) [
+				'source' => 'facebook_ads',
+				'metric' => 'impressions',
+				'value'  => '25000',
+			],
 		];
 
 		$by_source = [];
 		foreach ( $mock_metrics as $metric ) {
 			if ( ! isset( $by_source[ $metric->source ] ) ) {
 				$by_source[ $metric->source ] = [
-					'source' => $metric->source,
-					'metrics' => [],
+					'source'        => $metric->source,
+					'metrics'       => [],
 					'total_metrics' => 0,
 				];
 			}
-			
+
 			$by_source[ $metric->source ]['metrics'][ $metric->metric ] = $metric->value;
-			$by_source[ $metric->source ]['total_metrics']++;
+			++$by_source[ $metric->source ]['total_metrics'];
 		}
 
 		$this->assertArrayHasKey( 'google_analytics_4', $by_source );
 		$this->assertArrayHasKey( 'facebook_ads', $by_source );
-		
+
 		$this->assertEquals( 2, $by_source['google_analytics_4']['total_metrics'] );
 		$this->assertEquals( 1, $by_source['facebook_ads']['total_metrics'] );
-		
+
 		$this->assertArrayHasKey( 'sessions', $by_source['google_analytics_4']['metrics'] );
 		$this->assertArrayHasKey( 'users', $by_source['google_analytics_4']['metrics'] );
 		$this->assertArrayHasKey( 'impressions', $by_source['facebook_ads']['metrics'] );
@@ -786,11 +801,11 @@ class MetricsAggregatorTest extends TestCase {
 		$this->assertTrue( MetricsSchema::is_standard_kpi( MetricsSchema::KPI_SESSIONS ) );
 		$this->assertEquals( 'sum', MetricsSchema::get_aggregation_method( MetricsSchema::KPI_SESSIONS ) );
 		$this->assertEquals( 'average', MetricsSchema::get_aggregation_method( MetricsSchema::KPI_BOUNCE_RATE ) );
-		
+
 		// Test normalization integration
 		$normalized = MetricsSchema::normalize_metric_name( 'google_analytics_4', 'sessions' );
 		$this->assertEquals( MetricsSchema::KPI_SESSIONS, $normalized );
-		
+
 		// Test category filtering
 		$traffic_kpis = MetricsSchema::get_kpis_by_category( MetricsSchema::CATEGORY_TRAFFIC );
 		$this->assertContains( MetricsSchema::KPI_SESSIONS, $traffic_kpis );

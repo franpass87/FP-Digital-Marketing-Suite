@@ -68,7 +68,7 @@ class ClientePostType {
 			'public'             => false,
 			'publicly_queryable' => false,
 			'show_ui'            => true,
-                        'show_in_menu'       => 'fp-digital-marketing-dashboard',
+			'show_in_menu'       => 'fp-digital-marketing-dashboard',
 			'query_var'          => true,
 			'rewrite'            => [ 'slug' => 'cliente' ],
 			'capability_type'    => 'post',

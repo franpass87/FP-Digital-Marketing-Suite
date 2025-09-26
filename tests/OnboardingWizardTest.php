@@ -30,7 +30,7 @@ class OnboardingWizardTest extends TestCase {
 		$this->assertFalse( OnboardingWizard::is_completed() );
 
 		// Simulate completion
-                update_option( SettingsManager::OPTION_WIZARD_COMPLETED, true );
+				update_option( SettingsManager::OPTION_WIZARD_COMPLETED, true );
 		$this->assertTrue( OnboardingWizard::is_completed() );
 
 		// Reset
@@ -48,11 +48,11 @@ class OnboardingWizardTest extends TestCase {
 		// Simulate saving progress
 		$progress = [
 			'services' => [ 'google_analytics_4' ],
-			'metrics' => [ 'sessions', 'pageviews' ],
+			'metrics'  => [ 'sessions', 'pageviews' ],
 		];
-                update_option( SettingsManager::OPTION_WIZARD_PROGRESS, $progress );
+				update_option( SettingsManager::OPTION_WIZARD_PROGRESS, $progress );
 
-                $saved_progress = get_option( SettingsManager::OPTION_WIZARD_PROGRESS, [] );
+				$saved_progress = get_option( SettingsManager::OPTION_WIZARD_PROGRESS, [] );
 		$this->assertEquals( $progress['services'], $saved_progress['services'] );
 		$this->assertEquals( $progress['metrics'], $saved_progress['metrics'] );
 
@@ -65,15 +65,15 @@ class OnboardingWizardTest extends TestCase {
 	 */
 	public function test_wizard_reset(): void {
 		// Set some options
-                update_option( SettingsManager::OPTION_WIZARD_COMPLETED, true );
-                update_option( SettingsManager::OPTION_WIZARD_PROGRESS, [ 'test' => 'data' ] );
+				update_option( SettingsManager::OPTION_WIZARD_COMPLETED, true );
+				update_option( SettingsManager::OPTION_WIZARD_PROGRESS, [ 'test' => 'data' ] );
 
 		// Reset
 		OnboardingWizard::reset();
 
 		// Verify options are cleared
-                $this->assertFalse( get_option( SettingsManager::OPTION_WIZARD_COMPLETED, false ) );
-                $this->assertEquals( [], get_option( SettingsManager::OPTION_WIZARD_PROGRESS, [] ) );
+				$this->assertFalse( get_option( SettingsManager::OPTION_WIZARD_COMPLETED, false ) );
+				$this->assertEquals( [], get_option( SettingsManager::OPTION_WIZARD_PROGRESS, [] ) );
 	}
 
 	/**
@@ -90,7 +90,7 @@ class OnboardingWizardTest extends TestCase {
 
 		if ( ! function_exists( 'update_option' ) ) {
 			function update_option( $option, $value ) {
-				static $options = [];
+				static $options     = [];
 				$options[ $option ] = $value;
 				return true;
 			}

@@ -43,10 +43,10 @@ class Security {
 		}
 
 		$key = self::get_encryption_key();
-		$iv = random_bytes( openssl_cipher_iv_length( self::ENCRYPTION_METHOD ) );
-		
+		$iv  = random_bytes( openssl_cipher_iv_length( self::ENCRYPTION_METHOD ) );
+
 		$encrypted = openssl_encrypt( $data, self::ENCRYPTION_METHOD, $key, 0, $iv );
-		
+
 		if ( false === $encrypted ) {
 			error_log( 'FP Digital Marketing: Failed to encrypt sensitive data' );
 			return '';
@@ -73,19 +73,19 @@ class Security {
 			return '';
 		}
 
-		$key = self::get_encryption_key();
+		$key       = self::get_encryption_key();
 		$iv_length = openssl_cipher_iv_length( self::ENCRYPTION_METHOD );
-		
+
 		if ( strlen( $data ) < $iv_length ) {
 			error_log( 'FP Digital Marketing: Encrypted data too short for IV' );
 			return '';
 		}
 
-		$iv = substr( $data, 0, $iv_length );
+		$iv        = substr( $data, 0, $iv_length );
 		$encrypted = substr( $data, $iv_length );
 
 		$decrypted = openssl_decrypt( $encrypted, self::ENCRYPTION_METHOD, $key, 0, $iv );
-		
+
 		if ( false === $decrypted ) {
 			error_log( 'FP Digital Marketing: Failed to decrypt sensitive data' );
 			return '';
@@ -106,7 +106,7 @@ class Security {
 		if ( empty( $stored_key ) ) {
 			// Generate new key using WordPress salts and constants
 			$key_material = '';
-			
+
 			// Use WordPress security salts if available
 			if ( defined( 'AUTH_SALT' ) ) {
 				$key_material .= AUTH_SALT;
@@ -126,15 +126,15 @@ class Security {
 			if ( defined( 'ABSPATH' ) ) {
 				$key_material .= ABSPATH;
 			}
-			
+
 			// Fallback if no key material
 			if ( empty( $key_material ) ) {
 				$key_material = 'fp-digital-marketing-fallback-key-' . time();
 			}
-			
+
 			// Use simple sha256 hash for 32-byte key
 			$key = hash( 'sha256', $key_material, true );
-			
+
 			$stored_key = base64_encode( $key );
 			update_option( $key_option, $stored_key, false ); // autoload = false for security
 		}
@@ -145,7 +145,7 @@ class Security {
 			delete_option( $key_option );
 			return self::get_encryption_key();
 		}
-		
+
 		return $key;
 	}
 
@@ -156,28 +156,44 @@ class Security {
 	 * @param string $name Nonce field name.
 	 * @return bool True if nonce is valid.
 	 */
-	public static function verify_nonce_with_logging( string $action, string $name = '_wpnonce' ): bool {
-		$nonce = $_POST[ $name ] ?? $_GET[ $name ] ?? '';
-		
-		if ( empty( $nonce ) ) {
-			self::log_security_event( 'nonce_missing', [
-				'action' => $action,
-				'name' => $name,
-				'user_id' => get_current_user_id(),
-				'ip' => self::get_client_ip(),
-			] );
+        public static function verify_nonce_with_logging( string $action, string $name = '_wpnonce' ): bool {
+                $nonce = '';
+
+                if ( isset( $_POST[ $name ] ) ) {
+                        $nonce = wp_unslash( $_POST[ $name ] );
+                } elseif ( isset( $_GET[ $name ] ) ) {
+                        $nonce = wp_unslash( $_GET[ $name ] );
+                }
+
+                if ( ! is_string( $nonce ) ) {
+                        $nonce = '';
+                }
+
+                if ( empty( $nonce ) ) {
+                        self::log_security_event(
+                                'nonce_missing',
+                                [
+					'action'  => $action,
+					'name'    => $name,
+					'user_id' => get_current_user_id(),
+					'ip'      => self::get_client_ip(),
+				]
+			);
 			return false;
 		}
 
-		$verified = wp_verify_nonce( $nonce, $action );
-		
+                $verified = wp_verify_nonce( $nonce, $action );
+
 		if ( ! $verified ) {
-			self::log_security_event( 'nonce_invalid', [
-				'action' => $action,
-				'name' => $name,
-				'user_id' => get_current_user_id(),
-				'ip' => self::get_client_ip(),
-			] );
+			self::log_security_event(
+				'nonce_invalid',
+				[
+					'action'  => $action,
+					'name'    => $name,
+					'user_id' => get_current_user_id(),
+					'ip'      => self::get_client_ip(),
+				]
+			);
 		}
 
 		return (bool) $verified;
@@ -195,12 +211,15 @@ class Security {
 		$has_cap = current_user_can( $capability, $object_id );
 
 		if ( ! $has_cap ) {
-			self::log_security_event( 'capability_denied', [
-				'capability' => $capability,
-				'object_id' => $object_id,
-				'user_id' => $user_id,
-				'ip' => self::get_client_ip(),
-			] );
+			self::log_security_event(
+				'capability_denied',
+				[
+					'capability' => $capability,
+					'object_id'  => $object_id,
+					'user_id'    => $user_id,
+					'ip'         => self::get_client_ip(),
+				]
+			);
 		}
 
 		return $has_cap;
@@ -213,34 +232,34 @@ class Security {
 	 */
 	public static function run_security_audit(): array {
 		self::$audit_results = [
-			'timestamp' => current_time( 'mysql' ),
-			'plugin_version' => FP_DIGITAL_MARKETING_VERSION,
-			'wp_version' => get_bloginfo( 'version' ),
-			'php_version' => PHP_VERSION,
-			'checks' => [],
-			'overall_score' => 0,
+			'timestamp'       => current_time( 'mysql' ),
+			'plugin_version'  => FP_DIGITAL_MARKETING_VERSION,
+			'wp_version'      => get_bloginfo( 'version' ),
+			'php_version'     => PHP_VERSION,
+			'checks'          => [],
+			'overall_score'   => 0,
 			'critical_issues' => 0,
-			'warnings' => 0,
+			'warnings'        => 0,
 		];
 
 		// Check WordPress version
 		self::audit_wordpress_version();
-		
+
 		// Check PHP version
 		self::audit_php_version();
-		
+
 		// Check file permissions
 		self::audit_file_permissions();
-		
+
 		// Check security constants
 		self::audit_security_constants();
-		
+
 		// Check encryption capabilities
 		self::audit_encryption_support();
-		
+
 		// Check database security
 		self::audit_database_security();
-		
+
 		// Check API key storage
 		self::audit_api_key_storage();
 
@@ -258,21 +277,21 @@ class Security {
 	 */
 	public static function log_security_event( string $event_type, array $context = [] ): void {
 		$log_entry = [
-			'timestamp' => current_time( 'c' ),
+			'timestamp'  => current_time( 'c' ),
 			'event_type' => $event_type,
-			'context' => $context,
+			'context'    => $context,
 		];
 
 		error_log( 'FP Digital Marketing Security Event: ' . wp_json_encode( $log_entry ) );
-		
+
 		// Store in database for admin review
 		$security_logs = get_option( 'fp_dms_security_logs', [] );
-		
+
 		// Keep only last 100 entries
 		if ( count( $security_logs ) >= 100 ) {
 			$security_logs = array_slice( $security_logs, -99 );
 		}
-		
+
 		$security_logs[] = $log_entry;
 		update_option( 'fp_dms_security_logs', $security_logs, false );
 	}
@@ -296,32 +315,40 @@ class Security {
 		];
 
 		foreach ( $headers as $header ) {
-			if ( ! empty( $_SERVER[ $header ] ) ) {
-				$ip = sanitize_text_field( wp_unslash( $_SERVER[ $header ] ) );
-				// Take first IP if comma-separated list
-				$ip = explode( ',', $ip )[0];
-				$ip = trim( $ip );
-				
-				if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
-					return $ip;
-				}
-			}
-		}
+                        if ( ! empty( $_SERVER[ $header ] ) ) {
+                                $ip = sanitize_text_field( wp_unslash( $_SERVER[ $header ] ) );
+                                // Take first IP if comma-separated list
+                                $ip = explode( ',', $ip )[0];
+                                $ip = trim( $ip );
 
-		return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-	}
+                                if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE ) ) {
+                                        return $ip;
+                                }
+                        }
+                }
+
+                if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
+                        $remote_addr = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
+
+                        if ( filter_var( $remote_addr, FILTER_VALIDATE_IP ) ) {
+                                return $remote_addr;
+                        }
+                }
+
+                return 'unknown';
+        }
 
 	/**
 	 * Audit WordPress version
 	 */
 	private static function audit_wordpress_version(): void {
-		$wp_version = get_bloginfo( 'version' );
+		$wp_version     = get_bloginfo( 'version' );
 		$latest_version = '6.4'; // This would ideally be fetched from WordPress.org API
-		
+
 		$check = [
-			'name' => __( 'WordPress Version', 'fp-digital-marketing' ),
-			'status' => version_compare( $wp_version, '5.0', '>=' ) ? 'pass' : 'fail',
-			'message' => sprintf( __( 'WordPress version: %s', 'fp-digital-marketing' ), $wp_version ),
+			'name'     => __( 'WordPress Version', 'fp-digital-marketing' ),
+			'status'   => version_compare( $wp_version, '5.0', '>=' ) ? 'pass' : 'fail',
+			'message'  => sprintf( __( 'WordPress version: %s', 'fp-digital-marketing' ), $wp_version ),
 			'severity' => version_compare( $wp_version, '5.0', '<' ) ? 'critical' : 'info',
 		];
 
@@ -338,11 +365,11 @@ class Security {
 	 */
 	private static function audit_php_version(): void {
 		$php_version = PHP_VERSION;
-		
+
 		$check = [
-			'name' => __( 'PHP Version', 'fp-digital-marketing' ),
-			'status' => version_compare( $php_version, '7.4', '>=' ) ? 'pass' : 'fail',
-			'message' => sprintf( __( 'PHP version: %s', 'fp-digital-marketing' ), $php_version ),
+			'name'     => __( 'PHP Version', 'fp-digital-marketing' ),
+			'status'   => version_compare( $php_version, '7.4', '>=' ) ? 'pass' : 'fail',
+			'message'  => sprintf( __( 'PHP version: %s', 'fp-digital-marketing' ), $php_version ),
 			'severity' => version_compare( $php_version, '7.4', '<' ) ? 'critical' : 'info',
 		];
 
@@ -353,14 +380,14 @@ class Security {
 	 * Audit file permissions
 	 */
 	private static function audit_file_permissions(): void {
-		$plugin_dir = defined( 'FP_DIGITAL_MARKETING_PLUGIN_DIR' ) ? FP_DIGITAL_MARKETING_PLUGIN_DIR : __DIR__ . '/../../';
-		$perms = @fileperms( $plugin_dir );
+		$plugin_dir     = defined( 'FP_DIGITAL_MARKETING_PLUGIN_DIR' ) ? FP_DIGITAL_MARKETING_PLUGIN_DIR : __DIR__ . '/../../';
+		$perms          = @fileperms( $plugin_dir );
 		$readable_perms = $perms !== false ? substr( sprintf( '%o', $perms ), -4 ) : 'unknown';
-		
+
 		$check = [
-			'name' => __( 'File Permissions', 'fp-digital-marketing' ),
-			'status' => $perms !== false ? 'pass' : 'fail',
-			'message' => sprintf( __( 'Plugin directory permissions: %s', 'fp-digital-marketing' ), $readable_perms ),
+			'name'     => __( 'File Permissions', 'fp-digital-marketing' ),
+			'status'   => $perms !== false ? 'pass' : 'fail',
+			'message'  => sprintf( __( 'Plugin directory permissions: %s', 'fp-digital-marketing' ), $readable_perms ),
 			'severity' => 'info',
 		];
 
@@ -386,9 +413,9 @@ class Security {
 		}
 
 		$check = [
-			'name' => __( 'Security Constants', 'fp-digital-marketing' ),
-			'status' => empty( $missing_constants ) ? 'pass' : 'fail',
-			'message' => empty( $missing_constants ) 
+			'name'     => __( 'Security Constants', 'fp-digital-marketing' ),
+			'status'   => empty( $missing_constants ) ? 'pass' : 'fail',
+			'message'  => empty( $missing_constants )
 				? __( 'All security constants are defined', 'fp-digital-marketing' )
 				: sprintf( __( 'Missing constants: %s', 'fp-digital-marketing' ), implode( ', ', $missing_constants ) ),
 			'severity' => empty( $missing_constants ) ? 'info' : 'critical',
@@ -402,11 +429,11 @@ class Security {
 	 */
 	private static function audit_encryption_support(): void {
 		$has_openssl = extension_loaded( 'openssl' );
-		
+
 		$check = [
-			'name' => __( 'Encryption Support', 'fp-digital-marketing' ),
-			'status' => $has_openssl ? 'pass' : 'fail',
-			'message' => $has_openssl ? __( 'OpenSSL extension available', 'fp-digital-marketing' ) : __( 'OpenSSL extension not available', 'fp-digital-marketing' ),
+			'name'     => __( 'Encryption Support', 'fp-digital-marketing' ),
+			'status'   => $has_openssl ? 'pass' : 'fail',
+			'message'  => $has_openssl ? __( 'OpenSSL extension available', 'fp-digital-marketing' ) : __( 'OpenSSL extension not available', 'fp-digital-marketing' ),
 			'severity' => $has_openssl ? 'info' : 'critical',
 		];
 
@@ -418,16 +445,16 @@ class Security {
 	 */
 	private static function audit_database_security(): void {
 		global $wpdb;
-		
+
 		$db_version = '';
 		if ( isset( $wpdb ) && method_exists( $wpdb, 'get_var' ) ) {
 			$db_version = $wpdb->get_var( 'SELECT VERSION()' );
 		}
-		
+
 		$check = [
-			'name' => __( 'Database Security', 'fp-digital-marketing' ),
-			'status' => ! empty( $db_version ) ? 'pass' : 'warning',
-			'message' => ! empty( $db_version ) ? sprintf( __( 'Database version: %s', 'fp-digital-marketing' ), $db_version ) : __( 'Database connection not available in test environment', 'fp-digital-marketing' ),
+			'name'     => __( 'Database Security', 'fp-digital-marketing' ),
+			'status'   => ! empty( $db_version ) ? 'pass' : 'warning',
+			'message'  => ! empty( $db_version ) ? sprintf( __( 'Database version: %s', 'fp-digital-marketing' ), $db_version ) : __( 'Database connection not available in test environment', 'fp-digital-marketing' ),
 			'severity' => ! empty( $db_version ) ? 'info' : 'warning',
 		];
 
@@ -438,26 +465,26 @@ class Security {
 	 * Audit API key storage
 	 */
 	private static function audit_api_key_storage(): void {
-		$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
+		$api_keys        = get_option( 'fp_digital_marketing_api_keys', [] );
 		$encrypted_count = 0;
-		$total_count = 0;
+		$total_count     = 0;
 
 		foreach ( $api_keys as $key => $value ) {
 			if ( ! empty( $value ) ) {
-				$total_count++;
+				++$total_count;
 				// Check if value looks encrypted (base64 encoded)
 				if ( base64_encode( base64_decode( $value, true ) ) === $value ) {
-					$encrypted_count++;
+					++$encrypted_count;
 				}
 			}
 		}
 
 		$status = $total_count === 0 ? 'pass' : ( $encrypted_count === $total_count ? 'pass' : 'warning' );
-		
+
 		$check = [
-			'name' => __( 'API Key Storage', 'fp-digital-marketing' ),
-			'status' => $status,
-			'message' => sprintf( __( 'API keys: %d total, %d encrypted', 'fp-digital-marketing' ), $total_count, $encrypted_count ),
+			'name'     => __( 'API Key Storage', 'fp-digital-marketing' ),
+			'status'   => $status,
+			'message'  => sprintf( __( 'API keys: %1$d total, %2$d encrypted', 'fp-digital-marketing' ), $total_count, $encrypted_count ),
 			'severity' => $status === 'pass' ? 'info' : 'warning',
 		];
 
@@ -468,26 +495,26 @@ class Security {
 	 * Calculate overall audit score
 	 */
 	private static function calculate_audit_score(): void {
-		$total_checks = count( self::$audit_results['checks'] );
-		$passed_checks = 0;
+		$total_checks    = count( self::$audit_results['checks'] );
+		$passed_checks   = 0;
 		$critical_issues = 0;
-		$warnings = 0;
+		$warnings        = 0;
 
 		foreach ( self::$audit_results['checks'] as $check ) {
 			if ( $check['status'] === 'pass' ) {
-				$passed_checks++;
+				++$passed_checks;
 			}
 
 			if ( $check['severity'] === 'critical' ) {
-				$critical_issues++;
+				++$critical_issues;
 			} elseif ( $check['severity'] === 'warning' ) {
-				$warnings++;
+				++$warnings;
 			}
 		}
 
-		self::$audit_results['overall_score'] = $total_checks > 0 ? round( ( $passed_checks / $total_checks ) * 100 ) : 0;
+		self::$audit_results['overall_score']   = $total_checks > 0 ? round( ( $passed_checks / $total_checks ) * 100 ) : 0;
 		self::$audit_results['critical_issues'] = $critical_issues;
-		self::$audit_results['warnings'] = $warnings;
+		self::$audit_results['warnings']        = $warnings;
 	}
 
 	/**
@@ -506,9 +533,12 @@ class Security {
 	 */
 	public static function clear_security_logs(): void {
 		delete_option( 'fp_dms_security_logs' );
-		self::log_security_event( 'logs_cleared', [
-			'user_id' => get_current_user_id(),
-			'ip' => self::get_client_ip(),
-		] );
+		self::log_security_event(
+			'logs_cleared',
+			[
+				'user_id' => get_current_user_id(),
+				'ip'      => self::get_client_ip(),
+			]
+		);
 	}
 }

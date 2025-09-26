@@ -13,7 +13,7 @@ use FP\DigitalMarketing\Models\MetricsCache;
 
 /**
  * Google Ads data source integration class
- * 
+ *
  * This class handles the integration with Google Ads API,
  * including OAuth authentication, data fetching, and normalization.
  * Implements base metrics: impressions, clicks, cost, conversions
@@ -54,9 +54,9 @@ class GoogleAds {
 	 * @param string $developer_token Google Ads Developer Token
 	 */
 	public function __construct( string $customer_id = '', string $developer_token = '' ) {
-		$this->customer_id = $customer_id;
+		$this->customer_id     = $customer_id;
 		$this->developer_token = $developer_token;
-		$this->oauth_client = new GoogleOAuth();
+		$this->oauth_client    = new GoogleOAuth();
 	}
 
 	/**
@@ -101,9 +101,9 @@ class GoogleAds {
 	 * @return bool True if connected
 	 */
 	public function is_connected(): bool {
-		return $this->oauth_client->is_authenticated() && 
-		       ! empty( $this->customer_id ) && 
-		       ! empty( $this->developer_token );
+		return $this->oauth_client->is_authenticated() &&
+				! empty( $this->customer_id ) &&
+				! empty( $this->developer_token );
 	}
 
 	/**
@@ -145,8 +145,8 @@ class GoogleAds {
 
 			$metrics = [
 				'impressions' => $this->fetch_impressions( $start_date, $end_date, $filters ),
-				'clicks' => $this->fetch_clicks( $start_date, $end_date, $filters ),
-				'cost' => $this->fetch_cost( $start_date, $end_date, $filters ),
+				'clicks'      => $this->fetch_clicks( $start_date, $end_date, $filters ),
+				'cost'        => $this->fetch_cost( $start_date, $end_date, $filters ),
 				'conversions' => $this->fetch_conversions( $start_date, $end_date, $filters ),
 			];
 
@@ -224,21 +224,21 @@ class GoogleAds {
 	private function make_api_request( string $metric, string $start_date, string $end_date, array $filters = [] ): string {
 		// For demo purposes, return mock data
 		// In production, this would make actual Google Ads API calls
-		
+
 		$mock_values = [
 			'impressions' => '15000',
-			'clicks' => '750',
+			'clicks'      => '750',
 			'cost_micros' => '150000000', // $150 in micros
 			'conversions' => '25',
 		];
 
 		// Add some variation based on date range
-		$days = (strtotime($end_date) - strtotime($start_date)) / (60 * 60 * 24) + 1;
-		$base_value = (int) $mock_values[$metric];
-		
+		$days       = ( strtotime( $end_date ) - strtotime( $start_date ) ) / ( 60 * 60 * 24 ) + 1;
+		$base_value = (int) $mock_values[ $metric ];
+
 		// Scale by number of days (with some randomness for demo)
-		$scaled_value = (int) ($base_value * ($days / 30) * (0.8 + mt_rand(0, 40) / 100));
-		
+		$scaled_value = (int) ( $base_value * ( $days / 30 ) * ( 0.8 + mt_rand( 0, 40 ) / 100 ) );
+
 		return (string) $scaled_value;
 	}
 
@@ -265,11 +265,11 @@ class GoogleAds {
 
 		foreach ( $campaign_data as $campaign ) {
 			$utm_mappings[] = [
-				'campaign_id' => $campaign['id'] ?? '',
+				'campaign_id'   => $campaign['id'] ?? '',
 				'campaign_name' => $campaign['name'] ?? '',
-				'utm_source' => 'google',
-				'utm_medium' => 'cpc',
-				'utm_campaign' => $this->sanitize_utm_campaign( $campaign['name'] ?? '' ),
+				'utm_source'    => 'google',
+				'utm_medium'    => 'cpc',
+				'utm_campaign'  => $this->sanitize_utm_campaign( $campaign['name'] ?? '' ),
 			];
 		}
 
@@ -309,9 +309,9 @@ class GoogleAds {
 			// Add UTM mapping if campaign info is available
 			if ( ! empty( $filters['campaign_id'] ) ) {
 				$metadata['campaign_id'] = $filters['campaign_id'];
-				$metadata['utm_source'] = 'google';
-				$metadata['utm_medium'] = 'cpc';
-				
+				$metadata['utm_source']  = 'google';
+				$metadata['utm_medium']  = 'cpc';
+
 				if ( ! empty( $filters['campaign_name'] ) ) {
 					$metadata['utm_campaign'] = $this->sanitize_utm_campaign( $filters['campaign_name'] );
 				}
@@ -345,20 +345,20 @@ class GoogleAds {
 		// Mock campaign data for demo
 		$mock_campaigns = [
 			[
-				'id' => '12345678',
-				'name' => 'Summer Sale 2024',
-				'status' => 'ENABLED',
+				'id'          => '12345678',
+				'name'        => 'Summer Sale 2024',
+				'status'      => 'ENABLED',
 				'impressions' => '5000',
-				'clicks' => '250',
+				'clicks'      => '250',
 				'cost_micros' => '50000000',
 				'conversions' => '10',
 			],
 			[
-				'id' => '87654321',
-				'name' => 'Brand Awareness Q4',
-				'status' => 'ENABLED',
+				'id'          => '87654321',
+				'name'        => 'Brand Awareness Q4',
+				'status'      => 'ENABLED',
 				'impressions' => '10000',
-				'clicks' => '500',
+				'clicks'      => '500',
 				'cost_micros' => '100000000',
 				'conversions' => '15',
 			],
@@ -367,8 +367,8 @@ class GoogleAds {
 		// Add UTM mappings to campaigns
 		foreach ( $mock_campaigns as &$campaign ) {
 			$campaign['utm_mappings'] = [
-				'utm_source' => 'google',
-				'utm_medium' => 'cpc',
+				'utm_source'   => 'google',
+				'utm_medium'   => 'cpc',
 				'utm_campaign' => $this->sanitize_utm_campaign( $campaign['name'] ),
 			];
 		}

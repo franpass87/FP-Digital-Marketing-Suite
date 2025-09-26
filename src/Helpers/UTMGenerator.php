@@ -31,37 +31,37 @@ class UTMGenerator {
 	 * @var array
 	 */
 	private static array $presets = [
-		'email_newsletter' => [
+		'email_newsletter'  => [
 			'name'   => 'Email Newsletter',
 			'source' => 'newsletter',
 			'medium' => 'email',
 		],
-		'social_facebook' => [
+		'social_facebook'   => [
 			'name'   => 'Facebook Social',
 			'source' => 'facebook',
 			'medium' => 'social',
 		],
-		'social_instagram' => [
+		'social_instagram'  => [
 			'name'   => 'Instagram Social',
 			'source' => 'instagram',
 			'medium' => 'social',
 		],
-		'social_linkedin' => [
+		'social_linkedin'   => [
 			'name'   => 'LinkedIn Social',
 			'source' => 'linkedin',
 			'medium' => 'social',
 		],
-		'google_ads' => [
+		'google_ads'        => [
 			'name'   => 'Google Ads',
 			'source' => 'google',
 			'medium' => 'cpc',
 		],
-		'facebook_ads' => [
+		'facebook_ads'      => [
 			'name'   => 'Facebook Ads',
 			'source' => 'facebook',
 			'medium' => 'cpc',
 		],
-		'banner_display' => [
+		'banner_display'    => [
 			'name'   => 'Display Banner',
 			'source' => 'website',
 			'medium' => 'banner',
@@ -112,7 +112,7 @@ class UTMGenerator {
 		}
 
 		// Add parameters to URL.
-		$separator = strpos( $url, '?' ) !== false ? '&' : '?';
+		$separator    = strpos( $url, '?' ) !== false ? '&' : '?';
 		$query_string = http_build_query( $query_params );
 
 		return $url . $separator . $query_string;
@@ -126,7 +126,7 @@ class UTMGenerator {
 	 */
 	public static function extract_utm_params( string $url ): array {
 		$parsed_url = wp_parse_url( $url );
-		
+
 		if ( empty( $parsed_url['query'] ) ) {
 			return [];
 		}
@@ -175,16 +175,16 @@ class UTMGenerator {
 	 * @return array Validation results with 'valid' boolean and 'errors' array.
 	 */
 	public static function validate_utm_params( array $utm_params ): array {
-		$errors = [];
+		$errors   = [];
 		$required = [ 'source', 'medium', 'campaign' ];
 
 		// Check required parameters.
 		foreach ( $required as $param ) {
 			if ( empty( $utm_params[ $param ] ) ) {
-				$errors[] = sprintf( 
+				$errors[] = sprintf(
 					/* translators: %s: parameter name */
-					__( 'Il parametro %s è obbligatorio.', 'fp-digital-marketing' ), 
-					$param 
+					__( 'Il parametro %s è obbligatorio.', 'fp-digital-marketing' ),
+					$param
 				);
 			}
 		}
@@ -192,10 +192,10 @@ class UTMGenerator {
 		// Validate parameter format.
 		foreach ( $utm_params as $key => $value ) {
 			if ( ! empty( $value ) && ! self::is_valid_utm_value( $value ) ) {
-				$errors[] = sprintf( 
+				$errors[] = sprintf(
 					/* translators: %s: parameter name */
-					__( 'Il parametro %s contiene caratteri non validi.', 'fp-digital-marketing' ), 
-					$key 
+					__( 'Il parametro %s contiene caratteri non validi.', 'fp-digital-marketing' ),
+					$key
 				);
 			}
 		}
@@ -244,13 +244,13 @@ class UTMGenerator {
 	private static function clean_base_url( string $url ): string {
 		// Remove existing UTM parameters.
 		$parsed_url = wp_parse_url( $url );
-		
+
 		if ( empty( $parsed_url['host'] ) ) {
 			return '';
 		}
 
 		$clean_url = $parsed_url['scheme'] . '://' . $parsed_url['host'];
-		
+
 		if ( ! empty( $parsed_url['port'] ) ) {
 			$clean_url .= ':' . $parsed_url['port'];
 		}
@@ -262,7 +262,7 @@ class UTMGenerator {
 		// Keep non-UTM query parameters.
 		if ( ! empty( $parsed_url['query'] ) ) {
 			parse_str( $parsed_url['query'], $query_params );
-			
+
 			// Remove UTM parameters.
 			foreach ( self::UTM_PARAMS as $utm_param ) {
 				unset( $query_params[ $utm_param ] );
@@ -291,7 +291,7 @@ class UTMGenerator {
 		$value = strtolower( trim( $value ) );
 		$value = preg_replace( '/[^a-z0-9\-_.]/', '_', $value );
 		$value = preg_replace( '/_{2,}/', '_', $value );
-		
+
 		return trim( $value, '_' );
 	}
 

@@ -17,7 +17,7 @@ use FP\DigitalMarketing\Helpers\DataSources;
 
 /**
  * ConnectionManager class for simplifying platform connections
- * 
+ *
  * This class provides an easy interface for managing platform connections,
  * monitoring their health, and providing guided setup experiences.
  */
@@ -26,11 +26,11 @@ class ConnectionManager {
 	/**
 	 * Connection status constants
 	 */
-	public const STATUS_CONNECTED = 'connected';
+	public const STATUS_CONNECTED    = 'connected';
 	public const STATUS_DISCONNECTED = 'disconnected';
-	public const STATUS_ERROR = 'error';
-	public const STATUS_EXPIRED = 'expired';
-	public const STATUS_TESTING = 'testing';
+	public const STATUS_ERROR        = 'error';
+	public const STATUS_EXPIRED      = 'expired';
+	public const STATUS_TESTING      = 'testing';
 
 	/**
 	 * Platform connection cache duration (1 hour)
@@ -44,21 +44,21 @@ class ConnectionManager {
 	 */
 	public static function get_all_connections(): array {
 		$cache_key = 'fp_dms_connection_status_all';
-		$cached = wp_cache_get( $cache_key );
-		
+		$cached    = wp_cache_get( $cache_key );
+
 		if ( false !== $cached ) {
 			return $cached;
 		}
 
 		$connections = [
-			'google_analytics_4' => self::get_ga4_connection_status(),
+			'google_analytics_4'    => self::get_ga4_connection_status(),
 			'google_search_console' => self::get_gsc_connection_status(),
-			'microsoft_clarity' => self::get_clarity_connection_status(),
-			'google_ads' => self::get_google_ads_connection_status(),
+			'microsoft_clarity'     => self::get_clarity_connection_status(),
+			'google_ads'            => self::get_google_ads_connection_status(),
 		];
 
 		wp_cache_set( $cache_key, $connections, '', self::CACHE_DURATION );
-		
+
 		return $connections;
 	}
 
@@ -68,63 +68,63 @@ class ConnectionManager {
 	 * @return array Connection status details
 	 */
 	public static function get_ga4_connection_status(): array {
-		$oauth = new GoogleOAuth();
+		$oauth    = new GoogleOAuth();
 		$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
-		
+
 		if ( ! $oauth->is_configured() ) {
 			return [
-				'id' => 'google_analytics_4',
-				'name' => __( 'Google Analytics 4', 'fp-digital-marketing' ),
-				'status' => self::STATUS_DISCONNECTED,
-				'message' => __( 'Client ID e Client Secret non configurati', 'fp-digital-marketing' ),
-				'last_check' => current_time( 'mysql' ),
+				'id'             => 'google_analytics_4',
+				'name'           => __( 'Google Analytics 4', 'fp-digital-marketing' ),
+				'status'         => self::STATUS_DISCONNECTED,
+				'message'        => __( 'Client ID e Client Secret non configurati', 'fp-digital-marketing' ),
+				'last_check'     => current_time( 'mysql' ),
 				'setup_priority' => 'high',
-				'setup_steps' => self::get_ga4_setup_steps(),
+				'setup_steps'    => self::get_ga4_setup_steps(),
 			];
 		}
 
 		$connection_status = $oauth->get_connection_status();
-		$is_connected = ! empty( $connection_status['connected'] );
-		$is_expired = ! empty( $connection_status['expired'] );
-		$property_id = $api_keys['ga4_property_id'] ?? '';
+		$is_connected      = ! empty( $connection_status['connected'] );
+		$is_expired        = ! empty( $connection_status['expired'] );
+		$property_id       = $api_keys['ga4_property_id'] ?? '';
 
 		if ( empty( $property_id ) ) {
 			return [
-				'id' => 'google_analytics_4',
-				'name' => __( 'Google Analytics 4', 'fp-digital-marketing' ),
-				'status' => self::STATUS_DISCONNECTED,
-				'message' => __( 'Property ID non configurato', 'fp-digital-marketing' ),
-				'last_check' => current_time( 'mysql' ),
+				'id'             => 'google_analytics_4',
+				'name'           => __( 'Google Analytics 4', 'fp-digital-marketing' ),
+				'status'         => self::STATUS_DISCONNECTED,
+				'message'        => __( 'Property ID non configurato', 'fp-digital-marketing' ),
+				'last_check'     => current_time( 'mysql' ),
 				'setup_priority' => 'medium',
-				'setup_steps' => self::get_ga4_property_setup_steps(),
+				'setup_steps'    => self::get_ga4_property_setup_steps(),
 			];
 		}
 
-		$status = self::STATUS_DISCONNECTED;
+		$status  = self::STATUS_DISCONNECTED;
 		$message = __( 'Non connesso', 'fp-digital-marketing' );
 
 		if ( $is_connected ) {
 			// Test actual connection
 			$test_result = self::test_ga4_connection();
 			if ( $test_result['success'] ) {
-				$status = self::STATUS_CONNECTED;
+				$status  = self::STATUS_CONNECTED;
 				$message = __( 'Connesso e funzionante', 'fp-digital-marketing' );
 			} else {
-				$status = self::STATUS_ERROR;
+				$status  = self::STATUS_ERROR;
 				$message = $test_result['error'] ?? __( 'Errore di connessione', 'fp-digital-marketing' );
 			}
 		} elseif ( $is_expired ) {
-			$status = self::STATUS_EXPIRED;
+			$status  = self::STATUS_EXPIRED;
 			$message = __( 'Token scaduto, riconnessione necessaria', 'fp-digital-marketing' );
 		}
 
 		return [
-			'id' => 'google_analytics_4',
-			'name' => __( 'Google Analytics 4', 'fp-digital-marketing' ),
-			'status' => $status,
-			'message' => $message,
-			'last_check' => current_time( 'mysql' ),
-			'auto_heal' => $status === self::STATUS_EXPIRED,
+			'id'             => 'google_analytics_4',
+			'name'           => __( 'Google Analytics 4', 'fp-digital-marketing' ),
+			'status'         => $status,
+			'message'        => $message,
+			'last_check'     => current_time( 'mysql' ),
+			'auto_heal'      => $status === self::STATUS_EXPIRED,
 			'test_available' => true,
 		];
 	}
@@ -136,40 +136,40 @@ class ConnectionManager {
 	 */
 	public static function get_gsc_connection_status(): array {
 		$oauth = new GoogleOAuth();
-		
+
 		if ( ! $oauth->is_configured() ) {
 			return [
-				'id' => 'google_search_console',
-				'name' => __( 'Google Search Console', 'fp-digital-marketing' ),
-				'status' => self::STATUS_DISCONNECTED,
-				'message' => __( 'Richiede configurazione Google OAuth', 'fp-digital-marketing' ),
-				'last_check' => current_time( 'mysql' ),
+				'id'             => 'google_search_console',
+				'name'           => __( 'Google Search Console', 'fp-digital-marketing' ),
+				'status'         => self::STATUS_DISCONNECTED,
+				'message'        => __( 'Richiede configurazione Google OAuth', 'fp-digital-marketing' ),
+				'last_check'     => current_time( 'mysql' ),
 				'setup_priority' => 'high',
-				'depends_on' => 'google_analytics_4',
+				'depends_on'     => 'google_analytics_4',
 			];
 		}
 
 		$connection_status = $oauth->get_connection_status();
-		$is_connected = ! empty( $connection_status['connected'] );
-		$is_expired = ! empty( $connection_status['expired'] );
+		$is_connected      = ! empty( $connection_status['connected'] );
+		$is_expired        = ! empty( $connection_status['expired'] );
 
-		$status = $is_connected ? self::STATUS_CONNECTED : self::STATUS_DISCONNECTED;
+		$status  = $is_connected ? self::STATUS_CONNECTED : self::STATUS_DISCONNECTED;
 		$message = $is_connected
-                        ? __( 'Connesso tramite Google OAuth', 'fp-digital-marketing' )
-                        : __( 'Non connesso', 'fp-digital-marketing' );
+						? __( 'Connesso tramite Google OAuth', 'fp-digital-marketing' )
+						: __( 'Non connesso', 'fp-digital-marketing' );
 
 		if ( $is_expired ) {
-			$status = self::STATUS_EXPIRED;
+			$status  = self::STATUS_EXPIRED;
 			$message = __( 'Token scaduto', 'fp-digital-marketing' );
 		}
 
 		return [
-			'id' => 'google_search_console',
-			'name' => __( 'Google Search Console', 'fp-digital-marketing' ),
-			'status' => $status,
-			'message' => $message,
+			'id'         => 'google_search_console',
+			'name'       => __( 'Google Search Console', 'fp-digital-marketing' ),
+			'status'     => $status,
+			'message'    => $message,
 			'last_check' => current_time( 'mysql' ),
-			'auto_heal' => $status === self::STATUS_EXPIRED,
+			'auto_heal'  => $status === self::STATUS_EXPIRED,
 		];
 	}
 
@@ -180,22 +180,24 @@ class ConnectionManager {
 	 */
 	public static function get_clarity_connection_status(): array {
 		// Get clients with Clarity configured
-		$clients_with_clarity = get_posts([
-			'post_type' => 'cliente',
-			'meta_query' => [
-				'relation' => 'AND',
-				[
-					'key' => 'clarity_project_id',
-					'compare' => 'EXISTS',
+		$clients_with_clarity = get_posts(
+			[
+				'post_type'  => 'cliente',
+				'meta_query' => [
+					'relation' => 'AND',
+					[
+						'key'     => 'clarity_project_id',
+						'compare' => 'EXISTS',
+					],
+					[
+						'key'     => 'clarity_project_id',
+						'value'   => '',
+						'compare' => '!=',
+					],
 				],
-				[
-					'key' => 'clarity_project_id',
-					'value' => '',
-					'compare' => '!=',
-				],
-			],
-			'fields' => 'ids',
-		]);
+				'fields'     => 'ids',
+			]
+		);
 
 		$clients_with_clarity = array_filter(
 			$clients_with_clarity,
@@ -230,29 +232,29 @@ class ConnectionManager {
 		);
 
 		$client_count = count( $clients_with_clarity );
-		
+
 		if ( $client_count === 0 ) {
 			return [
-				'id' => 'microsoft_clarity',
-				'name' => __( 'Microsoft Clarity', 'fp-digital-marketing' ),
-				'status' => self::STATUS_DISCONNECTED,
-				'message' => __( 'Nessun cliente configurato', 'fp-digital-marketing' ),
-				'last_check' => current_time( 'mysql' ),
+				'id'             => 'microsoft_clarity',
+				'name'           => __( 'Microsoft Clarity', 'fp-digital-marketing' ),
+				'status'         => self::STATUS_DISCONNECTED,
+				'message'        => __( 'Nessun cliente configurato', 'fp-digital-marketing' ),
+				'last_check'     => current_time( 'mysql' ),
 				'setup_priority' => 'low',
-				'setup_steps' => self::get_clarity_setup_steps(),
+				'setup_steps'    => self::get_clarity_setup_steps(),
 			];
 		}
 
 		return [
-			'id' => 'microsoft_clarity',
-			'name' => __( 'Microsoft Clarity', 'fp-digital-marketing' ),
-			'status' => self::STATUS_CONNECTED,
-			'message' => sprintf(
+			'id'           => 'microsoft_clarity',
+			'name'         => __( 'Microsoft Clarity', 'fp-digital-marketing' ),
+			'status'       => self::STATUS_CONNECTED,
+			'message'      => sprintf(
 				/* translators: %d: number of clients */
 				_n( '%d cliente configurato', '%d clienti configurati', $client_count, 'fp-digital-marketing' ),
 				$client_count
 			),
-			'last_check' => current_time( 'mysql' ),
+			'last_check'   => current_time( 'mysql' ),
 			'client_count' => $client_count,
 		];
 	}
@@ -265,13 +267,13 @@ class ConnectionManager {
 	public static function get_google_ads_connection_status(): array {
 		// Google Ads is marked as "planned" in DataSources, so return appropriate status
 		return [
-			'id' => 'google_ads',
-			'name' => __( 'Google Ads', 'fp-digital-marketing' ),
-			'status' => self::STATUS_DISCONNECTED,
-			'message' => __( 'Integrazione pianificata - non ancora disponibile', 'fp-digital-marketing' ),
-			'last_check' => current_time( 'mysql' ),
+			'id'             => 'google_ads',
+			'name'           => __( 'Google Ads', 'fp-digital-marketing' ),
+			'status'         => self::STATUS_DISCONNECTED,
+			'message'        => __( 'Integrazione pianificata - non ancora disponibile', 'fp-digital-marketing' ),
+			'last_check'     => current_time( 'mysql' ),
 			'setup_priority' => 'planned',
-			'coming_soon' => true,
+			'coming_soon'    => true,
 		];
 	}
 
@@ -283,42 +285,42 @@ class ConnectionManager {
 	public static function test_ga4_connection(): array {
 		try {
 			$ga4 = new GoogleAnalytics4();
-			
+
 			// Try to fetch a simple metric to test the connection
-			$api_keys = get_option( 'fp_digital_marketing_api_keys', [] );
+			$api_keys    = get_option( 'fp_digital_marketing_api_keys', [] );
 			$property_id = $api_keys['ga4_property_id'] ?? '';
-			
+
 			if ( empty( $property_id ) ) {
 				return [
 					'success' => false,
-					'error' => __( 'Property ID non configurato', 'fp-digital-marketing' ),
+					'error'   => __( 'Property ID non configurato', 'fp-digital-marketing' ),
 				];
 			}
 
 			// This would need actual GA4 API implementation
 			// For now, we'll simulate a test based on OAuth status
-			$oauth = new GoogleOAuth();
+			$oauth             = new GoogleOAuth();
 			$connection_status = $oauth->get_connection_status();
-			
+
 			$is_connected = ! empty( $connection_status['connected'] );
-			$is_expired = ! empty( $connection_status['expired'] );
+			$is_expired   = ! empty( $connection_status['expired'] );
 
 			if ( $is_connected && ! $is_expired ) {
-                                return [
-                                        'success' => true,
-                                        'message' => __( 'Connessione verificata con successo', 'fp-digital-marketing' ),
-				];
+								return [
+									'success' => true,
+									'message' => __( 'Connessione verificata con successo', 'fp-digital-marketing' ),
+								];
 			}
 
 			return [
 				'success' => false,
-				'error' => __( 'Token non valido o scaduto', 'fp-digital-marketing' ),
+				'error'   => __( 'Token non valido o scaduto', 'fp-digital-marketing' ),
 			];
 
 		} catch ( \Exception $e ) {
 			return [
 				'success' => false,
-				'error' => $e->getMessage(),
+				'error'   => $e->getMessage(),
 			];
 		}
 	}
@@ -331,24 +333,24 @@ class ConnectionManager {
 	private static function get_ga4_setup_steps(): array {
 		return [
 			[
-				'step' => 1,
-				'title' => __( 'Crea progetto Google Cloud', 'fp-digital-marketing' ),
+				'step'        => 1,
+				'title'       => __( 'Crea progetto Google Cloud', 'fp-digital-marketing' ),
 				'description' => __( 'Accedi a Google Cloud Console e crea un nuovo progetto', 'fp-digital-marketing' ),
-				'url' => 'https://console.cloud.google.com/',
+				'url'         => 'https://console.cloud.google.com/',
 			],
 			[
-				'step' => 2,
-				'title' => __( 'Abilita Analytics API', 'fp-digital-marketing' ),
+				'step'        => 2,
+				'title'       => __( 'Abilita Analytics API', 'fp-digital-marketing' ),
 				'description' => __( 'Abilita Google Analytics Reporting API nel tuo progetto', 'fp-digital-marketing' ),
 			],
 			[
-				'step' => 3,
-				'title' => __( 'Configura OAuth 2.0', 'fp-digital-marketing' ),
+				'step'        => 3,
+				'title'       => __( 'Configura OAuth 2.0', 'fp-digital-marketing' ),
 				'description' => __( 'Crea credenziali OAuth 2.0 per applicazione web', 'fp-digital-marketing' ),
 			],
 			[
-				'step' => 4,
-				'title' => __( 'Inserisci credenziali', 'fp-digital-marketing' ),
+				'step'        => 4,
+				'title'       => __( 'Inserisci credenziali', 'fp-digital-marketing' ),
 				'description' => __( 'Copia Client ID e Client Secret nelle impostazioni del plugin', 'fp-digital-marketing' ),
 			],
 		];
@@ -362,13 +364,13 @@ class ConnectionManager {
 	private static function get_ga4_property_setup_steps(): array {
 		return [
 			[
-				'step' => 1,
-				'title' => __( 'Trova Property ID', 'fp-digital-marketing' ),
+				'step'        => 1,
+				'title'       => __( 'Trova Property ID', 'fp-digital-marketing' ),
 				'description' => __( 'Vai su Google Analytics e trova il Property ID nella sezione Amministrazione', 'fp-digital-marketing' ),
 			],
 			[
-				'step' => 2,
-				'title' => __( 'Inserisci Property ID', 'fp-digital-marketing' ),
+				'step'        => 2,
+				'title'       => __( 'Inserisci Property ID', 'fp-digital-marketing' ),
 				'description' => __( 'Copia il Property ID nelle impostazioni del plugin', 'fp-digital-marketing' ),
 			],
 		];
@@ -382,14 +384,14 @@ class ConnectionManager {
 	private static function get_clarity_setup_steps(): array {
 		return [
 			[
-				'step' => 1,
-				'title' => __( 'Crea account Microsoft Clarity', 'fp-digital-marketing' ),
+				'step'        => 1,
+				'title'       => __( 'Crea account Microsoft Clarity', 'fp-digital-marketing' ),
 				'description' => __( 'Registrati su Microsoft Clarity e crea un nuovo progetto', 'fp-digital-marketing' ),
-				'url' => 'https://clarity.microsoft.com/',
+				'url'         => 'https://clarity.microsoft.com/',
 			],
 			[
-				'step' => 2,
-				'title' => __( 'Configura per cliente', 'fp-digital-marketing' ),
+				'step'        => 2,
+				'title'       => __( 'Configura per cliente', 'fp-digital-marketing' ),
 				'description' => __( 'Vai alla pagina di modifica del cliente e inserisci il Project ID di Clarity', 'fp-digital-marketing' ),
 			],
 		];
@@ -413,26 +415,26 @@ class ConnectionManager {
 	 * @return array Health score with details
 	 */
 	public static function get_connection_health_score(): array {
-		$connections = self::get_all_connections();
-		$total_platforms = count( $connections );
+		$connections         = self::get_all_connections();
+		$total_platforms     = count( $connections );
 		$connected_platforms = 0;
-		$weight_by_priority = [
-			'high' => 3,
-			'medium' => 2,
-			'low' => 1,
+		$weight_by_priority  = [
+			'high'    => 3,
+			'medium'  => 2,
+			'low'     => 1,
 			'planned' => 0,
 		];
 
-		$total_weight = 0;
+		$total_weight     = 0;
 		$connected_weight = 0;
 
 		foreach ( $connections as $connection ) {
-			$priority = $connection['setup_priority'] ?? 'low';
-			$weight = $weight_by_priority[ $priority ] ?? 1;
+			$priority      = $connection['setup_priority'] ?? 'low';
+			$weight        = $weight_by_priority[ $priority ] ?? 1;
 			$total_weight += $weight;
 
 			if ( $connection['status'] === self::STATUS_CONNECTED ) {
-				$connected_platforms++;
+				++$connected_platforms;
 				$connected_weight += $weight;
 			}
 		}
@@ -440,11 +442,11 @@ class ConnectionManager {
 		$score = $total_weight > 0 ? (int) round( ( $connected_weight / $total_weight ) * 100 ) : 0;
 
 		return [
-			'score' => $score,
+			'score'               => $score,
 			'connected_platforms' => $connected_platforms,
-			'total_platforms' => $total_platforms,
-			'status' => self::get_health_status_from_score( $score ),
-			'recommendations' => self::get_health_recommendations( $connections ),
+			'total_platforms'     => $total_platforms,
+			'status'              => self::get_health_status_from_score( $score ),
+			'recommendations'     => self::get_health_recommendations( $connections ),
 		];
 	}
 
@@ -477,32 +479,32 @@ class ConnectionManager {
 		$recommendations = [];
 
 		foreach ( $connections as $connection ) {
-			if ( $connection['status'] === self::STATUS_DISCONNECTED && 
-				 ( $connection['setup_priority'] ?? '' ) === 'high' ) {
+			if ( $connection['status'] === self::STATUS_DISCONNECTED &&
+				( $connection['setup_priority'] ?? '' ) === 'high' ) {
 				$recommendations[] = [
-					'type' => 'setup',
-					'platform' => $connection['id'],
-					'title' => sprintf(
+					'type'        => 'setup',
+					'platform'    => $connection['id'],
+					'title'       => sprintf(
 						/* translators: %s: platform name */
 						__( 'Configura %s', 'fp-digital-marketing' ),
 						$connection['name']
 					),
 					'description' => $connection['message'],
-					'priority' => $connection['setup_priority'],
+					'priority'    => $connection['setup_priority'],
 				];
 			}
 
 			if ( $connection['status'] === self::STATUS_EXPIRED ) {
 				$recommendations[] = [
-					'type' => 'reconnect',
-					'platform' => $connection['id'],
-					'title' => sprintf(
+					'type'        => 'reconnect',
+					'platform'    => $connection['id'],
+					'title'       => sprintf(
 						/* translators: %s: platform name */
 						__( 'Riconnetti %s', 'fp-digital-marketing' ),
 						$connection['name']
 					),
 					'description' => __( 'La connessione è scaduta e deve essere rinnovata', 'fp-digital-marketing' ),
-					'priority' => 'urgent',
+					'priority'    => 'urgent',
 				];
 			}
 		}

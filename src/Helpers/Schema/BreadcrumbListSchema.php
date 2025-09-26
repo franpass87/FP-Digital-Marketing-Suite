@@ -26,9 +26,12 @@ class BreadcrumbListSchema extends BaseSchema {
 			return null;
 		}
 
-		$schema = self::create_base_schema( 'BreadcrumbList', [
-			'itemListElement' => $breadcrumbs
-		] );
+		$schema = self::create_base_schema(
+			'BreadcrumbList',
+			[
+				'itemListElement' => $breadcrumbs,
+			]
+		);
 
 		return apply_filters( 'fp_dms_breadcrumb_schema', $schema );
 	}
@@ -39,7 +42,7 @@ class BreadcrumbListSchema extends BaseSchema {
 	 * @return bool True if not on home page and breadcrumbs are enabled
 	 */
 	public static function is_applicable(): bool {
-		$settings = get_option( 'fp_digital_marketing_schema_settings', [] );
+		$settings            = get_option( 'fp_digital_marketing_schema_settings', [] );
 		$breadcrumbs_enabled = $settings['enable_breadcrumbs'] ?? true;
 
 		// Don't show breadcrumbs on home page
@@ -57,14 +60,14 @@ class BreadcrumbListSchema extends BaseSchema {
 	 */
 	private static function get_breadcrumbs(): array {
 		$breadcrumbs = [];
-		$position = 1;
+		$position    = 1;
 
 		// Always start with home
 		$breadcrumbs[] = [
-			'@type' => 'ListItem',
+			'@type'    => 'ListItem',
 			'position' => $position++,
-			'name' => get_bloginfo( 'name' ),
-			'item' => home_url()
+			'name'     => get_bloginfo( 'name' ),
+			'item'     => home_url(),
 		];
 
 		// Add context-specific breadcrumbs
@@ -91,11 +94,11 @@ class BreadcrumbListSchema extends BaseSchema {
 	 */
 	private static function get_taxonomy_breadcrumbs( int &$position ): array {
 		$breadcrumbs = [];
-		$term = get_queried_object();
+		$term        = get_queried_object();
 
-                if ( ! ( $term instanceof \WP_Term ) && ! ( is_object( $term ) && isset( $term->term_id, $term->taxonomy ) ) ) {
-                        return $breadcrumbs;
-                }
+		if ( ! ( $term instanceof \WP_Term ) && ! ( is_object( $term ) && isset( $term->term_id, $term->taxonomy ) ) ) {
+				return $breadcrumbs;
+		}
 
 		// Add parent terms if any
 		if ( $term->parent ) {
@@ -106,10 +109,10 @@ class BreadcrumbListSchema extends BaseSchema {
 				$parent_term = get_term( $parent_id, $term->taxonomy );
 				if ( $parent_term && ! is_wp_error( $parent_term ) ) {
 					$breadcrumbs[] = [
-						'@type' => 'ListItem',
+						'@type'    => 'ListItem',
 						'position' => $position++,
-						'name' => $parent_term->name,
-						'item' => get_term_link( $parent_term )
+						'name'     => $parent_term->name,
+						'item'     => get_term_link( $parent_term ),
 					];
 				}
 			}
@@ -117,10 +120,10 @@ class BreadcrumbListSchema extends BaseSchema {
 
 		// Add current term
 		$breadcrumbs[] = [
-			'@type' => 'ListItem',
+			'@type'    => 'ListItem',
 			'position' => $position++,
-			'name' => $term->name,
-			'item' => get_term_link( $term )
+			'name'     => $term->name,
+			'item'     => get_term_link( $term ),
 		];
 
 		return $breadcrumbs;
@@ -134,20 +137,20 @@ class BreadcrumbListSchema extends BaseSchema {
 	 */
 	private static function get_single_breadcrumbs( int &$position ): array {
 		$breadcrumbs = [];
-		$post = get_queried_object();
+		$post        = get_queried_object();
 
-                if ( ! is_object( $post ) || ! isset( $post->ID, $post->post_type ) ) {
-                        return $breadcrumbs;
-                }
+		if ( ! is_object( $post ) || ! isset( $post->ID, $post->post_type ) ) {
+				return $breadcrumbs;
+		}
 
 		// Add post type archive if applicable
 		$post_type_obj = get_post_type_object( $post->post_type );
 		if ( $post_type_obj && $post_type_obj->has_archive && $post->post_type !== 'post' ) {
 			$breadcrumbs[] = [
-				'@type' => 'ListItem',
+				'@type'    => 'ListItem',
 				'position' => $position++,
-				'name' => $post_type_obj->labels->name,
-				'item' => get_post_type_archive_link( $post->post_type )
+				'name'     => $post_type_obj->labels->name,
+				'item'     => get_post_type_archive_link( $post->post_type ),
 			];
 		}
 
@@ -155,22 +158,22 @@ class BreadcrumbListSchema extends BaseSchema {
 		if ( $post->post_type === 'post' ) {
 			$categories = get_the_category( $post->ID );
 			if ( ! empty( $categories ) ) {
-				$category = $categories[0];
+				$category      = $categories[0];
 				$breadcrumbs[] = [
-					'@type' => 'ListItem',
+					'@type'    => 'ListItem',
 					'position' => $position++,
-					'name' => $category->name,
-					'item' => get_category_link( $category->term_id )
+					'name'     => $category->name,
+					'item'     => get_category_link( $category->term_id ),
 				];
 			}
 		}
 
 		// Add current post
 		$breadcrumbs[] = [
-			'@type' => 'ListItem',
+			'@type'    => 'ListItem',
 			'position' => $position++,
-			'name' => get_the_title( $post ),
-			'item' => get_permalink( $post )
+			'name'     => get_the_title( $post ),
+			'item'     => get_permalink( $post ),
 		];
 
 		return $breadcrumbs;
@@ -184,11 +187,11 @@ class BreadcrumbListSchema extends BaseSchema {
 	 */
 	private static function get_page_breadcrumbs( int &$position ): array {
 		$breadcrumbs = [];
-		$post = get_queried_object();
+		$post        = get_queried_object();
 
-                if ( ! is_object( $post ) || ! isset( $post->ID ) ) {
-                        return $breadcrumbs;
-                }
+		if ( ! is_object( $post ) || ! isset( $post->ID ) ) {
+				return $breadcrumbs;
+		}
 
 		// Add parent pages
 		if ( $post->post_parent ) {
@@ -197,20 +200,20 @@ class BreadcrumbListSchema extends BaseSchema {
 
 			foreach ( $parents as $parent_id ) {
 				$breadcrumbs[] = [
-					'@type' => 'ListItem',
+					'@type'    => 'ListItem',
 					'position' => $position++,
-					'name' => get_the_title( $parent_id ),
-					'item' => get_permalink( $parent_id )
+					'name'     => get_the_title( $parent_id ),
+					'item'     => get_permalink( $parent_id ),
 				];
 			}
 		}
 
 		// Add current page
 		$breadcrumbs[] = [
-			'@type' => 'ListItem',
+			'@type'    => 'ListItem',
 			'position' => $position++,
-			'name' => get_the_title( $post ),
-			'item' => get_permalink( $post )
+			'name'     => get_the_title( $post ),
+			'item'     => get_permalink( $post ),
 		];
 
 		return $breadcrumbs;
@@ -231,11 +234,11 @@ class BreadcrumbListSchema extends BaseSchema {
 
 		return [
 			[
-				'@type' => 'ListItem',
+				'@type'    => 'ListItem',
 				'position' => $position++,
-				'name' => $author->display_name,
-				'item' => get_author_posts_url( $author->ID )
-			]
+				'name'     => $author->display_name,
+				'item'     => get_author_posts_url( $author->ID ),
+			],
 		];
 	}
 
@@ -249,44 +252,44 @@ class BreadcrumbListSchema extends BaseSchema {
 		$breadcrumbs = [];
 
 		if ( is_post_type_archive() ) {
-			$post_type = get_query_var( 'post_type' );
+			$post_type     = get_query_var( 'post_type' );
 			$post_type_obj = get_post_type_object( $post_type );
 
 			if ( $post_type_obj ) {
 				$breadcrumbs[] = [
-					'@type' => 'ListItem',
+					'@type'    => 'ListItem',
 					'position' => $position++,
-					'name' => $post_type_obj->labels->name,
-					'item' => get_post_type_archive_link( $post_type )
+					'name'     => $post_type_obj->labels->name,
+					'item'     => get_post_type_archive_link( $post_type ),
 				];
 			}
 		} elseif ( is_date() ) {
-			$year = get_query_var( 'year' );
+			$year  = get_query_var( 'year' );
 			$month = get_query_var( 'monthnum' );
-			$day = get_query_var( 'day' );
+			$day   = get_query_var( 'day' );
 
 			if ( $year ) {
 				$breadcrumbs[] = [
-					'@type' => 'ListItem',
+					'@type'    => 'ListItem',
 					'position' => $position++,
-					'name' => $year,
-					'item' => get_year_link( $year )
+					'name'     => $year,
+					'item'     => get_year_link( $year ),
 				];
 
 				if ( $month ) {
 					$breadcrumbs[] = [
-						'@type' => 'ListItem',
+						'@type'    => 'ListItem',
 						'position' => $position++,
-						'name' => date( 'F', mktime( 0, 0, 0, $month, 1 ) ),
-						'item' => get_month_link( $year, $month )
+						'name'     => date( 'F', mktime( 0, 0, 0, $month, 1 ) ),
+						'item'     => get_month_link( $year, $month ),
 					];
 
 					if ( $day ) {
 						$breadcrumbs[] = [
-							'@type' => 'ListItem',
+							'@type'    => 'ListItem',
 							'position' => $position++,
-							'name' => $day,
-							'item' => get_day_link( $year, $month, $day )
+							'name'     => $day,
+							'item'     => get_day_link( $year, $month, $day ),
 						];
 					}
 				}

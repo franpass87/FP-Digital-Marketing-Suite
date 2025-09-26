@@ -25,25 +25,25 @@ class AnomalyDetectorTest extends TestCase {
 	/**
 	 * Set up test environment
 	 */
-        public function setUp(): void {
-                parent::setUp();
+	public function setUp(): void {
+			parent::setUp();
 
-                // Create mock wpdb with the methods used by the detector.
-                $this->wpdb_mock = $this->getMockBuilder( stdClass::class )
-                        ->addMethods( [ 'prepare', 'get_results', 'get_var' ] )
-                        ->getMock();
-                $this->wpdb_mock->prefix = 'wp_';
-                $this->wpdb_mock->method( 'prepare' )->willReturnCallback(
-                        static function ( $query ) {
-                                return $query;
-                        }
-                );
+			// Create mock wpdb with the methods used by the detector.
+			$this->wpdb_mock         = $this->getMockBuilder( stdClass::class )
+					->addMethods( [ 'prepare', 'get_results', 'get_var' ] )
+					->getMock();
+			$this->wpdb_mock->prefix = 'wp_';
+			$this->wpdb_mock->method( 'prepare' )->willReturnCallback(
+				static function ( $query ) {
+							return $query;
+				}
+			);
 
 		// Set global wpdb
 		global $wpdb;
 		$wpdb = $this->wpdb_mock;
 
-                // Mock WordPress functions
+			// Mock WordPress functions
 		if ( ! function_exists( 'current_time' ) ) {
 			function current_time( $format ) {
 				return date( $format );
@@ -68,7 +68,7 @@ class AnomalyDetectorTest extends TestCase {
 	 */
 	public function test_z_score_detection_normal_data(): void {
 		// Mock MetricsAggregator to return normal data
-		$normal_data = [100, 105, 95, 110, 98, 102, 107, 99, 103, 101];
+		$normal_data   = [ 100, 105, 95, 110, 98, 102, 107, 99, 103, 101 ];
 		$current_value = 104; // Normal value
 
 		// Use reflection to test private method with mocked data
@@ -88,7 +88,7 @@ class AnomalyDetectorTest extends TestCase {
 	 */
 	public function test_z_score_detection_anomaly(): void {
 		// Mock MetricsAggregator to return normal data
-		$normal_data = [100, 105, 95, 110, 98, 102, 107, 99, 103, 101];
+		$normal_data   = [ 100, 105, 95, 110, 98, 102, 107, 99, 103, 101 ];
 		$current_value = 200; // Anomalous value (way above normal range)
 
 		$this->mock_historical_data( $normal_data );
@@ -98,15 +98,15 @@ class AnomalyDetectorTest extends TestCase {
 		$this->assertTrue( $result['is_anomaly'] );
 		$this->assertGreaterThan( 2.0, $result['z_score'] );
 		$this->assertEquals( 'positive', $result['deviation_type'] );
-		$this->assertContains( $result['confidence'], ['moderate', 'high', 'very_high'] );
+		$this->assertContains( $result['confidence'], [ 'moderate', 'high', 'very_high' ] );
 	}
 
 	/**
 	 * Test Z-score detection with insufficient data
 	 */
 	public function test_z_score_insufficient_data(): void {
-		$insufficient_data = [100, 105, 95]; // Only 3 data points
-		$current_value = 104;
+		$insufficient_data = [ 100, 105, 95 ]; // Only 3 data points
+		$current_value     = 104;
 
 		$this->mock_historical_data( $insufficient_data );
 
@@ -123,7 +123,7 @@ class AnomalyDetectorTest extends TestCase {
 	 */
 	public function test_moving_average_detection_normal(): void {
 		// Mock stable trending data
-		$stable_data = [100, 102, 98, 101, 99, 103, 97, 100, 102, 98, 101, 99, 103, 100];
+		$stable_data   = [ 100, 102, 98, 101, 99, 103, 97, 100, 102, 98, 101, 99, 103, 100 ];
 		$current_value = 102; // Within normal range
 
 		$this->mock_historical_data( $stable_data );
@@ -142,7 +142,7 @@ class AnomalyDetectorTest extends TestCase {
 	 */
 	public function test_moving_average_detection_anomaly(): void {
 		// Mock stable data with anomalous current value
-		$stable_data = [100, 102, 98, 101, 99, 103, 97, 100, 102, 98, 101, 99, 103, 100];
+		$stable_data   = [ 100, 102, 98, 101, 99, 103, 97, 100, 102, 98, 101, 99, 103, 100 ];
 		$current_value = 200; // Way above upper band
 
 		$this->mock_historical_data( $stable_data );
@@ -152,14 +152,14 @@ class AnomalyDetectorTest extends TestCase {
 		$this->assertTrue( $result['is_anomaly'] );
 		$this->assertEquals( 'upper', $result['band_type'] );
 		$this->assertGreaterThan( 0, $result['band_distance'] );
-		$this->assertContains( $result['severity'], ['low', 'medium', 'high', 'critical'] );
+		$this->assertContains( $result['severity'], [ 'low', 'medium', 'high', 'critical' ] );
 	}
 
 	/**
 	 * Test combined anomaly analysis
 	 */
 	public function test_combined_anomaly_analysis(): void {
-		$normal_data = [100, 105, 95, 110, 98, 102, 107, 99, 103, 101, 104, 96, 108, 100];
+		$normal_data     = [ 100, 105, 95, 110, 98, 102, 107, 99, 103, 101, 104, 96, 108, 100 ];
 		$anomalous_value = 250;
 
 		$this->mock_historical_data( $normal_data );
@@ -193,23 +193,38 @@ class AnomalyDetectorTest extends TestCase {
 	public function test_confidence_levels(): void {
 		// Test different Z-score ranges
 		$test_cases = [
-			['z_score' => 1.0, 'expected' => 'very_low'],
-			['z_score' => 1.8, 'expected' => 'low'],
-			['z_score' => 2.2, 'expected' => 'moderate'],
-			['z_score' => 2.7, 'expected' => 'high'],
-			['z_score' => 3.5, 'expected' => 'very_high'],
+			[
+				'z_score'  => 1.0,
+				'expected' => 'very_low',
+			],
+			[
+				'z_score'  => 1.8,
+				'expected' => 'low',
+			],
+			[
+				'z_score'  => 2.2,
+				'expected' => 'moderate',
+			],
+			[
+				'z_score'  => 2.7,
+				'expected' => 'high',
+			],
+			[
+				'z_score'  => 3.5,
+				'expected' => 'very_high',
+			],
 		];
 
 		foreach ( $test_cases as $case ) {
-			$normal_data = [100, 105, 95, 110, 98, 102, 107, 99, 103, 101];
-			
+			$normal_data = [ 100, 105, 95, 110, 98, 102, 107, 99, 103, 101 ];
+
 			// Calculate value that would produce desired Z-score
-			$mean = array_sum( $normal_data ) / count( $normal_data );
+			$mean     = array_sum( $normal_data ) / count( $normal_data );
 			$variance = 0;
 			foreach ( $normal_data as $value ) {
 				$variance += pow( $value - $mean, 2 );
 			}
-			$std_dev = sqrt( $variance / ( count( $normal_data ) - 1 ) );
+			$std_dev    = sqrt( $variance / ( count( $normal_data ) - 1 ) );
 			$test_value = $mean + ( $case['z_score'] * $std_dev );
 
 			$this->mock_historical_data( $normal_data );
@@ -228,7 +243,7 @@ class AnomalyDetectorTest extends TestCase {
 	 */
 	public function test_edge_cases(): void {
 		// Test zero variance (all values the same)
-		$constant_data = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100];
+		$constant_data = [ 100, 100, 100, 100, 100, 100, 100, 100, 100, 100 ];
 		$current_value = 100;
 
 		$this->mock_historical_data( $constant_data );
@@ -249,8 +264,8 @@ class AnomalyDetectorTest extends TestCase {
 	 * Test negative deviation detection
 	 */
 	public function test_negative_deviation(): void {
-		$normal_data = [100, 105, 95, 110, 98, 102, 107, 99, 103, 101];
-		$low_value = 20; // Much lower than normal
+		$normal_data = [ 100, 105, 95, 110, 98, 102, 107, 99, 103, 101 ];
+		$low_value   = 20; // Much lower than normal
 
 		$this->mock_historical_data( $normal_data );
 
@@ -269,7 +284,8 @@ class AnomalyDetectorTest extends TestCase {
 	private function mock_historical_data( array $data ): void {
 		// Create a static method to return test data
 		if ( ! class_exists( 'MockMetricsAggregator' ) ) {
-			eval('
+			eval(
+				'
 				class MockMetricsAggregator {
 					public static $test_data = [];
 					
@@ -292,7 +308,8 @@ class AnomalyDetectorTest extends TestCase {
 						return [];
 					}
 				}
-			');
+			'
+			);
 		}
 
 		// Set test data in reverse order (since we get from most recent backwards)
@@ -300,11 +317,11 @@ class AnomalyDetectorTest extends TestCase {
 
 		// Replace MetricsAggregator with mock in the AnomalyDetector namespace
 		$reflection = new ReflectionClass( 'FP\DigitalMarketing\Helpers\AnomalyDetector' );
-		$method = $reflection->getMethod( 'get_historical_metric_data' );
+		$method     = $reflection->getMethod( 'get_historical_metric_data' );
 		$method->setAccessible( true );
 
 		// Create a temporary method override for testing
-		$override = function( $client_id, $metric, $days ) {
+		$override = function ( $client_id, $metric, $days ) {
 			return MockMetricsAggregator::$test_data;
 		};
 
