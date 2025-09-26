@@ -37,12 +37,12 @@ class Dashboard {
          */
         private const MENU_NOTICE_TRANSIENT = 'fp_dms_menu_structure_notice';
 
-	/**
-	 * Admin optimizations instance
-	 *
-	 * @var AdminOptimizations
-	 */
-	private AdminOptimizations $optimizations;
+        /**
+         * Admin optimizations instance
+         *
+         * @var AdminOptimizations|null
+         */
+        private ?AdminOptimizations $optimizations = null;
 
 	/**
 	 * Initialize the dashboard page
@@ -50,16 +50,20 @@ class Dashboard {
 	 * @return void
 	 */
 	public function init(): void {
-		try {
-			// Initialize optimizations with error handling to prevent WSOD
-			$this->optimizations = new AdminOptimizations();
-			$this->optimizations->init();
-		} catch ( \Throwable $e ) {
-			// Log error but continue initialization
-			if ( function_exists( 'error_log' ) ) {
-				error_log( 'FP Digital Marketing Dashboard: Failed to initialize optimizations - ' . $e->getMessage() );
-			}
-		}
+                $this->optimizations = null;
+
+                try {
+                        // Initialize optimizations with error handling to prevent WSOD
+                        $this->optimizations = new AdminOptimizations();
+                        $this->optimizations->init();
+                } catch ( \Throwable $e ) {
+                        // Reset to safe default and log error but continue initialization
+                        $this->optimizations = null;
+
+                        if ( function_exists( 'error_log' ) ) {
+                                error_log( 'FP Digital Marketing Dashboard: Failed to initialize optimizations - ' . $e->getMessage() );
+                        }
+                }
 
 		// Add admin hooks with error handling to prevent WSOD
 		try {
@@ -803,16 +807,20 @@ class Dashboard {
 	 *
 	 * @return void
 	 */
-	public function add_performance_dashboard_widget(): void {
-		if ( ! current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
-			return;
-		}
+        public function add_performance_dashboard_widget(): void {
+                if ( ! current_user_can( Capabilities::VIEW_DASHBOARD ) ) {
+                        return;
+                }
 
-		wp_add_dashboard_widget(
-			'fp_dms_performance_widget',
-			__( 'FP Digital Marketing - Performance', 'fp-digital-marketing' ),
-			[ $this, 'render_performance_dashboard_widget' ]
-		);
+                if ( null === $this->optimizations && function_exists( 'error_log' ) ) {
+                        error_log( 'FP Digital Marketing Dashboard: Optimizations helper unavailable for dashboard widget.' );
+                }
+
+                wp_add_dashboard_widget(
+                        'fp_dms_performance_widget',
+                        __( 'FP Digital Marketing - Performance', 'fp-digital-marketing' ),
+                        [ $this, 'render_performance_dashboard_widget' ]
+                );
 	}
 
 	/**
@@ -820,17 +828,63 @@ class Dashboard {
 	 *
 	 * @return void
 	 */
-	public function render_performance_dashboard_widget(): void {
-		$performance_data = $this->optimizations->get_performance_widget_data();
-		$recommendations = $performance_data['recommendations'];
-		
-		?>
-		<div class="fp-dms-performance-widget">
-			<div class="fp-dms-performance-stats">
-				<div class="fp-dms-stat">
-					<span class="fp-dms-stat-value"><?php echo esc_html( $performance_data['avg_load_time'] ); ?>s</span>
-					<span class="fp-dms-stat-label"><?php esc_html_e( 'Avg Load Time', 'fp-digital-marketing' ); ?></span>
-				</div>
+        public function render_performance_dashboard_widget(): void {
+                $performance_data = [
+                        'avg_load_time' => 0,
+                        'error_count' => 0,
+                        'metrics_count' => 0,
+                        'recommendations' => [],
+                ];
+
+                $has_optimizations = $this->optimizations instanceof AdminOptimizations;
+
+                if ( $has_optimizations ) {
+                        try {
+                                $fetched_data = $this->optimizations->get_performance_widget_data();
+
+                                if ( is_array( $fetched_data ) ) {
+                                        foreach ( array_keys( $performance_data ) as $key ) {
+                                                if ( array_key_exists( $key, $fetched_data ) ) {
+                                                        $performance_data[ $key ] = $fetched_data[ $key ];
+                                                }
+                                        }
+                                }
+                        } catch ( \Throwable $e ) {
+                                $has_optimizations = false;
+
+                                if ( function_exists( 'error_log' ) ) {
+                                        error_log( 'FP Digital Marketing Dashboard: Failed to render performance widget - ' . $e->getMessage() );
+                                }
+                        }
+                }
+
+                $recommendations = [];
+                if ( isset( $performance_data['recommendations'] ) && is_array( $performance_data['recommendations'] ) ) {
+                        $recommendations = $performance_data['recommendations'];
+                }
+
+                $fallback_notice = '';
+                if ( ! $has_optimizations ) {
+                        $notice_message = 'Performance data temporarily unavailable. Please refresh later.';
+                        if ( function_exists( '__' ) ) {
+                                $notice_message = __( 'Performance data temporarily unavailable. Please refresh later.', 'fp-digital-marketing' );
+                        }
+                        $fallback_notice = $notice_message;
+                }
+
+                ?>
+                <div class="fp-dms-performance-widget">
+                        <?php if ( ! empty( $fallback_notice ) ) : ?>
+                                <div class="notice notice-warning fp-dms-widget-notice">
+                                        <?php echo esc_html( $fallback_notice ); ?>
+                                </div>
+                        <?php endif; ?>
+
+                        <div class="fp-dms-performance-stats">
+                                <div class="fp-dms-stat">
+                                        <span class="fp-dms-stat-value"><?php echo esc_html( $performance_data['avg_load_time'] ); ?>s</span>
+                                        <span class="fp-dms-stat-label"><?php esc_html_e( 'Avg Load Time', 'fp-digital-marketing' ); ?></span>
+                                </div>
 				<div class="fp-dms-stat">
 					<span class="fp-dms-stat-value"><?php echo esc_html( $performance_data['error_count'] ); ?></span>
 					<span class="fp-dms-stat-label"><?php esc_html_e( 'JS Errors (7d)', 'fp-digital-marketing' ); ?></span>
