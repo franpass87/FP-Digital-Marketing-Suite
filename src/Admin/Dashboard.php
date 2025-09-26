@@ -185,18 +185,43 @@ class Dashboard {
 				'users' => __( 'Users', 'fp-digital-marketing' ),
 				'impressions' => __( 'Impressions', 'fp-digital-marketing' ),
 				'clicks' => __( 'Clicks', 'fp-digital-marketing' ),
-				'ctr' => __( 'CTR', 'fp-digital-marketing' ),
-				'revenue' => __( 'Revenue', 'fp-digital-marketing' ),
-				'lcp' => __( 'LCP', 'fp-digital-marketing' ),
-				'inp' => __( 'INP', 'fp-digital-marketing' ),
-				'cls' => __( 'CLS', 'fp-digital-marketing' ),
-				'good' => __( 'Buono', 'fp-digital-marketing' ),
-				'needs_improvement' => __( 'Da migliorare', 'fp-digital-marketing' ),
-				'poor' => __( 'Scarso', 'fp-digital-marketing' ),
-				'recommendations' => __( 'Raccomandazioni', 'fp-digital-marketing' ),
-				'performance_score' => __( 'Punteggio Performance', 'fp-digital-marketing' ),
-			],
-		] );
+                                'ctr' => __( 'CTR', 'fp-digital-marketing' ),
+                                'revenue' => __( 'Revenue', 'fp-digital-marketing' ),
+                                'lcp' => __( 'LCP', 'fp-digital-marketing' ),
+                                'inp' => __( 'INP', 'fp-digital-marketing' ),
+                                'cls' => __( 'CLS', 'fp-digital-marketing' ),
+                                'kpi_info_hint' => __( 'Mostra spiegazioni aggiuntive su questo KPI', 'fp-digital-marketing' ),
+                                'kpi_groups' => [
+                                        'audience' => __( 'Pubblico', 'fp-digital-marketing' ),
+                                        'awareness' => __( 'Visibilità', 'fp-digital-marketing' ),
+                                        'engagement' => __( 'Coinvolgimento', 'fp-digital-marketing' ),
+                                        'monetization' => __( 'Entrate', 'fp-digital-marketing' ),
+                                        'insight' => __( 'Approfondimento', 'fp-digital-marketing' ),
+                                ],
+                                'sources' => [
+                                        'single' => __( '%d sorgente collegata', 'fp-digital-marketing' ),
+                                        'multiple' => __( '%d sorgenti collegate', 'fp-digital-marketing' ),
+                                        'demo' => __( 'Dati dimostrativi', 'fp-digital-marketing' ),
+                                ],
+                                'good' => __( 'Buono', 'fp-digital-marketing' ),
+                                'needs_improvement' => __( 'Da migliorare', 'fp-digital-marketing' ),
+                                'poor' => __( 'Scarso', 'fp-digital-marketing' ),
+                                'recommendations' => __( 'Raccomandazioni', 'fp-digital-marketing' ),
+                                'performance_score' => __( 'Punteggio Performance', 'fp-digital-marketing' ),
+                                'theme' => [
+                                        'system' => __( 'Tema: sistema', 'fp-digital-marketing' ),
+                                        'dark' => __( 'Tema: scuro', 'fp-digital-marketing' ),
+                                        'light' => __( 'Tema: chiaro', 'fp-digital-marketing' ),
+                                        'switch_to_dark' => __( 'Attiva il tema scuro', 'fp-digital-marketing' ),
+                                        'switch_to_light' => __( 'Attiva il tema chiaro', 'fp-digital-marketing' ),
+                                        'switch_to_system' => __( 'Segui il tema di sistema', 'fp-digital-marketing' ),
+                                        'status_system' => __( 'Tema basato sulle impostazioni di sistema', 'fp-digital-marketing' ),
+                                        'status_dark' => __( 'Tema scuro attivo', 'fp-digital-marketing' ),
+                                        'status_light' => __( 'Tema chiaro attivo', 'fp-digital-marketing' ),
+                                        'reset_hint' => __( 'Shift + clic per tornare al tema di sistema', 'fp-digital-marketing' ),
+                                ],
+                        ],
+                ] );
 
 		// Localize script for Core Web Vitals client-side collection
 		wp_localize_script( 'fp-dms-dashboard', 'fpDmsVitals', [
@@ -423,70 +448,106 @@ class Dashboard {
 
 		?>
 		<div class="wrap fp-dms-dashboard">
-			<div class="fp-dms-page-header">
-				<h1><?php esc_html_e( 'FP Digital Marketing Suite', 'fp-digital-marketing' ); ?></h1>
-				<p class="description"><?php esc_html_e( 'Dashboard principale per il monitoraggio e la gestione delle attività di digital marketing', 'fp-digital-marketing' ); ?></p>
-			</div>
+                        <div class="fp-dms-page-header">
+                                <div class="fp-dms-page-header-content">
+                                        <span class="fp-dms-page-badge">
+                                                <?php esc_html_e( 'Panoramica marketing', 'fp-digital-marketing' ); ?>
+                                        </span>
+                                        <h1><?php esc_html_e( 'FP Digital Marketing Suite', 'fp-digital-marketing' ); ?></h1>
+                                        <p class="description"><?php esc_html_e( 'Dashboard principale per il monitoraggio e la gestione delle attività di digital marketing', 'fp-digital-marketing' ); ?></p>
+                                        <p class="fp-dms-page-subtitle"><?php esc_html_e( 'Personalizza i KPI selezionando cliente, intervallo temporale e sorgenti dati per ottenere insight aggiornati.', 'fp-digital-marketing' ); ?></p>
+                                </div>
+                                <div class="fp-dms-page-toolbar" role="toolbar" aria-label="<?php esc_attr_e( 'Azioni dashboard', 'fp-digital-marketing' ); ?>">
+                                        <button type="button" id="fp-dms-theme-toggle" class="fp-dms-theme-toggle" data-mode="system" aria-describedby="fp-dms-theme-status">
+                                                <span class="fp-dms-theme-toggle-icon" aria-hidden="true">🖥️</span>
+                                                <span class="fp-dms-theme-toggle-label"><?php esc_html_e( 'Tema: sistema', 'fp-digital-marketing' ); ?></span>
+                                                <span class="screen-reader-text fp-dms-theme-toggle-status" id="fp-dms-theme-status" role="status" aria-live="polite"><?php esc_html_e( 'Tema basato sulle impostazioni di sistema', 'fp-digital-marketing' ); ?></span>
+                                        </button>
+                                </div>
+                        </div>
 
 			<!-- Global Filters -->
 			<div class="fp-dms-filters">
 				<div class="fp-dms-filter-row">
 					<div class="fp-dms-filter-group">
-						<label for="client-filter"><?php esc_html_e( 'Cliente:', 'fp-digital-marketing' ); ?></label>
-						<select id="client-filter" class="fp-dms-filter-select">
-							<option value="0"><?php esc_html_e( 'Tutti i clienti', 'fp-digital-marketing' ); ?></option>
-							<?php foreach ( $clients as $client ) : ?>
-								<option value="<?php echo esc_attr( $client->ID ); ?>">
-									<?php echo esc_html( $client->post_title ); ?>
-								</option>
-							<?php endforeach; ?>
-						</select>
-					</div>
+                                                <label for="client-filter"><?php esc_html_e( 'Cliente:', 'fp-digital-marketing' ); ?></label>
+                                                <select id="client-filter" class="fp-dms-filter-select" aria-describedby="fp-dms-client-filter-hint">
+                                                        <option value="0"><?php esc_html_e( 'Tutti i clienti', 'fp-digital-marketing' ); ?></option>
+                                                        <?php foreach ( $clients as $client ) : ?>
+                                                                <option value="<?php echo esc_attr( $client->ID ); ?>">
+                                                                        <?php echo esc_html( $client->post_title ); ?>
+                                                                </option>
+                                                        <?php endforeach; ?>
+                                                </select>
+                                                <small id="fp-dms-client-filter-hint" class="fp-dms-filter-hint"><?php esc_html_e( 'Limita l’analisi alle performance di un singolo cliente.', 'fp-digital-marketing' ); ?></small>
+                                        </div>
 
-					<div class="fp-dms-filter-group">
-						<label for="date-start"><?php esc_html_e( 'Data inizio:', 'fp-digital-marketing' ); ?></label>
-						<input type="date" id="date-start" class="fp-dms-filter-input" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( '-30 days' ) ) ); ?>">
-					</div>
+                                        <div class="fp-dms-filter-group">
+                                                <label for="date-start"><?php esc_html_e( 'Data inizio:', 'fp-digital-marketing' ); ?></label>
+                                                <input type="date" id="date-start" class="fp-dms-filter-input" value="<?php echo esc_attr( date( 'Y-m-d', strtotime( '-30 days' ) ) ); ?>" aria-describedby="fp-dms-date-range-hint">
+                                        </div>
 
-					<div class="fp-dms-filter-group">
-						<label for="date-end"><?php esc_html_e( 'Data fine:', 'fp-digital-marketing' ); ?></label>
-						<input type="date" id="date-end" class="fp-dms-filter-input" value="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>">
-					</div>
+                                        <div class="fp-dms-filter-group">
+                                                <label for="date-end"><?php esc_html_e( 'Data fine:', 'fp-digital-marketing' ); ?></label>
+                                                <input type="date" id="date-end" class="fp-dms-filter-input" value="<?php echo esc_attr( date( 'Y-m-d' ) ); ?>" aria-describedby="fp-dms-date-range-hint">
+                                                <small id="fp-dms-date-range-hint" class="fp-dms-filter-hint"><?php esc_html_e( 'Definisci l’intervallo temporale per i grafici e le metriche mostrati.', 'fp-digital-marketing' ); ?></small>
+                                        </div>
 
-					<div class="fp-dms-filter-group">
-						<label for="source-filter"><?php esc_html_e( 'Sorgente:', 'fp-digital-marketing' ); ?></label>
-						<select id="source-filter" class="fp-dms-filter-select" multiple>
-							<?php foreach ( $available_sources as $source_id => $source ) : ?>
-								<option value="<?php echo esc_attr( $source_id ); ?>">
-									<?php echo esc_html( $source['name'] ); ?>
-								</option>
-							<?php endforeach; ?>
-						</select>
-					</div>
+                                        <div class="fp-dms-filter-group">
+                                                <label for="source-filter"><?php esc_html_e( 'Sorgente:', 'fp-digital-marketing' ); ?></label>
+                                                <select id="source-filter" class="fp-dms-filter-select" multiple aria-describedby="fp-dms-source-filter-hint">
+                                                        <?php foreach ( $available_sources as $source_id => $source ) : ?>
+                                                                <option value="<?php echo esc_attr( $source_id ); ?>">
+                                                                        <?php echo esc_html( $source['name'] ); ?>
+                                                                </option>
+                                                        <?php endforeach; ?>
+                                                </select>
+                                                <small id="fp-dms-source-filter-hint" class="fp-dms-filter-hint"><?php esc_html_e( 'Seleziona una o più sorgenti per confrontare le performance delle integrazioni attive.', 'fp-digital-marketing' ); ?></small>
+                                        </div>
 
-					<div class="fp-dms-filter-group">
-						<button id="apply-filters" class="button button-primary">
-							<?php esc_html_e( 'Applica Filtri', 'fp-digital-marketing' ); ?>
-						</button>
-					</div>
-				</div>
-			</div>
+                                        <div class="fp-dms-filter-group fp-dms-filter-actions">
+                                                <button type="button" id="apply-filters" class="button button-primary" title="<?php esc_attr_e( 'Aggiorna i dati con i filtri correnti', 'fp-digital-marketing' ); ?>">
+                                                        <?php esc_html_e( 'Applica filtri', 'fp-digital-marketing' ); ?>
+                                                </button>
+                                                <button type="button" id="reset-filters" class="button button-secondary" title="<?php esc_attr_e( 'Ripristina i filtri iniziali', 'fp-digital-marketing' ); ?>">
+                                                        <?php esc_html_e( 'Reimposta', 'fp-digital-marketing' ); ?>
+                                                </button>
+                                        </div>
+                                </div>
+                        </div>
 
-			<!-- Loading State -->
-			<div id="dashboard-loading" class="fp-dms-loading">
-				<div class="fp-dms-skeleton-grid">
-					<?php for ( $i = 0; $i < 6; $i++ ) : ?>
-						<div class="fp-dms-skeleton-card">
-							<div class="fp-dms-skeleton-title"></div>
-							<div class="fp-dms-skeleton-value"></div>
-							<div class="fp-dms-skeleton-change"></div>
-						</div>
-					<?php endfor; ?>
-				</div>
-			</div>
+                        <!-- Loading State -->
+                        <div id="dashboard-loading" class="fp-dms-loading" role="status" aria-live="polite">
+                                <div class="fp-dms-skeleton-grid">
+                                        <?php
+                                        $skeleton_variants = [
+                                                [ 'title' => '58%', 'value' => '78%', 'change' => '36%' ],
+                                                [ 'title' => '64%', 'value' => '86%', 'change' => '42%' ],
+                                                [ 'title' => '52%', 'value' => '72%', 'change' => '48%' ],
+                                                [ 'title' => '68%', 'value' => '90%', 'change' => '38%' ],
+                                                [ 'title' => '60%', 'value' => '84%', 'change' => '44%' ],
+                                                [ 'title' => '55%', 'value' => '76%', 'change' => '40%' ],
+                                        ];
+
+                                        foreach ( $skeleton_variants as $variant ) :
+                                                $style = sprintf(
+                                                        '--fp-dms-skeleton-title-width:%s; --fp-dms-skeleton-value-width:%s; --fp-dms-skeleton-change-width:%s;',
+                                                        $variant['title'],
+                                                        $variant['value'],
+                                                        $variant['change']
+                                                );
+                                                ?>
+                                                <div class="fp-dms-skeleton-card" style="<?php echo esc_attr( $style ); ?>">
+                                                        <div class="fp-dms-skeleton-title"></div>
+                                                        <div class="fp-dms-skeleton-value"></div>
+                                                        <div class="fp-dms-skeleton-change"></div>
+                                                </div>
+                                        <?php endforeach; ?>
+                                </div>
+                        </div>
 
 			<!-- Dashboard Content -->
-			<div id="dashboard-content" class="fp-dms-dashboard-content" style="display: none;">
+                        <div id="dashboard-content" class="fp-dms-dashboard-content" style="display: none;" role="region" aria-live="polite">
 				
 				<!-- KPI Cards -->
 				<div class="fp-dms-kpi-grid" id="kpi-cards">
@@ -499,20 +560,21 @@ class Dashboard {
 						<h2><?php esc_html_e( 'Trend Metriche', 'fp-digital-marketing' ); ?></h2>
 						<div class="fp-dms-chart-controls">
 							<label for="chart-metric"><?php esc_html_e( 'Metrica:', 'fp-digital-marketing' ); ?></label>
-							<select id="chart-metric" class="fp-dms-metric-select">
-								<option value="sessions"><?php esc_html_e( 'Sessioni', 'fp-digital-marketing' ); ?></option>
-								<option value="users"><?php esc_html_e( 'Utenti', 'fp-digital-marketing' ); ?></option>
-								<option value="pageviews"><?php esc_html_e( 'Visualizzazioni Pagina', 'fp-digital-marketing' ); ?></option>
-								<option value="impressions"><?php esc_html_e( 'Impressioni', 'fp-digital-marketing' ); ?></option>
-								<option value="clicks"><?php esc_html_e( 'Click', 'fp-digital-marketing' ); ?></option>
+                                                        <select id="chart-metric" class="fp-dms-metric-select" aria-describedby="fp-dms-chart-metric-hint">
+                                                                <option value="sessions"><?php esc_html_e( 'Sessioni', 'fp-digital-marketing' ); ?></option>
+                                                                <option value="users"><?php esc_html_e( 'Utenti', 'fp-digital-marketing' ); ?></option>
+                                                                <option value="pageviews"><?php esc_html_e( 'Visualizzazioni Pagina', 'fp-digital-marketing' ); ?></option>
+                                                                <option value="impressions"><?php esc_html_e( 'Impressioni', 'fp-digital-marketing' ); ?></option>
+                                                                <option value="clicks"><?php esc_html_e( 'Click', 'fp-digital-marketing' ); ?></option>
 								<option value="conversions"><?php esc_html_e( 'Conversioni', 'fp-digital-marketing' ); ?></option>
 								<option value="revenue"><?php esc_html_e( 'Fatturato', 'fp-digital-marketing' ); ?></option>
 								<option value="lcp"><?php esc_html_e( 'LCP (ms)', 'fp-digital-marketing' ); ?></option>
-								<option value="inp"><?php esc_html_e( 'INP (ms)', 'fp-digital-marketing' ); ?></option>
-								<option value="cls"><?php esc_html_e( 'CLS', 'fp-digital-marketing' ); ?></option>
-							</select>
-						</div>
-					</div>
+                                                                <option value="inp"><?php esc_html_e( 'INP (ms)', 'fp-digital-marketing' ); ?></option>
+                                                                <option value="cls"><?php esc_html_e( 'CLS', 'fp-digital-marketing' ); ?></option>
+                                                        </select>
+                                                        <p id="fp-dms-chart-metric-hint" class="fp-dms-chart-hint"><?php esc_html_e( 'Scegli la metrica da visualizzare: il grafico adatta automaticamente colori, scala e descrizioni accessibili.', 'fp-digital-marketing' ); ?></p>
+                                                </div>
+                                        </div>
 					<div class="fp-dms-chart-container">
 						<canvas id="trend-chart" aria-label="<?php esc_attr_e( 'Grafico trend metriche', 'fp-digital-marketing' ); ?>"></canvas>
 					</div>
@@ -543,12 +605,28 @@ class Dashboard {
 			</div>
 
 			<!-- Empty State -->
-			<div id="dashboard-empty" class="fp-dms-empty-state" style="display: none;">
-				<div class="fp-dms-empty-icon">📊</div>
-				<h3><?php esc_html_e( 'Nessun dato disponibile', 'fp-digital-marketing' ); ?></h3>
-				<p><?php esc_html_e( 'Non sono stati trovati dati per il periodo e i filtri selezionati.', 'fp-digital-marketing' ); ?></p>
-				<p><?php esc_html_e( 'Verifica che le sorgenti dati siano configurate correttamente.', 'fp-digital-marketing' ); ?></p>
-			</div>
+                        <div id="dashboard-empty" class="fp-dms-empty-state" style="display: none;" role="region" aria-live="polite">
+                                <div class="fp-dms-empty-illustration" aria-hidden="true">
+                                        <span class="fp-dms-empty-icon">📊</span>
+                                </div>
+                                <h3><?php esc_html_e( 'Nessun dato disponibile', 'fp-digital-marketing' ); ?></h3>
+                                <p><?php esc_html_e( 'Non sono stati trovati dati per il periodo e i filtri selezionati.', 'fp-digital-marketing' ); ?></p>
+                                <p><?php esc_html_e( 'Verifica che le sorgenti dati siano configurate correttamente.', 'fp-digital-marketing' ); ?></p>
+                                <p class="fp-dms-empty-message" role="alert" aria-live="polite"></p>
+                                <ul class="fp-dms-empty-tips">
+                                        <li><?php esc_html_e( 'Controlla che l’intervallo temporale includa giorni con campagne attive o traffico rilevante.', 'fp-digital-marketing' ); ?></li>
+                                        <li><?php esc_html_e( 'Apri le impostazioni delle integrazioni per assicurarti che le credenziali e i permessi siano aggiornati.', 'fp-digital-marketing' ); ?></li>
+                                        <li><?php esc_html_e( 'Utilizza il pulsante “Riprova caricamento” per forzare una nuova sincronizzazione dei dati.', 'fp-digital-marketing' ); ?></li>
+                                </ul>
+                                <div class="fp-dms-empty-actions">
+                                        <a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=fp-dms-settings' ) ); ?>">
+                                                <?php esc_html_e( 'Configura le sorgenti', 'fp-digital-marketing' ); ?>
+                                        </a>
+                                        <button type="button" id="fp-dms-empty-refresh" class="button button-secondary">
+                                                <?php esc_html_e( 'Riprova caricamento', 'fp-digital-marketing' ); ?>
+                                        </button>
+                                </div>
+                        </div>
 
 		</div>
 		<?php
