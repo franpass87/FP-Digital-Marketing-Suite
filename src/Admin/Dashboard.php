@@ -134,7 +134,17 @@ class Dashboard {
 	 * @return void
 	 */
 	public function enqueue_dashboard_assets( string $hook ): void {
-		// Enqueue admin menu styles globally for all admin pages
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		$is_dashboard_screen = $screen && $screen->id === 'toplevel_page_' . self::PAGE_SLUG;
+		$is_plugin_screen = $is_dashboard_screen || (
+			$screen && 0 === strpos( (string) $screen->id, self::PAGE_SLUG . '_page_' )
+		);
+
+		if ( ! $is_plugin_screen ) {
+			return;
+		}
+
+		// Enqueue admin menu styles only on FP DMS screens
 		wp_enqueue_style(
 			'fp-dms-admin-menu',
 			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/css/admin-menu.css',
@@ -142,8 +152,7 @@ class Dashboard {
 			FP_DIGITAL_MARKETING_VERSION
 		);
 
-		$screen = get_current_screen();
-		if ( ! $screen || $screen->id !== 'toplevel_page_' . self::PAGE_SLUG ) {
+		if ( ! $is_dashboard_screen ) {
 			return;
 		}
 
