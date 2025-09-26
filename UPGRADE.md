@@ -1,6 +1,6 @@
 # Upgrade Guide
 
-This document outlines the recommended process for upgrading the FP Digital Marketing Suite to version 1.2.0 and beyond.
+This document outlines the recommended process for upgrading the FP Digital Marketing Suite to version 1.3.0 and beyond.
 
 ## Before You Upgrade
 
@@ -13,7 +13,7 @@ This document outlines the recommended process for upgrading the FP Digital Mark
 
 ### Updating from 1.1.x
 
-1. Download `dist/fp-digital-marketing-suite-1.2.0.zip`.
+1. Download `dist/fp-digital-marketing-suite-1.3.0.zip`.
 2. Deactivate the existing plugin in WordPress.
 3. Upload and activate the new version.
 4. The upgrade registry will automatically migrate wizard menu state, cache schemas and stored TTL overrides. Review cache TTLs under **Settings → Performance** if you previously customized them.
@@ -21,7 +21,7 @@ This document outlines the recommended process for upgrading the FP Digital Mark
 
 ### Updating from 1.0.x
 
-1. Follow the same steps as above, upgrading sequentially if possible (1.0.x → 1.1.0 → 1.2.0).
+1. Follow the same steps as above, upgrading sequentially if possible (1.0.x → 1.1.0 → 1.2.0 → 1.3.0).
 2. Read the change notes for 1.1.0 in [`CHANGELOG.md`](CHANGELOG.md) to prepare for new features such as Reporting Workspace and Alert Center.
 3. Validate role capabilities via **Settings → Permissions** after the upgrade to ensure new defaults match your organization.
 
@@ -32,9 +32,12 @@ Install the plugin normally from the packaged ZIP and walk through the onboardin
 ## Post-Upgrade Checklist
 
 - Run automated tests if you maintain a fork: `php phpunit.phar --configuration phpunit.xml`.
-- Inspect `docs/audit/release.md` for manual QA steps executed during the 1.2.0 release.
+- Inspect `docs/audit/release.md` for manual QA steps executed during the 1.3.0 release.
 - Execute `verify-deployment.php` and review `docs/audit/security.md` if you customize access controls.
 - Monitor the **Runtime Logs** (see `docs/audit/runtime-issues.log`) for unexpected notices after the first cron cycle.
+- Walk through the refreshed admin screens using only the keyboard to
+  confirm the skip link, focus outlines, and status pill contrast upgrades
+  behave as expected.
 
 ## Troubleshooting
 

@@ -4,7 +4,7 @@ Tags: digital marketing, analytics, google analytics, seo, marketing automation
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: MIT
 License URI: https://opensource.org/licenses/MIT
 
@@ -14,23 +14,23 @@ A comprehensive digital marketing toolkit with advanced client intelligence, omn
 
 FP Digital Marketing Suite delivers a unified operating system for agencies and growth teams. Manage client relationships, orchestrate campaigns, connect analytics sources and automate reporting from a single WordPress plugin maintained by Francesco Passeri.
 
-= Key Features in 1.2.0 =
+= Key Features in 1.3.0 =
 
-**Resilient Upgrade Engine**
-* Network-aware version tracking with automated option migrations across single and multisite installs
-* Structured upgrade registry with safe execution wrappers for menu state, cache schemas and follow-up routines
+**Accessible Admin Experience**
+* Skip-link navigation, landmarked main regions and improved focus outlines for every campaign screen
+* Centralized design tokens and base styles that align plugin pages with WordPress admin patterns
 
-**Cache Reliability & Hygiene**
-* Normalizes cache settings, TTLs and indexes while persisting schema metadata for observability
-* Forces PerformanceCache, WordPress object cache and OPcache purges after upgrades to prevent stale analytics
+**Reusable Interface Components**
+* Page headers, cards, notices, form rows and toolbars with built-in accessibility attributes
+* Tab navigation, contextual help and screen options wired for campaign management workflows
 
-**Operational Readiness**
-* Timestamped migration markers and schema versions for wizard UI state and cache payloads
-* Updated developer tooling to keep phpstan, PHPUnit and runtime helpers aware of the new release version
+**Menu Registry & Back-Compat**
+* Consolidated menu registration with sanitized legacy slug redirects and capability mapping
+* Updated IA documentation covering new labels, groupings and redirect behavior
 
 = Installation =
 
-1. Download `dist/fp-digital-marketing-suite-1.2.0.zip`.
+1. Download `dist/fp-digital-marketing-suite-1.3.0.zip`.
 2. In WordPress go to **Plugins → Add New → Upload Plugin**, choose the ZIP and activate it.
 3. Alternatively, extract the archive into `wp-content/plugins/` via SFTP or the command line and activate it from the plugins list.
 4. Visit **Tools → FP DMS Diagnostics** to run `verify-deployment.php` and confirm the hosting environment meets the documented requirements.
@@ -43,6 +43,7 @@ FP Digital Marketing Suite delivers a unified operating system for agencies and 
 
 = Release Timeline =
 
+* **1.3.0** – Admin UI revamp with reusable components, centralized menu registry and accessibility polish
 * **1.2.0** – Hardened upgrade engine, cache schema migrations and automated runtime cache purges
 * **1.1.0** – Reporting workspace, alert center, documentation refresh and new author branding
 * **1.0.1** – Metrics aggregation pipeline, onboarding wizard and performance optimizations
@@ -141,6 +142,11 @@ Yes, extensive documentation is included:
 
 == Changelog ==
 
+= 1.3.0 =
+* Introduced reusable admin components, skip links and landmarked regions across campaign workflows
+* Added sortable, filterable UTM campaign list tables with screen options and contextual help
+* Centralized admin menu registration with sanitized legacy slug redirects and IA documentation updates
+
 = 1.2.0 =
 * Added multisite-safe upgrade routines for menu state schema and performance cache configuration
 * Enforced cache TTL minimums, schema metadata and normalized indexes for consistent cache invalidation
@@ -167,6 +173,9 @@ Yes, extensive documentation is included:
 * SEO suite, caching, security enhancements and multilingual support
 
 == Upgrade Notice ==
+
+= 1.3.0 =
+The admin information architecture was reorganized. Legacy menu slugs redirect automatically, but clear cached admin screens and rerun smoke tests if you override menu registration.
 
 = 1.2.0 =
 Run the plugin upgrade process during low-traffic windows so cache purges can complete. All cached analytics and wizard menu

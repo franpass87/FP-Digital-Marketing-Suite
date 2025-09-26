@@ -3,7 +3,7 @@
  * Plugin Name: FP Digital Marketing Suite
  * Plugin URI: https://github.com/franpass87/FP-Digital-Marketing-Suite
  * Description: A comprehensive digital marketing toolkit with advanced client metadata management.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: Francesco Passeri
  * Author URI: https://francescopasseri.com
  * License: MIT
@@ -20,7 +20,7 @@
 defined( 'ABSPATH' ) || exit;
 
 // Define plugin constants.
-define( 'FP_DIGITAL_MARKETING_VERSION', '1.2.0' );
+define( 'FP_DIGITAL_MARKETING_VERSION', '1.3.0' );
 define( 'FP_DIGITAL_MARKETING_PLUGIN_FILE', __FILE__ );
 define( 'FP_DIGITAL_MARKETING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'FP_DIGITAL_MARKETING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

@@ -1,9 +1,9 @@
-# Phase 9 – Upgrade & Migrations
+# Phase 10 – Upgrade & Migrations
 
 ## Summary
-- Bumped the plugin release metadata to **1.2.0** across the bootstrap, readme files, changelog and PHPStan harness.
-- Added a dedicated upgrade definition for 1.2.0 that executes menu state and cache schema migrations before purging runtime caches.
-- Introduced schema versioning for wizard menu state and PerformanceCache settings to simplify future upgrade checks.
+- Bumped the plugin release metadata to **1.3.0** across the bootstrap, readme files, changelog and PHPStan harness.
+- Confirmed that menu registry redirects and list-table refits preserve slug compatibility so new IA changes remain back compatible.
+- Documented how reusable admin components interact with existing hooks and filters to minimize upgrade friction.
 
 ## Migration Details
 - `SettingsManager::upgrade_menu_state_schema()` normalizes legacy wizard menu payloads, sanitizes registered slugs, enforces allowed statuses and stamps schema metadata.

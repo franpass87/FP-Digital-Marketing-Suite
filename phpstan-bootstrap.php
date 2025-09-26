@@ -19,7 +19,7 @@ if (file_exists($woocommerce_stubs)) {
 }
 
 if (!defined('FP_DIGITAL_MARKETING_VERSION')) {
-    define('FP_DIGITAL_MARKETING_VERSION', '1.2.0');
+    define('FP_DIGITAL_MARKETING_VERSION', '1.3.0');
 }
 
 if (!defined('FP_DIGITAL_MARKETING_PLUGIN_URL')) {

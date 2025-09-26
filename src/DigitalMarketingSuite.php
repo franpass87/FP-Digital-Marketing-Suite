@@ -71,7 +71,7 @@ class DigitalMarketingSuite {
 		/**
 		 * Default plugin version used as a fallback when constants are missing.
 		 */
-        private const PLUGIN_VERSION = '1.2.0';
+        private const PLUGIN_VERSION = '1.3.0';
 
 		/**
 		 * Registry key used for the admin menu manager component.

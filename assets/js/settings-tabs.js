@@ -13,6 +13,7 @@
         }
 
         init() {
+            this.applyPageBodyClass();
             this.restoreActiveTab();
             this.createTabInterface();
             this.bindEvents();
@@ -204,6 +205,12 @@
                 localStorage.setItem('fp_dms_active_tab', tab);
             });
 
+            // Reset current tab fields
+            $(document).on('click', '#fp-dms-reset-tab', (e) => {
+                e.preventDefault();
+                this.resetActiveTabFields();
+            });
+
             // Collapsible sections
             $(document).on('click', '.fp-dms-collapsible-header', (e) => {
                 const $collapsible = $(e.currentTarget).closest('.fp-dms-collapsible');
@@ -295,6 +302,39 @@
             });
         }
 
+        applyPageBodyClass() {
+            if (document && document.body) {
+                document.body.classList.add('settings_page_fp-digital-marketing-settings');
+            }
+        }
+
+        resetActiveTabFields() {
+            if (typeof fpDmsSettings !== 'undefined' && fpDmsSettings.strings && !window.confirm(fpDmsSettings.strings.confirmReset)) {
+                return;
+            }
+
+            const $activePanel = $('.fp-dms-tab-panel.active, .fp-dms-tab-panel.is-active');
+            if (!$activePanel.length) {
+                return;
+            }
+
+            $activePanel.find('input, select, textarea').each(function() {
+                const $field = $(this);
+                if ($field.is(':checkbox')) {
+                    $field.prop('checked', $field.data('default') || false);
+                } else {
+                    $field.val($field.data('default') || '');
+                }
+            });
+
+            if (typeof fpDmsShowMessage === 'function') {
+                const message = (fpDmsSettings && fpDmsSettings.strings && fpDmsSettings.strings.resetNotice)
+                    ? fpDmsSettings.strings.resetNotice
+                    : 'Tab ripristinato.';
+                fpDmsShowMessage(message, 'warning');
+            }
+        }
+
         // Helper method to show status messages
         showMessage(message, type = 'success') {
             const $message = $(`
@@ -324,8 +364,7 @@
 
     // Initialize when DOM is ready
     $(document).ready(() => {
-        // Only initialize on settings page
-        if ($('body').hasClass('settings_page_fp-digital-marketing-settings')) {
+        if ($('#fp-dms-settings-form').length) {
             window.fpSettingsTabs = new FPSettingsTabs();
         }
     });

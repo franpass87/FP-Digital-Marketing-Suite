@@ -29,32 +29,49 @@ class AdminOptimizations {
 	/**
 	 * Initialize optimizations
 	 */
-	public function init(): void {
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_optimization_assets' ], 5 );
-		add_action( 'admin_head', [ $this, 'add_performance_hints' ] );
-		add_action( 'admin_footer', [ $this, 'add_performance_monitoring' ] );
-		add_filter( 'script_loader_tag', [ $this, 'optimize_script_loading' ], 10, 3 );
-		add_filter( 'style_loader_tag', [ $this, 'optimize_style_loading' ], 10, 4 );
-		add_action( 'wp_ajax_fp_dms_performance_metrics', [ $this, 'handle_performance_metrics' ] );
-	}
+        public function init(): void {
+                add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_optimization_assets' ], 5 );
+                add_action( 'admin_head', [ $this, 'add_performance_hints' ] );
+                add_action( 'admin_footer', [ $this, 'add_performance_monitoring' ] );
+                add_filter( 'script_loader_tag', [ $this, 'optimize_script_loading' ], 10, 3 );
+                add_filter( 'style_loader_tag', [ $this, 'optimize_style_loading' ], 10, 4 );
+                add_action( 'wp_ajax_fp_dms_performance_metrics', [ $this, 'handle_performance_metrics' ] );
+                add_filter( 'admin_body_class', [ $this, 'add_admin_body_class' ] );
+        }
 
-	/**
-	 * Enqueue optimization assets
-	 */
+        /**
+         * Enqueue optimization assets
+         */
 	public function enqueue_optimization_assets( string $hook ): void {
 		// Only load on our admin pages
-		if ( ! $this->is_fp_dms_admin_page() ) {
-			return;
-		}
+                if ( ! $this->is_fp_dms_admin_page() ) {
+                        return;
+                }
 
-		// Enqueue optimization CSS
-		wp_enqueue_style(
-			'fp-dms-admin-optimizations',
-			FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/css/admin-optimizations.css',
-			[],
-			FP_DIGITAL_MARKETING_VERSION,
-			'all'
-		);
+                wp_enqueue_style(
+                        'fp-dms-admin-tokens',
+                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/dist/admin/tokens.css',
+                        [],
+                        FP_DIGITAL_MARKETING_VERSION,
+                        'all'
+                );
+
+                wp_enqueue_style(
+                        'fp-dms-admin-base',
+                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/dist/admin/base.css',
+                        [ 'fp-dms-admin-tokens' ],
+                        FP_DIGITAL_MARKETING_VERSION,
+                        'all'
+                );
+
+                // Enqueue optimization CSS
+                wp_enqueue_style(
+                        'fp-dms-admin-optimizations',
+                        FP_DIGITAL_MARKETING_PLUGIN_URL . 'assets/css/admin-optimizations.css',
+                        [ 'fp-dms-admin-base' ],
+                        FP_DIGITAL_MARKETING_VERSION,
+                        'all'
+                );
 
 		// Enqueue optimization JavaScript
 		wp_enqueue_script(
@@ -85,8 +102,23 @@ class AdminOptimizations {
 				'i18n'     => $this->get_i18n_strings(),
 				'debug'    => defined( 'WP_DEBUG' ) && WP_DEBUG,
 			]
-		);
-	}
+                );
+        }
+
+        /**
+         * Add plugin-specific class to admin body tag for scoped styling.
+         */
+        public function add_admin_body_class( string $classes ): string {
+                if ( ! $this->is_fp_dms_admin_page() ) {
+                        return $classes;
+                }
+
+                if ( strpos( $classes, 'fp-dms-admin' ) === false ) {
+                        $classes .= ' fp-dms-admin';
+                }
+
+                return $classes;
+        }
 
 	/**
 	 * Add performance hints to page head

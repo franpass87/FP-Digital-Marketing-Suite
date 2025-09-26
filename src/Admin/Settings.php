@@ -22,6 +22,7 @@ use FP\DigitalMarketing\Helpers\XmlSitemap;
 use FP\DigitalMarketing\Helpers\SchemaGenerator;
 use FP\DigitalMarketing\Helpers\Capabilities;
 use FP\DigitalMarketing\Setup\SettingsManager;
+use FP\DigitalMarketing\Admin\UI\Components;
 
 /**
  * Settings class for plugin administration
@@ -215,14 +216,15 @@ class Settings {
 			[
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'fp_dms_settings_nonce' ),
-				'strings' => [
-					'loading'      => __( 'Caricamento...', 'fp-digital-marketing' ),
-					'saved'        => __( 'Impostazioni salvate con successo!', 'fp-digital-marketing' ),
-					'error'        => __( 'Errore durante il salvataggio delle impostazioni.', 'fp-digital-marketing' ),
-					'confirmReset' => __( 'Sei sicuro di voler ripristinare le impostazioni predefinite?', 'fp-digital-marketing' ),
-				],
-			]
-		);
+                                'strings' => [
+                                        'loading'      => __( 'Caricamento...', 'fp-digital-marketing' ),
+                                        'saved'        => __( 'Impostazioni salvate con successo!', 'fp-digital-marketing' ),
+                                        'error'        => __( 'Errore durante il salvataggio delle impostazioni.', 'fp-digital-marketing' ),
+                                        'confirmReset' => __( 'Sei sicuro di voler ripristinare le impostazioni predefinite?', 'fp-digital-marketing' ),
+                                        'resetNotice'  => __( 'Campi del tab corrente ripristinati.', 'fp-digital-marketing' ),
+                                ],
+                        ]
+                );
 	}
 
 	/**
@@ -454,11 +456,11 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	public function render_settings_page(): void {
-		// Check user capabilities.
-		if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
-			wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
-		}
+    public function render_settings_page(): void {
+        // Check user capabilities.
+        if ( ! Capabilities::current_user_can( Capabilities::MANAGE_SETTINGS ) ) {
+            wp_die( esc_html__( 'Non hai i permessi per accedere a questa pagina.', 'fp-digital-marketing' ) );
+        }
 
 		if ( isset( $_GET['cache_status'] ) ) {
 			$cache_status = sanitize_key( wp_unslash( $_GET['cache_status'] ) );
@@ -502,75 +504,78 @@ class Settings {
 			}
 		}
 
-		?>
-		<div class="wrap">
-			<h1>
-				<?php echo esc_html( get_admin_page_title() ); ?>
-				<span class="fp-dms-status-indicator connected">
-					<?php esc_html_e( 'Plugin Attivo', 'fp-digital-marketing' ); ?>
-				</span>
-			</h1>
-			
-			<?php settings_errors(); ?>
-			
-			<!-- Settings Form -->
-			<form method="post" action="options.php" id="fp-dms-settings-form">
-				<?php
-				settings_fields( self::OPTION_GROUP );
-				wp_nonce_field( self::NONCE_ACTION, '_wpnonce_settings' );
-				?>
-				
-				<!-- Tab Interface will be injected here by JavaScript -->
-				<div class="wp-settings-sections">
-					<?php do_settings_sections( self::PAGE_SLUG ); ?>
-				</div>
-				
-				<!-- Submit Button -->
-				<div class="fp-dms-action-buttons">
-					<?php submit_button( __( 'Salva Impostazioni', 'fp-digital-marketing' ), 'primary', 'submit', false ); ?>
-					<button type="button" class="button button-secondary" id="fp-dms-reset-tab">
-						<?php esc_html_e( 'Ripristina Tab Corrente', 'fp-digital-marketing' ); ?>
-					</button>
-					<a href="<?php echo esc_url( admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ) ); ?>" class="button button-secondary">
-						<?php esc_html_e( 'Torna alla Dashboard', 'fp-digital-marketing' ); ?>
-					</a>
-				</div>
-			</form>
-			
-			<!-- Quick Stats -->
-			<div class="fp-dms-quick-stats" style="margin-top: 30px;">
-				<h3><?php esc_html_e( 'Stato Configurazione', 'fp-digital-marketing' ); ?></h3>
-				<div style="display: flex; gap: 20px; flex-wrap: wrap;">
-					<?php $this->render_configuration_status(); ?>
-				</div>
-			</div>
-		</div>
+        $header_actions = [
+            [
+                'label'   => __( 'Apri Dashboard', 'fp-digital-marketing' ),
+                'url'     => admin_url( 'admin.php?page=fp-digital-marketing-dashboard' ),
+                'variant' => 'primary',
+            ],
+        ];
 
-		<script type="text/javascript">
-		jQuery(document).ready(function($) {
-			// Add body class for styling
-			$('body').addClass('settings_page_fp-digital-marketing-settings');
-			
-			// Reset tab button
-			$('#fp-dms-reset-tab').on('click', function() {
-				if (confirm(fpDmsSettings.strings.confirmReset)) {
-					// Reset form fields in active tab
-					$('.fp-dms-tab-panel.active').find('input, select, textarea').each(function() {
-						const $field = $(this);
-						if ($field.attr('type') === 'checkbox') {
-							$field.prop('checked', $field.data('default') || false);
-						} else {
-							$field.val($field.data('default') || '');
-						}
-					});
-					
-					fpDmsShowMessage('<?php esc_html_e( 'Campi del tab corrente ripristinati.', 'fp-digital-marketing' ); ?>', 'warning');
-				}
-			});
-		});
-		</script>
-		<?php
-	}
+        $header_meta = [
+            [
+                'label' => __( 'Stato plugin', 'fp-digital-marketing' ),
+                'value' => __( 'Attivo', 'fp-digital-marketing' ),
+            ],
+        ];
+
+        $form_markup    = $this->get_settings_form_markup();
+        $status_markup  = $this->get_configuration_status_markup();
+
+        echo '<div class="wrap fp-dms-settings">';
+        echo Components::page_header(
+            [
+                'title'    => get_admin_page_title(),
+                'subtitle' => __( 'Gestisci le integrazioni e le preferenze operative del plugin.', 'fp-digital-marketing' ),
+                'meta'     => $header_meta,
+                'actions'  => $header_actions,
+            ]
+        );
+
+        settings_errors();
+
+        echo Components::card(
+            [
+                'title'   => __( 'Preferenze e integrazioni', 'fp-digital-marketing' ),
+                'content' => $form_markup,
+            ]
+        );
+
+        echo Components::card(
+            [
+                'title'       => __( 'Stato configurazione', 'fp-digital-marketing' ),
+                'description' => __( 'Controlla rapidamente lo stato delle principali integrazioni e servizi.', 'fp-digital-marketing' ),
+                'content'     => '<div class="fp-dms-status-grid">' . $status_markup . '</div>',
+            ]
+        );
+
+        echo '</div>';
+    }
+
+    /**
+     * Build the settings form markup.
+     */
+    private function get_settings_form_markup(): string {
+        ob_start();
+        ?>
+        <form method="post" action="options.php" id="fp-dms-settings-form">
+            <?php
+            settings_fields( self::OPTION_GROUP );
+            wp_nonce_field( self::NONCE_ACTION, '_wpnonce_settings' );
+            ?>
+            <div class="wp-settings-sections">
+                <?php do_settings_sections( self::PAGE_SLUG ); ?>
+            </div>
+            <div class="fp-dms-form-actions">
+                <?php submit_button( __( 'Salva Impostazioni', 'fp-digital-marketing' ), 'primary', 'submit', false ); ?>
+                <button type="button" class="button button-secondary" id="fp-dms-reset-tab">
+                    <?php esc_html_e( 'Ripristina Tab Corrente', 'fp-digital-marketing' ); ?>
+                </button>
+            </div>
+        </form>
+        <?php
+        return (string) ob_get_clean();
+    }
 
 	/**
 	 * Render general section description
@@ -1026,14 +1031,19 @@ class Settings {
 	 * @return void
 	 */
 	public function handle_cache_actions(): void {
-		if ( ! isset( $_GET['page'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
-				return;
+		if ( ! isset( $_GET['page'] ) ) {
+			return;
+		}
+
+		$requested_page = sanitize_key( wp_unslash( $_GET['page'] ) );
+
+		if ( self::PAGE_SLUG !== $requested_page ) {
+			return;
 		}
 
 		if ( empty( $_GET['action'] ) ) {
-				return;
+			return;
 		}
-
 			$action = sanitize_key( wp_unslash( $_GET['action'] ) );
 
 		if ( ! in_array( $action, [ 'invalidate_cache', 'clear_cache_stats' ], true ) ) {
@@ -1126,26 +1136,29 @@ class Settings {
 	 */
 	public function handle_ga4_oauth_callback(): void {
 		// Handle OAuth callback
-		if ( isset( $_GET['ga4_callback'] ) && $_GET['ga4_callback'] === '1' ) {
+        $ga4_callback_flag = isset( $_GET['ga4_callback'] ) ? sanitize_key( wp_unslash( $_GET['ga4_callback'] ) ) : '';
+
+        if ( '1' === $ga4_callback_flag ) {
 			// Enhanced capability verification with logging
 			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}
 
 			// Verify state parameter with enhanced security
-			$state                    = sanitize_text_field( wp_unslash( $_GET['state'] ?? '' ) );
+                        $state                    = sanitize_text_field( wp_unslash( $_GET['state'] ?? '' ) );
 						$stored_state = SettingsManager::get_option( SettingsManager::OPTION_OAUTH_STATE, '' );
 
 			// Enhanced nonce verification
-			if ( ! wp_verify_nonce( $state, 'ga4_oauth_state' ) || $state !== $stored_state ) {
-				// Log security event
-				error_log(
-					sprintf(
-						'FP Digital Marketing Security: Invalid OAuth state from IP %s, User ID: %d',
-						$_SERVER['REMOTE_ADDR'] ?? 'unknown',
-						get_current_user_id()
-					)
-				);
+                        if ( ! wp_verify_nonce( $state, 'ga4_oauth_state' ) || $state !== $stored_state ) {
+                                $client_ip = Security::get_client_ip();
+                                // Log security event
+                                error_log(
+                                        sprintf(
+                                                'FP Digital Marketing Security: Invalid OAuth state from IP %s, User ID: %d',
+                                                $client_ip,
+                                                get_current_user_id()
+                                        )
+                                );
 
 				add_settings_error(
 					'ga4_oauth',
@@ -1159,9 +1172,10 @@ class Settings {
 			// Clean up state
 						SettingsManager::delete_option( SettingsManager::OPTION_OAUTH_STATE );
 
-			if ( isset( $_GET['code'] ) ) {
-				$oauth = new GoogleOAuth();
-				if ( $oauth->exchange_code_for_tokens( $_GET['code'] ) ) {
+                        if ( isset( $_GET['code'] ) ) {
+                                $code  = sanitize_text_field( wp_unslash( $_GET['code'] ) );
+                                $oauth = new GoogleOAuth();
+                                if ( $oauth->exchange_code_for_tokens( $code ) ) {
 					add_settings_error(
 						'ga4_oauth',
 						'connection_success',
@@ -1176,25 +1190,25 @@ class Settings {
 						'error'
 					);
 				}
-			} elseif ( isset( $_GET['error'] ) ) {
-				add_settings_error(
-					'ga4_oauth',
-					'oauth_error',
-					sprintf(
-						__( 'Errore OAuth: %s', 'fp-digital-marketing' ),
-						esc_html( $_GET['error'] )
-					),
-					'error'
-				);
-			}
+                        } elseif ( isset( $_GET['error'] ) ) {
+                                $error = sanitize_text_field( wp_unslash( $_GET['error'] ) );
+                                add_settings_error(
+                                        'ga4_oauth',
+                                        'oauth_error',
+                                        sprintf( __( 'Errore OAuth: %s', 'fp-digital-marketing' ), esc_html( $error ) ),
+                                        'error'
+                                );
+                        }
 
-			// Redirect to clean URL
-						wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
-			exit;
-		}
+                        // Redirect to clean URL
+                        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+                        exit;
+                }
 
-		// Handle disconnect with enhanced security
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'ga4_disconnect' ) {
+                // Handle disconnect with enhanced security
+                $posted_action = isset( $_POST['action'] ) ? sanitize_key( wp_unslash( $_POST['action'] ) ) : '';
+
+                if ( 'ga4_disconnect' === $posted_action ) {
 			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ||
 				! Security::verify_nonce_with_logging( 'ga4_disconnect', 'ga4_disconnect_nonce' ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
@@ -1210,43 +1224,48 @@ class Settings {
 				);
 			}
 
-						wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
-			exit;
-		}
+                        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+                        exit;
+                }
 
-		// Handle manual sync trigger with enhanced security
-		if ( isset( $_POST['action'] ) && $_POST['action'] === 'trigger_manual_sync' ) {
+                // Handle manual sync trigger with enhanced security
+                if ( 'trigger_manual_sync' === $posted_action ) {
 			if ( ! Capabilities::current_user_can( Capabilities::MANAGE_DATA_SOURCES ) ||
 				! Security::verify_nonce_with_logging( 'trigger_manual_sync', 'sync_nonce' ) ) {
 				wp_die( esc_html__( 'Non autorizzato', 'fp-digital-marketing' ) );
 			}
 
-			$results = SyncEngine::trigger_manual_sync();
+                        $results = SyncEngine::trigger_manual_sync();
 
-			if ( $results['status'] === 'success' ) {
-				add_settings_error(
-					'manual_sync',
-					'sync_success',
-					sprintf(
-						__( 'Sync manuale completato: %1$d sorgenti, %2$d record aggiornati in %3$ss', 'fp-digital-marketing' ),
-						$results['sources_count'],
-						$results['records_updated'],
-						$results['duration']
-					),
-					'success'
-				);
-			} else {
-				add_settings_error(
-					'manual_sync',
-					'sync_error',
-					sprintf( __( 'Errore sync manuale: %s', 'fp-digital-marketing' ), $results['message'] ),
-					'error'
-				);
-			}
+                        $sources_count    = isset( $results['sources_count'] ) ? absint( $results['sources_count'] ) : 0;
+                        $records_updated  = isset( $results['records_updated'] ) ? absint( $results['records_updated'] ) : 0;
+                        $duration_seconds = isset( $results['duration'] ) ? max( 0, (float) $results['duration'] ) : 0.0;
 
-						wp_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
-			exit;
-		}
+                        if ( isset( $results['status'] ) && 'success' === $results['status'] ) {
+                                add_settings_error(
+                                        'manual_sync',
+                                        'sync_success',
+                                        sprintf(
+                                                __( 'Sync manuale completato: %1$d sorgenti, %2$d record aggiornati in %3$ss', 'fp-digital-marketing' ),
+                                                $sources_count,
+                                                $records_updated,
+                                                number_format_i18n( $duration_seconds, 2 )
+                                        ),
+                                        'success'
+                                );
+                        } else {
+                                $message = isset( $results['message'] ) ? sanitize_text_field( (string) $results['message'] ) : '';
+                                add_settings_error(
+                                        'manual_sync',
+                                        'sync_error',
+                                        sprintf( __( 'Errore sync manuale: %s', 'fp-digital-marketing' ), esc_html( $message ) ),
+                                        'error'
+                                );
+                        }
+
+                        wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE_SLUG ) );
+                        exit;
+                }
 	}
 
 	/**
@@ -2874,63 +2893,52 @@ class Settings {
 	 *
 	 * @return void
 	 */
-	private function render_configuration_status(): void {
-		$oauth            = new GoogleOAuth();
-		$ga4_status       = $oauth->get_connection_status();
-		$cache_settings   = PerformanceCache::get_cache_settings();
-		$sitemap_settings = get_option( self::OPTION_SITEMAP, [] );
+    private function get_configuration_status_markup(): string {
+        $oauth            = new GoogleOAuth();
+        $ga4_status       = $oauth->get_connection_status();
+        $cache_settings   = PerformanceCache::get_cache_settings();
+        $sitemap_settings = get_option( self::OPTION_SITEMAP, [] );
 
-		// Google Analytics Status
-		$ga4_connected = isset( $ga4_status['status'] ) && $ga4_status['status'] === 'connected';
-		?>
-		<div class="fp-dms-status-card">
-			<strong><?php esc_html_e( 'Google Analytics 4', 'fp-digital-marketing' ); ?></strong>
-			<span class="fp-dms-status-indicator <?php echo $ga4_connected ? 'connected' : 'disconnected'; ?>">
-				<?php echo $ga4_connected ? esc_html__( 'Connesso', 'fp-digital-marketing' ) : esc_html__( 'Non Connesso', 'fp-digital-marketing' ); ?>
-			</span>
-		</div>
+        $ga4_connected = isset( $ga4_status['status'] ) && $ga4_status['status'] === 'connected';
+        $cache_enabled = ! empty( $cache_settings['enabled'] );
+        $sitemap_ready = ! empty( $sitemap_settings['enabled_post_types'] );
 
-		<!-- Cache Status -->
-		<div class="fp-dms-status-card">
-			<strong><?php esc_html_e( 'Sistema Cache', 'fp-digital-marketing' ); ?></strong>
-			<span class="fp-dms-status-indicator <?php echo $cache_settings['enabled'] ? 'connected' : 'warning'; ?>">
-				<?php echo $cache_settings['enabled'] ? esc_html__( 'Abilitato', 'fp-digital-marketing' ) : esc_html__( 'Disabilitato', 'fp-digital-marketing' ); ?>
-			</span>
-		</div>
+        $seo_settings   = get_option( self::OPTION_SEO, [] );
+        $seo_configured = ! empty( $seo_settings['site_title_template'] ) && ! empty( $seo_settings['home_title_template'] );
 
-		<!-- Sitemap Status -->
-		<div class="fp-dms-status-card">
-			<strong><?php esc_html_e( 'XML Sitemap', 'fp-digital-marketing' ); ?></strong>
-			<span class="fp-dms-status-indicator <?php echo ! empty( $sitemap_settings['enabled_post_types'] ) ? 'connected' : 'warning'; ?>">
-				<?php echo ! empty( $sitemap_settings['enabled_post_types'] ) ? esc_html__( 'Configurato', 'fp-digital-marketing' ) : esc_html__( 'Non Configurato', 'fp-digital-marketing' ); ?>
-			</span>
-		</div>
-
-		<!-- SEO Status -->
-		<?php
-		$seo_settings   = get_option( self::OPTION_SEO, [] );
-		$seo_configured = ! empty( $seo_settings['site_title_template'] ) && ! empty( $seo_settings['home_title_template'] );
-		?>
-		<div class="fp-dms-status-card">
-			<strong><?php esc_html_e( 'Configurazione SEO', 'fp-digital-marketing' ); ?></strong>
-			<span class="fp-dms-status-indicator <?php echo $seo_configured ? 'connected' : 'warning'; ?>">
-				<?php echo $seo_configured ? esc_html__( 'Configurato', 'fp-digital-marketing' ) : esc_html__( 'Parziale', 'fp-digital-marketing' ); ?>
-			</span>
-		</div>
-
-		<style>
-		.fp-dms-status-card {
-			background: #fff;
-			border: 1px solid #ddd;
-			border-radius: 6px;
-			padding: 15px;
-			min-width: 180px;
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			gap: 10px;
-		}
-		</style>
-		<?php
-	}
+        ob_start();
+        ?>
+        <?php
+        $ga4_status_class     = $ga4_connected ? 'is-success' : 'is-error';
+        $cache_status_class   = $cache_enabled ? 'is-success' : 'is-warning';
+        $sitemap_status_class = $sitemap_ready ? 'is-success' : 'is-warning';
+        $seo_status_class     = $seo_configured ? 'is-success' : 'is-warning';
+        ?>
+        <div class="fp-dms-status-tile">
+            <span class="fp-dms-status-tile__label"><?php esc_html_e( 'Google Analytics 4', 'fp-digital-marketing' ); ?></span>
+            <span class="fp-dms-status-pill <?php echo esc_attr( $ga4_status_class ); ?>">
+                <?php echo $ga4_connected ? esc_html__( 'Connesso', 'fp-digital-marketing' ) : esc_html__( 'Non connesso', 'fp-digital-marketing' ); ?>
+            </span>
+        </div>
+        <div class="fp-dms-status-tile">
+            <span class="fp-dms-status-tile__label"><?php esc_html_e( 'Sistema cache', 'fp-digital-marketing' ); ?></span>
+            <span class="fp-dms-status-pill <?php echo esc_attr( $cache_status_class ); ?>">
+                <?php echo $cache_enabled ? esc_html__( 'Abilitato', 'fp-digital-marketing' ) : esc_html__( 'Disabilitato', 'fp-digital-marketing' ); ?>
+            </span>
+        </div>
+        <div class="fp-dms-status-tile">
+            <span class="fp-dms-status-tile__label"><?php esc_html_e( 'XML Sitemap', 'fp-digital-marketing' ); ?></span>
+            <span class="fp-dms-status-pill <?php echo esc_attr( $sitemap_status_class ); ?>">
+                <?php echo $sitemap_ready ? esc_html__( 'Configurata', 'fp-digital-marketing' ) : esc_html__( 'Incompleta', 'fp-digital-marketing' ); ?>
+            </span>
+        </div>
+        <div class="fp-dms-status-tile">
+            <span class="fp-dms-status-tile__label"><?php esc_html_e( 'Configurazione SEO', 'fp-digital-marketing' ); ?></span>
+            <span class="fp-dms-status-pill <?php echo esc_attr( $seo_status_class ); ?>">
+                <?php echo $seo_configured ? esc_html__( 'Completa', 'fp-digital-marketing' ) : esc_html__( 'Parziale', 'fp-digital-marketing' ); ?>
+            </span>
+        </div>
+        <?php
+        return (string) ob_get_clean();
+    }
 }

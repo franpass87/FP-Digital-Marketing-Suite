@@ -1,8 +1,11 @@
 # === Build artifacts ===
-dist/
+/dist/
+/assets/dist/
 *.zip
 *.tar.gz
 *.sha256
+*.min.js
+*.min.css
 
 # Dependency directories
 /vendor/

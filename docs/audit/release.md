@@ -1,10 +1,10 @@
-# Phase 10 – Documentation & Release Packaging
+# Phase 11 – Release Packaging & Publication
 
 ## Summary
 
-- Produced a distributable archive at `dist/fp-digital-marketing-suite-1.2.0.zip` with a matching SHA-256 checksum for integrity verification.
-- Refreshed README, readme.txt and CHANGELOG entries to direct users toward the packaged release, verification script and QA tooling.
-- Authored `UPGRADE.md` detailing pre-flight checks, upgrade paths from 1.0.x and 1.1.x, and post-upgrade validation tasks.
+- Generated the distributable archive with `./build.sh`, producing `dist/fp-digital-marketing-suite-1.3.0.zip` and its SHA-256 checksum for integrity verification.
+- Refreshed README, readme.txt and CHANGELOG entries to highlight the admin UI revamp, accessibility upgrades and validation hardening.
+- Extended `UPGRADE.md` and the admin UI playbook docs with guidance for moving from 1.2.0 to 1.3.0 while preserving menu and slug compatibility.
 
 ## Quality Assurance
 
@@ -17,11 +17,11 @@
 ## Manual Verification
 
 1. Confirmed plugin metadata (version, stable tag) matches the packaged artifact.
-2. Validated that the upgrade registry description and cache hygiene changes are captured in the changelog and upgrade guide.
+2. Validated that the admin IA, menu registry, component system and accessibility improvements are captured across README, changelog and docs.
 3. Documented outstanding linting actions for future hardening initiatives.
 
 ## Next Steps
 
 - Schedule dedicated remediation sprints to drive PHPStan and PHPCS results toward zero.
 - Automate the build script within CI so distribution artifacts and checksums are produced for every tagged release.
-- Execute smoke tests on a pristine WordPress environment prior to publishing the 1.2.0 package to the plugin directory.
+- Execute smoke tests on a pristine WordPress environment prior to publishing the 1.3.0 package to the plugin directory.
