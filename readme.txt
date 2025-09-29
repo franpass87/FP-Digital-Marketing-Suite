@@ -12,7 +12,7 @@ Automated marketing reports for a private WordPress installation.
 
 == Description ==
 
-FP Digital Marketing Suite centralises report scheduling, connector management, PDF rendering, email delivery, anomalies detection, and fallback cron orchestration for a private WordPress site.
+FP Digital Marketing Suite centralises report scheduling, connector management, PDF rendering, email delivery, advanced anomalies detection, and fallback cron orchestration for a private WordPress site.
 
 == Reliability ==
 
@@ -65,6 +65,19 @@ For scripted runs call the REST namespace (include the `X-FPDMS-QA-KEY` header o
 
 Each endpoint returns machine-readable JSON detailing the outcome, warnings, and any generated report metadata.
 
+== Anomaly detection ==
+
+Global defaults and client overrides drive a multi-layer detector combining percentage deltas, z-score, EWMA deviation, seasonal baselines, and CUSUM jumps. Baselines can be tuned per metric, mute windows avoid off-hours escalation, and rate limiting keeps notification volume predictable. Channels include email digests, Slack, Microsoft Teams, Telegram, generic webhooks with optional HMAC signatures, and a Twilio SMS stub (logs only).
+
+Configure routing credentials and thresholds under **FP Suite → Settings**, then fine-tune per client from the **Policy** tab in **FP Suite → Anomalies**. The policy screen offers inline test buttons to validate each channel and on-demand evaluations of the latest 30 days.
+
+REST endpoints:
+
+* `POST /wp-json/fpdms/v1/anomalies/evaluate?client_id=ID&from=YYYY-MM-DD&to=YYYY-MM-DD`
+* `POST /wp-json/fpdms/v1/anomalies/notify?client_id=ID`
+
+Both require a valid nonce and `manage_options` capability.
+
 == CLI commands ==
 
 After installing WP-CLI you can control the suite via:
@@ -72,6 +85,8 @@ After installing WP-CLI you can control the suite via:
 * `wp fpdms run --client=ID --from=YYYY-MM-DD --to=YYYY-MM-DD`
 * `wp fpdms queue:list`
 * `wp fpdms anomalies:scan --client=ID`
+* `wp fpdms anomalies:evaluate --client=ID [--from=YYYY-MM-DD --to=YYYY-MM-DD]`
+* `wp fpdms anomalies:notify --client=ID`
 * `wp fpdms repair:db`
 
 == Support ==

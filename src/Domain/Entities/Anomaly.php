@@ -14,6 +14,14 @@ class Anomaly
         public array $payload,
         public string $detectedAt,
         public bool $notified,
+        public ?string $algo = null,
+        public ?float $score = null,
+        public ?float $expected = null,
+        public ?float $actual = null,
+        public ?float $baseline = null,
+        public ?float $z = null,
+        public ?float $pValue = null,
+        public ?int $window = null,
     ) {
     }
 
@@ -30,6 +38,14 @@ class Anomaly
             self::decodePayload($row['payload'] ?? '[]'),
             (string) ($row['detected_at'] ?? ''),
             (bool) ($row['notified'] ?? false),
+            isset($row['algo']) ? (string) $row['algo'] : null,
+            isset($row['score']) ? (float) $row['score'] : null,
+            isset($row['expected']) ? (float) $row['expected'] : null,
+            isset($row['actual']) ? (float) $row['actual'] : null,
+            isset($row['baseline']) ? (float) $row['baseline'] : null,
+            isset($row['z']) ? (float) $row['z'] : null,
+            isset($row['p_value']) ? (float) $row['p_value'] : null,
+            isset($row['window']) ? (int) $row['window'] : null,
         );
     }
 
@@ -46,6 +62,14 @@ class Anomaly
             'payload' => wp_json_encode($this->payload),
             'detected_at' => $this->detectedAt,
             'notified' => $this->notified ? 1 : 0,
+            'algo' => $this->algo,
+            'score' => $this->score,
+            'expected' => $this->expected,
+            'actual' => $this->actual,
+            'baseline' => $this->baseline,
+            'z' => $this->z,
+            'p_value' => $this->pValue,
+            'window' => $this->window,
         ];
     }
 

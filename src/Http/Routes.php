@@ -6,10 +6,14 @@ namespace FP\DMS\Http;
 
 use DateTimeImmutable;
 use Exception;
+use FP\DMS\Domain\Repos\AnomaliesRepo;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Domain\Repos\ReportsRepo;
 use FP\DMS\Infra\Options;
 use FP\DMS\Infra\Queue;
+use FP\DMS\Infra\NotificationRouter;
+use FP\DMS\Services\Anomalies\Detector;
+use FP\DMS\Support\Period;
 use FP\DMS\Services\Qa\Automation;
 use Throwable;
 use WP_Error;
@@ -51,6 +55,18 @@ class Routes
                     'validate_callback' => static fn($value): bool => is_numeric($value) && (int) $value > 0,
                 ],
             ],
+        ]);
+
+        register_rest_route('fpdms/v1', '/anomalies/evaluate', [
+            'methods' => 'POST',
+            'callback' => [self::class, 'handleAnomaliesEvaluate'],
+            'permission_callback' => [self::class, 'checkManageOptions'],
+        ]);
+
+        register_rest_route('fpdms/v1', '/anomalies/notify', [
+            'methods' => 'POST',
+            'callback' => [self::class, 'handleAnomaliesNotify'],
+            'permission_callback' => [self::class, 'checkManageOptions'],
         ]);
 
         register_rest_route('fpdms/v1', '/qa/seed', [
@@ -177,6 +193,104 @@ class Routes
             'mime_type' => 'application/pdf',
             'data' => base64_encode($contents),
             'size' => filesize($path) ?: null,
+        ]);
+    }
+
+    public static function handleAnomaliesEvaluate(WP_REST_Request $request): WP_REST_Response|WP_Error
+    {
+        if (! self::verifyNonce($request)) {
+            return new WP_Error('rest_forbidden', __('Invalid or missing nonce.', 'fp-dms'), ['status' => 403]);
+        }
+
+        $clientId = (int) $request->get_param('client_id');
+        if ($clientId <= 0) {
+            return new WP_Error('rest_invalid_param', __('Missing client_id parameter.', 'fp-dms'), ['status' => 400]);
+        }
+
+        $clients = new ClientsRepo();
+        $client = $clients->find($clientId);
+        if (! $client) {
+            return new WP_Error('rest_not_found', __('Client not found.', 'fp-dms'), ['status' => 404]);
+        }
+
+        $from = (string) $request->get_param('from');
+        $to = (string) $request->get_param('to');
+        $reports = new ReportsRepo();
+        if ($from !== '' && $to !== '') {
+            $report = $reports->findByClientAndPeriod($clientId, $from, $to, ['success']);
+        } else {
+            $report = $reports->search(['client_id' => $clientId, 'status' => 'success'])[0] ?? null;
+        }
+
+        if (! $report) {
+            return new WP_Error('rest_not_found', __('No report data available for evaluation.', 'fp-dms'), ['status' => 404]);
+        }
+
+        $period = Period::fromStrings($report->periodStart, $report->periodEnd, $client->timezone);
+        $detector = new Detector(new AnomaliesRepo());
+        $anomalies = $detector->evaluatePeriod($clientId, $period, $report->meta, [], false);
+
+        return new WP_REST_Response([
+            'count' => count($anomalies),
+            'anomalies' => $anomalies,
+        ]);
+    }
+
+    public static function handleAnomaliesNotify(WP_REST_Request $request): WP_REST_Response|WP_Error
+    {
+        if (! self::verifyNonce($request)) {
+            return new WP_Error('rest_forbidden', __('Invalid or missing nonce.', 'fp-dms'), ['status' => 403]);
+        }
+
+        $clientId = (int) $request->get_param('client_id');
+        if ($clientId <= 0) {
+            return new WP_Error('rest_invalid_param', __('Missing client_id parameter.', 'fp-dms'), ['status' => 400]);
+        }
+
+        $clients = new ClientsRepo();
+        $client = $clients->find($clientId);
+        if (! $client) {
+            return new WP_Error('rest_not_found', __('Client not found.', 'fp-dms'), ['status' => 404]);
+        }
+
+        $repo = new AnomaliesRepo();
+        $recent = $repo->recentForClient($clientId, 10);
+        if (empty($recent)) {
+            return new WP_REST_Response(['ok' => false, 'message' => __('No anomalies to notify.', 'fp-dms')]);
+        }
+
+        $payloads = [];
+        $periodStart = gmdate('Y-m-d');
+        $periodEnd = gmdate('Y-m-d');
+        foreach ($recent as $anomaly) {
+            $payload = $anomaly->payload;
+            $payload['severity'] = $anomaly->severity;
+            if (isset($payload['period']['start'])) {
+                $periodStart = (string) $payload['period']['start'];
+            }
+            if (isset($payload['period']['end'])) {
+                $periodEnd = (string) $payload['period']['end'];
+            }
+            $payloads[] = $payload;
+        }
+
+        $period = Period::fromStrings($periodStart, $periodEnd, $client->timezone);
+        $policy = Options::getAnomalyPolicy($clientId);
+        $router = new NotificationRouter();
+        $result = $router->route($payloads, $policy, $client, $period);
+
+        if (! empty($result['channels'])) {
+            foreach ($recent as $anomaly) {
+                if ($anomaly->id !== null) {
+                    $repo->markNotified($anomaly->id, true);
+                }
+            }
+        }
+
+        return new WP_REST_Response([
+            'channels' => $result['channels'] ?? [],
+            'muted' => $result['muted'] ?? false,
+            'skipped' => $result['skipped'] ?? null,
         ]);
     }
 

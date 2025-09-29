@@ -110,8 +110,10 @@ class Mailer
             return false;
         }
 
-        /* translators: 1: client name, 2: period start date, 3: period end date */
-        $subject = sprintf(I18n::__('[Alert] %1$s – %2$s to %3$s'), $client->name, $period->start->format('Y-m-d'), $period->end->format('Y-m-d'));
+        $first = $anomalies[0] ?? [];
+        $metric = is_array($first) && isset($first['metric']) ? (string) $first['metric'] : 'metric';
+        $severity = is_array($first) && isset($first['severity']) ? (string) $first['severity'] : 'warn';
+        $subject = self::buildAnomalySubject($client, $metric, $severity);
         $body = '<p>' . esc_html(sprintf(I18n::__('The anomaly detector flagged the following metrics for %s.'), $client->name)) . '</p><ul>';
         foreach ($anomalies as $anomaly) {
             if (! is_array($anomaly)) {
@@ -125,6 +127,12 @@ class Mailer
         $body .= '</ul>';
 
         return $this->sendWithRetry($owner, $subject, $body, ['Content-Type: text/html; charset=UTF-8']);
+    }
+
+    public static function buildAnomalySubject(Client $client, string $metric, string $severity): string
+    {
+        /* translators: 1: client name, 2: metric, 3: severity */
+        return sprintf(I18n::__('[Anomaly] %1$s — %2$s (%3$s)'), $client->name, ucfirst($metric), ucfirst($severity));
     }
 
     private function describeLastError(): string
