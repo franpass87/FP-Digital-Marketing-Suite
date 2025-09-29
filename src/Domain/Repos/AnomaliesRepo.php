@@ -60,9 +60,18 @@ class AnomaliesRepo
             'payload' => wp_json_encode($payloadData),
             'detected_at' => (string) ($data['detected_at'] ?? current_time('mysql')),
             'notified' => empty($data['notified']) ? 0 : 1,
+            'algo' => isset($data['algo']) ? (string) $data['algo'] : null,
+            'score' => isset($data['score']) ? (float) $data['score'] : null,
+            'expected' => isset($data['expected']) ? (float) $data['expected'] : null,
+            'actual' => isset($data['actual']) ? (float) $data['actual'] : null,
+            'baseline' => isset($data['baseline']) ? (float) $data['baseline'] : null,
+            'z' => isset($data['z']) ? (float) $data['z'] : null,
+            'p_value' => isset($data['p_value']) ? (float) $data['p_value'] : null,
+            'window' => isset($data['window']) ? (int) $data['window'] : null,
         ];
 
-        $result = $wpdb->insert($this->table, $payload, ['%d', '%s', '%s', '%s', '%s', '%d']);
+        $formats = ['%d', '%s', '%s', '%s', '%s', '%d', '%s', '%f', '%f', '%f', '%f', '%f', '%f', '%d'];
+        $result = $wpdb->insert($this->table, $payload, $formats);
         if ($result === false) {
             return null;
         }

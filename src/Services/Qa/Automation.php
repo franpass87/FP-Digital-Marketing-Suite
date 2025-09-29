@@ -199,6 +199,7 @@ CSV;
         }
 
         $period = $this->qaPeriod();
+        $periodObj = Period::fromStrings($period['start'], $period['end'], $client->timezone);
         $detector = new Detector(new AnomaliesRepo());
         $history = [];
         for ($i = 0; $i < 8; $i++) {
@@ -209,15 +210,22 @@ CSV;
             ];
         }
 
-        $previous = [
-            'qa_fixture' => ['clicks' => 160.0, 'sessions' => 360.0, 'conversions' => 8.0],
-        ];
-        $current = [
-            'qa_fixture' => ['clicks' => 420.0, 'sessions' => 620.0, 'conversions' => 18.0],
+        $meta = [
+            'metrics_daily' => [[
+                'source' => 'qa_fixture',
+                'date' => $periodObj->end->format('Y-m-d'),
+                'clicks' => 420.0,
+                'sessions' => 620.0,
+                'conversions' => 18.0,
+            ]],
+            'previous_totals' => [
+                'clicks' => 160.0,
+                'sessions' => 360.0,
+                'conversions' => 8.0,
+            ],
         ];
 
-        $anomalies = $detector->evaluate($client->id ?? 0, $current, $previous, $history, true);
-        $periodObj = Period::fromStrings($period['start'], $period['end'], $client->timezone);
+        $anomalies = $detector->evaluatePeriod($client->id ?? 0, $periodObj, $meta, $history, true);
         $mailer = new Mailer();
         $mailSent = ! empty($anomalies) && $mailer->sendAnomalyAlert($client, $anomalies, $periodObj);
 

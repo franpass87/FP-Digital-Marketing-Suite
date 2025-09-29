@@ -16,6 +16,7 @@ use FP\DMS\Domain\Repos\TemplatesRepo;
 use FP\DMS\Infra\DB;
 use FP\DMS\Infra\Lock;
 use FP\DMS\Infra\Mailer;
+use FP\DMS\Infra\NotificationRouter;
 use FP\DMS\Infra\Options;
 use FP\DMS\Infra\Queue;
 use FP\DMS\Services\Anomalies\Detector;
@@ -39,6 +40,8 @@ class Commands
         WP_CLI::add_command('fpdms run', [self::class, 'runReport']);
         WP_CLI::add_command('fpdms queue:list', [self::class, 'listQueue']);
         WP_CLI::add_command('fpdms anomalies:scan', [self::class, 'scanAnomalies']);
+        WP_CLI::add_command('fpdms anomalies:evaluate', [self::class, 'anomaliesEvaluate']);
+        WP_CLI::add_command('fpdms anomalies:notify', [self::class, 'anomaliesNotify']);
         WP_CLI::add_command('fpdms repair:db', [self::class, 'repairDb']);
         WP_CLI::add_command('fpdms qa:seed', [self::class, 'qaSeed']);
         WP_CLI::add_command('fpdms qa:run', [self::class, 'qaRun']);
@@ -84,13 +87,114 @@ class Commands
         }
 
         $detector = new Detector(new AnomaliesRepo());
-        $detector->evaluate($clientId, [], []);
-        WP_CLI::success('Anomaly scan completed (placeholder).');
+        $period = Period::fromStrings(
+            gmdate('Y-m-d', strtotime('-7 days')),
+            gmdate('Y-m-d'),
+            'UTC'
+        );
+        $detector->evaluatePeriod($clientId, $period, ['metrics_daily' => [], 'previous_totals' => []]);
+        WP_CLI::success('Anomaly scan completed.');
+    }
+
+    public static function anomaliesEvaluate(array $args, array $assocArgs): void
+    {
+        $clientId = (int) ($assocArgs['client'] ?? 0);
+        if ($clientId <= 0) {
+            WP_CLI::error('Specify --client=<id>.');
+            return;
+        }
+
+        $from = $assocArgs['from'] ?? null;
+        $to = $assocArgs['to'] ?? null;
+        $reports = new ReportsRepo();
+        if ($from && $to) {
+            $report = $reports->findByClientAndPeriod($clientId, (string) $from, (string) $to, ['success']);
+        } else {
+            $report = $reports->search(['client_id' => $clientId, 'status' => 'success'])[0] ?? null;
+        }
+
+        if (! $report) {
+            WP_CLI::error('No successful report found for the requested period.');
+        }
+
+        $clients = new ClientsRepo();
+        $client = $clients->find($clientId);
+        if (! $client) {
+            WP_CLI::error('Client not found.');
+        }
+
+        $period = Period::fromStrings($report->periodStart, $report->periodEnd, $client->timezone);
+        $detector = new Detector(new AnomaliesRepo());
+        $anomalies = $detector->evaluatePeriod($clientId, $period, $report->meta, [], false);
+
+        if (empty($anomalies)) {
+            WP_CLI::success('No anomalies detected.');
+
+            return;
+        }
+
+        WP_CLI::log(sprintf('Anomalies detected: %d', count($anomalies)));
+        foreach ($anomalies as $anomaly) {
+            $metric = (string) ($anomaly['metric'] ?? 'metric');
+            $severity = (string) ($anomaly['severity'] ?? 'warn');
+            $delta = isset($anomaly['delta_percent']) ? (string) $anomaly['delta_percent'] : 'n/a';
+            WP_CLI::log(sprintf('- %s (%s) Δ %s', $metric, $severity, $delta));
+        }
+    }
+
+    public static function anomaliesNotify(array $args, array $assocArgs): void
+    {
+        $clientId = (int) ($assocArgs['client'] ?? 0);
+        if ($clientId <= 0) {
+            WP_CLI::error('Specify --client=<id>.');
+            return;
+        }
+
+        $clients = new ClientsRepo();
+        $client = $clients->find($clientId);
+        if (! $client) {
+            WP_CLI::error('Client not found.');
+        }
+
+        $repo = new AnomaliesRepo();
+        $recent = $repo->recentForClient($clientId, 10);
+        if (empty($recent)) {
+            WP_CLI::error('No stored anomalies for this client.');
+        }
+
+        $payloads = [];
+        $periodStart = gmdate('Y-m-d');
+        $periodEnd = gmdate('Y-m-d');
+        foreach ($recent as $anomaly) {
+            $payload = $anomaly->payload;
+            $payload['severity'] = $anomaly->severity;
+            if (isset($payload['period']['start'])) {
+                $periodStart = (string) $payload['period']['start'];
+            }
+            if (isset($payload['period']['end'])) {
+                $periodEnd = (string) $payload['period']['end'];
+            }
+            $payloads[] = $payload;
+        }
+
+        $period = Period::fromStrings($periodStart, $periodEnd, $client->timezone);
+        $policy = Options::getAnomalyPolicy($clientId);
+        $router = new NotificationRouter();
+        $result = $router->route($payloads, $policy, $client, $period);
+
+        if (empty($result['channels'])) {
+            WP_CLI::warning('Notifications skipped (cooldown, mute window or configuration).');
+
+            return;
+        }
+
+        WP_CLI::success('Notifications sent via: ' . implode(', ', array_keys($result['channels'])));
     }
 
     public static function repairDb(): void
     {
         DB::migrate();
+        DB::migrateAnomaliesV2();
         WP_CLI::success('Database schema refreshed.');
     }
 

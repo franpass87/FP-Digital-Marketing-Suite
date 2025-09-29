@@ -5,14 +5,23 @@ declare(strict_types=1);
 namespace FP\DMS\Services\Anomalies;
 
 use FP\DMS\Domain\Repos\AnomaliesRepo;
+use FP\DMS\Infra\Options;
+use FP\DMS\Services\Anomalies\Engine;
+use FP\DMS\Support\Period;
 
 class Detector
 {
+    private Engine $engine;
+
     public function __construct(private AnomaliesRepo $repo)
     {
+        $this->engine = new Engine($repo);
     }
 
     /**
+     * Legacy compatibility wrapper that maps the historical evaluate signature
+     * to the new engine. Metrics are assumed to represent the latest day.
+     *
      * @param array<string,array<string,float|int>> $current
      * @param array<string,array<string,float|int>> $previous
      * @param array<int,array<string,float>> $history
@@ -20,48 +29,42 @@ class Detector
      */
     public function evaluate(int $clientId, array $current, array $previous = [], array $history = [], bool $qaTag = false): array
     {
-        $anomalies = [];
-        $currentTotals = $this->aggregateTotals($current);
-        $previousTotals = $this->aggregateTotals($previous);
+        $period = Period::fromStrings(
+            gmdate('Y-m-d', strtotime('-6 days')),
+            gmdate('Y-m-d'),
+            'UTC'
+        );
 
-        foreach ($currentTotals as $metric => $value) {
-            $prev = $previousTotals[$metric] ?? null;
-            $series = $this->extractSeries($history, $metric);
-            $deltaPercent = $prev && $prev > 0.0 ? (($value - $prev) / $prev) * 100 : null;
-            $zScore = $this->computeZScore($series, $value);
+        $meta = [
+            'metrics_daily' => $this->legacyRows($current),
+            'previous_totals' => $this->aggregateTotals($previous),
+        ];
 
-            $isDeltaAnomaly = $deltaPercent !== null && abs($deltaPercent) >= 30.0;
-            $isZScoreAnomaly = $zScore !== null && abs($zScore) >= 2.0;
+        return $this->evaluatePeriod($clientId, $period, $meta, $history, $qaTag);
+    }
 
-            if (! $isDeltaAnomaly && ! $isZScoreAnomaly) {
-                continue;
+    /**
+     * Evaluates anomalies given a rich report metadata payload.
+     *
+     * @param array<int,array<string,mixed>> $history
+     * @return array<int,array<string,mixed>>
+     */
+    public function evaluatePeriod(int $clientId, Period $period, array $meta, array $history = [], bool $qaTag = false): array
+    {
+        $policy = Options::getAnomalyPolicy($clientId);
+        $policy['_context'] = [
+            'daily' => is_array($meta['metrics_daily'] ?? null) ? $meta['metrics_daily'] : [],
+            'previous_totals' => is_array($meta['previous_totals'] ?? null) ? $meta['previous_totals'] : [],
+            'history' => $history,
+            'qa' => $qaTag,
+        ];
+
+        $anomalies = $this->engine->evaluateClientPeriod($clientId, $period, $policy);
+
+        if ($qaTag) {
+            foreach ($anomalies as &$anomaly) {
+                $anomaly['qa'] = true;
             }
-
-            $severity = (abs((float) ($deltaPercent ?? 0)) >= 50.0 || ($zScore !== null && abs($zScore) >= 3.0)) ? 'critical' : 'warn';
-
-            $payload = [
-                'metric' => $metric,
-                'current' => round($value, 2),
-                'previous' => $prev !== null ? round((float) $prev, 2) : null,
-                'delta_percent' => $deltaPercent !== null ? round($deltaPercent, 2) : null,
-                'z_score' => $zScore !== null ? round($zScore, 2) : null,
-                'resolved' => false,
-                'note' => '',
-            ];
-
-            if ($qaTag) {
-                $payload['qa'] = true;
-            }
-
-            $this->repo->create([
-                'client_id' => $clientId,
-                'type' => $metric,
-                'severity' => $severity,
-                'payload' => $payload,
-                'detected_at' => current_time('mysql'),
-            ]);
-
-            $anomalies[] = $payload + ['severity' => $severity];
         }
 
         return $anomalies;
@@ -73,7 +76,7 @@ class Detector
      */
     private function aggregateTotals(array $buckets): array
     {
-        $totals = array_fill_keys(['users', 'sessions', 'clicks', 'impressions', 'conversions', 'cost', 'revenue'], 0.0);
+        $totals = [];
         foreach ($buckets as $metrics) {
             if (! is_array($metrics)) {
                 continue;
@@ -90,42 +93,22 @@ class Detector
     }
 
     /**
-     * @param array<int,array<string,float>> $history
-     * @return array<int,float>
+     * @param array<string,array<string,float|int>> $current
+     * @return array<int,array<string,mixed>>
      */
-    private function extractSeries(array $history, string $metric): array
+    private function legacyRows(array $current): array
     {
-        $series = [];
-        foreach ($history as $periodTotals) {
-            if (! is_array($periodTotals) || ! isset($periodTotals[$metric])) {
+        $rows = [];
+        foreach ($current as $source => $metrics) {
+            if (! is_array($metrics)) {
                 continue;
             }
-            $series[] = (float) $periodTotals[$metric];
+            $rows[] = array_merge(
+                ['source' => is_string($source) ? $source : 'aggregate', 'date' => gmdate('Y-m-d')],
+                array_map(static fn($value) => is_numeric($value) ? (float) $value : 0.0, $metrics)
+            );
         }
 
-        return array_slice($series, 0, 8);
-    }
-
-    /**
-     * @param array<int,float> $series
-     */
-    private function computeZScore(array $series, float $current): ?float
-    {
-        if (count($series) < 3) {
-            return null;
-        }
-
-        $mean = array_sum($series) / count($series);
-        $variance = 0.0;
-        foreach ($series as $value) {
-            $variance += ($value - $mean) ** 2;
-        }
-        $variance /= count($series);
-        $stdDev = sqrt($variance);
-        if ($stdDev <= 0.0) {
-            return null;
-        }
-
-        return ($current - $mean) / $stdDev;
+        return $rows;
     }
 }

@@ -85,17 +85,7 @@ class DB
                 PRIMARY KEY  (id),
                 KEY client_id (client_id)
             ) $charset;",
-            "CREATE TABLE " . self::table('anomalies') . " (
-                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                client_id BIGINT UNSIGNED NOT NULL,
-                type VARCHAR(64) NOT NULL,
-                severity VARCHAR(16) NOT NULL,
-                payload LONGTEXT NULL,
-                detected_at DATETIME NOT NULL,
-                notified TINYINT(1) NOT NULL DEFAULT 0,
-                PRIMARY KEY  (id),
-                KEY client_id (client_id)
-            ) $charset;",
+            self::anomaliesTableSql($charset),
             "CREATE TABLE " . self::table('templates') . " (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 name VARCHAR(190) NOT NULL,
@@ -113,5 +103,36 @@ class DB
                 PRIMARY KEY (lock_key)
             ) $charset;"
         ];
+    }
+
+    public static function migrateAnomaliesV2(): void
+    {
+        global $wpdb;
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        $charset = $wpdb->get_charset_collate();
+        dbDelta(self::anomaliesTableSql($charset));
+    }
+
+    private static function anomaliesTableSql(string $charset): string
+    {
+        return "CREATE TABLE " . self::table('anomalies') . " (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                client_id BIGINT UNSIGNED NOT NULL,
+                type VARCHAR(64) NOT NULL,
+                severity VARCHAR(16) NOT NULL,
+                payload LONGTEXT NULL,
+                detected_at DATETIME NOT NULL,
+                notified TINYINT(1) NOT NULL DEFAULT 0,
+                algo VARCHAR(32) NULL,
+                score DOUBLE NULL,
+                expected DOUBLE NULL,
+                actual DOUBLE NULL,
+                baseline DOUBLE NULL,
+                z DOUBLE NULL,
+                p_value DOUBLE NULL,
+                window INT NULL,
+                PRIMARY KEY  (id),
+                KEY client_id (client_id)
+            ) $charset;";
     }
 }

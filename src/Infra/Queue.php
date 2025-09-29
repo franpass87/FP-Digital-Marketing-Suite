@@ -166,7 +166,7 @@ class Queue
 
         $detector = new Detector(new AnomaliesRepo());
         $historySeries = self::metricsHistory($reports, $client->id ?? 0, $result->id ?? null);
-        $anomalies = $detector->evaluate($client->id ?? 0, $result->meta['kpi'] ?? [], $previousMetrics, $historySeries);
+        $anomalies = $detector->evaluatePeriod($client->id ?? 0, $period, $result->meta, $historySeries);
 
         if (! empty($anomalies)) {
             $reports->update($result->id ?? 0, [
@@ -437,24 +437,8 @@ class Queue
             return;
         }
 
-        $settings = Options::getGlobalSettings();
-        $mailer = new Mailer();
-        $mailer->sendAnomalyAlert($client, $anomalies, $period);
-
-        $webhook = $settings['error_webhook_url'] ?? '';
-        if ($webhook) {
-            wp_remote_post($webhook, [
-                'headers' => ['Content-Type' => 'application/json'],
-                'body' => wp_json_encode([
-                    'client' => $client->name,
-                    'period' => [
-                        'start' => $period->start->format('Y-m-d'),
-                        'end' => $period->end->format('Y-m-d'),
-                    ],
-                    'anomalies' => $anomalies,
-                ]),
-                'timeout' => 5,
-            ]);
-        }
+        $policy = Options::getAnomalyPolicy($client->id ?? 0);
+        $router = new NotificationRouter();
+        $router->route($anomalies, $policy, $client, $period);
     }
 }

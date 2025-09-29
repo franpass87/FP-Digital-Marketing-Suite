@@ -69,6 +69,56 @@ class SettingsPage
         echo '<button type="submit" name="fpdms_settings_action" value="regenerate" class="button">' . esc_html__('Generate New Tick Key', 'fp-dms') . '</button>';
         echo '</td></tr>';
 
+        $policy = $settings['anomaly_policy'];
+        echo '<tr><th scope="row">' . esc_html__('Anomaly thresholds', 'fp-dms') . '</th><td>';
+        echo '<table class="widefat striped" style="max-width:720px">';
+        echo '<thead><tr><th>' . esc_html__('Metric', 'fp-dms') . '</th><th>' . esc_html__('Warn %', 'fp-dms') . '</th><th>' . esc_html__('Crit %', 'fp-dms') . '</th><th>' . esc_html__('Warn z', 'fp-dms') . '</th><th>' . esc_html__('Crit z', 'fp-dms') . '</th></tr></thead><tbody>';
+        foreach ($policy['metrics'] as $metric => $values) {
+            echo '<tr>';
+            echo '<td>' . esc_html($metric) . '</td>';
+            echo '<td><input type="number" step="0.1" class="small-text" name="anomaly_policy[metrics][' . esc_attr($metric) . '][warn_pct]" value="' . esc_attr((string) $values['warn_pct']) . '"></td>';
+            echo '<td><input type="number" step="0.1" class="small-text" name="anomaly_policy[metrics][' . esc_attr($metric) . '][crit_pct]" value="' . esc_attr((string) $values['crit_pct']) . '"></td>';
+            echo '<td><input type="number" step="0.1" class="small-text" name="anomaly_policy[metrics][' . esc_attr($metric) . '][z_warn]" value="' . esc_attr((string) $values['z_warn']) . '"></td>';
+            echo '<td><input type="number" step="0.1" class="small-text" name="anomaly_policy[metrics][' . esc_attr($metric) . '][z_crit]" value="' . esc_attr((string) $values['z_crit']) . '"></td>';
+            echo '</tr>';
+        }
+        echo '</tbody></table>';
+        echo '</td></tr>';
+
+        echo '<tr><th scope="row">' . esc_html__('Baseline defaults', 'fp-dms') . '</th><td>';
+        echo '<label>' . esc_html__('Window days', 'fp-dms') . ' <input type="number" class="small-text" name="anomaly_policy[baseline][window_days]" value="' . esc_attr((string) $policy['baseline']['window_days']) . '"></label> ';
+        echo '<label>' . esc_html__('Seasonality', 'fp-dms') . ' <input type="text" class="regular-text" name="anomaly_policy[baseline][seasonality]" value="' . esc_attr((string) $policy['baseline']['seasonality']) . '"></label> ';
+        echo '<label>' . esc_html__('EWMA α', 'fp-dms') . ' <input type="number" step="0.01" class="small-text" name="anomaly_policy[baseline][ewma_alpha]" value="' . esc_attr((string) $policy['baseline']['ewma_alpha']) . '"></label> ';
+        echo '<label>' . esc_html__('CUSUM k', 'fp-dms') . ' <input type="number" step="0.01" class="small-text" name="anomaly_policy[baseline][cusum_k]" value="' . esc_attr((string) $policy['baseline']['cusum_k']) . '"></label> ';
+        echo '<label>' . esc_html__('CUSUM h', 'fp-dms') . ' <input type="number" step="0.01" class="small-text" name="anomaly_policy[baseline][cusum_h]" value="' . esc_attr((string) $policy['baseline']['cusum_h']) . '"></label>';
+        echo '</td></tr>';
+
+        echo '<tr><th scope="row">' . esc_html__('Routing defaults', 'fp-dms') . '</th><td>';
+        echo '<p>' . esc_html__('Enable global channels and enter credentials used when client overrides are missing.', 'fp-dms') . '</p>';
+        foreach ($policy['routing'] as $channel => $config) {
+            echo '<fieldset style="margin-bottom:16px;padding:12px;border:1px solid #ddd;">';
+            echo '<legend>' . esc_html(ucfirst(str_replace('_', ' ', $channel))) . '</legend>';
+            echo '<label><input type="checkbox" name="anomaly_policy[routing][' . esc_attr($channel) . '][enabled]" value="1"' . checked(! empty($config['enabled']), true, false) . '> ' . esc_html__('Enabled', 'fp-dms') . '</label><br>';
+            foreach ($config as $key => $value) {
+                if ($key === 'enabled') {
+                    continue;
+                }
+                $label = ucwords(str_replace('_', ' ', $key));
+                $type = str_contains($key, 'token') || str_contains($key, 'secret') ? 'password' : 'text';
+                echo '<label>' . esc_html($label) . ' <input type="' . esc_attr($type) . '" class="regular-text" name="anomaly_policy[routing][' . esc_attr($channel) . '][' . esc_attr($key) . ']" value="' . esc_attr((string) $value) . '"></label><br>';
+            }
+            if ($channel === 'email') {
+                echo '<label>' . esc_html__('Digest window (minutes)', 'fp-dms') . ' <input type="number" class="small-text" name="anomaly_policy[routing][email][digest_window_min]" value="' . esc_attr((string) $config['digest_window_min']) . '"></label>';
+            }
+            echo '</fieldset>';
+        }
+        echo '</td></tr>';
+
+        echo '<tr><th scope="row">' . esc_html__('Rate limiting', 'fp-dms') . '</th><td>';
+        echo '<label>' . esc_html__('Cooldown (minutes)', 'fp-dms') . ' <input type="number" class="small-text" name="anomaly_policy[cooldown_min]" value="' . esc_attr((string) $policy['cooldown_min']) . '"></label> ';
+        echo '<label>' . esc_html__('Max per window', 'fp-dms') . ' <input type="number" class="small-text" name="anomaly_policy[max_per_window]" value="' . esc_attr((string) $policy['max_per_window']) . '"></label>';
+        echo '</td></tr>';
+
         echo '</tbody></table>';
         submit_button(__('Save Settings', 'fp-dms'));
         echo '</form>';
@@ -122,7 +172,73 @@ class SettingsPage
         $webhook = esc_url_raw($_POST['error_webhook_url'] ?? '');
         $settings['error_webhook_url'] = Validation::safeUrl($webhook) ? $webhook : '';
 
+        $policyInput = isset($_POST['anomaly_policy']) && is_array($_POST['anomaly_policy']) ? $_POST['anomaly_policy'] : [];
+        $settings['anomaly_policy'] = self::sanitizeAnomalyPolicy($policyInput, $settings['anomaly_policy']);
+
         Options::updateGlobalSettings($settings);
         add_settings_error('fpdms_settings', 'fpdms_settings_saved', __('Settings saved.', 'fp-dms'), 'updated');
+    }
+
+    /**
+     * @param array<string,mixed> $input
+     * @param array<string,mixed> $current
+     * @return array<string,mixed>
+     */
+    private static function sanitizeAnomalyPolicy(array $input, array $current): array
+    {
+        $policy = Options::defaultAnomalyPolicy();
+        $policy = array_replace_recursive($policy, $current);
+
+        if (isset($input['metrics']) && is_array($input['metrics'])) {
+            foreach ($policy['metrics'] as $metric => &$values) {
+                $source = $input['metrics'][$metric] ?? [];
+                foreach (['warn_pct', 'crit_pct', 'z_warn', 'z_crit'] as $field) {
+                    if (isset($source[$field]) && is_numeric($source[$field])) {
+                        $values[$field] = (float) $source[$field];
+                    }
+                }
+            }
+            unset($values);
+        }
+
+        if (isset($input['baseline']) && is_array($input['baseline'])) {
+            foreach (['window_days', 'seasonality', 'ewma_alpha', 'cusum_k', 'cusum_h'] as $field) {
+                if (! isset($input['baseline'][$field])) {
+                    continue;
+                }
+                $value = $input['baseline'][$field];
+                $policy['baseline'][$field] = is_numeric($value) ? (float) $value : sanitize_text_field((string) $value);
+            }
+            $policy['baseline']['window_days'] = (int) $policy['baseline']['window_days'];
+        }
+
+        if (isset($input['routing']) && is_array($input['routing'])) {
+            foreach ($policy['routing'] as $channel => &$config) {
+                $source = $input['routing'][$channel] ?? [];
+                $config['enabled'] = ! empty($source['enabled']);
+                foreach ($config as $key => &$value) {
+                    if ($key === 'enabled' || ! isset($source[$key])) {
+                        continue;
+                    }
+                    $raw = (string) $source[$key];
+                    $value = str_contains($key, 'url') ? esc_url_raw($raw) : sanitize_text_field($raw);
+                }
+                unset($value);
+            }
+            unset($config);
+        }
+
+        if (isset($policy['routing']['email']['digest_window_min']) && isset($input['routing']['email']['digest_window_min'])) {
+            $policy['routing']['email']['digest_window_min'] = (int) $input['routing']['email']['digest_window_min'];
+        }
+
+        if (isset($input['cooldown_min'])) {
+            $policy['cooldown_min'] = (int) $input['cooldown_min'];
+        }
+        if (isset($input['max_per_window'])) {
+            $policy['max_per_window'] = (int) $input['max_per_window'];
+        }
+
+        return $policy;
     }
 }
