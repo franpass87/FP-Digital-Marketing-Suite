@@ -1,0 +1,203 @@
+name: Build Plugin ZIPs
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-build:
+    name: Validate & Build ZIPs
+    runs-on: ubuntu-latest
+
+    env:
+      PLUGIN_DIR: fp-digital-marketing-suite
+      MAIN_FILE: fp-digital-marketing-suite/fp-digital-marketing-suite.php
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+
+      - name: PHP syntax check
+        run: |
+          set -e
+          mapfile -t PHPFILES < <(find $PLUGIN_DIR -type f -name "*.php")
+          for f in "${PHPFILES[@]}"; do
+            php -l "$f"
+          done
+
+      - name: Read plugin version
+        id: ver
+        shell: bash
+        run: |
+          set -e
+          if [[ -f "$MAIN_FILE" ]]; then
+            VER=$(sed -n 's/^\s*Version:\s*\([^[:space:]]*\).*$/\1/p' "$MAIN_FILE" | head -n1)
+          fi
+          if [[ -z "$VER" ]]; then VER="0.0.0"; fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "Detected version: $VER"
+
+      - name: Prepare build dirs
+        run: |
+          set -e
+          rm -rf build
+          mkdir -p build/source build/release
+
+      - name: Sync source (exclude forbidden)
+        run: |
+          set -e
+          rsync -a "$PLUGIN_DIR"/ build/source/ \
+            --delete \
+            --exclude=".git" --exclude=".github" \
+            --exclude="vendor" --exclude="node_modules" \
+            --exclude="dist" --exclude="build" \
+            --exclude="tests" --exclude="*.map" \
+            --exclude="composer.lock" \
+            --exclude="*.png" --exclude="*.jpg" --exclude="*.jpeg" \
+            --exclude="*.gif" --exclude="*.webp" --exclude="*.ico" --exclude="*.svg" \
+            --exclude="*.ttf" --exclude="*.otf" --exclude="*.woff" --exclude="*.woff2" \
+            --exclude="*.zip" --exclude="*.tar" --exclude="*.gz" \
+            --exclude="*.pdf"
+
+      - name: Safety checks (no forbidden artifacts in source)
+        run: |
+          set -e
+          test -f build/source/fp-digital-marketing-suite.php || { echo "Main plugin file missing in source"; exit 1; }
+          if find build/source -type d -name vendor -o -name node_modules | grep .; then
+            echo "Forbidden directories found (vendor/node_modules) in source"; exit 1; fi
+          if find build/source -type f \( -name composer.lock -o -name "*.pdf" -o -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.webp" -o -name "*.ico" -o -name "*.svg" -o -name "*.ttf" -o -name "*.otf" -o -name "*.woff" -o -name "*.woff2" -o -name "*.zip" -o -name "*.tar" -o -name "*.gz" \) | grep .; then
+            echo "Forbidden files found in source"; exit 1; fi
+
+      - name: Prepare release dir (copy source)
+        run: |
+          set -e
+          rsync -a build/source/ build/release/
+
+      - name: Composer install in release (no dev)
+        working-directory: build/release
+        run: |
+          set -e
+          if [[ -f "composer.json" ]]; then
+            composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+          else
+            echo "composer.json not found in release; skipping composer install"
+          fi
+
+      - name: Create ZIPs
+        env:
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          set -e
+          cd build
+          zip -r -q "fp-digital-marketing-suite-source-v${VERSION}.zip" "source"
+          zip -r -q "fp-digital-marketing-suite-release-v${VERSION}.zip" "release"
+
+      - name: Generate checksums
+        run: |
+          set -e
+          cd build
+          sha256sum fp-digital-marketing-suite-source-*.zip > fp-digital-marketing-suite-source.zip.sha256
+          sha256sum fp-digital-marketing-suite-release-*.zip > fp-digital-marketing-suite-release.zip.sha256
+          cat *.sha256
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fp-digital-marketing-suite-${{ steps.ver.outputs.version }}
+          path: |
+            build/fp-digital-marketing-suite-source-v${{ steps.ver.outputs.version }}.zip
+            build/fp-digital-marketing-suite-release-v${{ steps.ver.outputs.version }}.zip
+            build/fp-digital-marketing-suite-source.zip.sha256
+            build/fp-digital-marketing-suite-release.zip.sha256
+          retention-days: 7
+
+  release:
+    name: Publish Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: validate-and-build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: fp-digital-marketing-suite-${{ needs.validate-and-build.outputs.version }}
+          path: dist
+        continue-on-error: true
+
+      - name: Fallback download (fetch from build job)
+        if: failure()
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: List dist files
+        run: ls -la dist || true
+
+      - name: Extract version from ref
+        id: tagver
+        run: |
+          REF="${GITHUB_REF##*/}"
+          echo "version=${REF#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: FP Digital Marketing Suite v${{ steps.tagver.outputs.version }}
+          draft: false
+          prerelease: false
+
+      - name: Upload asset (source zip)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/fp-digital-marketing-suite-source-v${{ steps.tagver.outputs.version }}.zip
+          asset_name: fp-digital-marketing-suite-source-v${{ steps.tagver.outputs.version }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload asset (release zip)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/fp-digital-marketing-suite-release-v${{ steps.tagver.outputs.version }}.zip
+          asset_name: fp-digital-marketing-suite-release-v${{ steps.tagver.outputs.version }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload checksums
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/fp-digital-marketing-suite-source.zip.sha256
+          asset_name: fp-digital-marketing-suite-source-v${{ steps.tagver.outputs.version }}.zip.sha256
+          asset_content_type: text/plain
+
+      - name: Upload checksums (release)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/fp-digital-marketing-suite-release.zip.sha256
+          asset_name: fp-digital-marketing-suite-release-v${{ steps.tagver.outputs.version }}.zip.sha256
+          asset_content_type: text/plain
