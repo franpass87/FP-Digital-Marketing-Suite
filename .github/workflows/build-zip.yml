@@ -14,14 +14,37 @@ jobs:
   validate-and-build:
     name: Validate & Build ZIPs
     runs-on: ubuntu-latest
-
-    env:
-      PLUGIN_DIR: fp-digital-marketing-suite
-      MAIN_FILE: fp-digital-marketing-suite/fp-digital-marketing-suite.php
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Detect plugin dir & main file
+        id: detect
+        shell: bash
+        run: |
+          set -e
+          # Try common layouts
+          if [[ -f "fp-digital-marketing-suite.php" ]]; then
+            DIR="."
+            MAIN="fp-digital-marketing-suite.php"
+          elif [[ -f "fp-digital-marketing-suite/fp-digital-marketing-suite.php" ]]; then
+            DIR="fp-digital-marketing-suite"
+            MAIN="fp-digital-marketing-suite/fp-digital-marketing-suite.php"
+          else
+            # Fallback: search first match
+            MAIN=$(git ls-files "*fp-digital-marketing-suite.php" | head -n1 || true)
+            if [[ -z "$MAIN" ]]; then
+              echo "Main plugin file not found"; exit 1
+            fi
+            DIR=$(dirname "$MAIN")
+            [[ "$DIR" == "." ]] || true
+          fi
+          echo "dir=$DIR"   >> "$GITHUB_OUTPUT"
+          echo "main=$MAIN" >> "$GITHUB_OUTPUT"
+          echo "Detected dir=$DIR main=$MAIN"
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -32,7 +55,7 @@ jobs:
       - name: PHP syntax check
         run: |
           set -e
-          mapfile -t PHPFILES < <(find $PLUGIN_DIR -type f -name "*.php")
+          mapfile -t PHPFILES < <(find "${{ steps.detect.outputs.dir }}" -type f -name "*.php")
           for f in "${PHPFILES[@]}"; do
             php -l "$f"
           done
@@ -42,10 +65,8 @@ jobs:
         shell: bash
         run: |
           set -e
-          if [[ -f "$MAIN_FILE" ]]; then
-            VER=$(sed -n 's/^\s*Version:\s*\([^[:space:]]*\).*$/\1/p' "$MAIN_FILE" | head -n1)
-          fi
-          if [[ -z "$VER" ]]; then VER="0.0.0"; fi
+          VER=$(sed -n 's/^\s*Version:\s*\([^[:space:]]*\).*$/\1/p' "${{ steps.detect.outputs.main }}" | head -n1 || true)
+          [[ -z "$VER" ]] && VER="0.0.0"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
           echo "Detected version: $VER"
 
@@ -58,7 +79,7 @@ jobs:
       - name: Sync source (exclude forbidden)
         run: |
           set -e
-          rsync -a "$PLUGIN_DIR"/ build/source/ \
+          rsync -a "${{ steps.detect.outputs.dir }}"/ build/source/ \
             --delete \
             --exclude=".git" --exclude=".github" \
             --exclude="vendor" --exclude="node_modules" \
@@ -74,7 +95,12 @@ jobs:
       - name: Safety checks (no forbidden artifacts in source)
         run: |
           set -e
-          test -f build/source/fp-digital-marketing-suite.php || { echo "Main plugin file missing in source"; exit 1; }
+          MAIN_PATH="${{ steps.detect.outputs.main }}"
+          DIR_PATH="${{ steps.detect.outputs.dir }}"
+          if [[ "$DIR_PATH" != "." ]]; then
+            MAIN_PATH="${MAIN_PATH#${DIR_PATH}/}"
+          fi
+          test -f "build/source/$MAIN_PATH" || { echo "Main plugin file missing in source"; exit 1; }
           if find build/source -type d -name vendor -o -name node_modules | grep .; then
             echo "Forbidden directories found (vendor/node_modules) in source"; exit 1; fi
           if find build/source -type f \( -name composer.lock -o -name "*.pdf" -o -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.webp" -o -name "*.ico" -o -name "*.svg" -o -name "*.ttf" -o -name "*.otf" -o -name "*.woff" -o -name "*.woff2" -o -name "*.zip" -o -name "*.tar" -o -name "*.gz" \) | grep .; then
