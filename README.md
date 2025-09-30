@@ -21,6 +21,10 @@ FP Digital Marketing Suite is a private WordPress plugin to automate marketing p
 - REST API + WP-CLI command coverage
 - QA Automation suite (seed/run/anomalies/status/cleanup via Admin or REST)
 - GitHub Actions workflow for source/release ZIPs, checksums, and tagged releases
+- Client Overview dashboard for real-time KPI snapshots, anomalies, connector health, and quick remediation actions
+
+## Client Overview Dashboard
+The **FP Suite → Overview** page surfaces real-time KPI cards, inline sparklines, anomaly snapshots, datasource health, and job controls per client without waiting for PDF reports. Filters support date presets and custom ranges, auto-refresh can be toggled per user, and responses are cached briefly to stay responsive. REST endpoints under `/wp-json/fpdms/v1/overview/*` power the UI so data can also be consumed programmatically.
 
 ## Installation
 1. Place the plugin folder under `wp-content/plugins/`.

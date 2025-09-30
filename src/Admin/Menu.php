@@ -10,6 +10,7 @@ use FP\DMS\Admin\Pages\DashboardPage;
 use FP\DMS\Admin\Pages\DataSourcesPage;
 use FP\DMS\Admin\Pages\HealthPage;
 use FP\DMS\Admin\Pages\LogsPage;
+use FP\DMS\Admin\Pages\OverviewPage;
 use FP\DMS\Admin\Pages\SchedulesPage;
 use FP\DMS\Admin\Pages\SettingsPage;
 use FP\DMS\Admin\Pages\TemplatesPage;
@@ -39,6 +40,7 @@ class Menu
         );
 
         add_submenu_page('fp-dms-dashboard', __('Dashboard', 'fp-dms'), __('Dashboard', 'fp-dms'), 'manage_options', 'fp-dms-dashboard', [DashboardPage::class, 'render']);
+        add_submenu_page('fp-dms-dashboard', __('Overview', 'fp-dms'), __('Overview', 'fp-dms'), 'manage_options', 'fp-dms-overview', [OverviewPage::class, 'render']);
         add_submenu_page('fp-dms-dashboard', __('Clients', 'fp-dms'), __('Clients', 'fp-dms'), 'manage_options', 'fp-dms-clients', [ClientsPage::class, 'render']);
         add_submenu_page('fp-dms-dashboard', __('Data Sources', 'fp-dms'), __('Data Sources', 'fp-dms'), 'manage_options', 'fp-dms-datasources', [DataSourcesPage::class, 'render']);
         add_submenu_page('fp-dms-dashboard', __('Schedules', 'fp-dms'), __('Schedules', 'fp-dms'), 'manage_options', 'fp-dms-schedules', [SchedulesPage::class, 'render']);
