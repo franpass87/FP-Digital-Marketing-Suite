@@ -1,0 +1,1797 @@
+{
+    "classes": [
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Menu",
+            "short_name": "Menu",
+            "file": "src/Admin/Menu.php",
+            "methods": [
+                {
+                    "name": "init",
+                    "visibility": "public"
+                },
+                {
+                    "name": "register",
+                    "visibility": "public"
+                },
+                {
+                    "name": "enqueue_assets",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\SettingsPage",
+            "short_name": "SettingsPage",
+            "file": "src/Admin/Pages/SettingsPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\ClientsPage",
+            "short_name": "ClientsPage",
+            "file": "src/Admin/Pages/ClientsPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\AnomaliesPage",
+            "short_name": "AnomaliesPage",
+            "file": "src/Admin/Pages/AnomaliesPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\TemplatesPage",
+            "short_name": "TemplatesPage",
+            "file": "src/Admin/Pages/TemplatesPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\HealthPage",
+            "short_name": "HealthPage",
+            "file": "src/Admin/Pages/HealthPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\DataSourcesPage",
+            "short_name": "DataSourcesPage",
+            "file": "src/Admin/Pages/DataSourcesPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\LogsPage",
+            "short_name": "LogsPage",
+            "file": "src/Admin/Pages/LogsPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\DashboardPage",
+            "short_name": "DashboardPage",
+            "file": "src/Admin/Pages/DashboardPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\SchedulesPage",
+            "short_name": "SchedulesPage",
+            "file": "src/Admin/Pages/SchedulesPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Admin\\Pages\\QaPage",
+            "short_name": "QaPage",
+            "file": "src/Admin/Pages/QaPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Cli\\Commands",
+            "short_name": "Commands",
+            "file": "src/Cli/Commands.php",
+            "methods": [
+                {
+                    "name": "register",
+                    "visibility": "public"
+                },
+                {
+                    "name": "runReport",
+                    "visibility": "public"
+                },
+                {
+                    "name": "listQueue",
+                    "visibility": "public"
+                },
+                {
+                    "name": "scanAnomalies",
+                    "visibility": "public"
+                },
+                {
+                    "name": "anomaliesEvaluate",
+                    "visibility": "public"
+                },
+                {
+                    "name": "anomaliesNotify",
+                    "visibility": "public"
+                },
+                {
+                    "name": "repairDb",
+                    "visibility": "public"
+                },
+                {
+                    "name": "qaSeed",
+                    "visibility": "public"
+                },
+                {
+                    "name": "qaRun",
+                    "visibility": "public"
+                },
+                {
+                    "name": "qaAnomalies",
+                    "visibility": "public"
+                },
+                {
+                    "name": "qaAll",
+                    "visibility": "public"
+                },
+                {
+                    "name": "shortCircuitMail",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Repos\\DataSourcesRepo",
+            "short_name": "DataSourcesRepo",
+            "file": "src/Domain/Repos/DataSourcesRepo.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "forClient",
+                    "visibility": "public"
+                },
+                {
+                    "name": "find",
+                    "visibility": "public"
+                },
+                {
+                    "name": "create",
+                    "visibility": "public"
+                },
+                {
+                    "name": "update",
+                    "visibility": "public"
+                },
+                {
+                    "name": "delete",
+                    "visibility": "public"
+                },
+                {
+                    "name": "deleteByClient",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Repos\\TemplatesRepo",
+            "short_name": "TemplatesRepo",
+            "file": "src/Domain/Repos/TemplatesRepo.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "all",
+                    "visibility": "public"
+                },
+                {
+                    "name": "find",
+                    "visibility": "public"
+                },
+                {
+                    "name": "findDefault",
+                    "visibility": "public"
+                },
+                {
+                    "name": "create",
+                    "visibility": "public"
+                },
+                {
+                    "name": "update",
+                    "visibility": "public"
+                },
+                {
+                    "name": "delete",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "short_name": "SchedulesRepo",
+            "file": "src/Domain/Repos/SchedulesRepo.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "dueSchedules",
+                    "visibility": "public"
+                },
+                {
+                    "name": "all",
+                    "visibility": "public"
+                },
+                {
+                    "name": "forClient",
+                    "visibility": "public"
+                },
+                {
+                    "name": "find",
+                    "visibility": "public"
+                },
+                {
+                    "name": "nextScheduledRun",
+                    "visibility": "public"
+                },
+                {
+                    "name": "create",
+                    "visibility": "public"
+                },
+                {
+                    "name": "update",
+                    "visibility": "public"
+                },
+                {
+                    "name": "delete",
+                    "visibility": "public"
+                },
+                {
+                    "name": "deleteByClient",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "short_name": "ReportsRepo",
+            "file": "src/Domain/Repos/ReportsRepo.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "find",
+                    "visibility": "public"
+                },
+                {
+                    "name": "nextQueued",
+                    "visibility": "public"
+                },
+                {
+                    "name": "forClient",
+                    "visibility": "public"
+                },
+                {
+                    "name": "search",
+                    "visibility": "public"
+                },
+                {
+                    "name": "findByClientAndPeriod",
+                    "visibility": "public"
+                },
+                {
+                    "name": "create",
+                    "visibility": "public"
+                },
+                {
+                    "name": "update",
+                    "visibility": "public"
+                },
+                {
+                    "name": "delete",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Repos\\ClientsRepo",
+            "short_name": "ClientsRepo",
+            "file": "src/Domain/Repos/ClientsRepo.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "all",
+                    "visibility": "public"
+                },
+                {
+                    "name": "find",
+                    "visibility": "public"
+                },
+                {
+                    "name": "findByName",
+                    "visibility": "public"
+                },
+                {
+                    "name": "create",
+                    "visibility": "public"
+                },
+                {
+                    "name": "update",
+                    "visibility": "public"
+                },
+                {
+                    "name": "delete",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "short_name": "AnomaliesRepo",
+            "file": "src/Domain/Repos/AnomaliesRepo.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "recent",
+                    "visibility": "public"
+                },
+                {
+                    "name": "recentForClient",
+                    "visibility": "public"
+                },
+                {
+                    "name": "create",
+                    "visibility": "public"
+                },
+                {
+                    "name": "find",
+                    "visibility": "public"
+                },
+                {
+                    "name": "markNotified",
+                    "visibility": "public"
+                },
+                {
+                    "name": "updatePayload",
+                    "visibility": "public"
+                },
+                {
+                    "name": "countForClient",
+                    "visibility": "public"
+                },
+                {
+                    "name": "deleteByClient",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Entities\\Template",
+            "short_name": "Template",
+            "file": "src/Domain/Entities/Template.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fromRow",
+                    "visibility": "public"
+                },
+                {
+                    "name": "toRow",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Entities\\Schedule",
+            "short_name": "Schedule",
+            "file": "src/Domain/Entities/Schedule.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fromRow",
+                    "visibility": "public"
+                },
+                {
+                    "name": "toRow",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Entities\\DataSource",
+            "short_name": "DataSource",
+            "file": "src/Domain/Entities/DataSource.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fromRow",
+                    "visibility": "public"
+                },
+                {
+                    "name": "toRow",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Entities\\ReportJob",
+            "short_name": "ReportJob",
+            "file": "src/Domain/Entities/ReportJob.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fromRow",
+                    "visibility": "public"
+                },
+                {
+                    "name": "toRow",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Entities\\Anomaly",
+            "short_name": "Anomaly",
+            "file": "src/Domain/Entities/Anomaly.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fromRow",
+                    "visibility": "public"
+                },
+                {
+                    "name": "toRow",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Domain\\Entities\\Client",
+            "short_name": "Client",
+            "file": "src/Domain/Entities/Client.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fromRow",
+                    "visibility": "public"
+                },
+                {
+                    "name": "toRow",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider",
+            "short_name": "GoogleAdsProvider",
+            "file": "src/Services/Connectors/GoogleAdsProvider.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "testConnection",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchMetrics",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchDimensions",
+                    "visibility": "public"
+                },
+                {
+                    "name": "describe",
+                    "visibility": "public"
+                },
+                {
+                    "name": "ingestCsvSummary",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Connectors\\GA4Provider",
+            "short_name": "GA4Provider",
+            "file": "src/Services/Connectors/GA4Provider.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "testConnection",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchMetrics",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchDimensions",
+                    "visibility": "public"
+                },
+                {
+                    "name": "describe",
+                    "visibility": "public"
+                },
+                {
+                    "name": "ingestCsvSummary",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Connectors\\ConnectionResult",
+            "short_name": "ConnectionResult",
+            "file": "src/Services/Connectors/ConnectionResult.php",
+            "methods": [
+                {
+                    "name": "success",
+                    "visibility": "public"
+                },
+                {
+                    "name": "failure",
+                    "visibility": "public"
+                },
+                {
+                    "name": "isSuccess",
+                    "visibility": "public"
+                },
+                {
+                    "name": "message",
+                    "visibility": "public"
+                },
+                {
+                    "name": "details",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider",
+            "short_name": "ClarityCsvProvider",
+            "file": "src/Services/Connectors/ClarityCsvProvider.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "testConnection",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchMetrics",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchDimensions",
+                    "visibility": "public"
+                },
+                {
+                    "name": "describe",
+                    "visibility": "public"
+                },
+                {
+                    "name": "ingestCsvSummary",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Connectors\\Normalizer",
+            "short_name": "Normalizer",
+            "file": "src/Services/Connectors/Normalizer.php",
+            "methods": [
+                {
+                    "name": "ensureKeys",
+                    "visibility": "public"
+                },
+                {
+                    "name": "mergeDaily",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Connectors\\ProviderFactory",
+            "short_name": "ProviderFactory",
+            "file": "src/Services/Connectors/ProviderFactory.php",
+            "methods": [
+                {
+                    "name": "create",
+                    "visibility": "public"
+                },
+                {
+                    "name": "definitions",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Connectors\\MetaAdsProvider",
+            "short_name": "MetaAdsProvider",
+            "file": "src/Services/Connectors/MetaAdsProvider.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "testConnection",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchMetrics",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchDimensions",
+                    "visibility": "public"
+                },
+                {
+                    "name": "describe",
+                    "visibility": "public"
+                },
+                {
+                    "name": "ingestCsvSummary",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Connectors\\GSCProvider",
+            "short_name": "GSCProvider",
+            "file": "src/Services/Connectors/GSCProvider.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "testConnection",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchMetrics",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchDimensions",
+                    "visibility": "public"
+                },
+                {
+                    "name": "describe",
+                    "visibility": "public"
+                },
+                {
+                    "name": "ingestCsvSummary",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Connectors\\CsvGenericProvider",
+            "short_name": "CsvGenericProvider",
+            "file": "src/Services/Connectors/CsvGenericProvider.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "testConnection",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchMetrics",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchDimensions",
+                    "visibility": "public"
+                },
+                {
+                    "name": "describe",
+                    "visibility": "public"
+                },
+                {
+                    "name": "ingestCsvSummary",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Anomalies\\Engine",
+            "short_name": "Engine",
+            "file": "src/Services/Anomalies/Engine.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "evaluateClientPeriod",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Anomalies\\TimeSeries",
+            "short_name": "TimeSeries",
+            "file": "src/Services/Anomalies/TimeSeries.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "normalize",
+                    "visibility": "public"
+                },
+                {
+                    "name": "groupByDate",
+                    "visibility": "public"
+                },
+                {
+                    "name": "metricSeries",
+                    "visibility": "public"
+                },
+                {
+                    "name": "dates",
+                    "visibility": "public"
+                },
+                {
+                    "name": "totals",
+                    "visibility": "public"
+                },
+                {
+                    "name": "dayOfWeek",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Anomalies\\Detector",
+            "short_name": "Detector",
+            "file": "src/Services/Anomalies/Detector.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "evaluate",
+                    "visibility": "public"
+                },
+                {
+                    "name": "evaluatePeriod",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Anomalies\\Detectors",
+            "short_name": "Detectors",
+            "file": "src/Services/Anomalies/Detectors.php",
+            "methods": [
+                {
+                    "name": "zScore",
+                    "visibility": "public"
+                },
+                {
+                    "name": "ewmaDeviation",
+                    "visibility": "public"
+                },
+                {
+                    "name": "cusum",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Anomalies\\Baseline",
+            "short_name": "Baseline",
+            "file": "src/Services/Anomalies/Baseline.php",
+            "methods": [
+                {
+                    "name": "rollingMean",
+                    "visibility": "public"
+                },
+                {
+                    "name": "seasonalBaseline",
+                    "visibility": "public"
+                },
+                {
+                    "name": "ewma",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Reports\\TokenEngine",
+            "short_name": "TokenEngine",
+            "file": "src/Services/Reports/TokenEngine.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Reports\\HtmlRenderer",
+            "short_name": "HtmlRenderer",
+            "file": "src/Services/Reports/HtmlRenderer.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Reports\\ReportBuilder",
+            "short_name": "ReportBuilder",
+            "file": "src/Services/Reports/ReportBuilder.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "generate",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Services\\Qa\\Automation",
+            "short_name": "Automation",
+            "file": "src/Services/Qa/Automation.php",
+            "methods": [
+                {
+                    "name": "seed",
+                    "visibility": "public"
+                },
+                {
+                    "name": "run",
+                    "visibility": "public"
+                },
+                {
+                    "name": "anomalies",
+                    "visibility": "public"
+                },
+                {
+                    "name": "all",
+                    "visibility": "public"
+                },
+                {
+                    "name": "status",
+                    "visibility": "public"
+                },
+                {
+                    "name": "cleanup",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\PdfRenderer",
+            "short_name": "PdfRenderer",
+            "file": "src/Infra/PdfRenderer.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Retention",
+            "short_name": "Retention",
+            "file": "src/Infra/Retention.php",
+            "methods": [
+                {
+                    "name": "cleanup",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Deactivator",
+            "short_name": "Deactivator",
+            "file": "src/Infra/Deactivator.php",
+            "methods": [
+                {
+                    "name": "deactivate",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Options",
+            "short_name": "Options",
+            "file": "src/Infra/Options.php",
+            "methods": [
+                {
+                    "name": "getGlobalSettings",
+                    "visibility": "public"
+                },
+                {
+                    "name": "updateGlobalSettings",
+                    "visibility": "public"
+                },
+                {
+                    "name": "ensureDefaults",
+                    "visibility": "public"
+                },
+                {
+                    "name": "getLastTick",
+                    "visibility": "public"
+                },
+                {
+                    "name": "setLastTick",
+                    "visibility": "public"
+                },
+                {
+                    "name": "getQaKey",
+                    "visibility": "public"
+                },
+                {
+                    "name": "regenerateQaKey",
+                    "visibility": "public"
+                },
+                {
+                    "name": "defaultGlobalSettings",
+                    "visibility": "public"
+                },
+                {
+                    "name": "defaultAnomalyPolicy",
+                    "visibility": "public"
+                },
+                {
+                    "name": "getAnomalyPolicy",
+                    "visibility": "public"
+                },
+                {
+                    "name": "updateAnomalyPolicy",
+                    "visibility": "public"
+                },
+                {
+                    "name": "deleteAnomalyPolicy",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\NotificationRouter",
+            "short_name": "NotificationRouter",
+            "file": "src/Infra/NotificationRouter.php",
+            "methods": [
+                {
+                    "name": "route",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Notifiers\\TelegramNotifier",
+            "short_name": "TelegramNotifier",
+            "file": "src/Infra/Notifiers/TelegramNotifier.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "send",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Notifiers\\EmailNotifier",
+            "short_name": "EmailNotifier",
+            "file": "src/Infra/Notifiers/EmailNotifier.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "send",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Notifiers\\WebhookNotifier",
+            "short_name": "WebhookNotifier",
+            "file": "src/Infra/Notifiers/WebhookNotifier.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "send",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Notifiers\\TeamsNotifier",
+            "short_name": "TeamsNotifier",
+            "file": "src/Infra/Notifiers/TeamsNotifier.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "send",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub",
+            "short_name": "TwilioNotifierStub",
+            "file": "src/Infra/Notifiers/TwilioNotifierStub.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "send",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Notifiers\\SlackNotifier",
+            "short_name": "SlackNotifier",
+            "file": "src/Infra/Notifiers/SlackNotifier.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "send",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Queue",
+            "short_name": "Queue",
+            "file": "src/Infra/Queue.php",
+            "methods": [
+                {
+                    "name": "enqueue",
+                    "visibility": "public"
+                },
+                {
+                    "name": "tick",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Lock",
+            "short_name": "Lock",
+            "file": "src/Infra/Lock.php",
+            "methods": [
+                {
+                    "name": "acquire",
+                    "visibility": "public"
+                },
+                {
+                    "name": "release",
+                    "visibility": "public"
+                },
+                {
+                    "name": "withLock",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Mailer",
+            "short_name": "Mailer",
+            "file": "src/Infra/Mailer.php",
+            "methods": [
+                {
+                    "name": "bootstrap",
+                    "visibility": "public"
+                },
+                {
+                    "name": "sendReport",
+                    "visibility": "public"
+                },
+                {
+                    "name": "sendWithRetry",
+                    "visibility": "public"
+                },
+                {
+                    "name": "sendAnomalyAlert",
+                    "visibility": "public"
+                },
+                {
+                    "name": "buildAnomalySubject",
+                    "visibility": "public"
+                },
+                {
+                    "name": "configureMailer",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Logger",
+            "short_name": "Logger",
+            "file": "src/Infra/Logger.php",
+            "methods": [
+                {
+                    "name": "log",
+                    "visibility": "public"
+                },
+                {
+                    "name": "logQa",
+                    "visibility": "public"
+                },
+                {
+                    "name": "logAnomaly",
+                    "visibility": "public"
+                },
+                {
+                    "name": "logChannel",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Cron",
+            "short_name": "Cron",
+            "file": "src/Infra/Cron.php",
+            "methods": [
+                {
+                    "name": "bootstrap",
+                    "visibility": "public"
+                },
+                {
+                    "name": "registerInterval",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\Activator",
+            "short_name": "Activator",
+            "file": "src/Infra/Activator.php",
+            "methods": [
+                {
+                    "name": "activate",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Infra\\DB",
+            "short_name": "DB",
+            "file": "src/Infra/DB.php",
+            "methods": [
+                {
+                    "name": "table",
+                    "visibility": "public"
+                },
+                {
+                    "name": "migrate",
+                    "visibility": "public"
+                },
+                {
+                    "name": "migrateAnomaliesV2",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Support\\Dates",
+            "short_name": "Dates",
+            "file": "src/Support/Dates.php",
+            "methods": [
+                {
+                    "name": "prevComparable",
+                    "visibility": "public"
+                },
+                {
+                    "name": "rangeDays",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fmt",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Support\\Period",
+            "short_name": "Period",
+            "file": "src/Support/Period.php",
+            "methods": [
+                {
+                    "name": "__construct",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fromStrings",
+                    "visibility": "public"
+                },
+                {
+                    "name": "format",
+                    "visibility": "public"
+                },
+                {
+                    "name": "toArray",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Support\\Security",
+            "short_name": "Security",
+            "file": "src/Support/Security.php",
+            "methods": [
+                {
+                    "name": "isEncryptionAvailable",
+                    "visibility": "public"
+                },
+                {
+                    "name": "encrypt",
+                    "visibility": "public"
+                },
+                {
+                    "name": "decrypt",
+                    "visibility": "public"
+                },
+                {
+                    "name": "registerAdminNotice",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Support\\Arr",
+            "short_name": "Arr",
+            "file": "src/Support/Arr.php",
+            "methods": [
+                {
+                    "name": "get",
+                    "visibility": "public"
+                },
+                {
+                    "name": "flattenKeys",
+                    "visibility": "public"
+                },
+                {
+                    "name": "mapKeys",
+                    "visibility": "public"
+                },
+                {
+                    "name": "sumBy",
+                    "visibility": "public"
+                },
+                {
+                    "name": "groupBy",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Support\\Validation",
+            "short_name": "Validation",
+            "file": "src/Support/Validation.php",
+            "methods": [
+                {
+                    "name": "isHexColor",
+                    "visibility": "public"
+                },
+                {
+                    "name": "isEmailList",
+                    "visibility": "public"
+                },
+                {
+                    "name": "nonEmptyString",
+                    "visibility": "public"
+                },
+                {
+                    "name": "positiveInt",
+                    "visibility": "public"
+                },
+                {
+                    "name": "safeUrl",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Support\\I18n",
+            "short_name": "I18n",
+            "file": "src/Support/I18n.php",
+            "methods": [
+                {
+                    "name": "__",
+                    "visibility": "public"
+                },
+                {
+                    "name": "_x",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "class",
+            "name": "FP\\DMS\\Http\\Routes",
+            "short_name": "Routes",
+            "file": "src/Http/Routes.php",
+            "methods": [
+                {
+                    "name": "register",
+                    "visibility": "public"
+                },
+                {
+                    "name": "onRestInit",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleTick",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleRun",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleDownload",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleAnomaliesEvaluate",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleAnomaliesNotify",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleQaSeed",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleQaRun",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleQaAnomalies",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleQaAll",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleQaStatus",
+                    "visibility": "public"
+                },
+                {
+                    "name": "handleQaCleanup",
+                    "visibility": "public"
+                },
+                {
+                    "name": "checkManageOptions",
+                    "visibility": "public"
+                }
+            ]
+        }
+    ],
+    "traits": [],
+    "interfaces": [
+        {
+            "type": "interface",
+            "name": "FP\\DMS\\Services\\Connectors\\DataSourceProviderInterface",
+            "short_name": "DataSourceProviderInterface",
+            "file": "src/Services/Connectors/DataSourceProviderInterface.php",
+            "methods": [
+                {
+                    "name": "testConnection",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchMetrics",
+                    "visibility": "public"
+                },
+                {
+                    "name": "fetchDimensions",
+                    "visibility": "public"
+                },
+                {
+                    "name": "describe",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "type": "interface",
+            "name": "FP\\DMS\\Infra\\Notifiers\\BaseNotifier",
+            "short_name": "BaseNotifier",
+            "file": "src/Infra/Notifiers/BaseNotifier.php",
+            "methods": [
+                {
+                    "name": "send",
+                    "visibility": "public"
+                }
+            ]
+        }
+    ],
+    "rest_routes": [
+        {
+            "namespace": "fpdms/v1",
+            "route": "/tick",
+            "methods": "POST"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/run/(?P<client_id>\\\\d+)",
+            "methods": "POST"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/report/(?P<report_id>\\\\d+)/download",
+            "methods": "GET"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/anomalies/evaluate",
+            "methods": "POST"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/anomalies/notify",
+            "methods": "POST"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/qa/seed",
+            "methods": "POST"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/qa/run",
+            "methods": "POST"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/qa/anomalies",
+            "methods": "POST"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/qa/all",
+            "methods": "POST"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/qa/status",
+            "methods": "GET"
+        },
+        {
+            "namespace": "fpdms/v1",
+            "route": "/qa/cleanup",
+            "methods": "POST"
+        }
+    ],
+    "admin_pages": [
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\SettingsPage",
+            "file": "src/Admin/Pages/SettingsPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\ClientsPage",
+            "file": "src/Admin/Pages/ClientsPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\AnomaliesPage",
+            "file": "src/Admin/Pages/AnomaliesPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\TemplatesPage",
+            "file": "src/Admin/Pages/TemplatesPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\HealthPage",
+            "file": "src/Admin/Pages/HealthPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\DataSourcesPage",
+            "file": "src/Admin/Pages/DataSourcesPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\LogsPage",
+            "file": "src/Admin/Pages/LogsPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\DashboardPage",
+            "file": "src/Admin/Pages/DashboardPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\SchedulesPage",
+            "file": "src/Admin/Pages/SchedulesPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        },
+        {
+            "class": "FP\\DMS\\Admin\\Pages\\QaPage",
+            "file": "src/Admin/Pages/QaPage.php",
+            "methods": [
+                {
+                    "name": "render",
+                    "visibility": "public"
+                }
+            ]
+        }
+    ],
+    "cli_commands": [
+        {
+            "command": "fpdms run",
+            "file": "src/Cli/Commands.php"
+        },
+        {
+            "command": "fpdms queue:list",
+            "file": "src/Cli/Commands.php"
+        },
+        {
+            "command": "fpdms anomalies:scan",
+            "file": "src/Cli/Commands.php"
+        },
+        {
+            "command": "fpdms anomalies:evaluate",
+            "file": "src/Cli/Commands.php"
+        },
+        {
+            "command": "fpdms anomalies:notify",
+            "file": "src/Cli/Commands.php"
+        },
+        {
+            "command": "fpdms repair:db",
+            "file": "src/Cli/Commands.php"
+        },
+        {
+            "command": "fpdms qa:seed",
+            "file": "src/Cli/Commands.php"
+        },
+        {
+            "command": "fpdms qa:run",
+            "file": "src/Cli/Commands.php"
+        },
+        {
+            "command": "fpdms qa:anomalies",
+            "file": "src/Cli/Commands.php"
+        },
+        {
+            "command": "fpdms qa:all",
+            "file": "src/Cli/Commands.php"
+        }
+    ],
+    "summary": {
+        "classes": 67,
+        "interfaces": 2,
+        "traits": 0,
+        "methods": 257,
+        "rest_routes": 11,
+        "admin_pages": 10,
+        "cli_commands": 10
+    }
+}

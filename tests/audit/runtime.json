@@ -1,0 +1,72 @@
+{
+    "seed": {
+        "qa": "seed",
+        "client_id": 1,
+        "datasources": {
+            "google_ads": "ok",
+            "meta_ads": "ok",
+            "csv_generic": "ok"
+        },
+        "schedule": "ok",
+        "status": "PASS"
+    },
+    "run": {
+        "qa": "run",
+        "client_id": 1,
+        "report_id": 1,
+        "pdf": "",
+        "email": "UNKNOWN",
+        "locks": "CONTENDED",
+        "warnings": [
+            "PDF renderer missing (composer install required)"
+        ],
+        "status": "WARN"
+    },
+    "anomalies": {
+        "qa": "anomalies",
+        "client_id": 1,
+        "anomalies": 3,
+        "severities": [
+            "critical"
+        ],
+        "status": "PASS"
+    },
+    "status": {
+        "qa": "status",
+        "client_id": 1,
+        "schedules": 1,
+        "last_report": null,
+        "anomalies_count": 3,
+        "last_tick": 1759217179,
+        "mail_last_result": "UNKNOWN",
+        "warnings": [
+            "report_missing"
+        ],
+        "status": "WARN"
+    },
+    "http_requests": 0,
+    "mail_events": 1,
+    "remote_requests": [],
+    "mail_log": [
+        {
+            "to": [
+                "qa-owner@example.com"
+            ],
+            "subject": "[Anomaly] QA Demo Client \u2014 Sessions (Critical)",
+            "headers": [
+                "Content-Type: text/html; charset=UTF-8"
+            ],
+            "attachments": [],
+            "message": "<p>The anomaly detector flagged the following metrics for QA Demo Client.</p><ul><li><strong>sessions</strong> \u2013 \u0394 72.2% (critical)</li><li><strong>clicks</strong> \u2013 \u0394 162.5% (critical)</li><li><strong>conversions</strong> \u2013 \u0394 125.0% (critical)</li></ul>"
+        }
+    ],
+    "missing_keys": {
+        "seed": [],
+        "run": [],
+        "anomalies": [],
+        "status": []
+    },
+    "notes": [
+        "PDF renderer missing \u2013 recorded as WARN."
+    ]
+}

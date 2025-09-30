@@ -1,0 +1,105 @@
+{
+    "task": "fpdms_functionality_audit",
+    "current_phase": 5,
+    "phases_done": [
+        1,
+        2,
+        3,
+        4,
+        5
+    ],
+    "totals": {
+        "classes": 67,
+        "interfaces": 2,
+        "traits": 0,
+        "methods": 257,
+        "rest_routes": 11,
+        "admin_pages": 10,
+        "cli_commands": 10,
+        "methods_analyzed": 252,
+        "methods_with_references": 106,
+        "methods_without_references": 146,
+        "contract_checks_total": 28,
+        "contract_checks_passed": 28,
+        "contract_checks_failed": 0,
+        "routes_verified": 9,
+        "runtime_seed_status": "PASS",
+        "runtime_run_status": "WARN",
+        "runtime_anomalies_status": "PASS",
+        "runtime_status_status": "WARN",
+        "runtime_http_requests": 0,
+        "runtime_mail_events": 1,
+        "runtime_notes": [
+            "PDF renderer missing \u2013 recorded as WARN."
+        ],
+        "modules": [
+            {
+                "name": "Admin",
+                "pass": 10,
+                "total": 10,
+                "pct": 100
+            },
+            {
+                "name": "Http",
+                "pass": 9,
+                "total": 9,
+                "pct": 100
+            },
+            {
+                "name": "Infra",
+                "pass": 7,
+                "total": 7,
+                "pct": 100
+            },
+            {
+                "name": "Services Reports",
+                "pass": 3,
+                "total": 3,
+                "pct": 100
+            },
+            {
+                "name": "Services Connectors",
+                "pass": 5,
+                "total": 5,
+                "pct": 100
+            },
+            {
+                "name": "Anomalies",
+                "pass": 3,
+                "total": 3,
+                "pct": 100
+            },
+            {
+                "name": "QA Automation",
+                "pass": 5,
+                "total": 5,
+                "pct": 100
+            }
+        ],
+        "overall_pct": 100,
+        "top_unreferenced": [
+            "FP\\DMS\\Cli\\Commands::shortCircuitMail",
+            "FP\\DMS\\Domain\\Entities\\Anomaly::__construct",
+            "FP\\DMS\\Domain\\Entities\\Anomaly::toRow",
+            "FP\\DMS\\Domain\\Entities\\Client::__construct",
+            "FP\\DMS\\Domain\\Entities\\Client::toRow",
+            "FP\\DMS\\Domain\\Entities\\DataSource::__construct",
+            "FP\\DMS\\Domain\\Entities\\DataSource::toRow",
+            "FP\\DMS\\Domain\\Entities\\ReportJob::__construct",
+            "FP\\DMS\\Domain\\Entities\\ReportJob::toRow",
+            "FP\\DMS\\Domain\\Entities\\Schedule::__construct"
+        ],
+        "runtime_summary": {
+            "seed": "PASS",
+            "run": "WARN",
+            "anomalies": "PASS",
+            "status": "WARN",
+            "notes": [
+                "PDF renderer missing \u2013 recorded as WARN."
+            ]
+        },
+        "total_items": 42,
+        "passed_items": 42
+    },
+    "completed": true
+}

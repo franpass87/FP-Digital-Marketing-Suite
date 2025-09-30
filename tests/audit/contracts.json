@@ -1,0 +1,208 @@
+{
+    "generated_at": "2025-09-30T07:12:33+00:00",
+    "classes": {
+        "infra": [
+            {
+                "class": "FP\\DMS\\Infra\\DB",
+                "description": "Database access layer",
+                "file": "src/Infra/DB.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Infra\\Options",
+                "description": "Options manager",
+                "file": "src/Infra/Options.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Infra\\Logger",
+                "description": "Logger service",
+                "file": "src/Infra/Logger.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Infra\\Mailer",
+                "description": "Mailer service",
+                "file": "src/Infra/Mailer.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Infra\\Queue",
+                "description": "Queue dispatcher",
+                "file": "src/Infra/Queue.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Infra\\Lock",
+                "description": "Lock coordination",
+                "file": "src/Infra/Lock.php",
+                "status": "PASS"
+            }
+        ],
+        "services_reports": [
+            {
+                "class": "FP\\DMS\\Services\\Reports\\ReportBuilder",
+                "description": "Report builder",
+                "file": "src/Services/Reports/ReportBuilder.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Services\\Reports\\HtmlRenderer",
+                "description": "HTML report renderer",
+                "file": "src/Services/Reports/HtmlRenderer.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Services\\Reports\\TokenEngine",
+                "description": "Report token engine",
+                "file": "src/Services/Reports/TokenEngine.php",
+                "status": "PASS"
+            }
+        ],
+        "services_anomalies": [
+            {
+                "class": "FP\\DMS\\Services\\Anomalies\\Detector",
+                "description": "Anomalies detector",
+                "file": "src/Services/Anomalies/Detector.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Services\\Anomalies\\Engine",
+                "description": "Anomalies engine",
+                "file": "src/Services/Anomalies/Engine.php",
+                "status": "PASS"
+            }
+        ],
+        "services_connectors": [
+            {
+                "class": "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider",
+                "description": "Google Ads connector",
+                "file": "src/Services/Connectors/GoogleAdsProvider.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Services\\Connectors\\MetaAdsProvider",
+                "description": "Meta Ads connector",
+                "file": "src/Services/Connectors/MetaAdsProvider.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Services\\Connectors\\CsvGenericProvider",
+                "description": "CSV generic connector",
+                "file": "src/Services/Connectors/CsvGenericProvider.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Services\\Connectors\\GA4Provider",
+                "description": "GA4 connector",
+                "file": "src/Services/Connectors/GA4Provider.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Services\\Connectors\\GSCProvider",
+                "description": "GSC connector",
+                "file": "src/Services/Connectors/GSCProvider.php",
+                "status": "PASS"
+            }
+        ],
+        "qa": [
+            {
+                "class": "FP\\DMS\\Services\\Qa\\Automation",
+                "description": "QA automation orchestrator",
+                "file": "src/Services/Qa/Automation.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Admin\\Pages\\QaPage",
+                "description": "QA admin page",
+                "file": "src/Admin/Pages/QaPage.php",
+                "status": "PASS"
+            },
+            {
+                "class": "FP\\DMS\\Http\\Routes",
+                "description": "HTTP routes registrar",
+                "file": "src/Http/Routes.php",
+                "status": "PASS"
+            }
+        ]
+    },
+    "routes": [
+        {
+            "path": "/tick",
+            "status": "PASS",
+            "details": {
+                "expected_method": "POST",
+                "actual_method": "POST"
+            }
+        },
+        {
+            "path": "/run/(?P<client_id>\\d+)",
+            "status": "PASS",
+            "details": {
+                "expected_method": "POST",
+                "actual_method": "POST"
+            }
+        },
+        {
+            "path": "/report/(?P<report_id>\\d+)/download",
+            "status": "PASS",
+            "details": {
+                "expected_method": "GET",
+                "actual_method": "GET"
+            }
+        },
+        {
+            "path": "/qa/seed",
+            "status": "PASS",
+            "details": {
+                "expected_method": "POST",
+                "actual_method": "POST"
+            }
+        },
+        {
+            "path": "/qa/run",
+            "status": "PASS",
+            "details": {
+                "expected_method": "POST",
+                "actual_method": "POST"
+            }
+        },
+        {
+            "path": "/qa/anomalies",
+            "status": "PASS",
+            "details": {
+                "expected_method": "POST",
+                "actual_method": "POST"
+            }
+        },
+        {
+            "path": "/qa/all",
+            "status": "PASS",
+            "details": {
+                "expected_method": "POST",
+                "actual_method": "POST"
+            }
+        },
+        {
+            "path": "/qa/status",
+            "status": "PASS",
+            "details": {
+                "expected_method": "GET",
+                "actual_method": "GET"
+            }
+        },
+        {
+            "path": "/qa/cleanup",
+            "status": "PASS",
+            "details": {
+                "expected_method": "POST",
+                "actual_method": "POST"
+            }
+        }
+    ],
+    "summary": {
+        "total_checks": 28,
+        "passed": 28,
+        "failed": 0
+    }
+}
