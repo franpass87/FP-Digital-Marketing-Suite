@@ -9,6 +9,8 @@ use FP\DMS\Domain\Entities\ReportJob;
 use FP\DMS\Support\I18n;
 use FP\DMS\Support\Period;
 use PHPMailer\PHPMailer\PHPMailer;
+use function is_email;
+use function sanitize_email;
 
 class Mailer
 {
@@ -20,23 +22,38 @@ class Mailer
     public function sendReport(Client $client, ReportJob $report, Period $period): bool
     {
         $settings = Options::getGlobalSettings();
-        $recipients = $client->emailTo;
-        if (empty($recipients) && $settings['owner_email']) {
-            $recipients[] = $settings['owner_email'];
+        $primary = $this->sanitizeEmails($client->emailTo);
+        $cc = $this->sanitizeEmails($client->emailCc);
+
+        $owner = isset($settings['owner_email']) ? sanitize_email((string) $settings['owner_email']) : '';
+        if ($owner !== '' && ! is_email($owner)) {
+            $owner = '';
         }
 
-        if (empty($recipients)) {
+        if (empty($primary) && $owner !== '') {
+            $primary[] = $owner;
+        }
+
+        if (empty($primary)) {
             return false;
+        }
+
+        $cc = array_values(array_filter(
+            $cc,
+            static fn(string $email): bool => ! in_array($email, $primary, true)
+        ));
+
+        $headers = ['Content-Type: text/html; charset=UTF-8'];
+        if (! empty($cc)) {
+            $headers[] = 'Cc: ' . implode(', ', $cc);
         }
 
         /* translators: 1: client name, 2: period start date, 3: period end date */
         $subject = sprintf(I18n::__('[Report] %1$s – %2$s to %3$s'), $client->name, $period->start->format('Y-m-d'), $period->end->format('Y-m-d'));
         $body = '<p>' . esc_html(sprintf(I18n::__('Attached you will find the latest marketing report for %s.'), $client->name)) . '</p>';
 
-        $headers = ['Content-Type: text/html; charset=UTF-8'];
-        $bcc = $settings['owner_email'] ?? '';
-        if ($bcc && ! in_array($bcc, $recipients, true)) {
-            $headers[] = 'Bcc: ' . $bcc;
+        if ($owner !== '' && ! in_array($owner, $primary, true) && ! in_array($owner, $cc, true)) {
+            $headers[] = 'Bcc: ' . $owner;
         }
 
         if (empty($report->storagePath)) {
@@ -50,7 +67,7 @@ class Mailer
             return false;
         }
 
-        return $this->sendWithRetry($recipients, $subject, $body, $headers, [$attachment]);
+        return $this->sendWithRetry($primary, $subject, $body, $headers, [$attachment]);
     }
 
     /**
@@ -133,6 +150,26 @@ class Mailer
     {
         /* translators: 1: client name, 2: metric, 3: severity */
         return sprintf(I18n::__('[Anomaly] %1$s — %2$s (%3$s)'), $client->name, ucfirst($metric), ucfirst($severity));
+    }
+
+    /**
+     * @param string[] $emails
+     * @return string[]
+     */
+    private function sanitizeEmails(array $emails): array
+    {
+        $clean = [];
+        foreach ($emails as $email) {
+            $sanitized = sanitize_email((string) $email);
+            if ($sanitized === '' || ! is_email($sanitized)) {
+                continue;
+            }
+            if (! in_array($sanitized, $clean, true)) {
+                $clean[] = $sanitized;
+            }
+        }
+
+        return $clean;
     }
 
     private function describeLastError(): string

@@ -14,6 +14,8 @@ use FP\DMS\Infra\Notifiers\TwilioNotifierStub;
 use FP\DMS\Infra\Notifiers\WebhookNotifier;
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\Period;
+use function is_email;
+use function sanitize_email;
 
 class NotificationRouter
 {
@@ -145,20 +147,41 @@ class NotificationRouter
 
     private function emailRecipients(Client $client): array
     {
-        $recipients = [];
-        foreach ($client->emailTo as $email) {
-            $email = sanitize_email($email);
-            if ($email !== '' && is_email($email)) {
+        $primary = $this->sanitizeEmails($client->emailTo);
+        $cc = $this->sanitizeEmails($client->emailCc);
+
+        $recipients = $primary;
+        foreach ($cc as $email) {
+            if (! in_array($email, $recipients, true)) {
                 $recipients[] = $email;
             }
         }
+
         $settings = Options::getGlobalSettings();
         $owner = isset($settings['owner_email']) ? sanitize_email((string) $settings['owner_email']) : '';
-        if ($owner && is_email($owner) && ! in_array($owner, $recipients, true)) {
+        if ($owner !== '' && is_email($owner) && ! in_array($owner, $recipients, true)) {
             $recipients[] = $owner;
         }
 
-        return array_values(array_unique($recipients));
+        return $recipients;
+    }
+
+    /**
+     * @param string[] $emails
+     * @return string[]
+     */
+    private function sanitizeEmails(array $emails): array
+    {
+        $clean = [];
+        foreach ($emails as $email) {
+            $sanitized = sanitize_email((string) $email);
+            if ($sanitized === '' || ! is_email($sanitized) || in_array($sanitized, $clean, true)) {
+                continue;
+            }
+            $clean[] = $sanitized;
+        }
+
+        return $clean;
     }
 
     private function buildSummary(array $anomalies, Client $client, Period $period): string
