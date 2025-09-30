@@ -29,6 +29,8 @@ class Routes
 
     public static function onRestInit(): void
     {
+        OverviewRoutes::register();
+
         register_rest_route('fpdms/v1', '/tick', [
             'methods' => 'POST',
             'callback' => [self::class, 'handleTick'],
