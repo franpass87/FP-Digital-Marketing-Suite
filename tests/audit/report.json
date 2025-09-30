@@ -1,0 +1,86 @@
+{
+    "modules": [
+        {
+            "name": "Admin",
+            "pass": 10,
+            "total": 10,
+            "pct": 100
+        },
+        {
+            "name": "Http",
+            "pass": 9,
+            "total": 9,
+            "pct": 100
+        },
+        {
+            "name": "Infra",
+            "pass": 7,
+            "total": 7,
+            "pct": 100,
+            "warn": [
+                "Runtime run reported WARN (likely missing PDF renderer)."
+            ]
+        },
+        {
+            "name": "Services Reports",
+            "pass": 3,
+            "total": 3,
+            "pct": 100,
+            "warn": [
+                "FP\\DMS\\Services\\Reports\\ReportBuilder status=PASS usage=no",
+                "FP\\DMS\\Services\\Reports\\HtmlRenderer status=PASS usage=no",
+                "FP\\DMS\\Services\\Reports\\TokenEngine status=PASS usage=no"
+            ]
+        },
+        {
+            "name": "Services Connectors",
+            "pass": 5,
+            "total": 5,
+            "pct": 100,
+            "warn": [
+                "FP\\DMS\\Services\\Connectors\\GA4Provider status=PASS runtime=missing usage=no",
+                "FP\\DMS\\Services\\Connectors\\GSCProvider status=PASS runtime=missing usage=no"
+            ]
+        },
+        {
+            "name": "Anomalies",
+            "pass": 3,
+            "total": 3,
+            "pct": 100,
+            "warn": [
+                "FP\\DMS\\Services\\Anomalies\\Engine status=PASS usage=no"
+            ]
+        },
+        {
+            "name": "QA Automation",
+            "pass": 5,
+            "total": 5,
+            "pct": 100,
+            "warn": [
+                "Runtime status reported WARN."
+            ]
+        }
+    ],
+    "overall_pct": 100,
+    "unreferenced_methods": [
+        "FP\\DMS\\Cli\\Commands::shortCircuitMail",
+        "FP\\DMS\\Domain\\Entities\\Anomaly::__construct",
+        "FP\\DMS\\Domain\\Entities\\Anomaly::toRow",
+        "FP\\DMS\\Domain\\Entities\\Client::__construct",
+        "FP\\DMS\\Domain\\Entities\\Client::toRow",
+        "FP\\DMS\\Domain\\Entities\\DataSource::__construct",
+        "FP\\DMS\\Domain\\Entities\\DataSource::toRow",
+        "FP\\DMS\\Domain\\Entities\\ReportJob::__construct",
+        "FP\\DMS\\Domain\\Entities\\ReportJob::toRow",
+        "FP\\DMS\\Domain\\Entities\\Schedule::__construct"
+    ],
+    "runtime": {
+        "seed": "PASS",
+        "run": "WARN",
+        "anomalies": "PASS",
+        "status": "WARN",
+        "notes": [
+            "PDF renderer missing \u2013 recorded as WARN."
+        ]
+    }
+}

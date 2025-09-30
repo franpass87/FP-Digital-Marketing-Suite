@@ -1,0 +1,4483 @@
+{
+    "methods": {
+        "FP\\DMS\\Admin\\Menu::init": {
+            "class": "FP\\DMS\\Admin\\Menu",
+            "method": "init",
+            "visibility": "public",
+            "declared_in": "src/Admin/Menu.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 87,
+                    "type": "static_call",
+                    "context": "Menu::init();"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Menu::register": {
+            "class": "FP\\DMS\\Admin\\Menu",
+            "method": "register",
+            "visibility": "public",
+            "declared_in": "src/Admin/Menu.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 22,
+                    "type": "array_callable",
+                    "context": "add_action('admin_menu', [self::class, 'register']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Menu::enqueue_assets": {
+            "class": "FP\\DMS\\Admin\\Menu",
+            "method": "enqueue_assets",
+            "visibility": "public",
+            "declared_in": "src/Admin/Menu.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 53,
+                    "type": "array_callable",
+                    "context": "add_action('load-' . $hook, [self::class, 'enqueue_assets']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\SettingsPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\SettingsPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/SettingsPage.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 46,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('Settings', 'fp-dms'), __('Settings', 'fp-dms'), 'manage_options', 'fp-dms-settings', [SettingsPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\ClientsPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\ClientsPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/ClientsPage.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 42,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('Clients', 'fp-dms'), __('Clients', 'fp-dms'), 'manage_options', 'fp-dms-clients', [ClientsPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\AnomaliesPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\AnomaliesPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/AnomaliesPage.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 48,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('Anomalies', 'fp-dms'), __('Anomalies', 'fp-dms'), 'manage_options', 'fp-dms-anomalies', [AnomaliesPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\TemplatesPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\TemplatesPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/TemplatesPage.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 45,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('Templates', 'fp-dms'), __('Templates', 'fp-dms'), 'manage_options', 'fp-dms-templates', [TemplatesPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\HealthPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\HealthPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/HealthPage.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 49,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('Health', 'fp-dms'), __('Health', 'fp-dms'), 'manage_options', 'fp-dms-health', [HealthPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\DataSourcesPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\DataSourcesPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/DataSourcesPage.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 43,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('Data Sources', 'fp-dms'), __('Data Sources', 'fp-dms'), 'manage_options', 'fp-dms-datasources', [DataSourcesPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\LogsPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\LogsPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/LogsPage.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 47,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('Logs', 'fp-dms'), __('Logs', 'fp-dms'), 'manage_options', 'fp-dms-logs', [LogsPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\DashboardPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\DashboardPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/DashboardPage.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 36,
+                    "type": "array_callable",
+                    "context": "[DashboardPage::class, 'render'],"
+                },
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 41,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('Dashboard', 'fp-dms'), __('Dashboard', 'fp-dms'), 'manage_options', 'fp-dms-dashboard', [DashboardPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\SchedulesPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\SchedulesPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/SchedulesPage.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 44,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('Schedules', 'fp-dms'), __('Schedules', 'fp-dms'), 'manage_options', 'fp-dms-schedules', [SchedulesPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Admin\\Pages\\QaPage::render": {
+            "class": "FP\\DMS\\Admin\\Pages\\QaPage",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Admin/Pages/QaPage.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Menu.php",
+                    "line": 50,
+                    "type": "array_callable",
+                    "context": "add_submenu_page('fp-dms-dashboard', __('QA Automation', 'fp-dms'), __('QA Automation', 'fp-dms'), 'manage_options', 'fp-dms-qa', [QaPage::class, 'render']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::register": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "register",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 60,
+                    "type": "static_call",
+                    "context": "Commands::register();"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::runReport": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "runReport",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 40,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms run', [self::class, 'runReport']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::listQueue": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "listQueue",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 41,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms queue:list', [self::class, 'listQueue']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::scanAnomalies": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "scanAnomalies",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 42,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms anomalies:scan', [self::class, 'scanAnomalies']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::anomaliesEvaluate": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "anomaliesEvaluate",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 43,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms anomalies:evaluate', [self::class, 'anomaliesEvaluate']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::anomaliesNotify": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "anomaliesNotify",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 44,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms anomalies:notify', [self::class, 'anomaliesNotify']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::repairDb": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "repairDb",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 45,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms repair:db', [self::class, 'repairDb']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::qaSeed": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "qaSeed",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 46,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms qa:seed', [self::class, 'qaSeed']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::qaRun": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "qaRun",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 47,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms qa:run', [self::class, 'qaRun']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::qaAnomalies": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "qaAnomalies",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 48,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms qa:anomalies', [self::class, 'qaAnomalies']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::qaAll": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "qaAll",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 49,
+                    "type": "array_callable",
+                    "context": "WP_CLI::add_command('fpdms qa:all', [self::class, 'qaAll']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Cli\\Commands::shortCircuitMail": {
+            "class": "FP\\DMS\\Cli\\Commands",
+            "method": "shortCircuitMail",
+            "visibility": "public",
+            "declared_in": "src/Cli/Commands.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\DataSourcesRepo::__construct": {
+            "class": "FP\\DMS\\Domain\\Repos\\DataSourcesRepo",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/DataSourcesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\DataSourcesRepo::forClient": {
+            "class": "FP\\DMS\\Domain\\Repos\\DataSourcesRepo",
+            "method": "forClient",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/DataSourcesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\DataSourcesRepo::find": {
+            "class": "FP\\DMS\\Domain\\Repos\\DataSourcesRepo",
+            "method": "find",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/DataSourcesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\DataSourcesRepo::create": {
+            "class": "FP\\DMS\\Domain\\Repos\\DataSourcesRepo",
+            "method": "create",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/DataSourcesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\DataSourcesRepo::update": {
+            "class": "FP\\DMS\\Domain\\Repos\\DataSourcesRepo",
+            "method": "update",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/DataSourcesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\DataSourcesRepo::delete": {
+            "class": "FP\\DMS\\Domain\\Repos\\DataSourcesRepo",
+            "method": "delete",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/DataSourcesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\DataSourcesRepo::deleteByClient": {
+            "class": "FP\\DMS\\Domain\\Repos\\DataSourcesRepo",
+            "method": "deleteByClient",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/DataSourcesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\TemplatesRepo::__construct": {
+            "class": "FP\\DMS\\Domain\\Repos\\TemplatesRepo",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/TemplatesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\TemplatesRepo::all": {
+            "class": "FP\\DMS\\Domain\\Repos\\TemplatesRepo",
+            "method": "all",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/TemplatesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\TemplatesRepo::find": {
+            "class": "FP\\DMS\\Domain\\Repos\\TemplatesRepo",
+            "method": "find",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/TemplatesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\TemplatesRepo::findDefault": {
+            "class": "FP\\DMS\\Domain\\Repos\\TemplatesRepo",
+            "method": "findDefault",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/TemplatesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\TemplatesRepo::create": {
+            "class": "FP\\DMS\\Domain\\Repos\\TemplatesRepo",
+            "method": "create",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/TemplatesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\TemplatesRepo::update": {
+            "class": "FP\\DMS\\Domain\\Repos\\TemplatesRepo",
+            "method": "update",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/TemplatesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\TemplatesRepo::delete": {
+            "class": "FP\\DMS\\Domain\\Repos\\TemplatesRepo",
+            "method": "delete",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/TemplatesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::__construct": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::dueSchedules": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "dueSchedules",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::all": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "all",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::forClient": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "forClient",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::find": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "find",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::nextScheduledRun": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "nextScheduledRun",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::create": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "create",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::update": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "update",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::delete": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "delete",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\SchedulesRepo::deleteByClient": {
+            "class": "FP\\DMS\\Domain\\Repos\\SchedulesRepo",
+            "method": "deleteByClient",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/SchedulesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ReportsRepo::__construct": {
+            "class": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ReportsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ReportsRepo::find": {
+            "class": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "method": "find",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ReportsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ReportsRepo::nextQueued": {
+            "class": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "method": "nextQueued",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ReportsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ReportsRepo::forClient": {
+            "class": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "method": "forClient",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ReportsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ReportsRepo::search": {
+            "class": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "method": "search",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ReportsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ReportsRepo::findByClientAndPeriod": {
+            "class": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "method": "findByClientAndPeriod",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ReportsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ReportsRepo::create": {
+            "class": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "method": "create",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ReportsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ReportsRepo::update": {
+            "class": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "method": "update",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ReportsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ReportsRepo::delete": {
+            "class": "FP\\DMS\\Domain\\Repos\\ReportsRepo",
+            "method": "delete",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ReportsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ClientsRepo::__construct": {
+            "class": "FP\\DMS\\Domain\\Repos\\ClientsRepo",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ClientsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ClientsRepo::all": {
+            "class": "FP\\DMS\\Domain\\Repos\\ClientsRepo",
+            "method": "all",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ClientsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ClientsRepo::find": {
+            "class": "FP\\DMS\\Domain\\Repos\\ClientsRepo",
+            "method": "find",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ClientsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ClientsRepo::findByName": {
+            "class": "FP\\DMS\\Domain\\Repos\\ClientsRepo",
+            "method": "findByName",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ClientsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ClientsRepo::create": {
+            "class": "FP\\DMS\\Domain\\Repos\\ClientsRepo",
+            "method": "create",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ClientsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ClientsRepo::update": {
+            "class": "FP\\DMS\\Domain\\Repos\\ClientsRepo",
+            "method": "update",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ClientsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\ClientsRepo::delete": {
+            "class": "FP\\DMS\\Domain\\Repos\\ClientsRepo",
+            "method": "delete",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/ClientsRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\AnomaliesRepo::__construct": {
+            "class": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/AnomaliesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\AnomaliesRepo::recent": {
+            "class": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "method": "recent",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/AnomaliesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\AnomaliesRepo::recentForClient": {
+            "class": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "method": "recentForClient",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/AnomaliesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\AnomaliesRepo::create": {
+            "class": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "method": "create",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/AnomaliesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\AnomaliesRepo::find": {
+            "class": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "method": "find",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/AnomaliesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\AnomaliesRepo::markNotified": {
+            "class": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "method": "markNotified",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/AnomaliesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\AnomaliesRepo::updatePayload": {
+            "class": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "method": "updatePayload",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/AnomaliesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\AnomaliesRepo::countForClient": {
+            "class": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "method": "countForClient",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/AnomaliesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Repos\\AnomaliesRepo::deleteByClient": {
+            "class": "FP\\DMS\\Domain\\Repos\\AnomaliesRepo",
+            "method": "deleteByClient",
+            "visibility": "public",
+            "declared_in": "src/Domain/Repos/AnomaliesRepo.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\Template::__construct": {
+            "class": "FP\\DMS\\Domain\\Entities\\Template",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Template.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\Template::fromRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\Template",
+            "method": "fromRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Template.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Domain/Repos/TemplatesRepo.php",
+                    "line": 31,
+                    "type": "static_call",
+                    "context": "return array_map(static fn(array $row): Template => Template::fromRow($row), $rows);"
+                },
+                {
+                    "file": "src/Domain/Repos/TemplatesRepo.php",
+                    "line": 40,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? Template::fromRow($row) : null;"
+                },
+                {
+                    "file": "src/Domain/Repos/TemplatesRepo.php",
+                    "line": 49,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? Template::fromRow($row) : null;"
+                }
+            ]
+        },
+        "FP\\DMS\\Domain\\Entities\\Template::toRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\Template",
+            "method": "toRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Template.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\Schedule::__construct": {
+            "class": "FP\\DMS\\Domain\\Entities\\Schedule",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Schedule.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\Schedule::fromRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\Schedule",
+            "method": "fromRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Schedule.php",
+            "reference_count": 5,
+            "references": [
+                {
+                    "file": "src/Domain/Repos/SchedulesRepo.php",
+                    "line": 32,
+                    "type": "static_call",
+                    "context": "return array_map(static fn(array $row): Schedule => Schedule::fromRow($row), $rows);"
+                },
+                {
+                    "file": "src/Domain/Repos/SchedulesRepo.php",
+                    "line": 46,
+                    "type": "static_call",
+                    "context": "return array_map(static fn(array $row): Schedule => Schedule::fromRow($row), $rows);"
+                },
+                {
+                    "file": "src/Domain/Repos/SchedulesRepo.php",
+                    "line": 61,
+                    "type": "static_call",
+                    "context": "return array_map(static fn(array $row): Schedule => Schedule::fromRow($row), $rows);"
+                },
+                {
+                    "file": "src/Domain/Repos/SchedulesRepo.php",
+                    "line": 70,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? Schedule::fromRow($row) : null;"
+                },
+                {
+                    "file": "src/Domain/Repos/SchedulesRepo.php",
+                    "line": 79,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? Schedule::fromRow($row) : null;"
+                }
+            ]
+        },
+        "FP\\DMS\\Domain\\Entities\\Schedule::toRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\Schedule",
+            "method": "toRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Schedule.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\DataSource::__construct": {
+            "class": "FP\\DMS\\Domain\\Entities\\DataSource",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/DataSource.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\DataSource::fromRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\DataSource",
+            "method": "fromRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/DataSource.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Domain/Repos/DataSourcesRepo.php",
+                    "line": 34,
+                    "type": "static_call",
+                    "context": "return array_map(static fn(array $row): DataSource => DataSource::fromRow($row), $rows);"
+                },
+                {
+                    "file": "src/Domain/Repos/DataSourcesRepo.php",
+                    "line": 43,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? DataSource::fromRow($row) : null;"
+                }
+            ]
+        },
+        "FP\\DMS\\Domain\\Entities\\DataSource::toRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\DataSource",
+            "method": "toRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/DataSource.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\ReportJob::__construct": {
+            "class": "FP\\DMS\\Domain\\Entities\\ReportJob",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/ReportJob.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\ReportJob::fromRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\ReportJob",
+            "method": "fromRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/ReportJob.php",
+            "reference_count": 4,
+            "references": [
+                {
+                    "file": "src/Domain/Repos/ReportsRepo.php",
+                    "line": 26,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? ReportJob::fromRow($row) : null;"
+                },
+                {
+                    "file": "src/Domain/Repos/ReportsRepo.php",
+                    "line": 35,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? ReportJob::fromRow($row) : null;"
+                },
+                {
+                    "file": "src/Domain/Repos/ReportsRepo.php",
+                    "line": 81,
+                    "type": "static_call",
+                    "context": "return array_map(static fn(array $row): ReportJob => ReportJob::fromRow($row), $rows);"
+                },
+                {
+                    "file": "src/Domain/Repos/ReportsRepo.php",
+                    "line": 103,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? ReportJob::fromRow($row) : null;"
+                }
+            ]
+        },
+        "FP\\DMS\\Domain\\Entities\\ReportJob::toRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\ReportJob",
+            "method": "toRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/ReportJob.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\Anomaly::__construct": {
+            "class": "FP\\DMS\\Domain\\Entities\\Anomaly",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Anomaly.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\Anomaly::fromRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\Anomaly",
+            "method": "fromRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Anomaly.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Domain/Repos/AnomaliesRepo.php",
+                    "line": 32,
+                    "type": "static_call",
+                    "context": "return array_map(static fn(array $row): Anomaly => Anomaly::fromRow($row), $rows);"
+                },
+                {
+                    "file": "src/Domain/Repos/AnomaliesRepo.php",
+                    "line": 47,
+                    "type": "static_call",
+                    "context": "return array_map(static fn(array $row): Anomaly => Anomaly::fromRow($row), $rows);"
+                },
+                {
+                    "file": "src/Domain/Repos/AnomaliesRepo.php",
+                    "line": 88,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? Anomaly::fromRow($row) : null;"
+                }
+            ]
+        },
+        "FP\\DMS\\Domain\\Entities\\Anomaly::toRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\Anomaly",
+            "method": "toRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Anomaly.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\Client::__construct": {
+            "class": "FP\\DMS\\Domain\\Entities\\Client",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Client.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Domain\\Entities\\Client::fromRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\Client",
+            "method": "fromRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Client.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Domain/Repos/ClientsRepo.php",
+                    "line": 31,
+                    "type": "static_call",
+                    "context": "return array_map(static fn(array $row): Client => Client::fromRow($row), $rows);"
+                },
+                {
+                    "file": "src/Domain/Repos/ClientsRepo.php",
+                    "line": 40,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? Client::fromRow($row) : null;"
+                },
+                {
+                    "file": "src/Domain/Repos/ClientsRepo.php",
+                    "line": 49,
+                    "type": "static_call",
+                    "context": "return is_array($row) ? Client::fromRow($row) : null;"
+                }
+            ]
+        },
+        "FP\\DMS\\Domain\\Entities\\Client::toRow": {
+            "class": "FP\\DMS\\Domain\\Entities\\Client",
+            "method": "toRow",
+            "visibility": "public",
+            "declared_in": "src/Domain/Entities/Client.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider::__construct": {
+            "class": "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GoogleAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider::testConnection": {
+            "class": "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider",
+            "method": "testConnection",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GoogleAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider::fetchMetrics": {
+            "class": "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider",
+            "method": "fetchMetrics",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GoogleAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider::fetchDimensions": {
+            "class": "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider",
+            "method": "fetchDimensions",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GoogleAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider::describe": {
+            "class": "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider",
+            "method": "describe",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GoogleAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider::ingestCsvSummary": {
+            "class": "FP\\DMS\\Services\\Connectors\\GoogleAdsProvider",
+            "method": "ingestCsvSummary",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GoogleAdsProvider.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 492,
+                    "type": "static_call",
+                    "context": "'summary' => GoogleAdsProvider::ingestCsvSummary(self::GOOGLE_ADS_CSV),"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Connectors\\GA4Provider::__construct": {
+            "class": "FP\\DMS\\Services\\Connectors\\GA4Provider",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GA4Provider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GA4Provider::testConnection": {
+            "class": "FP\\DMS\\Services\\Connectors\\GA4Provider",
+            "method": "testConnection",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GA4Provider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GA4Provider::fetchMetrics": {
+            "class": "FP\\DMS\\Services\\Connectors\\GA4Provider",
+            "method": "fetchMetrics",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GA4Provider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GA4Provider::fetchDimensions": {
+            "class": "FP\\DMS\\Services\\Connectors\\GA4Provider",
+            "method": "fetchDimensions",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GA4Provider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GA4Provider::describe": {
+            "class": "FP\\DMS\\Services\\Connectors\\GA4Provider",
+            "method": "describe",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GA4Provider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GA4Provider::ingestCsvSummary": {
+            "class": "FP\\DMS\\Services\\Connectors\\GA4Provider",
+            "method": "ingestCsvSummary",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GA4Provider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\ConnectionResult::success": {
+            "class": "FP\\DMS\\Services\\Connectors\\ConnectionResult",
+            "method": "success",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ConnectionResult.php",
+            "reference_count": 6,
+            "references": [
+                {
+                    "file": "src/Services/Connectors/MetaAdsProvider.php",
+                    "line": 20,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::success(__('CSV summary loaded.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/GSCProvider.php",
+                    "line": 30,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::success(__('Credentials look valid. Run a report to confirm data.', 'fp-dms'), ["
+                },
+                {
+                    "file": "src/Services/Connectors/CsvGenericProvider.php",
+                    "line": 20,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::success(__('CSV summary loaded.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/GA4Provider.php",
+                    "line": 30,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::success(__('Credentials look valid. Run a report to confirm data.', 'fp-dms'), ["
+                },
+                {
+                    "file": "src/Services/Connectors/GoogleAdsProvider.php",
+                    "line": 20,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::success(__('CSV summary loaded.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/ClarityCsvProvider.php",
+                    "line": 20,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::success(__('CSV summary loaded.', 'fp-dms'));"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Connectors\\ConnectionResult::failure": {
+            "class": "FP\\DMS\\Services\\Connectors\\ConnectionResult",
+            "method": "failure",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ConnectionResult.php",
+            "reference_count": 8,
+            "references": [
+                {
+                    "file": "src/Services/Connectors/MetaAdsProvider.php",
+                    "line": 23,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::failure(__('No CSV data available for Meta Ads.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/GSCProvider.php",
+                    "line": 22,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::failure(__('Missing service account or site URL.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/GSCProvider.php",
+                    "line": 27,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::failure(__('Invalid service account JSON.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/CsvGenericProvider.php",
+                    "line": 23,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::failure(__('No CSV data available for this connector.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/GA4Provider.php",
+                    "line": 22,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::failure(__('Missing service account or property ID.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/GA4Provider.php",
+                    "line": 27,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::failure(__('Invalid service account JSON.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/GoogleAdsProvider.php",
+                    "line": 23,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::failure(__('No CSV data available for Google Ads.', 'fp-dms'));"
+                },
+                {
+                    "file": "src/Services/Connectors/ClarityCsvProvider.php",
+                    "line": 23,
+                    "type": "static_call",
+                    "context": "return ConnectionResult::failure(__('No CSV data available for Microsoft Clarity.', 'fp-dms'));"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Connectors\\ConnectionResult::isSuccess": {
+            "class": "FP\\DMS\\Services\\Connectors\\ConnectionResult",
+            "method": "isSuccess",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ConnectionResult.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\ConnectionResult::message": {
+            "class": "FP\\DMS\\Services\\Connectors\\ConnectionResult",
+            "method": "message",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ConnectionResult.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\ConnectionResult::details": {
+            "class": "FP\\DMS\\Services\\Connectors\\ConnectionResult",
+            "method": "details",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ConnectionResult.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider::__construct": {
+            "class": "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ClarityCsvProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider::testConnection": {
+            "class": "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider",
+            "method": "testConnection",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ClarityCsvProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider::fetchMetrics": {
+            "class": "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider",
+            "method": "fetchMetrics",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ClarityCsvProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider::fetchDimensions": {
+            "class": "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider",
+            "method": "fetchDimensions",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ClarityCsvProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider::describe": {
+            "class": "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider",
+            "method": "describe",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ClarityCsvProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider::ingestCsvSummary": {
+            "class": "FP\\DMS\\Services\\Connectors\\ClarityCsvProvider",
+            "method": "ingestCsvSummary",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ClarityCsvProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\Normalizer::ensureKeys": {
+            "class": "FP\\DMS\\Services\\Connectors\\Normalizer",
+            "method": "ensureKeys",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/Normalizer.php",
+            "reference_count": 22,
+            "references": [
+                {
+                    "file": "src/Services/Anomalies/TimeSeries.php",
+                    "line": 43,
+                    "type": "static_call",
+                    "context": "$normalised[] = Normalizer::ensureKeys($row);"
+                },
+                {
+                    "file": "src/Services/Reports/ReportBuilder.php",
+                    "line": 96,
+                    "type": "static_call",
+                    "context": "$normalized = Normalizer::ensureKeys($row);"
+                },
+                {
+                    "file": "src/Services/Reports/ReportBuilder.php",
+                    "line": 220,
+                    "type": "static_call",
+                    "context": "$normalized = Normalizer::ensureKeys($row);"
+                },
+                {
+                    "file": "src/Services/Connectors/Normalizer.php",
+                    "line": 48,
+                    "type": "static_call",
+                    "context": "$normalized = self::ensureKeys($row);"
+                },
+                {
+                    "file": "src/Services/Connectors/MetaAdsProvider.php",
+                    "line": 40,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/MetaAdsProvider.php",
+                    "line": 46,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/MetaAdsProvider.php",
+                    "line": 52,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(['source' => 'meta_ads', 'date' => $date]);"
+                },
+                {
+                    "file": "src/Services/Connectors/GSCProvider.php",
+                    "line": 49,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/GSCProvider.php",
+                    "line": 55,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/GSCProvider.php",
+                    "line": 61,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(['source' => 'gsc', 'date' => $date]);"
+                },
+                {
+                    "file": "src/Services/Connectors/CsvGenericProvider.php",
+                    "line": 40,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/CsvGenericProvider.php",
+                    "line": 46,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/CsvGenericProvider.php",
+                    "line": 52,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(['source' => 'csv_generic', 'date' => $date]);"
+                },
+                {
+                    "file": "src/Services/Connectors/GA4Provider.php",
+                    "line": 49,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/GA4Provider.php",
+                    "line": 55,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/GA4Provider.php",
+                    "line": 61,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(['source' => 'ga4', 'date' => $date]);"
+                },
+                {
+                    "file": "src/Services/Connectors/GoogleAdsProvider.php",
+                    "line": 40,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/GoogleAdsProvider.php",
+                    "line": 46,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/GoogleAdsProvider.php",
+                    "line": 52,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(['source' => 'google_ads', 'date' => $date]);"
+                },
+                {
+                    "file": "src/Services/Connectors/ClarityCsvProvider.php",
+                    "line": 40,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/ClarityCsvProvider.php",
+                    "line": 46,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(array_merge("
+                },
+                {
+                    "file": "src/Services/Connectors/ClarityCsvProvider.php",
+                    "line": 52,
+                    "type": "static_call",
+                    "context": "$rows[] = Normalizer::ensureKeys(['source' => 'clarity', 'date' => $date]);"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Connectors\\Normalizer::mergeDaily": {
+            "class": "FP\\DMS\\Services\\Connectors\\Normalizer",
+            "method": "mergeDaily",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/Normalizer.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Reports/ReportBuilder.php",
+                    "line": 115,
+                    "type": "static_call",
+                    "context": "$daily = Normalizer::mergeDaily(...array_values($metrics));"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Connectors\\ProviderFactory::create": {
+            "class": "FP\\DMS\\Services\\Connectors\\ProviderFactory",
+            "method": "create",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ProviderFactory.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/DataSourcesPage.php",
+                    "line": 129,
+                    "type": "static_call",
+                    "context": "$provider = ProviderFactory::create($dataSource->type, $dataSource->auth, $dataSource->config);"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 230,
+                    "type": "static_call",
+                    "context": "$provider = ProviderFactory::create($dataSource->type, $dataSource->auth, $dataSource->config);"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Connectors\\ProviderFactory::definitions": {
+            "class": "FP\\DMS\\Services\\Connectors\\ProviderFactory",
+            "method": "definitions",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/ProviderFactory.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/DataSourcesPage.php",
+                    "line": 57,
+                    "type": "static_call",
+                    "context": "$definitions = ProviderFactory::definitions();"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Connectors\\MetaAdsProvider::__construct": {
+            "class": "FP\\DMS\\Services\\Connectors\\MetaAdsProvider",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/MetaAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\MetaAdsProvider::testConnection": {
+            "class": "FP\\DMS\\Services\\Connectors\\MetaAdsProvider",
+            "method": "testConnection",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/MetaAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\MetaAdsProvider::fetchMetrics": {
+            "class": "FP\\DMS\\Services\\Connectors\\MetaAdsProvider",
+            "method": "fetchMetrics",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/MetaAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\MetaAdsProvider::fetchDimensions": {
+            "class": "FP\\DMS\\Services\\Connectors\\MetaAdsProvider",
+            "method": "fetchDimensions",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/MetaAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\MetaAdsProvider::describe": {
+            "class": "FP\\DMS\\Services\\Connectors\\MetaAdsProvider",
+            "method": "describe",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/MetaAdsProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\MetaAdsProvider::ingestCsvSummary": {
+            "class": "FP\\DMS\\Services\\Connectors\\MetaAdsProvider",
+            "method": "ingestCsvSummary",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/MetaAdsProvider.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 498,
+                    "type": "static_call",
+                    "context": "'summary' => MetaAdsProvider::ingestCsvSummary(self::META_ADS_CSV),"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Connectors\\GSCProvider::__construct": {
+            "class": "FP\\DMS\\Services\\Connectors\\GSCProvider",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GSCProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GSCProvider::testConnection": {
+            "class": "FP\\DMS\\Services\\Connectors\\GSCProvider",
+            "method": "testConnection",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GSCProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GSCProvider::fetchMetrics": {
+            "class": "FP\\DMS\\Services\\Connectors\\GSCProvider",
+            "method": "fetchMetrics",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GSCProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GSCProvider::fetchDimensions": {
+            "class": "FP\\DMS\\Services\\Connectors\\GSCProvider",
+            "method": "fetchDimensions",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GSCProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GSCProvider::describe": {
+            "class": "FP\\DMS\\Services\\Connectors\\GSCProvider",
+            "method": "describe",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GSCProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\GSCProvider::ingestCsvSummary": {
+            "class": "FP\\DMS\\Services\\Connectors\\GSCProvider",
+            "method": "ingestCsvSummary",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/GSCProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\CsvGenericProvider::__construct": {
+            "class": "FP\\DMS\\Services\\Connectors\\CsvGenericProvider",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/CsvGenericProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\CsvGenericProvider::testConnection": {
+            "class": "FP\\DMS\\Services\\Connectors\\CsvGenericProvider",
+            "method": "testConnection",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/CsvGenericProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\CsvGenericProvider::fetchMetrics": {
+            "class": "FP\\DMS\\Services\\Connectors\\CsvGenericProvider",
+            "method": "fetchMetrics",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/CsvGenericProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\CsvGenericProvider::fetchDimensions": {
+            "class": "FP\\DMS\\Services\\Connectors\\CsvGenericProvider",
+            "method": "fetchDimensions",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/CsvGenericProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\CsvGenericProvider::describe": {
+            "class": "FP\\DMS\\Services\\Connectors\\CsvGenericProvider",
+            "method": "describe",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/CsvGenericProvider.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Connectors\\CsvGenericProvider::ingestCsvSummary": {
+            "class": "FP\\DMS\\Services\\Connectors\\CsvGenericProvider",
+            "method": "ingestCsvSummary",
+            "visibility": "public",
+            "declared_in": "src/Services/Connectors/CsvGenericProvider.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 504,
+                    "type": "static_call",
+                    "context": "'summary' => CsvGenericProvider::ingestCsvSummary(self::GENERIC_CSV),"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Anomalies\\Engine::__construct": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Engine",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Engine.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\Engine::evaluateClientPeriod": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Engine",
+            "method": "evaluateClientPeriod",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Engine.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\TimeSeries::__construct": {
+            "class": "FP\\DMS\\Services\\Anomalies\\TimeSeries",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/TimeSeries.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\TimeSeries::normalize": {
+            "class": "FP\\DMS\\Services\\Anomalies\\TimeSeries",
+            "method": "normalize",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/TimeSeries.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Anomalies/TimeSeries.php",
+                    "line": 27,
+                    "type": "static_call",
+                    "context": "$this->rows = self::normalize($rows);"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Anomalies\\TimeSeries::groupByDate": {
+            "class": "FP\\DMS\\Services\\Anomalies\\TimeSeries",
+            "method": "groupByDate",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/TimeSeries.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Services/Anomalies/TimeSeries.php",
+                    "line": 93,
+                    "type": "instance_call",
+                    "context": "$grouped = $this->groupByDate();"
+                },
+                {
+                    "file": "src/Services/Anomalies/TimeSeries.php",
+                    "line": 107,
+                    "type": "instance_call",
+                    "context": "$grouped = $this->groupByDate();"
+                },
+                {
+                    "file": "src/Services/Anomalies/TimeSeries.php",
+                    "line": 118,
+                    "type": "instance_call",
+                    "context": "$grouped = $this->groupByDate();"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Anomalies\\TimeSeries::metricSeries": {
+            "class": "FP\\DMS\\Services\\Anomalies\\TimeSeries",
+            "method": "metricSeries",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/TimeSeries.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\TimeSeries::dates": {
+            "class": "FP\\DMS\\Services\\Anomalies\\TimeSeries",
+            "method": "dates",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/TimeSeries.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\TimeSeries::totals": {
+            "class": "FP\\DMS\\Services\\Anomalies\\TimeSeries",
+            "method": "totals",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/TimeSeries.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\TimeSeries::dayOfWeek": {
+            "class": "FP\\DMS\\Services\\Anomalies\\TimeSeries",
+            "method": "dayOfWeek",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/TimeSeries.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Services/Anomalies/Baseline.php",
+                    "line": 48,
+                    "type": "static_call",
+                    "context": "$key = $seasonality === 'dow' ? TimeSeries::dayOfWeek($date) : $seasonality;"
+                },
+                {
+                    "file": "src/Services/Anomalies/Baseline.php",
+                    "line": 59,
+                    "type": "static_call",
+                    "context": "$key = $seasonality === 'dow' ? TimeSeries::dayOfWeek($date) : $seasonality;"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Anomalies\\Detector::__construct": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Detector",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Detector.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\Detector::evaluate": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Detector",
+            "method": "evaluate",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Detector.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\Detector::evaluatePeriod": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Detector",
+            "method": "evaluatePeriod",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Detector.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Anomalies/Detector.php",
+                    "line": 43,
+                    "type": "instance_call",
+                    "context": "return $this->evaluatePeriod($clientId, $period, $meta, $history, $qaTag);"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Anomalies\\Detectors::zScore": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Detectors",
+            "method": "zScore",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Detectors.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\Detectors::ewmaDeviation": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Detectors",
+            "method": "ewmaDeviation",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Detectors.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\Detectors::cusum": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Detectors",
+            "method": "cusum",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Detectors.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\Baseline::rollingMean": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Baseline",
+            "method": "rollingMean",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Baseline.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\Baseline::seasonalBaseline": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Baseline",
+            "method": "seasonalBaseline",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Baseline.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Anomalies\\Baseline::ewma": {
+            "class": "FP\\DMS\\Services\\Anomalies\\Baseline",
+            "method": "ewma",
+            "visibility": "public",
+            "declared_in": "src/Services/Anomalies/Baseline.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Reports\\TokenEngine::render": {
+            "class": "FP\\DMS\\Services\\Reports\\TokenEngine",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Services/Reports/TokenEngine.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Reports\\HtmlRenderer::__construct": {
+            "class": "FP\\DMS\\Services\\Reports\\HtmlRenderer",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Reports/HtmlRenderer.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Reports\\HtmlRenderer::render": {
+            "class": "FP\\DMS\\Services\\Reports\\HtmlRenderer",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Services/Reports/HtmlRenderer.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Reports\\ReportBuilder::__construct": {
+            "class": "FP\\DMS\\Services\\Reports\\ReportBuilder",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Services/Reports/ReportBuilder.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Reports\\ReportBuilder::generate": {
+            "class": "FP\\DMS\\Services\\Reports\\ReportBuilder",
+            "method": "generate",
+            "visibility": "public",
+            "declared_in": "src/Services/Reports/ReportBuilder.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Qa\\Automation::seed": {
+            "class": "FP\\DMS\\Services\\Qa\\Automation",
+            "method": "seed",
+            "visibility": "public",
+            "declared_in": "src/Services/Qa/Automation.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 275,
+                    "type": "instance_call",
+                    "context": "$seed = $this->seed();"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Qa\\Automation::run": {
+            "class": "FP\\DMS\\Services\\Qa\\Automation",
+            "method": "run",
+            "visibility": "public",
+            "declared_in": "src/Services/Qa/Automation.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 276,
+                    "type": "instance_call",
+                    "context": "$run = $this->run(false);"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Qa\\Automation::anomalies": {
+            "class": "FP\\DMS\\Services\\Qa\\Automation",
+            "method": "anomalies",
+            "visibility": "public",
+            "declared_in": "src/Services/Qa/Automation.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 277,
+                    "type": "instance_call",
+                    "context": "$anomalies = $this->anomalies(false);"
+                }
+            ]
+        },
+        "FP\\DMS\\Services\\Qa\\Automation::all": {
+            "class": "FP\\DMS\\Services\\Qa\\Automation",
+            "method": "all",
+            "visibility": "public",
+            "declared_in": "src/Services/Qa/Automation.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Qa\\Automation::status": {
+            "class": "FP\\DMS\\Services\\Qa\\Automation",
+            "method": "status",
+            "visibility": "public",
+            "declared_in": "src/Services/Qa/Automation.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Services\\Qa\\Automation::cleanup": {
+            "class": "FP\\DMS\\Services\\Qa\\Automation",
+            "method": "cleanup",
+            "visibility": "public",
+            "declared_in": "src/Services/Qa/Automation.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\PdfRenderer::render": {
+            "class": "FP\\DMS\\Infra\\PdfRenderer",
+            "method": "render",
+            "visibility": "public",
+            "declared_in": "src/Infra/PdfRenderer.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Retention::cleanup": {
+            "class": "FP\\DMS\\Infra\\Retention",
+            "method": "cleanup",
+            "visibility": "public",
+            "declared_in": "src/Infra/Retention.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Infra/Cron.php",
+                    "line": 12,
+                    "type": "callable",
+                    "context": "add_action('fpdms_retention_cleanup', ['FP\\\\DMS\\\\Infra\\\\Retention', 'cleanup']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Deactivator::deactivate": {
+            "class": "FP\\DMS\\Infra\\Deactivator",
+            "method": "deactivate",
+            "visibility": "public",
+            "declared_in": "src/Infra/Deactivator.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 76,
+                    "type": "static_call",
+                    "context": "Deactivator::deactivate();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::getGlobalSettings": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "getGlobalSettings",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 15,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 19,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 142,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 112,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Infra/NotificationRouter.php",
+                    "line": 155,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Infra/Retention.php",
+                    "line": 13,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 22,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 107,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 194,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 409,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 50,
+                    "type": "static_call",
+                    "context": "$settings = self::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 147,
+                    "type": "static_call",
+                    "context": "$global = self::getGlobalSettings()['anomaly_policy'];"
+                },
+                {
+                    "file": "src/Services/Reports/ReportBuilder.php",
+                    "line": 147,
+                    "type": "static_call",
+                    "context": "$branding = Options::getGlobalSettings()['pdf_branding'];"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 232,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 445,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 285,
+                    "type": "static_call",
+                    "context": "$settings = Options::getGlobalSettings();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::updateGlobalSettings": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "updateGlobalSettings",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 5,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 146,
+                    "type": "static_call",
+                    "context": "Options::updateGlobalSettings($settings);"
+                },
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 178,
+                    "type": "static_call",
+                    "context": "Options::updateGlobalSettings($settings);"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 53,
+                    "type": "static_call",
+                    "context": "self::updateGlobalSettings($settings);"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 451,
+                    "type": "static_call",
+                    "context": "Options::updateGlobalSettings($settings);"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 288,
+                    "type": "static_call",
+                    "context": "Options::updateGlobalSettings($settings);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::ensureDefaults": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "ensureDefaults",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Infra/Activator.php",
+                    "line": 14,
+                    "type": "static_call",
+                    "context": "Options::ensureDefaults();"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 425,
+                    "type": "static_call",
+                    "context": "Options::ensureDefaults();"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 284,
+                    "type": "static_call",
+                    "context": "Options::ensureDefaults();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::getLastTick": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "getLastTick",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 21,
+                    "type": "static_call",
+                    "context": "$lastTick = Options::getLastTick();"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 117,
+                    "type": "static_call",
+                    "context": "$last = Options::getLastTick();"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 348,
+                    "type": "static_call",
+                    "context": "'last_tick' => Options::getLastTick(),"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::setLastTick": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "setLastTick",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 75,
+                    "type": "static_call",
+                    "context": "Options::setLastTick(time());"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::getQaKey": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "getQaKey",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 4,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 25,
+                    "type": "static_call",
+                    "context": "$qaKey = Options::getQaKey();"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 465,
+                    "type": "static_call",
+                    "context": "$expected = Options::getQaKey();"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 56,
+                    "type": "static_call",
+                    "context": "self::getQaKey();"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 426,
+                    "type": "static_call",
+                    "context": "Options::getQaKey();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::regenerateQaKey": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "regenerateQaKey",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 21,
+                    "type": "static_call",
+                    "context": "Options::regenerateQaKey();"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 76,
+                    "type": "static_call",
+                    "context": "return self::regenerateQaKey();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::defaultGlobalSettings": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "defaultGlobalSettings",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 23,
+                    "type": "static_call",
+                    "context": "$settings = array_replace_recursive(self::defaultGlobalSettings(), $value);"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 37,
+                    "type": "static_call",
+                    "context": "$merged = array_replace_recursive(self::defaultGlobalSettings(), $settings);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::defaultAnomalyPolicy": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "defaultAnomalyPolicy",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 4,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 189,
+                    "type": "static_call",
+                    "context": "$policy = Options::defaultAnomalyPolicy();"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 308,
+                    "type": "static_call",
+                    "context": "$policy = Options::defaultAnomalyPolicy();"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 108,
+                    "type": "static_call",
+                    "context": "'anomaly_policy' => self::defaultAnomalyPolicy(),"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 180,
+                    "type": "static_call",
+                    "context": "$base = self::defaultAnomalyPolicy();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::getAnomalyPolicy": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "getAnomalyPolicy",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 6,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 214,
+                    "type": "static_call",
+                    "context": "$policy = Options::getAnomalyPolicy($clientId);"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 407,
+                    "type": "static_call",
+                    "context": "$policy = Options::getAnomalyPolicy($clientId);"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 278,
+                    "type": "static_call",
+                    "context": "$policy = Options::getAnomalyPolicy($clientId);"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 440,
+                    "type": "static_call",
+                    "context": "$policy = Options::getAnomalyPolicy($client->id ?? 0);"
+                },
+                {
+                    "file": "src/Services/Anomalies/Detector.php",
+                    "line": 54,
+                    "type": "static_call",
+                    "context": "$policy = Options::getAnomalyPolicy($clientId);"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 181,
+                    "type": "static_call",
+                    "context": "$policy = Options::getAnomalyPolicy($clientId);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::updateAnomalyPolicy": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "updateAnomalyPolicy",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 197,
+                    "type": "static_call",
+                    "context": "Options::updateAnomalyPolicy($clientId, $policy);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Options::deleteAnomalyPolicy": {
+            "class": "FP\\DMS\\Infra\\Options",
+            "method": "deleteAnomalyPolicy",
+            "visibility": "public",
+            "declared_in": "src/Infra/Options.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 177,
+                    "type": "static_call",
+                    "context": "Options::deleteAnomalyPolicy($clientId);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\NotificationRouter::route": {
+            "class": "FP\\DMS\\Infra\\NotificationRouter",
+            "method": "route",
+            "visibility": "public",
+            "declared_in": "src/Infra/NotificationRouter.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\TelegramNotifier::__construct": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\TelegramNotifier",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/TelegramNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\TelegramNotifier::send": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\TelegramNotifier",
+            "method": "send",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/TelegramNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\EmailNotifier::__construct": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\EmailNotifier",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/EmailNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\EmailNotifier::send": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\EmailNotifier",
+            "method": "send",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/EmailNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\WebhookNotifier::__construct": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\WebhookNotifier",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/WebhookNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\WebhookNotifier::send": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\WebhookNotifier",
+            "method": "send",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/WebhookNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\TeamsNotifier::__construct": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\TeamsNotifier",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/TeamsNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\TeamsNotifier::send": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\TeamsNotifier",
+            "method": "send",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/TeamsNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub::__construct": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/TwilioNotifierStub.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub::send": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub",
+            "method": "send",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/TwilioNotifierStub.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\SlackNotifier::__construct": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\SlackNotifier",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/SlackNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Notifiers\\SlackNotifier::send": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\SlackNotifier",
+            "method": "send",
+            "visibility": "public",
+            "declared_in": "src/Infra/Notifiers/SlackNotifier.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Queue::enqueue": {
+            "class": "FP\\DMS\\Infra\\Queue",
+            "method": "enqueue",
+            "visibility": "public",
+            "declared_in": "src/Infra/Queue.php",
+            "reference_count": 6,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/SchedulesPage.php",
+                    "line": 194,
+                    "type": "static_call",
+                    "context": "Queue::enqueue("
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 150,
+                    "type": "static_call",
+                    "context": "$job = Queue::enqueue($clientId, $period['start'], $period['end'], $templateId, null, ['origin' => 'rest']);"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 255,
+                    "type": "static_call",
+                    "context": "$job = self::enqueue("
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 93,
+                    "type": "static_call",
+                    "context": "$job = Queue::enqueue("
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 63,
+                    "type": "static_call",
+                    "context": "Queue::enqueue($clientId, $from, $to, null, null, ['origin' => 'cli']);"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 517,
+                    "type": "static_call",
+                    "context": "$job = Queue::enqueue("
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Queue::tick": {
+            "class": "FP\\DMS\\Infra\\Queue",
+            "method": "tick",
+            "visibility": "public",
+            "declared_in": "src/Infra/Queue.php",
+            "reference_count": 8,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 122,
+                    "type": "static_call",
+                    "context": "Queue::tick();"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 156,
+                    "type": "static_call",
+                    "context": "Queue::tick();"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 115,
+                    "type": "static_call",
+                    "context": "Queue::tick();"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 122,
+                    "type": "static_call",
+                    "context": "Queue::tick();"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 541,
+                    "type": "static_call",
+                    "context": "Queue::tick();"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 549,
+                    "type": "static_call",
+                    "context": "Queue::tick();"
+                },
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 58,
+                    "type": "array_callable",
+                    "context": "add_action('fpdms_cron_tick', [Queue::class, 'tick']);"
+                },
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 59,
+                    "type": "array_callable",
+                    "context": "add_action('fpdms/health/force_tick', [Queue::class, 'tick']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Lock::acquire": {
+            "class": "FP\\DMS\\Infra\\Lock",
+            "method": "acquire",
+            "visibility": "public",
+            "declared_in": "src/Infra/Lock.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Infra/Lock.php",
+                    "line": 39,
+                    "type": "static_call",
+                    "context": "if (! self::acquire($name, $owner, $ttl)) {"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 113,
+                    "type": "static_call",
+                    "context": "if (Lock::acquire('queue-global', $lockOwner, 30)) {"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 539,
+                    "type": "static_call",
+                    "context": "if (Lock::acquire('queue-global', $owner, 30)) {"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Lock::release": {
+            "class": "FP\\DMS\\Infra\\Lock",
+            "method": "release",
+            "visibility": "public",
+            "declared_in": "src/Infra/Lock.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Infra/Lock.php",
+                    "line": 48,
+                    "type": "static_call",
+                    "context": "self::release($name, $owner);"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 117,
+                    "type": "static_call",
+                    "context": "Lock::release('queue-global', $lockOwner);"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 544,
+                    "type": "static_call",
+                    "context": "Lock::release('queue-global', $owner);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Lock::withLock": {
+            "class": "FP\\DMS\\Infra\\Lock",
+            "method": "withLock",
+            "visibility": "public",
+            "declared_in": "src/Infra/Lock.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 80,
+                    "type": "static_call",
+                    "context": "$job = Lock::withLock('queue-global', $owner, function () use ($reports) {"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 100,
+                    "type": "static_call",
+                    "context": "$handled = Lock::withLock('client-' . (string) $job->clientId, $owner . '-client', function () use ($job): bool {"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Mailer::bootstrap": {
+            "class": "FP\\DMS\\Infra\\Mailer",
+            "method": "bootstrap",
+            "visibility": "public",
+            "declared_in": "src/Infra/Mailer.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 56,
+                    "type": "static_call",
+                    "context": "Mailer::bootstrap();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Mailer::sendReport": {
+            "class": "FP\\DMS\\Infra\\Mailer",
+            "method": "sendReport",
+            "visibility": "public",
+            "declared_in": "src/Infra/Mailer.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Mailer::sendWithRetry": {
+            "class": "FP\\DMS\\Infra\\Mailer",
+            "method": "sendWithRetry",
+            "visibility": "public",
+            "declared_in": "src/Infra/Mailer.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 53,
+                    "type": "instance_call",
+                    "context": "return $this->sendWithRetry($recipients, $subject, $body, $headers, [$attachment]);"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 129,
+                    "type": "instance_call",
+                    "context": "return $this->sendWithRetry($owner, $subject, $body, ['Content-Type: text/html; charset=UTF-8']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Mailer::sendAnomalyAlert": {
+            "class": "FP\\DMS\\Infra\\Mailer",
+            "method": "sendAnomalyAlert",
+            "visibility": "public",
+            "declared_in": "src/Infra/Mailer.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Infra\\Mailer::buildAnomalySubject": {
+            "class": "FP\\DMS\\Infra\\Mailer",
+            "method": "buildAnomalySubject",
+            "visibility": "public",
+            "declared_in": "src/Infra/Mailer.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Infra/Notifiers/EmailNotifier.php",
+                    "line": 35,
+                    "type": "static_call",
+                    "context": "$subject = Mailer::buildAnomalySubject($client, $metric, $severity);"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 116,
+                    "type": "static_call",
+                    "context": "$subject = self::buildAnomalySubject($client, $metric, $severity);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Mailer::configureMailer": {
+            "class": "FP\\DMS\\Infra\\Mailer",
+            "method": "configureMailer",
+            "visibility": "public",
+            "declared_in": "src/Infra/Mailer.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 17,
+                    "type": "array_callable",
+                    "context": "add_action('phpmailer_init', [self::class, 'configureMailer']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Logger::log": {
+            "class": "FP\\DMS\\Infra\\Logger",
+            "method": "log",
+            "visibility": "public",
+            "declared_in": "src/Infra/Logger.php",
+            "reference_count": 9,
+            "references": [
+                {
+                    "file": "src/Infra/Lock.php",
+                    "line": 40,
+                    "type": "static_call",
+                    "context": "Logger::log(sprintf('LOCK_CONTENDED:%s', $name));"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 71,
+                    "type": "static_call",
+                    "context": "Logger::log(sprintf('MAIL_SENT attempt=%d subject=\"%s\"', $attempt, $subject));"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 77,
+                    "type": "static_call",
+                    "context": "Logger::log(sprintf('MAIL_RETRY_FAIL attempt=%d subject=\"%s\" error=\"%s\"', $attempt, $subject, $error));"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 90,
+                    "type": "static_call",
+                    "context": "Logger::log(sprintf('MAIL_BACKOFF_SKIPPED attempt=%d subject=\"%s\"', $attempt, $subject));"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 97,
+                    "type": "static_call",
+                    "context": "Logger::log(sprintf('MAIL_FAILED subject=\"%s\"', $subject));"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 107,
+                    "type": "static_call",
+                    "context": "Logger::log(sprintf('LOCK_CONTENDED:client-%d', $job->clientId));"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 161,
+                    "type": "static_call",
+                    "context": "Logger::log(sprintf('Report generation failed for client %d.', $client->id ?? 0));"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 165,
+                    "type": "static_call",
+                    "context": "Logger::log(sprintf('Report %d generated for client %d.', $result->id ?? 0, $client->id ?? 0));"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 408,
+                    "type": "static_call",
+                    "context": "Logger::log(sprintf('MAIL_DELIVERY_FAILED report=%d client=%d', $report->id ?? 0, $client->id ?? 0));"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Logger::logQa": {
+            "class": "FP\\DMS\\Infra\\Logger",
+            "method": "logQa",
+            "visibility": "public",
+            "declared_in": "src/Infra/Logger.php",
+            "reference_count": 4,
+            "references": [
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 165,
+                    "type": "static_call",
+                    "context": "Logger::logQa(sprintf("
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 254,
+                    "type": "static_call",
+                    "context": "Logger::logQa(sprintf("
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 295,
+                    "type": "static_call",
+                    "context": "Logger::logQa(sprintf('all client=%d status=%s', $seed['client_id'], $overallStatus));"
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 400,
+                    "type": "static_call",
+                    "context": "Logger::logQa(sprintf("
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Logger::logAnomaly": {
+            "class": "FP\\DMS\\Infra\\Logger",
+            "method": "logAnomaly",
+            "visibility": "public",
+            "declared_in": "src/Infra/Logger.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Services/Anomalies/Engine.php",
+                    "line": 152,
+                    "type": "static_call",
+                    "context": "Logger::logAnomaly($clientId, $metric, $severity, ["
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Logger::logChannel": {
+            "class": "FP\\DMS\\Infra\\Logger",
+            "method": "logChannel",
+            "visibility": "public",
+            "declared_in": "src/Infra/Logger.php",
+            "reference_count": 9,
+            "references": [
+                {
+                    "file": "src/Infra/Notifiers/WebhookNotifier.php",
+                    "line": 38,
+                    "type": "static_call",
+                    "context": "Logger::logChannel('ANOM', sprintf('webhook_failed url=%s', md5($this->url)));"
+                },
+                {
+                    "file": "src/Infra/Notifiers/TeamsNotifier.php",
+                    "line": 44,
+                    "type": "static_call",
+                    "context": "Logger::logChannel('ANOM', sprintf('teams_failed url=%s', md5($this->webhookUrl)));"
+                },
+                {
+                    "file": "src/Infra/Notifiers/SlackNotifier.php",
+                    "line": 33,
+                    "type": "static_call",
+                    "context": "Logger::logChannel('ANOM', sprintf('slack_failed url=%s', md5($this->webhookUrl)));"
+                },
+                {
+                    "file": "src/Infra/Notifiers/TelegramNotifier.php",
+                    "line": 37,
+                    "type": "static_call",
+                    "context": "Logger::logChannel('ANOM', sprintf('telegram_failed chat=%s', $this->chatId));"
+                },
+                {
+                    "file": "src/Infra/Notifiers/EmailNotifier.php",
+                    "line": 40,
+                    "type": "static_call",
+                    "context": "Logger::logChannel('ANOM', sprintf('email_failed client=%d metric=%s', $client->id ?? 0, $metric));"
+                },
+                {
+                    "file": "src/Infra/Notifiers/TwilioNotifierStub.php",
+                    "line": 25,
+                    "type": "static_call",
+                    "context": "Logger::logChannel('ANOM', sprintf('twilio_stub from=%s to=%s message=%s', $from, $to, substr($text, 0, 120)));"
+                },
+                {
+                    "file": "src/Infra/Logger.php",
+                    "line": 11,
+                    "type": "static_call",
+                    "context": "self::logChannel('INFO', $message);"
+                },
+                {
+                    "file": "src/Infra/Logger.php",
+                    "line": 16,
+                    "type": "static_call",
+                    "context": "self::logChannel('QA', $message);"
+                },
+                {
+                    "file": "src/Infra/Logger.php",
+                    "line": 41,
+                    "type": "static_call",
+                    "context": "self::logChannel('ANOM', implode(' ', $parts));"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Cron::bootstrap": {
+            "class": "FP\\DMS\\Infra\\Cron",
+            "method": "bootstrap",
+            "visibility": "public",
+            "declared_in": "src/Infra/Cron.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 55,
+                    "type": "static_call",
+                    "context": "Cron::bootstrap();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Cron::registerInterval": {
+            "class": "FP\\DMS\\Infra\\Cron",
+            "method": "registerInterval",
+            "visibility": "public",
+            "declared_in": "src/Infra/Cron.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Infra/Cron.php",
+                    "line": 11,
+                    "type": "array_callable",
+                    "context": "add_filter('cron_schedules', [self::class, 'registerInterval']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\Activator::activate": {
+            "class": "FP\\DMS\\Infra\\Activator",
+            "method": "activate",
+            "visibility": "public",
+            "declared_in": "src/Infra/Activator.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 70,
+                    "type": "static_call",
+                    "context": "Activator::activate();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\DB::table": {
+            "class": "FP\\DMS\\Infra\\DB",
+            "method": "table",
+            "visibility": "public",
+            "declared_in": "src/Infra/DB.php",
+            "reference_count": 15,
+            "references": [
+                {
+                    "file": "src/Infra/Lock.php",
+                    "line": 60,
+                    "type": "static_call",
+                    "context": "$table = DB::table('locks');"
+                },
+                {
+                    "file": "src/Infra/Lock.php",
+                    "line": 123,
+                    "type": "static_call",
+                    "context": "$table = DB::table('locks');"
+                },
+                {
+                    "file": "src/Infra/DB.php",
+                    "line": 38,
+                    "type": "static_call",
+                    "context": "\"CREATE TABLE \" . self::table('clients') . \" ("
+                },
+                {
+                    "file": "src/Infra/DB.php",
+                    "line": 49,
+                    "type": "static_call",
+                    "context": "\"CREATE TABLE \" . self::table('datasources') . \" ("
+                },
+                {
+                    "file": "src/Infra/DB.php",
+                    "line": 61,
+                    "type": "static_call",
+                    "context": "\"CREATE TABLE \" . self::table('schedules') . \" ("
+                },
+                {
+                    "file": "src/Infra/DB.php",
+                    "line": 75,
+                    "type": "static_call",
+                    "context": "\"CREATE TABLE \" . self::table('reports') . \" ("
+                },
+                {
+                    "file": "src/Infra/DB.php",
+                    "line": 89,
+                    "type": "static_call",
+                    "context": "\"CREATE TABLE \" . self::table('templates') . \" ("
+                },
+                {
+                    "file": "src/Infra/DB.php",
+                    "line": 99,
+                    "type": "static_call",
+                    "context": "\"CREATE TABLE \" . self::table('locks') . \" ("
+                },
+                {
+                    "file": "src/Infra/DB.php",
+                    "line": 118,
+                    "type": "static_call",
+                    "context": "return \"CREATE TABLE \" . self::table('anomalies') . \" ("
+                },
+                {
+                    "file": "src/Domain/Repos/ReportsRepo.php",
+                    "line": 17,
+                    "type": "static_call",
+                    "context": "$this->table = DB::table('reports');"
+                },
+                {
+                    "file": "src/Domain/Repos/ClientsRepo.php",
+                    "line": 17,
+                    "type": "static_call",
+                    "context": "$this->table = DB::table('clients');"
+                },
+                {
+                    "file": "src/Domain/Repos/TemplatesRepo.php",
+                    "line": 17,
+                    "type": "static_call",
+                    "context": "$this->table = DB::table('templates');"
+                },
+                {
+                    "file": "src/Domain/Repos/DataSourcesRepo.php",
+                    "line": 18,
+                    "type": "static_call",
+                    "context": "$this->table = DB::table('datasources');"
+                },
+                {
+                    "file": "src/Domain/Repos/SchedulesRepo.php",
+                    "line": 17,
+                    "type": "static_call",
+                    "context": "$this->table = DB::table('schedules');"
+                },
+                {
+                    "file": "src/Domain/Repos/AnomaliesRepo.php",
+                    "line": 17,
+                    "type": "static_call",
+                    "context": "$this->table = DB::table('anomalies');"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\DB::migrate": {
+            "class": "FP\\DMS\\Infra\\DB",
+            "method": "migrate",
+            "visibility": "public",
+            "declared_in": "src/Infra/DB.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Infra/Activator.php",
+                    "line": 13,
+                    "type": "static_call",
+                    "context": "DB::migrate();"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 196,
+                    "type": "static_call",
+                    "context": "DB::migrate();"
+                }
+            ]
+        },
+        "FP\\DMS\\Infra\\DB::migrateAnomaliesV2": {
+            "class": "FP\\DMS\\Infra\\DB",
+            "method": "migrateAnomaliesV2",
+            "visibility": "public",
+            "declared_in": "src/Infra/DB.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 197,
+                    "type": "static_call",
+                    "context": "DB::migrateAnomaliesV2();"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Dates::prevComparable": {
+            "class": "FP\\DMS\\Support\\Dates",
+            "method": "prevComparable",
+            "visibility": "public",
+            "declared_in": "src/Support/Dates.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Support\\Dates::rangeDays": {
+            "class": "FP\\DMS\\Support\\Dates",
+            "method": "rangeDays",
+            "visibility": "public",
+            "declared_in": "src/Support/Dates.php",
+            "reference_count": 6,
+            "references": [
+                {
+                    "file": "src/Services/Connectors/MetaAdsProvider.php",
+                    "line": 51,
+                    "type": "static_call",
+                    "context": "foreach (Dates::rangeDays($period->start, $period->end) as $date) {"
+                },
+                {
+                    "file": "src/Services/Connectors/GSCProvider.php",
+                    "line": 60,
+                    "type": "static_call",
+                    "context": "foreach (Dates::rangeDays($period->start, $period->end) as $date) {"
+                },
+                {
+                    "file": "src/Services/Connectors/CsvGenericProvider.php",
+                    "line": 51,
+                    "type": "static_call",
+                    "context": "foreach (Dates::rangeDays($period->start, $period->end) as $date) {"
+                },
+                {
+                    "file": "src/Services/Connectors/GA4Provider.php",
+                    "line": 60,
+                    "type": "static_call",
+                    "context": "foreach (Dates::rangeDays($period->start, $period->end) as $date) {"
+                },
+                {
+                    "file": "src/Services/Connectors/GoogleAdsProvider.php",
+                    "line": 51,
+                    "type": "static_call",
+                    "context": "foreach (Dates::rangeDays($period->start, $period->end) as $date) {"
+                },
+                {
+                    "file": "src/Services/Connectors/ClarityCsvProvider.php",
+                    "line": 51,
+                    "type": "static_call",
+                    "context": "foreach (Dates::rangeDays($period->start, $period->end) as $date) {"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Dates::fmt": {
+            "class": "FP\\DMS\\Support\\Dates",
+            "method": "fmt",
+            "visibility": "public",
+            "declared_in": "src/Support/Dates.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Support\\Period::__construct": {
+            "class": "FP\\DMS\\Support\\Period",
+            "method": "__construct",
+            "visibility": "public",
+            "declared_in": "src/Support/Period.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Support\\Period::fromStrings": {
+            "class": "FP\\DMS\\Support\\Period",
+            "method": "fromStrings",
+            "visibility": "public",
+            "declared_in": "src/Support/Period.php",
+            "reference_count": 11,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 385,
+                    "type": "static_call",
+                    "context": "$period = Period::fromStrings($report->periodStart, $report->periodEnd, $client->timezone);"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 413,
+                    "type": "static_call",
+                    "context": "$period = Period::fromStrings("
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 229,
+                    "type": "static_call",
+                    "context": "$period = Period::fromStrings($report->periodStart, $report->periodEnd, $client->timezone);"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 277,
+                    "type": "static_call",
+                    "context": "$period = Period::fromStrings($periodStart, $periodEnd, $client->timezone);"
+                },
+                {
+                    "file": "src/Infra/Queue.php",
+                    "line": 149,
+                    "type": "static_call",
+                    "context": "$period = Period::fromStrings($job->periodStart, $job->periodEnd, $client->timezone);"
+                },
+                {
+                    "file": "src/Services/Anomalies/Detector.php",
+                    "line": 32,
+                    "type": "static_call",
+                    "context": "$period = Period::fromStrings("
+                },
+                {
+                    "file": "src/Services/Qa/Automation.php",
+                    "line": 202,
+                    "type": "static_call",
+                    "context": "$periodObj = Period::fromStrings($period['start'], $period['end'], $client->timezone);"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 90,
+                    "type": "static_call",
+                    "context": "$period = Period::fromStrings("
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 126,
+                    "type": "static_call",
+                    "context": "$period = Period::fromStrings($report->periodStart, $report->periodEnd, $client->timezone);"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 180,
+                    "type": "static_call",
+                    "context": "$period = Period::fromStrings($periodStart, $periodEnd, $client->timezone);"
+                },
+                {
+                    "file": "src/Cli/Commands.php",
+                    "line": 623,
+                    "type": "static_call",
+                    "context": "$periodObj = Period::fromStrings($period['start'], $period['end'], $client->timezone);"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Period::format": {
+            "class": "FP\\DMS\\Support\\Period",
+            "method": "format",
+            "visibility": "public",
+            "declared_in": "src/Support/Period.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Support\\Period::toArray": {
+            "class": "FP\\DMS\\Support\\Period",
+            "method": "toArray",
+            "visibility": "public",
+            "declared_in": "src/Support/Period.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Support\\Security::isEncryptionAvailable": {
+            "class": "FP\\DMS\\Support\\Security",
+            "method": "isEncryptionAvailable",
+            "visibility": "public",
+            "declared_in": "src/Support/Security.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Support/Security.php",
+                    "line": 22,
+                    "type": "static_call",
+                    "context": "if (! self::isEncryptionAvailable()) {"
+                },
+                {
+                    "file": "src/Support/Security.php",
+                    "line": 38,
+                    "type": "static_call",
+                    "context": "if (! self::isEncryptionAvailable()) {"
+                },
+                {
+                    "file": "src/Support/Security.php",
+                    "line": 66,
+                    "type": "static_call",
+                    "context": "if (self::isEncryptionAvailable()) {"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Security::encrypt": {
+            "class": "FP\\DMS\\Support\\Security",
+            "method": "encrypt",
+            "visibility": "public",
+            "declared_in": "src/Support/Security.php",
+            "reference_count": 4,
+            "references": [
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 40,
+                    "type": "static_call",
+                    "context": "$merged['mail']['smtp']['pass'] = Security::encrypt($merged['mail']['smtp']['pass']);"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 215,
+                    "type": "static_call",
+                    "context": "$routing[$channel][$field] = Security::encrypt($value);"
+                },
+                {
+                    "file": "src/Domain/Repos/DataSourcesRepo.php",
+                    "line": 67,
+                    "type": "static_call",
+                    "context": "'auth' => Security::encrypt($auth),"
+                },
+                {
+                    "file": "src/Domain/Repos/DataSourcesRepo.php",
+                    "line": 101,
+                    "type": "static_call",
+                    "context": "'auth' => Security::encrypt($auth),"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Security::decrypt": {
+            "class": "FP\\DMS\\Support\\Security",
+            "method": "decrypt",
+            "visibility": "public",
+            "declared_in": "src/Support/Security.php",
+            "reference_count": 3,
+            "references": [
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 26,
+                    "type": "static_call",
+                    "context": "$settings['mail']['smtp']['pass'] = Security::decrypt($settings['mail']['smtp']['pass']);"
+                },
+                {
+                    "file": "src/Infra/Options.php",
+                    "line": 236,
+                    "type": "static_call",
+                    "context": "$routing[$channel][$field] = Security::decrypt((string) $routing[$channel][$field]);"
+                },
+                {
+                    "file": "src/Domain/Entities/DataSource.php",
+                    "line": 32,
+                    "type": "static_call",
+                    "context": "self::decodeJson(Security::decrypt(is_string($row['auth'] ?? null) ? (string) $row['auth'] : '[]')),"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Security::registerAdminNotice": {
+            "class": "FP\\DMS\\Support\\Security",
+            "method": "registerAdminNotice",
+            "visibility": "public",
+            "declared_in": "src/Support/Security.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 86,
+                    "type": "static_call",
+                    "context": "Security::registerAdminNotice();"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Arr::get": {
+            "class": "FP\\DMS\\Support\\Arr",
+            "method": "get",
+            "visibility": "public",
+            "declared_in": "src/Support/Arr.php",
+            "reference_count": 5,
+            "references": [
+                {
+                    "file": "src/Services/Reports/HtmlRenderer.php",
+                    "line": 105,
+                    "type": "static_call",
+                    "context": "$value = number_format_i18n((float) Arr::get($totals, $key, 0.0), in_array($key, ['cost', 'revenue'], true) ? 2 : 0);"
+                },
+                {
+                    "file": "src/Services/Reports/HtmlRenderer.php",
+                    "line": 156,
+                    "type": "static_call",
+                    "context": "$current = number_format_i18n((float) Arr::get($row, 'current', 0.0), in_array($metric, ['cost', 'revenue'], true) ? 2 : 0);"
+                },
+                {
+                    "file": "src/Services/Reports/HtmlRenderer.php",
+                    "line": 157,
+                    "type": "static_call",
+                    "context": "$previous = number_format_i18n((float) Arr::get($row, 'previous', 0.0), in_array($metric, ['cost', 'revenue'], true) ? 2 : 0);"
+                },
+                {
+                    "file": "src/Services/Reports/HtmlRenderer.php",
+                    "line": 158,
+                    "type": "static_call",
+                    "context": "$delta = (float) Arr::get($row, 'delta', 0.0);"
+                },
+                {
+                    "file": "src/Services/Reports/HtmlRenderer.php",
+                    "line": 159,
+                    "type": "static_call",
+                    "context": "$pct = Arr::get($row, 'delta_pct');"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Arr::flattenKeys": {
+            "class": "FP\\DMS\\Support\\Arr",
+            "method": "flattenKeys",
+            "visibility": "public",
+            "declared_in": "src/Support/Arr.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Support/Arr.php",
+                    "line": 32,
+                    "type": "static_call",
+                    "context": "$result += self::flattenKeys($value, $compound);"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Arr::mapKeys": {
+            "class": "FP\\DMS\\Support\\Arr",
+            "method": "mapKeys",
+            "visibility": "public",
+            "declared_in": "src/Support/Arr.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Support\\Arr::sumBy": {
+            "class": "FP\\DMS\\Support\\Arr",
+            "method": "sumBy",
+            "visibility": "public",
+            "declared_in": "src/Support/Arr.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Support\\Arr::groupBy": {
+            "class": "FP\\DMS\\Support\\Arr",
+            "method": "groupBy",
+            "visibility": "public",
+            "declared_in": "src/Support/Arr.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Support\\Validation::isHexColor": {
+            "class": "FP\\DMS\\Support\\Validation",
+            "method": "isHexColor",
+            "visibility": "public",
+            "declared_in": "src/Support/Validation.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 165,
+                    "type": "static_call",
+                    "context": "$settings['pdf_branding']['primary_color'] = Validation::isHexColor($primary) ? $primary : '#1d4ed8';"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Validation::isEmailList": {
+            "class": "FP\\DMS\\Support\\Validation",
+            "method": "isEmailList",
+            "visibility": "public",
+            "declared_in": "src/Support/Validation.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 152,
+                    "type": "static_call",
+                    "context": "if ($email !== '' && ! Validation::isEmailList([$email])) {"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Validation::nonEmptyString": {
+            "class": "FP\\DMS\\Support\\Validation",
+            "method": "nonEmptyString",
+            "visibility": "public",
+            "declared_in": "src/Support/Validation.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Support\\Validation::positiveInt": {
+            "class": "FP\\DMS\\Support\\Validation",
+            "method": "positiveInt",
+            "visibility": "public",
+            "declared_in": "src/Support/Validation.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 159,
+                    "type": "static_call",
+                    "context": "$settings['retention_days'] = Validation::positiveInt($retention) ? $retention : 90;"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\Validation::safeUrl": {
+            "class": "FP\\DMS\\Support\\Validation",
+            "method": "safeUrl",
+            "visibility": "public",
+            "declared_in": "src/Support/Validation.php",
+            "reference_count": 2,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 162,
+                    "type": "static_call",
+                    "context": "$settings['pdf_branding']['logo_url'] = Validation::safeUrl($logoUrl) ? $logoUrl : '';"
+                },
+                {
+                    "file": "src/Admin/Pages/SettingsPage.php",
+                    "line": 173,
+                    "type": "static_call",
+                    "context": "$settings['error_webhook_url'] = Validation::safeUrl($webhook) ? $webhook : '';"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\I18n::__": {
+            "class": "FP\\DMS\\Support\\I18n",
+            "method": "__",
+            "visibility": "public",
+            "declared_in": "src/Support/I18n.php",
+            "reference_count": 97,
+            "references": [
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 26,
+                    "type": "static_call",
+                    "context": "echo '<h1>' . esc_html(I18n::__('System Health')) . '</h1>';"
+                },
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 35,
+                    "type": "static_call",
+                    "context": ": I18n::__('Not scheduled');"
+                },
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 42,
+                    "type": "static_call",
+                    "context": "submit_button(I18n::__('Force Tick Now'), 'secondary');"
+                },
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 60,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_health', 'fpdms_health_tick', I18n::__('Tick executed.'), 'updated');"
+                },
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 67,
+                    "type": "static_call",
+                    "context": "return I18n::__('Never');"
+                },
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 72,
+                    "type": "static_call",
+                    "context": "return sprintf(I18n::__('%1$s ago (%2$s)'), $diff, wp_date('Y-m-d H:i:s', $timestamp));"
+                },
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 78,
+                    "type": "static_call",
+                    "context": "return I18n::__('No tick recorded yet');"
+                },
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 83,
+                    "type": "static_call",
+                    "context": "return I18n::__('Warning: last tick more than 15 minutes ago');"
+                },
+                {
+                    "file": "src/Admin/Pages/HealthPage.php",
+                    "line": 86,
+                    "type": "static_call",
+                    "context": "return I18n::__('OK');"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 22,
+                    "type": "static_call",
+                    "context": "$notice = I18n::__('QA key regenerated successfully.');"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 31,
+                    "type": "static_call",
+                    "context": "echo '<h1>' . esc_html(I18n::__('QA Automation')) . '</h1>';"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 37,
+                    "type": "static_call",
+                    "context": "echo '<p>' . esc_html(I18n::__('Trigger the automated QA harness to seed fixtures, run the reporting pipeline, and inspect results without using WP-CLI.')) . '</p>';"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 41,
+                    "type": "static_call",
+                    "context": "echo '<div><label class=\"screen-reader-text\" for=\"fpdms-qa-key\">' . esc_html(I18n::__('QA key')) . '</label>';"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 43,
+                    "type": "static_call",
+                    "context": "echo '<p class=\"description\">' . esc_html(I18n::__('Share this key only with trusted automation.')) . '</p></div>';"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 44,
+                    "type": "static_call",
+                    "context": "echo '<div><button type=\"submit\" name=\"fpdms_regenerate_qa_key\" class=\"button button-secondary\">' . esc_html(I18n::__('Regenerate QA key')) . '</button></div>';"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 49,
+                    "type": "static_call",
+                    "context": "'all' => I18n::__('Run All'),"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 50,
+                    "type": "static_call",
+                    "context": "'seed' => I18n::__('Seed Data'),"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 51,
+                    "type": "static_call",
+                    "context": "'run' => I18n::__('Run Report'),"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 52,
+                    "type": "static_call",
+                    "context": "'anomalies' => I18n::__('Trigger Anomalies'),"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 53,
+                    "type": "static_call",
+                    "context": "'status' => I18n::__('Show Status'),"
+                },
+                {
+                    "file": "src/Admin/Pages/QaPage.php",
+                    "line": 54,
+                    "type": "static_call",
+                    "context": "'cleanup' => I18n::__('Cleanup'),"
+                },
+                {
+                    "file": "src/Admin/Pages/SchedulesPage.php",
+                    "line": 152,
+                    "type": "static_call",
+                    "context": "$nextRun = $schedule->nextRunAt ?: I18n::__('Not scheduled');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 41,
+                    "type": "static_call",
+                    "context": "echo '<h1>' . esc_html(I18n::__('Anomalies')) . '</h1>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 44,
+                    "type": "static_call",
+                    "context": "'anomalies' => I18n::__('Recent Anomalies'),"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 45,
+                    "type": "static_call",
+                    "context": "'policy' => I18n::__('Policy'),"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 66,
+                    "type": "static_call",
+                    "context": "echo '<label for=\"fpdms-anomaly-client\">' . esc_html(I18n::__('Filter by client')) . '</label>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 68,
+                    "type": "static_call",
+                    "context": "echo '<option value=\"0\">' . esc_html(I18n::__('All clients')) . '</option>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 74,
+                    "type": "static_call",
+                    "context": "submit_button(I18n::__('Apply'), '', '', false);"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 79,
+                    "type": "static_call",
+                    "context": "echo '<th>' . esc_html(I18n::__('Detected at')) . '</th>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 80,
+                    "type": "static_call",
+                    "context": "echo '<th>' . esc_html(I18n::__('Client')) . '</th>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 81,
+                    "type": "static_call",
+                    "context": "echo '<th>' . esc_html(I18n::__('Metric')) . '</th>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 82,
+                    "type": "static_call",
+                    "context": "echo '<th>' . esc_html(I18n::__('Severity')) . '</th>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 83,
+                    "type": "static_call",
+                    "context": "echo '<th>' . esc_html(I18n::__('\u0394 %')) . '</th>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 84,
+                    "type": "static_call",
+                    "context": "echo '<th>' . esc_html(I18n::__('Z-score')) . '</th>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 85,
+                    "type": "static_call",
+                    "context": "echo '<th>' . esc_html(I18n::__('Note')) . '</th>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 86,
+                    "type": "static_call",
+                    "context": "echo '<th>' . esc_html(I18n::__('Actions')) . '</th>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 90,
+                    "type": "static_call",
+                    "context": "echo '<tr><td colspan=\"8\">' . esc_html(I18n::__('No anomalies recorded.')) . '</td></tr>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 98,
+                    "type": "static_call",
+                    "context": ": I18n::__('n/a');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 101,
+                    "type": "static_call",
+                    "context": ": I18n::__('n/a');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 104,
+                    "type": "static_call",
+                    "context": "$clientName = $clientsMap[$anomaly->clientId] ?? I18n::__('Unknown client');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 118,
+                    "type": "static_call",
+                    "context": "echo '<label><input type=\"checkbox\" name=\"resolved\" value=\"1\"' . checked($resolved, true, false) . '> ' . esc_html(I18n::__('Resolved')) . '</label>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 119,
+                    "type": "static_call",
+                    "context": "echo '<label class=\"screen-reader-text\" for=\"fpdms-note-' . esc_attr((string) $anomaly->id) . '\">' . esc_html(I18n::__('Add note')) . '</label>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 120,
+                    "type": "static_call",
+                    "context": "echo '<input type=\"text\" id=\"fpdms-note-' . esc_attr((string) $anomaly->id) . '\" name=\"note\" value=\"' . esc_attr($note) . '\" placeholder=\"' . esc_attr(I18n::__('Add note')) . '\" style=\"width:160px;\">';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 121,
+                    "type": "static_call",
+                    "context": "submit_button(I18n::__('Save'), 'secondary small', 'submit', false);"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 157,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomalies', 'fpdms_anomaly_saved', I18n::__('Anomaly updated.'), 'updated');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 159,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomalies', 'fpdms_anomaly_error', I18n::__('Unable to update anomaly.'), 'error');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 178,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_reset', I18n::__('Policy reset to defaults.'), 'updated');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 198,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_saved', I18n::__('Policy saved.'), 'updated');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 204,
+                    "type": "static_call",
+                    "context": "echo '<p>' . esc_html(I18n::__('Add a client before configuring anomaly policies.')) . '</p>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 222,
+                    "type": "static_call",
+                    "context": "echo '<tr><th scope=\"row\"><label for=\"fpdms-policy-client\">' . esc_html(I18n::__('Client')) . '</label></th>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 230,
+                    "type": "static_call",
+                    "context": "echo '<tr><th scope=\"row\">' . esc_html(I18n::__('Thresholds')) . '</th><td>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 232,
+                    "type": "static_call",
+                    "context": "echo '<thead><tr><th>' . esc_html(I18n::__('Metric')) . '</th><th>' . esc_html(I18n::__('Warn %')) . '</th><th>' . esc_html(I18n::__('Crit %')) . '</th><th>' . esc_html(I18n::__('Warn z')) . '</th><th>' . esc_html(I18n::__('Crit z')) . '</th></tr></thead><tbody>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 245,
+                    "type": "static_call",
+                    "context": "echo '<tr><th scope=\"row\">' . esc_html(I18n::__('Baseline')) . '</th><td>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 246,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('Window (days)')) . ' <input type=\"number\" class=\"small-text\" name=\"baseline[window_days]\" value=\"' . esc_attr((string) $policy['baseline']['window_days']) . '\"></label> ';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 247,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('Seasonality')) . ' <input type=\"text\" class=\"regular-text\" name=\"baseline[seasonality]\" value=\"' . esc_attr((string) $policy['baseline']['seasonality']) . '\"></label> ';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 248,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('EWMA \u03b1')) . ' <input type=\"number\" step=\"0.01\" class=\"small-text\" name=\"baseline[ewma_alpha]\" value=\"' . esc_attr((string) $policy['baseline']['ewma_alpha']) . '\"></label> ';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 249,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('CUSUM k')) . ' <input type=\"number\" step=\"0.01\" class=\"small-text\" name=\"baseline[cusum_k]\" value=\"' . esc_attr((string) $policy['baseline']['cusum_k']) . '\"></label> ';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 250,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('CUSUM h')) . ' <input type=\"number\" step=\"0.01\" class=\"small-text\" name=\"baseline[cusum_h]\" value=\"' . esc_attr((string) $policy['baseline']['cusum_h']) . '\"></label>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 253,
+                    "type": "static_call",
+                    "context": "echo '<tr><th scope=\"row\">' . esc_html(I18n::__('Mute window')) . '</th><td>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 254,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('Start')) . ' <input type=\"time\" name=\"mute[start]\" value=\"' . esc_attr((string) $policy['mute']['start']) . '\"></label> ';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 255,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('End')) . ' <input type=\"time\" name=\"mute[end]\" value=\"' . esc_attr((string) $policy['mute']['end']) . '\"></label> ';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 256,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('Timezone')) . ' <input type=\"text\" class=\"regular-text\" name=\"mute[tz]\" value=\"' . esc_attr((string) $policy['mute']['tz']) . '\"></label>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 259,
+                    "type": "static_call",
+                    "context": "echo '<tr><th scope=\"row\">' . esc_html(I18n::__('Routing')) . '</th><td>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 260,
+                    "type": "static_call",
+                    "context": "echo '<p>' . esc_html(I18n::__('Enable channels and provide credentials where required.')) . '</p>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 264,
+                    "type": "static_call",
+                    "context": "echo '<label><input type=\"checkbox\" name=\"routing[' . esc_attr($channel) . '][enabled]\" value=\"1\"' . checked(! empty($config['enabled']), true, false) . '> ' . esc_html(I18n::__('Enabled')) . '</label><br>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 273,
+                    "type": "static_call",
+                    "context": "echo '<button type=\"submit\" class=\"button\" name=\"fpdms_policy_action\" value=\"test_' . esc_attr($channel) . '\">' . esc_html(I18n::__('Test notification')) . '</button>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 278,
+                    "type": "static_call",
+                    "context": "echo '<tr><th scope=\"row\">' . esc_html(I18n::__('Rate limiting')) . '</th><td>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 279,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('Cooldown (minutes)')) . ' <input type=\"number\" class=\"small-text\" name=\"cooldown_min\" value=\"' . esc_attr((string) $policy['cooldown_min']) . '\"></label> ';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 280,
+                    "type": "static_call",
+                    "context": "echo '<label>' . esc_html(I18n::__('Max per window')) . ' <input type=\"number\" class=\"small-text\" name=\"max_per_window\" value=\"' . esc_attr((string) $policy['max_per_window']) . '\"></label>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 285,
+                    "type": "static_call",
+                    "context": "submit_button(I18n::__('Save Policy'), 'primary', 'fpdms_policy_action', false, ['value' => 'save']);"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 286,
+                    "type": "static_call",
+                    "context": "submit_button(I18n::__('Reset to defaults'), 'secondary', 'fpdms_policy_action', false, ['value' => 'reset']);"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 287,
+                    "type": "static_call",
+                    "context": "submit_button(I18n::__('Evaluate last 30 days'), 'secondary', 'fpdms_policy_action', false, ['value' => 'test']);"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 292,
+                    "type": "static_call",
+                    "context": "echo '<div class=\"notice notice-info\" style=\"margin-top:20px;\"><p>' . esc_html(sprintf(I18n::__('Evaluation produced %d anomalies:'), $count)) . '</p><ul>';"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 372,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_client', I18n::__('Client not found.'), 'error');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 380,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_report', I18n::__('No successful reports available for evaluation.'), 'error');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 391,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_none', I18n::__('No anomalies detected for the sampled period.'), 'info');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 402,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_client', I18n::__('Client not found.'), 'error');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 433,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_test_fail', I18n::__('Test notification could not be sent. Check the configuration and cooldown windows.'), 'error');"
+                },
+                {
+                    "file": "src/Admin/Pages/AnomaliesPage.php",
+                    "line": 438,
+                    "type": "static_call",
+                    "context": "add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_test_ok', I18n::__('Test notification dispatched.'), 'updated');"
+                },
+                {
+                    "file": "src/Infra/Notifiers/EmailNotifier.php",
+                    "line": 33,
+                    "type": "static_call",
+                    "context": "$metric = isset($first['metric']) ? (string) $first['metric'] : I18n::__('metric');"
+                },
+                {
+                    "file": "src/Infra/Notifiers/EmailNotifier.php",
+                    "line": 56,
+                    "type": "static_call",
+                    "context": "$metric = esc_html((string) ($anomaly['metric'] ?? I18n::__('metric')));"
+                },
+                {
+                    "file": "src/Infra/Notifiers/EmailNotifier.php",
+                    "line": 60,
+                    "type": "static_call",
+                    "context": ": I18n::__('n/a');"
+                },
+                {
+                    "file": "src/Infra/Notifiers/EmailNotifier.php",
+                    "line": 61,
+                    "type": "static_call",
+                    "context": "$items .= '<li><strong>' . $metric . '</strong> \u2013 ' . esc_html(sprintf(I18n::__('%s (%s)'), $delta, $severity)) . '</li>';"
+                },
+                {
+                    "file": "src/Infra/Notifiers/EmailNotifier.php",
+                    "line": 67,
+                    "type": "static_call",
+                    "context": "I18n::__('The anomaly detector flagged the following metrics for %s (%s \u2192 %s).'),"
+                },
+                {
+                    "file": "src/Infra/Notifiers/EmailNotifier.php",
+                    "line": 73,
+                    "type": "static_call",
+                    "context": "esc_html(I18n::__('You can adjust thresholds from the FP Suite dashboard.'))"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 33,
+                    "type": "static_call",
+                    "context": "$subject = sprintf(I18n::__('[Report] %1$s \u2013 %2$s to %3$s'), $client->name, $period->start->format('Y-m-d'), $period->end->format('Y-m-d'));"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 34,
+                    "type": "static_call",
+                    "context": "$body = '<p>' . esc_html(sprintf(I18n::__('Attached you will find the latest marketing report for %s.'), $client->name)) . '</p>';"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 117,
+                    "type": "static_call",
+                    "context": "$body = '<p>' . esc_html(sprintf(I18n::__('The anomaly detector flagged the following metrics for %s.'), $client->name)) . '</p><ul>';"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 122,
+                    "type": "static_call",
+                    "context": "$metric = esc_html((string) ($anomaly['metric'] ?? I18n::__('metric')));"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 123,
+                    "type": "static_call",
+                    "context": "$delta = isset($anomaly['delta_percent']) ? number_format_i18n((float) $anomaly['delta_percent'], 1) . '%' : I18n::__('n/a');"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 125,
+                    "type": "static_call",
+                    "context": "$body .= '<li><strong>' . $metric . '</strong> \u2013 ' . esc_html(sprintf(I18n::__('\u0394 %s (%s)'), $delta, $severity)) . '</li>';"
+                },
+                {
+                    "file": "src/Infra/Mailer.php",
+                    "line": 135,
+                    "type": "static_call",
+                    "context": "return sprintf(I18n::__('[Anomaly] %1$s \u2014 %2$s (%3$s)'), $client->name, ucfirst($metric), ucfirst($severity));"
+                },
+                {
+                    "file": "src/Services/Reports/HtmlRenderer.php",
+                    "line": 37,
+                    "type": "static_call",
+                    "context": "$fallback = '<div class=\"fpdms-empty\">' . esc_html($context['report']['empty_message'] ?? I18n::__('Nessun dato disponibile nel periodo')) . '</div>';"
+                },
+                {
+                    "file": "src/Services/Reports/HtmlRenderer.php",
+                    "line": 127,
+                    "type": "static_call",
+                    "context": "'wow' => I18n::__('Week over week'),"
+                },
+                {
+                    "file": "src/Services/Reports/HtmlRenderer.php",
+                    "line": 128,
+                    "type": "static_call",
+                    "context": "'mom' => I18n::__('Month over month'),"
+                },
+                {
+                    "file": "src/Services/Reports/HtmlRenderer.php",
+                    "line": 144,
+                    "type": "static_call",
+                    "context": "return '<div class=\"section\"><h2>' . esc_html(I18n::__('Trend comparison')) . '</h2><div class=\"tables-wrap trend-tables\">' . $tables . '</div></div>';"
+                },
+                {
+                    "file": "src/Services/Reports/ReportBuilder.php",
+                    "line": 189,
+                    "type": "static_call",
+                    "context": "'empty_message' => I18n::__('Nessun dato disponibile nel periodo'),"
+                }
+            ]
+        },
+        "FP\\DMS\\Support\\I18n::_x": {
+            "class": "FP\\DMS\\Support\\I18n",
+            "method": "_x",
+            "visibility": "public",
+            "declared_in": "src/Support/I18n.php",
+            "reference_count": 0,
+            "references": []
+        },
+        "FP\\DMS\\Http\\Routes::register": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "register",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "fp-digital-marketing-suite.php",
+                    "line": 57,
+                    "type": "static_call",
+                    "context": "Routes::register();"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::onRestInit": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "onRestInit",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 27,
+                    "type": "array_callable",
+                    "context": "add_action('rest_api_init', [self::class, 'onRestInit']);"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleTick": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleTick",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 34,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleTick'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleRun": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleRun",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 40,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleRun'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleDownload": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleDownload",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 51,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleDownload'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleAnomaliesEvaluate": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleAnomaliesEvaluate",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 62,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleAnomaliesEvaluate'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleAnomaliesNotify": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleAnomaliesNotify",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 68,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleAnomaliesNotify'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleQaSeed": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleQaSeed",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 74,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleQaSeed'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleQaRun": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleQaRun",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 80,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleQaRun'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleQaAnomalies": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleQaAnomalies",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 86,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleQaAnomalies'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleQaAll": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleQaAll",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 92,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleQaAll'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleQaStatus": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleQaStatus",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 98,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleQaStatus'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::handleQaCleanup": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "handleQaCleanup",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 1,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 104,
+                    "type": "array_callable",
+                    "context": "'callback' => [self::class, 'handleQaCleanup'],"
+                }
+            ]
+        },
+        "FP\\DMS\\Http\\Routes::checkManageOptions": {
+            "class": "FP\\DMS\\Http\\Routes",
+            "method": "checkManageOptions",
+            "visibility": "public",
+            "declared_in": "src/Http/Routes.php",
+            "reference_count": 10,
+            "references": [
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 41,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 52,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 63,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 69,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 75,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 81,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 87,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 93,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 99,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                },
+                {
+                    "file": "src/Http/Routes.php",
+                    "line": 105,
+                    "type": "array_callable",
+                    "context": "'permission_callback' => [self::class, 'checkManageOptions'],"
+                }
+            ]
+        }
+    },
+    "summary": {
+        "files_scanned": [
+            "src/Admin/Menu.php",
+            "src/Admin/Pages/TemplatesPage.php",
+            "src/Admin/Pages/HealthPage.php",
+            "src/Admin/Pages/QaPage.php",
+            "src/Admin/Pages/ClientsPage.php",
+            "src/Admin/Pages/DataSourcesPage.php",
+            "src/Admin/Pages/SchedulesPage.php",
+            "src/Admin/Pages/DashboardPage.php",
+            "src/Admin/Pages/SettingsPage.php",
+            "src/Admin/Pages/LogsPage.php",
+            "src/Admin/Pages/AnomaliesPage.php",
+            "src/Http/Routes.php",
+            "src/Support/Period.php",
+            "src/Support/Security.php",
+            "src/Support/Dates.php",
+            "src/Support/Validation.php",
+            "src/Support/I18n.php",
+            "src/Support/Arr.php",
+            "src/Infra/Lock.php",
+            "src/Infra/NotificationRouter.php",
+            "src/Infra/Retention.php",
+            "src/Infra/Notifiers/WebhookNotifier.php",
+            "src/Infra/Notifiers/TeamsNotifier.php",
+            "src/Infra/Notifiers/SlackNotifier.php",
+            "src/Infra/Notifiers/TelegramNotifier.php",
+            "src/Infra/Notifiers/EmailNotifier.php",
+            "src/Infra/Notifiers/TwilioNotifierStub.php",
+            "src/Infra/Notifiers/BaseNotifier.php",
+            "src/Infra/Cron.php",
+            "src/Infra/PdfRenderer.php",
+            "src/Infra/DB.php",
+            "src/Infra/Activator.php",
+            "src/Infra/Mailer.php",
+            "src/Infra/Queue.php",
+            "src/Infra/Deactivator.php",
+            "src/Infra/Logger.php",
+            "src/Infra/Options.php",
+            "src/Services/Anomalies/Detectors.php",
+            "src/Services/Anomalies/Engine.php",
+            "src/Services/Anomalies/Detector.php",
+            "src/Services/Anomalies/Baseline.php",
+            "src/Services/Anomalies/TimeSeries.php",
+            "src/Services/Reports/TokenEngine.php",
+            "src/Services/Reports/HtmlRenderer.php",
+            "src/Services/Reports/ReportBuilder.php",
+            "src/Services/Qa/Automation.php",
+            "src/Services/Connectors/Normalizer.php",
+            "src/Services/Connectors/MetaAdsProvider.php",
+            "src/Services/Connectors/GSCProvider.php",
+            "src/Services/Connectors/CsvGenericProvider.php",
+            "src/Services/Connectors/GA4Provider.php",
+            "src/Services/Connectors/GoogleAdsProvider.php",
+            "src/Services/Connectors/DataSourceProviderInterface.php",
+            "src/Services/Connectors/ClarityCsvProvider.php",
+            "src/Services/Connectors/ProviderFactory.php",
+            "src/Services/Connectors/ConnectionResult.php",
+            "src/Cli/Commands.php",
+            "src/Domain/Repos/ReportsRepo.php",
+            "src/Domain/Repos/ClientsRepo.php",
+            "src/Domain/Repos/TemplatesRepo.php",
+            "src/Domain/Repos/DataSourcesRepo.php",
+            "src/Domain/Repos/SchedulesRepo.php",
+            "src/Domain/Repos/AnomaliesRepo.php",
+            "src/Domain/Entities/DataSource.php",
+            "src/Domain/Entities/Template.php",
+            "src/Domain/Entities/ReportJob.php",
+            "src/Domain/Entities/Anomaly.php",
+            "src/Domain/Entities/Client.php",
+            "src/Domain/Entities/Schedule.php",
+            "fp-digital-marketing-suite.php"
+        ],
+        "total_methods": 252,
+        "methods_with_references": 106,
+        "methods_without_references": 146,
+        "top_unreferenced": [
+            "FP\\DMS\\Cli\\Commands::shortCircuitMail",
+            "FP\\DMS\\Domain\\Entities\\Anomaly::__construct",
+            "FP\\DMS\\Domain\\Entities\\Anomaly::toRow",
+            "FP\\DMS\\Domain\\Entities\\Client::__construct",
+            "FP\\DMS\\Domain\\Entities\\Client::toRow",
+            "FP\\DMS\\Domain\\Entities\\DataSource::__construct",
+            "FP\\DMS\\Domain\\Entities\\DataSource::toRow",
+            "FP\\DMS\\Domain\\Entities\\ReportJob::__construct",
+            "FP\\DMS\\Domain\\Entities\\ReportJob::toRow",
+            "FP\\DMS\\Domain\\Entities\\Schedule::__construct"
+        ]
+    }
+}

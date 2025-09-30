@@ -1,0 +1,48 @@
+{
+    "generated_at": "2025-09-30T08:32:46+00:00",
+    "modules": [
+        {
+            "name": "Admin",
+            "pass": 10,
+            "total": 10,
+            "pct": 100
+        },
+        {
+            "name": "Http",
+            "pass": 9,
+            "total": 9,
+            "pct": 100
+        },
+        {
+            "name": "Infra",
+            "pass": 7,
+            "total": 7,
+            "pct": 100
+        },
+        {
+            "name": "Services Reports",
+            "pass": 3,
+            "total": 3,
+            "pct": 100
+        },
+        {
+            "name": "Services Connectors",
+            "pass": 5,
+            "total": 5,
+            "pct": 100
+        },
+        {
+            "name": "Anomalies",
+            "pass": 3,
+            "total": 3,
+            "pct": 100
+        },
+        {
+            "name": "QA Automation",
+            "pass": 5,
+            "total": 5,
+            "pct": 100
+        }
+    ],
+    "overall_pct": 100
+}
