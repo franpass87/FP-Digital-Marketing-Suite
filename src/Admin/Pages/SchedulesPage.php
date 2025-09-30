@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace FP\DMS\Admin\Pages;
 
+use DateTimeImmutable;
+use DateTimeZone;
+use Exception;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Domain\Repos\SchedulesRepo;
 use FP\DMS\Domain\Repos\TemplatesRepo;
 use FP\DMS\Infra\Queue;
 use FP\DMS\Support\I18n;
+use function wp_timezone;
 
 class SchedulesPage
 {
@@ -22,7 +26,7 @@ class SchedulesPage
         $clientsRepo = new ClientsRepo();
         $templatesRepo = new TemplatesRepo();
 
-        self::handleActions($schedulesRepo);
+        self::handleActions($schedulesRepo, $clientsRepo);
 
         $clients = $clientsRepo->all();
         $templates = $templatesRepo->all();
@@ -51,7 +55,7 @@ class SchedulesPage
         echo '</div>';
     }
 
-    private static function handleActions(SchedulesRepo $repo): void
+    private static function handleActions(SchedulesRepo $repo, ClientsRepo $clientsRepo): void
     {
         if (! empty($_POST['fpdms_schedule_nonce']) && wp_verify_nonce(sanitize_text_field($_POST['fpdms_schedule_nonce']), 'fpdms_save_schedule')) {
             $clientId = (int) ($_POST['client_id'] ?? 0);
@@ -59,12 +63,15 @@ class SchedulesPage
             $templateId = isset($_POST['template_id']) ? (int) $_POST['template_id'] : null;
             $active = ! empty($_POST['active']) ? 1 : 0;
 
+            $client = $clientsRepo->find($clientId);
+            $nextRunAt = self::calculateInitialNextRunAt($frequency, $client?->timezone);
+
             $repo->create([
                 'client_id' => $clientId,
                 'frequency' => $frequency,
                 'template_id' => $templateId,
                 'active' => $active,
-                'next_run_at' => current_time('mysql'),
+                'next_run_at' => $nextRunAt,
             ]);
 
             add_settings_error('fpdms_schedules', 'fpdms_schedule_saved', __('Schedule saved.', 'fp-dms'), 'updated');
@@ -78,6 +85,37 @@ class SchedulesPage
                 add_settings_error('fpdms_schedules', 'fpdms_schedule_run', __('Schedule queued.', 'fp-dms'), 'updated');
             }
         }
+    }
+
+    private static function calculateInitialNextRunAt(string $frequency, ?string $timezone): string
+    {
+        $siteTz = wp_timezone();
+        $clientTz = $siteTz;
+
+        if (is_string($timezone) && $timezone !== '') {
+            try {
+                $clientTz = new DateTimeZone($timezone);
+            } catch (Exception) {
+                $clientTz = $siteTz;
+            }
+        }
+
+        $now = new DateTimeImmutable('now', $clientTz);
+
+        switch ($frequency) {
+            case 'daily':
+                $next = $now->modify('tomorrow')->setTime(0, 0, 0);
+                break;
+            case 'weekly':
+                $next = $now->modify('next monday')->setTime(0, 0, 0);
+                break;
+            case 'monthly':
+            default:
+                $next = $now->modify('first day of next month')->setTime(0, 0, 0);
+                break;
+        }
+
+        return $next->setTimezone($siteTz)->format('Y-m-d H:i:s');
     }
 
     /**
