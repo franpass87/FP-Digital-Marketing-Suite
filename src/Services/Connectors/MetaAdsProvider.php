@@ -73,29 +73,35 @@ class MetaAdsProvider implements DataSourceProviderInterface
         ];
     }
 
+    /** @var array<string, string[]> */
+    private const METRIC_ALIASES = [
+        'clicks' => ['clicks', 'link_clicks'],
+        'impressions' => ['impressions'],
+        'conversions' => ['conversions', 'purchases', 'leads', 'website_purchases'],
+        'cost' => ['cost', 'spend', 'amount_spent'],
+        'revenue' => [
+            'revenue',
+            'purchase_conversion_value',
+            'purchases_conversion_value',
+            'website_purchase_conversion_value',
+            'total_conversion_value',
+        ],
+    ];
+
     /**
      * @param array<string, mixed> $metrics
      * @return array<string, float>
      */
     private static function mapMetrics(array $metrics): array
     {
-        $map = [
-            'clicks' => 'clicks',
-            'impressions' => 'impressions',
-            'conversions' => 'conversions',
-            'purchases' => 'conversions',
-            'leads' => 'conversions',
-            'spend' => 'cost',
-            'cost' => 'cost',
-            'revenue' => 'revenue',
-        ];
-
         $normalized = [];
-        foreach ($map as $sourceKey => $target) {
-            if (! isset($metrics[$sourceKey]) || ! is_numeric($metrics[$sourceKey])) {
+        foreach (self::METRIC_ALIASES as $target => $candidates) {
+            $value = self::findMetricValue($metrics, $candidates);
+            if ($value === null) {
                 continue;
             }
-            $normalized[$target] = ($normalized[$target] ?? 0.0) + (float) $metrics[$sourceKey];
+
+            $normalized[$target] = $value;
         }
 
         return $normalized;
@@ -117,13 +123,10 @@ class MetaAdsProvider implements DataSourceProviderInterface
                 continue;
             }
 
-            $metrics = [
-                'clicks' => self::toNumber($row['clicks'] ?? ''),
-                'impressions' => self::toNumber($row['impressions'] ?? ''),
-                'conversions' => self::toNumber($row['conversions'] ?? $row['purchases'] ?? $row['leads'] ?? ''),
-                'cost' => self::toNumber($row['cost'] ?? $row['spend'] ?? ''),
-                'revenue' => self::toNumber($row['revenue'] ?? ''),
-            ];
+            $metrics = [];
+            foreach (self::METRIC_ALIASES as $key => $aliases) {
+                $metrics[$key] = self::extractMetric($row, $aliases);
+            }
 
             foreach ($metrics as $key => $value) {
                 if ($value < 0) {
@@ -151,6 +154,162 @@ class MetaAdsProvider implements DataSourceProviderInterface
             'rows' => count($daily),
             'last_ingested_at' => Wp::currentTime('mysql'),
         ];
+    }
+
+    /**
+     * @param array<string, string> $row
+     * @param string[] $aliases
+     */
+    private static function extractMetric(array $row, array $aliases): float
+    {
+        $value = self::findMetricValue($row, $aliases);
+
+        return $value ?? 0.0;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @param string[] $aliases
+     */
+    private static function findMetricValue(array $row, array $aliases): ?float
+    {
+        foreach ($aliases as $alias) {
+            foreach (self::aliasCandidates($row, $alias) as $candidate) {
+                $value = self::parseMetricValue($row[$candidate]);
+                if ($value === null) {
+                    continue;
+                }
+
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return string[]
+     */
+    private static function aliasCandidates(array $row, string $alias): array
+    {
+        $candidates = [];
+        $bases = array_filter(array_unique([$alias, str_replace('_', '', $alias)]));
+        $normalizedKeys = [];
+
+        foreach ($row as $key => $_value) {
+            if (! is_string($key)) {
+                continue;
+            }
+
+            $sanitized = Wp::sanitizeKey($key);
+            if ($sanitized === '') {
+                continue;
+            }
+
+            if (! isset($normalizedKeys[$sanitized])) {
+                $normalizedKeys[$sanitized] = $key;
+            }
+        }
+
+        foreach ($bases as $base) {
+            if (array_key_exists($base, $row)) {
+                $candidates[] = $base;
+            }
+
+            if (isset($normalizedKeys[$base])) {
+                $candidates[] = $normalizedKeys[$base];
+            }
+
+            foreach ($normalizedKeys as $sanitized => $original) {
+                if ($sanitized === $base) {
+                    continue;
+                }
+
+                if (self::aliasMatchesWithSuffix($sanitized, $base)) {
+                    $candidates[] = $original;
+                }
+            }
+        }
+
+        return array_values(array_unique($candidates));
+    }
+
+    private static function aliasMatchesWithSuffix(string $sanitized, string $base): bool
+    {
+        if ($sanitized === '' || $base === '') {
+            return false;
+        }
+
+        if (str_starts_with($sanitized, $base . '_')) {
+            $suffix = substr($sanitized, strlen($base) + 1);
+        } elseif (str_starts_with($sanitized, $base)) {
+            $suffix = substr($sanitized, strlen($base));
+        } else {
+            return false;
+        }
+
+        if ($suffix === '') {
+            return false;
+        }
+
+        if (preg_match('/^[a-z]{3}$/', $suffix) === 1) {
+            return true;
+        }
+
+        if (preg_match('/^[0-9][a-z0-9_-]*$/', $suffix) === 1) {
+            return true;
+        }
+
+        if (in_array($suffix, ['default', 'standard'], true)) {
+            return true;
+        }
+
+        if (preg_match('/^[a-z]{3}([a-z0-9_-]+)$/', $suffix, $matches) === 1) {
+            $rest = $matches[1];
+
+            if ($rest === '') {
+                return true;
+            }
+
+            if (strpbrk($rest, '0123456789') !== false) {
+                return true;
+            }
+
+            foreach (['click', 'view', 'day', 'week', 'month', 'hour', 'year'] as $keyword) {
+                if (str_contains($rest, $keyword)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param mixed $value Raw metric value from a CSV cell or cached summary.
+     */
+    private static function parseMetricValue(mixed $value): ?float
+    {
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $number = self::toNumber($trimmed);
+        if ($number === 0.0 && preg_match('/[0-9]/', $trimmed) !== 1) {
+            return null;
+        }
+
+        return $number;
     }
 
     /**
@@ -200,13 +359,62 @@ class MetaAdsProvider implements DataSourceProviderInterface
 
     private static function toNumber(string $value): float
     {
-        $clean = preg_replace('/[^0-9\.,-]/', '', $value);
-        if ($clean === null || $clean === '') {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
             return 0.0;
         }
 
-        $clean = str_replace(',', '', $clean);
+        $negative = false;
+        if (str_starts_with($trimmed, '(') && str_ends_with($trimmed, ')')) {
+            $negative = true;
+            $trimmed = substr($trimmed, 1, -1);
+        }
 
-        return (float) $clean;
+        $clean = preg_replace('/[^0-9\.,-]/', '', $trimmed) ?? '';
+        if ($clean === '') {
+            return 0.0;
+        }
+
+        if (str_contains($clean, '-')) {
+            $negative = true;
+            $clean = str_replace('-', '', $clean);
+        }
+
+        if ($clean === '' || preg_match('/[0-9]/', $clean) !== 1) {
+            return 0.0;
+        }
+
+        $commaCount = substr_count($clean, ',');
+        $dotCount = substr_count($clean, '.');
+
+        if ($commaCount > 0 && $dotCount > 0) {
+            $lastComma = strrpos($clean, ',');
+            $lastDot = strrpos($clean, '.');
+            if ($lastComma !== false && $lastDot !== false && $lastComma > $lastDot) {
+                $clean = str_replace('.', '', $clean);
+                $clean = str_replace(',', '.', $clean);
+            } else {
+                $clean = str_replace(',', '', $clean);
+            }
+        } elseif ($commaCount > 0) {
+            $lastComma = strrchr($clean, ',');
+            $decimals = $lastComma === false ? 0 : strlen($lastComma) - 1;
+            if ($commaCount === 1 && $decimals > 0 && $decimals <= 2) {
+                $clean = str_replace('.', '', $clean);
+                $clean = str_replace(',', '.', $clean);
+            } else {
+                $clean = str_replace(',', '', $clean);
+            }
+        } elseif ($dotCount > 0) {
+            $lastDot = strrchr($clean, '.');
+            $decimals = $lastDot === false ? 0 : strlen($lastDot) - 1;
+            if ($dotCount > 1 || $decimals > 2) {
+                $clean = str_replace('.', '', $clean);
+            }
+        }
+
+        $number = (float) $clean;
+
+        return $negative ? -$number : $number;
     }
 }
