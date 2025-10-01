@@ -1,0 +1,55 @@
+name: Build plugin ZIP
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --no-check-all
+
+      - name: Install dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+
+      - name: Optimize autoloader
+        run: composer dump-autoload -o --classmap-authoritative
+
+      - name: Prepare build directory
+        run: |
+          rsync -a \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'tests' \
+            --exclude 'docs' \
+            --exclude 'node_modules' \
+            --exclude '*.md' \
+            --exclude '.idea' \
+            --exclude '.vscode' \
+            --exclude 'build' \
+            --exclude '.gitattributes' \
+            --exclude '.gitignore' \
+            ./ build/fp-digital-marketing-suite/
+
+      - name: Create ZIP
+        run: |
+          cd build
+          zip -rq fp-digital-marketing-suite.zip fp-digital-marketing-suite
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-zip
+          path: build/fp-digital-marketing-suite.zip

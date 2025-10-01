@@ -79,6 +79,18 @@ REST endpoints (requires `X-FPDMS-QA-KEY` header):
   - Uploads build artifacts
   - Publishes a GitHub Release when tags are pushed
 
+## Release process
+- Bump the plugin version and build the distributable ZIP locally:
+  ```bash
+  bash build.sh --bump=patch
+  ```
+- Optionally set an explicit semantic version:
+  ```bash
+  bash build.sh --set-version=1.2.3
+  ```
+- Grab the generated archive under `build/` and upload it to WordPress.
+- Tag the release to trigger the GitHub Action that publishes the packaged ZIP (`git tag v1.2.3 && git push origin v1.2.3`).
+
 ## Changelog
 ### v0.1.0
 - Initial release with enterprise features
