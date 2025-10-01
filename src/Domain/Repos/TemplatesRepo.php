@@ -83,11 +83,23 @@ class TemplatesRepo
     public function update(int $id, array $data): bool
     {
         global $wpdb;
+        $current = $this->find($id);
+        if (! $current) {
+            return false;
+        }
+
+        $name = array_key_exists('name', $data) ? (string) $data['name'] : $current->name;
+        $description = array_key_exists('description', $data) ? (string) $data['description'] : $current->description;
+        $content = array_key_exists('content', $data) ? (string) $data['content'] : $current->content;
+        $isDefault = array_key_exists('is_default', $data)
+            ? (! empty($data['is_default']) ? 1 : 0)
+            : ($current->isDefault ? 1 : 0);
+
         $payload = [
-            'name' => (string) ($data['name'] ?? ''),
-            'description' => (string) ($data['description'] ?? ''),
-            'content' => (string) ($data['content'] ?? ''),
-            'is_default' => empty($data['is_default']) ? 0 : 1,
+            'name' => $name,
+            'description' => $description,
+            'content' => $content,
+            'is_default' => $isDefault,
             'updated_at' => current_time('mysql'),
         ];
 

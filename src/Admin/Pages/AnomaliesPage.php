@@ -10,6 +10,12 @@ use FP\DMS\Infra\Options;
 use FP\DMS\Services\Anomalies\Detector;
 use FP\DMS\Support\I18n;
 use FP\DMS\Support\Period;
+use function is_array;
+use function is_numeric;
+use function sanitize_key;
+use function sanitize_text_field;
+use function str_contains;
+use function wp_unslash;
 
 class AnomaliesPage
 {
@@ -131,15 +137,16 @@ class AnomaliesPage
 
     private static function handleActions(AnomaliesRepo $repo): void
     {
-        if (empty($_POST['fpdms_anomaly_nonce'])) {
+        $post = wp_unslash($_POST);
+        if (empty($post['fpdms_anomaly_nonce'])) {
             return;
         }
 
-        if (! wp_verify_nonce(sanitize_text_field((string) $_POST['fpdms_anomaly_nonce']), 'fpdms_anomaly_update')) {
+        if (! wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_anomaly_nonce'] ?? '')), 'fpdms_anomaly_update')) {
             return;
         }
 
-        $id = (int) ($_POST['anomaly_id'] ?? 0);
+        $id = (int) ($post['anomaly_id'] ?? 0);
         if ($id <= 0) {
             return;
         }
@@ -150,8 +157,8 @@ class AnomaliesPage
         }
 
         $payload = $anomaly->payload;
-        $payload['resolved'] = ! empty($_POST['resolved']);
-        $payload['note'] = sanitize_text_field((string) ($_POST['note'] ?? ''));
+        $payload['resolved'] = ! empty($post['resolved']);
+        $payload['note'] = sanitize_text_field((string) ($post['note'] ?? ''));
 
         if ($repo->updatePayload($id, $payload)) {
             add_settings_error('fpdms_anomalies', 'fpdms_anomaly_saved', I18n::__('Anomaly updated.'), 'updated');
@@ -162,16 +169,17 @@ class AnomaliesPage
 
     private static function handlePolicyActions(): void
     {
-        if (empty($_POST['fpdms_anomaly_policy_nonce'])) {
+        $post = wp_unslash($_POST);
+        if (empty($post['fpdms_anomaly_policy_nonce'])) {
             return;
         }
 
-        if (! wp_verify_nonce(sanitize_text_field((string) $_POST['fpdms_anomaly_policy_nonce']), 'fpdms_anomaly_policy')) {
+        if (! wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_anomaly_policy_nonce'] ?? '')), 'fpdms_anomaly_policy')) {
             return;
         }
 
-        $clientId = (int) ($_POST['client_id'] ?? 0);
-        $action = sanitize_text_field((string) ($_POST['fpdms_policy_action'] ?? 'save'));
+        $clientId = (int) ($post['client_id'] ?? 0);
+        $action = sanitize_text_field((string) ($post['fpdms_policy_action'] ?? 'save'));
 
         if ($action === 'reset') {
             Options::deleteAnomalyPolicy($clientId);
@@ -193,8 +201,11 @@ class AnomaliesPage
             return;
         }
 
-        $policy = self::sanitizePolicyInput();
-        Options::updateAnomalyPolicy($clientId, $policy);
+        $result = self::sanitizePolicyInput($clientId);
+        Options::updateAnomalyPolicy($clientId, $result['policy']);
+        if (! empty($result['errors']['invalid_mute_timezone'])) {
+            add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_tz', I18n::__('Invalid mute timezone provided. Reverted to the previous value.'), 'error');
+        }
         add_settings_error('fpdms_anomaly_policy', 'fpdms_anomaly_policy_saved', I18n::__('Policy saved.'), 'updated');
     }
 
@@ -303,62 +314,35 @@ class AnomaliesPage
     /**
      * @return array<string,mixed>
      */
-    private static function sanitizePolicyInput(): array
+    private static function sanitizePolicyInput(int $clientId): array
     {
-        $policy = Options::defaultAnomalyPolicy();
-        $metrics = isset($_POST['metrics']) && is_array($_POST['metrics']) ? $_POST['metrics'] : [];
-        foreach ($metrics as $metric => $values) {
-            if (! isset($policy['metrics'][$metric])) {
-                continue;
-            }
-            foreach (['warn_pct', 'crit_pct', 'z_warn', 'z_crit'] as $field) {
-                $policy['metrics'][$metric][$field] = isset($values[$field]) ? (float) $values[$field] : $policy['metrics'][$metric][$field];
-            }
+        $post = wp_unslash($_POST);
+
+        $input = [];
+        if (isset($post['metrics']) && is_array($post['metrics'])) {
+            $input['metrics'] = $post['metrics'];
+        }
+        if (isset($post['baseline']) && is_array($post['baseline'])) {
+            $input['baseline'] = $post['baseline'];
+        }
+        if (isset($post['mute']) && is_array($post['mute'])) {
+            $input['mute'] = $post['mute'];
+        }
+        if (isset($post['routing']) && is_array($post['routing'])) {
+            $input['routing'] = $post['routing'];
+        }
+        if (isset($post['cooldown_min'])) {
+            $input['cooldown_min'] = $post['cooldown_min'];
+        }
+        if (isset($post['max_per_window'])) {
+            $input['max_per_window'] = $post['max_per_window'];
         }
 
-        $baseline = isset($_POST['baseline']) && is_array($_POST['baseline']) ? $_POST['baseline'] : [];
-        foreach (['window_days', 'seasonality', 'ewma_alpha', 'cusum_k', 'cusum_h'] as $field) {
-            if (! isset($baseline[$field])) {
-                continue;
-            }
-            $policy['baseline'][$field] = is_numeric($baseline[$field]) ? (float) $baseline[$field] : sanitize_text_field((string) $baseline[$field]);
-        }
-        $policy['baseline']['window_days'] = (int) ($policy['baseline']['window_days'] ?? 28);
+        $current = $clientId > 0
+            ? Options::getAnomalyPolicy($clientId)
+            : Options::getGlobalSettings()['anomaly_policy'];
 
-        $mute = isset($_POST['mute']) && is_array($_POST['mute']) ? $_POST['mute'] : [];
-        $policy['mute']['start'] = isset($mute['start']) ? sanitize_text_field((string) $mute['start']) : $policy['mute']['start'];
-        $policy['mute']['end'] = isset($mute['end']) ? sanitize_text_field((string) $mute['end']) : $policy['mute']['end'];
-        $policy['mute']['tz'] = isset($mute['tz']) ? sanitize_text_field((string) $mute['tz']) : $policy['mute']['tz'];
-
-        $routing = isset($_POST['routing']) && is_array($_POST['routing']) ? $_POST['routing'] : [];
-        foreach ($policy['routing'] as $channel => &$config) {
-            $input = isset($routing[$channel]) && is_array($routing[$channel]) ? $routing[$channel] : [];
-            $config['enabled'] = ! empty($input['enabled']);
-            foreach ($config as $key => &$value) {
-                if ($key === 'enabled') {
-                    continue;
-                }
-                if (! isset($input[$key])) {
-                    continue;
-                }
-                $raw = (string) $input[$key];
-                if (str_contains($key, 'url')) {
-                    $value = esc_url_raw($raw);
-                } else {
-                    $value = sanitize_text_field($raw);
-                }
-            }
-        }
-        unset($config, $value);
-
-        if (isset($routing['email']['digest_window_min'])) {
-            $policy['routing']['email']['digest_window_min'] = (int) $routing['email']['digest_window_min'];
-        }
-
-        $policy['cooldown_min'] = isset($_POST['cooldown_min']) ? (int) $_POST['cooldown_min'] : $policy['cooldown_min'];
-        $policy['max_per_window'] = isset($_POST['max_per_window']) ? (int) $_POST['max_per_window'] : $policy['max_per_window'];
-
-        return $policy;
+        return Options::sanitizeAnomalyPolicyInput($input, $current);
     }
 
     /**

@@ -14,6 +14,7 @@ use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
 use Throwable;
 use function __;
+use function array_filter;
 use function array_fill_keys;
 use function array_map;
 use function count;
@@ -295,7 +296,7 @@ class Assembler
 
         if (! empty($summary['metrics']) && is_array($summary['metrics'])) {
             foreach ($summary['metrics'] as $value) {
-                if (is_numeric($value) && (float) $value !== 0.0) {
+                if (is_numeric($value)) {
                     return true;
                 }
             }
@@ -306,8 +307,13 @@ class Assembler
                 if (! is_array($metrics)) {
                     continue;
                 }
-                foreach ($metrics as $value) {
-                    if (is_numeric($value) && (float) $value !== 0.0) {
+
+                foreach ($metrics as $key => $value) {
+                    if ($key === 'date') {
+                        continue;
+                    }
+
+                    if (is_numeric($value)) {
                         return true;
                     }
                 }

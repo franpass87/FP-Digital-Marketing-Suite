@@ -11,6 +11,12 @@ use FP\DMS\Support\Period;
 use PHPMailer\PHPMailer\PHPMailer;
 use function is_email;
 use function sanitize_email;
+use function trailingslashit;
+use function wp_upload_dir;
+use function wp_normalize_path;
+use function ltrim;
+use function str_starts_with;
+use function file_exists;
 
 class Mailer
 {
@@ -57,13 +63,33 @@ class Mailer
         }
 
         if (empty($report->storagePath)) {
+            Logger::log('MAIL_ATTACHMENT_MISSING empty_storage_path');
             return false;
         }
 
         $upload = wp_upload_dir();
-        $attachment = trailingslashit($upload['basedir']) . $report->storagePath;
+        if (! empty($upload['error']) || empty($upload['basedir'])) {
+            Logger::log('MAIL_ATTACHMENT_DIR_MISSING ' . (string) ($upload['error'] ?? 'unknown'));
+
+            return false;
+        }
+        $baseDir = trailingslashit(wp_normalize_path($upload['basedir']));
+        $relative = wp_normalize_path(ltrim((string) $report->storagePath, '/\\'));
+        if ($relative === '') {
+            Logger::log('MAIL_ATTACHMENT_INVALID_PATH empty_relative');
+
+            return false;
+        }
+
+        $attachment = wp_normalize_path($baseDir . $relative);
+        if (! str_starts_with($attachment, $baseDir)) {
+            Logger::log(sprintf('MAIL_ATTACHMENT_INVALID_PATH path="%s"', $report->storagePath));
+
+            return false;
+        }
 
         if (! file_exists($attachment)) {
+            Logger::log(sprintf('MAIL_ATTACHMENT_NOT_FOUND path="%s"', $attachment));
             return false;
         }
 

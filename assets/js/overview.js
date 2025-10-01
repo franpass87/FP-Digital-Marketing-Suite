@@ -39,13 +39,24 @@
             .filter((interval) => !Number.isNaN(interval) && interval > 0)
         : [60, 120];
 
+    if (refreshIntervals.length === 0) {
+        const fallback = parseInt(config.defaultRefreshInterval, 10);
+        if (!Number.isNaN(fallback) && fallback > 0) {
+            refreshIntervals.push(fallback);
+        } else {
+            refreshIntervals.push(60);
+        }
+    }
+
+    const defaultRefreshInterval = clampInterval(config.defaultRefreshInterval);
+
     const state = {
         clientId: clientSelect ? clientSelect.value : '',
         preset: 'last7',
         customFrom: '',
         customTo: '',
         autoRefresh: false,
-        refreshInterval: config.defaultRefreshInterval || 60,
+        refreshInterval: defaultRefreshInterval,
         lastRefresh: ''
     };
 
@@ -193,16 +204,17 @@
         const opts = options || {};
         const shouldLoad = opts.load !== false;
         const preserveCustom = !!opts.preserveCustom;
-        state.preset = preset;
+        const normalizedPreset = normalizePreset(typeof preset === 'string' ? preset : '');
+        state.preset = normalizedPreset;
         presetButtons.forEach((button) => {
-            const isActive = button.getAttribute('data-fpdms-preset') === preset;
+            const isActive = button.getAttribute('data-fpdms-preset') === normalizedPreset;
             button.classList.toggle('is-active', isActive);
             button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         });
         if (customContainer) {
-            customContainer.hidden = preset !== 'custom';
+            customContainer.hidden = normalizedPreset !== 'custom';
         }
-        if (preset !== 'custom') {
+        if (normalizedPreset !== 'custom') {
             if (!preserveCustom) {
                 state.customFrom = '';
                 state.customTo = '';
@@ -353,13 +365,14 @@
                     deltaEl.setAttribute('data-direction', 'flat');
                 }
                 if (previousEl) {
-                    previousEl.textContent = config.i18n?.previous + ': --';
+                    previousEl.textContent = (config.i18n?.previous || 'Previous') + ': --';
                 }
                 renderSparkline(sparklineSvg, []);
                 return;
             }
             if (valueEl) {
-                valueEl.textContent = kpi.formatted_value || String(kpi.value || '--');
+                const rawValue = kpi.formatted_value ?? kpi.value;
+                valueEl.textContent = rawValue !== undefined && rawValue !== null ? String(rawValue) : '--';
             }
             if (deltaEl) {
                 const delta = kpi.delta || {};
@@ -491,7 +504,8 @@
             const metric = document.createElement('td');
             metric.textContent = item.metric_label || item.metric || '';
             const change = document.createElement('td');
-            change.textContent = item.delta_formatted || item.delta || '';
+            const rawDelta = item.delta_formatted ?? item.delta;
+            change.textContent = rawDelta !== undefined && rawDelta !== null ? String(rawDelta) : '';
             const score = document.createElement('td');
             score.textContent = item.score !== undefined ? String(item.score) : '';
             const when = document.createElement('td');

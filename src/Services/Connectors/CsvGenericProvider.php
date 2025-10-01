@@ -6,6 +6,7 @@ namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
+use function __;
 
 class CsvGenericProvider implements DataSourceProviderInterface
 {
@@ -121,7 +122,7 @@ class CsvGenericProvider implements DataSourceProviderInterface
                     continue;
                 }
                 $value = self::toNumber($row[$key]);
-                if ($value <= 0 && ! in_array($key, ['cost', 'spend', 'revenue'], true)) {
+                if ($value < 0) {
                     continue;
                 }
                 $target = $key === 'spend' ? 'cost' : $key;
@@ -133,6 +134,9 @@ class CsvGenericProvider implements DataSourceProviderInterface
             }
 
             foreach ($metrics as $metric => $value) {
+                if (! isset($daily[$date])) {
+                    $daily[$date] = [];
+                }
                 $daily[$date][$metric] = round(($daily[$date][$metric] ?? 0.0) + $value, 2);
                 $totals[$metric] = ($totals[$metric] ?? 0.0) + $value;
             }

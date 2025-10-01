@@ -7,12 +7,14 @@ namespace FP\DMS\Admin\Pages;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
+use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Domain\Repos\SchedulesRepo;
 use FP\DMS\Domain\Repos\TemplatesRepo;
 use FP\DMS\Infra\Queue;
 use FP\DMS\Support\I18n;
 use function wp_timezone;
+use function wp_unslash;
 
 class SchedulesPage
 {
@@ -48,6 +50,7 @@ class SchedulesPage
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__('Schedules', 'fp-dms') . '</h1>';
+        NoticeStore::flash('fpdms_schedules');
         settings_errors('fpdms_schedules');
 
         self::renderForm($clients, $templates);
@@ -57,11 +60,13 @@ class SchedulesPage
 
     private static function handleActions(SchedulesRepo $repo, ClientsRepo $clientsRepo): void
     {
-        if (! empty($_POST['fpdms_schedule_nonce']) && wp_verify_nonce(sanitize_text_field($_POST['fpdms_schedule_nonce']), 'fpdms_save_schedule')) {
-            $clientId = (int) ($_POST['client_id'] ?? 0);
-            $frequency = sanitize_text_field($_POST['frequency'] ?? 'monthly');
-            $templateId = isset($_POST['template_id']) ? (int) $_POST['template_id'] : null;
-            $active = ! empty($_POST['active']) ? 1 : 0;
+        $post = wp_unslash($_POST);
+
+        if (! empty($post['fpdms_schedule_nonce']) && wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_schedule_nonce'] ?? '')), 'fpdms_save_schedule')) {
+            $clientId = (int) ($post['client_id'] ?? 0);
+            $frequency = self::normalizeFrequency(sanitize_text_field((string) ($post['frequency'] ?? 'monthly')));
+            $templateId = isset($post['template_id']) ? (int) $post['template_id'] : null;
+            $active = ! empty($post['active']) ? 1 : 0;
 
             $client = $clientsRepo->find($clientId);
             $nextRunAt = self::calculateInitialNextRunAt($frequency, $client?->timezone);
@@ -74,16 +79,21 @@ class SchedulesPage
                 'next_run_at' => $nextRunAt,
             ]);
 
-            add_settings_error('fpdms_schedules', 'fpdms_schedule_saved', __('Schedule saved.', 'fp-dms'), 'updated');
+            NoticeStore::enqueue('fpdms_schedules', 'fpdms_schedule_saved', __('Schedule saved.', 'fp-dms'), 'updated');
+            wp_safe_redirect(add_query_arg(['page' => 'fp-dms-schedules'], admin_url('admin.php')));
+            exit;
         }
 
-        if (isset($_GET['action'], $_GET['schedule']) && $_GET['action'] === 'run') {
-            $scheduleId = (int) $_GET['schedule'];
-            $nonce = sanitize_text_field($_GET['_wpnonce'] ?? '');
+        $query = wp_unslash($_GET);
+        if (isset($query['action'], $query['schedule']) && $query['action'] === 'run') {
+            $scheduleId = (int) $query['schedule'];
+            $nonce = sanitize_text_field((string) ($query['_wpnonce'] ?? ''));
             if (wp_verify_nonce($nonce, 'fpdms_run_schedule_' . $scheduleId)) {
                 self::runSchedule($scheduleId);
-                add_settings_error('fpdms_schedules', 'fpdms_schedule_run', __('Schedule queued.', 'fp-dms'), 'updated');
+                NoticeStore::enqueue('fpdms_schedules', 'fpdms_schedule_run', __('Schedule queued.', 'fp-dms'), 'updated');
             }
+            wp_safe_redirect(add_query_arg(['page' => 'fp-dms-schedules'], admin_url('admin.php')));
+            exit;
         }
     }
 
@@ -139,8 +149,9 @@ class SchedulesPage
 
         echo '<tr><th scope="row"><label for="fpdms-schedule-frequency">' . esc_html__('Frequency', 'fp-dms') . '</label></th><td>';
         echo '<select name="frequency" id="fpdms-schedule-frequency">';
-        foreach (['daily' => __('Daily', 'fp-dms'), 'weekly' => __('Weekly', 'fp-dms'), 'monthly' => __('Monthly', 'fp-dms')] as $value => $label) {
-            echo '<option value="' . esc_attr($value) . '">' . esc_html($label) . '</option>';
+        $frequencies = ['daily' => __('Daily', 'fp-dms'), 'weekly' => __('Weekly', 'fp-dms'), 'monthly' => __('Monthly', 'fp-dms')];
+        foreach ($frequencies as $value => $label) {
+            echo '<option value="' . esc_attr($value) . '"' . selected($value, 'monthly', false) . '>' . esc_html($label) . '</option>';
         }
         echo '</select></td></tr>';
 
@@ -218,6 +229,14 @@ class SchedulesPage
         if ($links) {
             echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post($links) . '</div></div>';
         }
+    }
+
+    private static function normalizeFrequency(string $frequency): string
+    {
+        $normalized = strtolower($frequency);
+        $allowed = ['daily', 'weekly', 'monthly'];
+
+        return in_array($normalized, $allowed, true) ? $normalized : 'monthly';
     }
 
     private static function runSchedule(int $scheduleId): void

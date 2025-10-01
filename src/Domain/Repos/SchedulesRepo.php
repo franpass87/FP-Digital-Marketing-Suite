@@ -113,12 +113,25 @@ class SchedulesRepo
     {
         global $wpdb;
 
+        $current = $this->find($id);
+        if (! $current) {
+            return false;
+        }
+
+        $frequency = array_key_exists('frequency', $data) ? (string) $data['frequency'] : $current->frequency;
+        $nextRunAt = array_key_exists('next_run_at', $data) ? $data['next_run_at'] : $current->nextRunAt;
+        $lastRunAt = array_key_exists('last_run_at', $data) ? $data['last_run_at'] : $current->lastRunAt;
+        $active = array_key_exists('active', $data) ? ! empty($data['active']) : $current->active;
+        $templateId = array_key_exists('template_id', $data)
+            ? (isset($data['template_id']) ? (int) $data['template_id'] : null)
+            : $current->templateId;
+
         $payload = [
-            'frequency' => (string) ($data['frequency'] ?? 'monthly'),
-            'next_run_at' => $data['next_run_at'] ?? null,
-            'last_run_at' => $data['last_run_at'] ?? null,
-            'active' => empty($data['active']) ? 0 : 1,
-            'template_id' => isset($data['template_id']) ? (int) $data['template_id'] : null,
+            'frequency' => $frequency,
+            'next_run_at' => $nextRunAt,
+            'last_run_at' => $lastRunAt,
+            'active' => $active ? 1 : 0,
+            'template_id' => $templateId,
             'updated_at' => current_time('mysql'),
         ];
 

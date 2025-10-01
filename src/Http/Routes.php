@@ -19,6 +19,16 @@ use Throwable;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
+use function wp_upload_dir;
+use function trailingslashit;
+use function wp_normalize_path;
+use function ltrim;
+use function str_starts_with;
+use function file_exists;
+use function file_get_contents;
+use function base64_encode;
+use function basename;
+use function filesize;
 
 class Routes
 {
@@ -179,7 +189,20 @@ class Routes
         }
 
         $upload = wp_upload_dir();
-        $path = trailingslashit($upload['basedir']) . ltrim($report->storagePath, '/');
+        if (! empty($upload['error']) || empty($upload['basedir'])) {
+            return new WP_Error('rest_upload_unavailable', __('Uploads directory is not available.', 'fp-dms'), ['status' => 500]);
+        }
+        $baseDir = trailingslashit(wp_normalize_path($upload['basedir']));
+        $relative = wp_normalize_path(ltrim((string) $report->storagePath, '/\\'));
+        if ($relative === '') {
+            return new WP_Error('rest_invalid_report_path', __('Report path is invalid.', 'fp-dms'), ['status' => 403]);
+        }
+
+        $path = wp_normalize_path($baseDir . $relative);
+        if (! str_starts_with($path, $baseDir)) {
+            return new WP_Error('rest_invalid_report_path', __('Report path is invalid.', 'fp-dms'), ['status' => 403]);
+        }
+
         if (! file_exists($path)) {
             return new WP_Error('rest_not_found', __('Report file missing.', 'fp-dms'), ['status' => 404]);
         }

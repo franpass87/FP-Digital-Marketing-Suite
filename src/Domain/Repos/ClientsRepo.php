@@ -4,9 +4,19 @@ declare(strict_types=1);
 
 namespace FP\DMS\Domain\Repos;
 
+use DateTimeZone;
+use Exception;
 use FP\DMS\Domain\Entities\Client;
 use FP\DMS\Infra\DB;
 use wpdb;
+
+use function explode;
+use function is_array;
+use function is_string;
+use function is_email;
+use function sanitize_email;
+use function strtolower;
+use function trim;
 
 class ClientsRepo
 {
@@ -59,9 +69,9 @@ class ClientsRepo
         $now = current_time('mysql');
         $payload = [
             'name' => (string) ($data['name'] ?? ''),
-            'email_to' => wp_json_encode(array_values($data['email_to'] ?? [])),
-            'email_cc' => wp_json_encode(array_values($data['email_cc'] ?? [])),
-            'timezone' => (string) ($data['timezone'] ?? 'UTC'),
+            'email_to' => wp_json_encode($this->sanitizeEmailList($data['email_to'] ?? [])),
+            'email_cc' => wp_json_encode($this->sanitizeEmailList($data['email_cc'] ?? [])),
+            'timezone' => $this->normalizeTimezone((string) ($data['timezone'] ?? ''), 'UTC'),
             'notes' => (string) ($data['notes'] ?? ''),
             'created_at' => $now,
             'updated_at' => $now,
@@ -82,12 +92,25 @@ class ClientsRepo
     {
         global $wpdb;
 
+        $current = $this->find($id);
+        if (! $current) {
+            return false;
+        }
+
+        $name = array_key_exists('name', $data) ? (string) $data['name'] : $current->name;
+        $timezoneInput = array_key_exists('timezone', $data) ? (string) $data['timezone'] : $current->timezone;
+        $timezone = $this->normalizeTimezone($timezoneInput, $current->timezone);
+        $notes = array_key_exists('notes', $data) ? (string) $data['notes'] : $current->notes;
+
+        $emailToInput = array_key_exists('email_to', $data) ? $data['email_to'] : $current->emailTo;
+        $emailCcInput = array_key_exists('email_cc', $data) ? $data['email_cc'] : $current->emailCc;
+
         $payload = [
-            'name' => (string) ($data['name'] ?? ''),
-            'email_to' => wp_json_encode(array_values($data['email_to'] ?? [])),
-            'email_cc' => wp_json_encode(array_values($data['email_cc'] ?? [])),
-            'timezone' => (string) ($data['timezone'] ?? 'UTC'),
-            'notes' => (string) ($data['notes'] ?? ''),
+            'name' => $name,
+            'email_to' => wp_json_encode($this->sanitizeEmailList($emailToInput)),
+            'email_cc' => wp_json_encode($this->sanitizeEmailList($emailCcInput)),
+            'timezone' => $timezone,
+            'notes' => $notes,
             'updated_at' => current_time('mysql'),
         ];
 
@@ -103,5 +126,55 @@ class ClientsRepo
         $result = $wpdb->delete($this->table, ['id' => $id], ['%d']);
 
         return $result !== false;
+    }
+
+    /**
+     * @param mixed $input
+     *
+     * @return string[]
+     */
+    private function sanitizeEmailList(mixed $input): array
+    {
+        $items = [];
+
+        if (is_string($input)) {
+            $items = explode(',', $input);
+        } elseif (is_array($input)) {
+            $items = $input;
+        }
+
+        $sanitized = [];
+
+        foreach ($items as $email) {
+            if (! is_string($email)) {
+                continue;
+            }
+
+            $normalized = sanitize_email(trim($email));
+            if ($normalized === '' || ! is_email($normalized)) {
+                continue;
+            }
+
+            $normalized = strtolower($normalized);
+            $sanitized[$normalized] = $normalized;
+        }
+
+        return array_values($sanitized);
+    }
+
+    private function normalizeTimezone(string $timezone, string $fallback): string
+    {
+        $candidate = trim($timezone);
+        if ($candidate === '') {
+            return $fallback;
+        }
+
+        try {
+            new DateTimeZone($candidate);
+
+            return $candidate;
+        } catch (Exception $exception) {
+            return $fallback;
+        }
     }
 }

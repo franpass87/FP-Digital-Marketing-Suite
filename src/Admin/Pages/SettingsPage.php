@@ -6,9 +6,17 @@ namespace FP\DMS\Admin\Pages;
 
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\Validation;
+use function __;
+use function absint;
+use function in_array;
+use function sanitize_key;
+use function strtolower;
+use function wp_unslash;
 
 class SettingsPage
 {
+    private const SMTP_SECURE_MODES = ['none', 'ssl', 'tls'];
+
     public static function render(): void
     {
         if (! current_user_can('manage_options')) {
@@ -17,6 +25,11 @@ class SettingsPage
 
         self::handlePost();
         $settings = Options::getGlobalSettings();
+        $configuredIntervals = $settings['overview']['refresh_intervals'] ?? Options::defaultGlobalSettings()['overview']['refresh_intervals'];
+        if (! is_array($configuredIntervals)) {
+            $configuredIntervals = Options::defaultGlobalSettings()['overview']['refresh_intervals'];
+        }
+        $refreshIntervalsDisplay = implode(', ', array_map(static fn($seconds): string => (string) (int) $seconds, $configuredIntervals));
 
         echo '<div class="wrap">';
         echo '<h1>' . esc_html__('FP Suite Settings', 'fp-dms') . '</h1>';
@@ -32,6 +45,10 @@ class SettingsPage
         echo '<tr><th scope="row"><label for="fpdms-retention">' . esc_html__('Retention Days', 'fp-dms') . '</label></th>';
         echo '<td><input type="number" min="1" class="small-text" id="fpdms-retention" name="retention_days" value="' . esc_attr((string) $settings['retention_days']) . '"></td></tr>';
 
+        echo '<tr><th scope="row"><label for="fpdms-overview-refresh-intervals">' . esc_html__('Overview refresh intervals', 'fp-dms') . '</label></th>';
+        echo '<td><input type="text" class="regular-text" id="fpdms-overview-refresh-intervals" name="overview[refresh_intervals]" value="' . esc_attr($refreshIntervalsDisplay) . '">';
+        echo '<p class="description">' . esc_html__('Comma-separated list of allowed auto-refresh intervals in seconds.', 'fp-dms') . '</p></td></tr>';
+
         echo '<tr><th scope="row">' . esc_html__('Branding', 'fp-dms') . '</th>';
         echo '<td>';
         echo '<label for="fpdms-logo-url">' . esc_html__('Logo URL', 'fp-dms') . '</label><br>';
@@ -42,6 +59,8 @@ class SettingsPage
         echo '<textarea class="large-text" rows="3" id="fpdms-footer-text" name="pdf_branding[footer_text]">' . esc_textarea($settings['pdf_branding']['footer_text']) . '</textarea>';
         echo '</td></tr>';
 
+        $settings['mail']['smtp']['secure'] = self::normaliseSecureMode((string) ($settings['mail']['smtp']['secure'] ?? 'none'));
+
         echo '<tr><th scope="row">' . esc_html__('SMTP Settings', 'fp-dms') . '</th>';
         echo '<td>';
         echo '<label for="fpdms-smtp-host">' . esc_html__('Host', 'fp-dms') . '</label><br>';
@@ -50,7 +69,7 @@ class SettingsPage
         echo '<input type="number" class="small-text" id="fpdms-smtp-port" name="mail[smtp][port]" value="' . esc_attr((string) $settings['mail']['smtp']['port']) . '"><br><br>';
         echo '<label for="fpdms-smtp-secure">' . esc_html__('Secure Mode', 'fp-dms') . '</label><br>';
         echo '<select id="fpdms-smtp-secure" name="mail[smtp][secure]">';
-        foreach (['none' => __('None', 'fp-dms'), 'ssl' => 'SSL', 'tls' => 'TLS'] as $value => $label) {
+        foreach (['none' => __('None', 'fp-dms'), 'ssl' => __('SSL', 'fp-dms'), 'tls' => __('TLS', 'fp-dms')] as $value => $label) {
             echo '<option value="' . esc_attr($value) . '" ' . selected($settings['mail']['smtp']['secure'], $value, false) . '>' . esc_html($label) . '</option>';
         }
         echo '</select><br><br>';
@@ -134,11 +153,15 @@ class SettingsPage
             return;
         }
 
-        if (! wp_verify_nonce(sanitize_text_field($_POST['fpdms_settings_nonce']), 'fpdms_save_settings')) {
+        $nonce = sanitize_text_field((string) wp_unslash($_POST['fpdms_settings_nonce']));
+
+        if (! wp_verify_nonce($nonce, 'fpdms_save_settings')) {
             return;
         }
 
-        $action = sanitize_text_field($_POST['fpdms_settings_action'] ?? 'save');
+        $post = wp_unslash($_POST);
+
+        $action = sanitize_text_field((string) ($post['fpdms_settings_action'] ?? 'save'));
         $settings = Options::getGlobalSettings();
 
         if ($action === 'regenerate') {
@@ -148,97 +171,132 @@ class SettingsPage
             return;
         }
 
-        $email = sanitize_email($_POST['owner_email'] ?? '');
+        $email = sanitize_email((string) ($post['owner_email'] ?? ''));
         if ($email !== '' && ! Validation::isEmailList([$email])) {
             add_settings_error('fpdms_settings', 'fpdms_settings_email', __('Owner email is not valid.', 'fp-dms'));
         } else {
             $settings['owner_email'] = $email;
         }
 
-        $retention = (int) ($_POST['retention_days'] ?? 90);
+        $retention = (int) ($post['retention_days'] ?? 90);
         $settings['retention_days'] = Validation::positiveInt($retention) ? $retention : 90;
 
-        $logoUrl = esc_url_raw($_POST['pdf_branding']['logo_url'] ?? '');
+        $overviewInput = isset($post['overview']) && is_array($post['overview']) ? $post['overview'] : [];
+        $intervalInput = $overviewInput['refresh_intervals'] ?? '';
+        $currentIntervals = $settings['overview']['refresh_intervals'] ?? Options::defaultGlobalSettings()['overview']['refresh_intervals'];
+        if (! is_array($currentIntervals)) {
+            $currentIntervals = Options::defaultGlobalSettings()['overview']['refresh_intervals'];
+        }
+        $settings['overview']['refresh_intervals'] = self::sanitizeRefreshIntervals($intervalInput, $currentIntervals);
+
+        $brandingInput = isset($post['pdf_branding']) && is_array($post['pdf_branding']) ? $post['pdf_branding'] : [];
+        $logoUrl = esc_url_raw((string) ($brandingInput['logo_url'] ?? ''));
         $settings['pdf_branding']['logo_url'] = Validation::safeUrl($logoUrl) ? $logoUrl : '';
 
-        $primary = sanitize_text_field($_POST['pdf_branding']['primary_color'] ?? '#1d4ed8');
+        $primary = sanitize_text_field((string) ($brandingInput['primary_color'] ?? '#1d4ed8'));
         $settings['pdf_branding']['primary_color'] = Validation::isHexColor($primary) ? $primary : '#1d4ed8';
-        $settings['pdf_branding']['footer_text'] = wp_kses_post($_POST['pdf_branding']['footer_text'] ?? '');
-        $settings['mail']['smtp']['host'] = sanitize_text_field($_POST['mail']['smtp']['host'] ?? '');
-        $settings['mail']['smtp']['port'] = sanitize_text_field($_POST['mail']['smtp']['port'] ?? '');
-        $settings['mail']['smtp']['secure'] = sanitize_text_field($_POST['mail']['smtp']['secure'] ?? 'none');
-        $settings['mail']['smtp']['user'] = sanitize_text_field($_POST['mail']['smtp']['user'] ?? '');
-        $settings['mail']['smtp']['pass'] = sanitize_text_field($_POST['mail']['smtp']['pass'] ?? '');
-        $webhook = esc_url_raw($_POST['error_webhook_url'] ?? '');
+        $settings['pdf_branding']['footer_text'] = wp_kses_post((string) ($brandingInput['footer_text'] ?? ''));
+
+        $mailInput = isset($post['mail']) && is_array($post['mail']) ? $post['mail'] : [];
+        $smtpInput = isset($mailInput['smtp']) && is_array($mailInput['smtp']) ? $mailInput['smtp'] : [];
+
+        $settings['mail']['smtp']['host'] = sanitize_text_field((string) ($smtpInput['host'] ?? ''));
+
+        $defaultPort = (int) Options::defaultGlobalSettings()['mail']['smtp']['port'];
+        $currentPort = (int) ($settings['mail']['smtp']['port'] ?? $defaultPort);
+        if ($currentPort < 1 || $currentPort > 65535) {
+            $currentPort = $defaultPort;
+        }
+
+        $submittedPort = isset($smtpInput['port']) ? absint($smtpInput['port']) : 0;
+        if ($submittedPort < 1 || $submittedPort > 65535) {
+            $submittedPort = $currentPort;
+        }
+        $settings['mail']['smtp']['port'] = $submittedPort;
+
+        $secure = isset($smtpInput['secure']) ? sanitize_key((string) $smtpInput['secure']) : 'none';
+        $settings['mail']['smtp']['secure'] = self::normaliseSecureMode($secure);
+        $settings['mail']['smtp']['user'] = sanitize_text_field((string) ($smtpInput['user'] ?? ''));
+
+        $existingCipher = isset($settings['mail']['smtp']['pass_cipher']) && is_string($settings['mail']['smtp']['pass_cipher'])
+            ? $settings['mail']['smtp']['pass_cipher']
+            : '';
+        $submittedPass = isset($smtpInput['pass']) ? (string) $smtpInput['pass'] : '';
+
+        if ($submittedPass === '') {
+            $settings['mail']['smtp']['pass'] = '';
+            $settings['mail']['smtp']['pass_cipher'] = $existingCipher;
+        } else {
+            $settings['mail']['smtp']['pass'] = $submittedPass;
+            $settings['mail']['smtp']['pass_cipher'] = '';
+        }
+
+        $webhook = esc_url_raw((string) ($post['error_webhook_url'] ?? ''));
         $settings['error_webhook_url'] = Validation::safeUrl($webhook) ? $webhook : '';
 
-        $policyInput = isset($_POST['anomaly_policy']) && is_array($_POST['anomaly_policy']) ? $_POST['anomaly_policy'] : [];
-        $settings['anomaly_policy'] = self::sanitizeAnomalyPolicy($policyInput, $settings['anomaly_policy']);
+        $policyInput = isset($post['anomaly_policy']) && is_array($post['anomaly_policy']) ? $post['anomaly_policy'] : [];
+        $policyResult = Options::sanitizeAnomalyPolicyInput($policyInput, $settings['anomaly_policy']);
+        $settings['anomaly_policy'] = $policyResult['policy'];
+        if (! empty($policyResult['errors']['invalid_mute_timezone'])) {
+            add_settings_error('fpdms_settings', 'fpdms_settings_mute_tz', __('Invalid mute timezone provided. Reverted to the previous value.', 'fp-dms'));
+        }
 
         Options::updateGlobalSettings($settings);
         add_settings_error('fpdms_settings', 'fpdms_settings_saved', __('Settings saved.', 'fp-dms'), 'updated');
     }
 
-    /**
-     * @param array<string,mixed> $input
-     * @param array<string,mixed> $current
-     * @return array<string,mixed>
-     */
-    private static function sanitizeAnomalyPolicy(array $input, array $current): array
+    private static function normaliseSecureMode(string $mode): string
     {
-        $policy = Options::defaultAnomalyPolicy();
-        $policy = array_replace_recursive($policy, $current);
+        $normalized = strtolower($mode);
 
-        if (isset($input['metrics']) && is_array($input['metrics'])) {
-            foreach ($policy['metrics'] as $metric => &$values) {
-                $source = $input['metrics'][$metric] ?? [];
-                foreach (['warn_pct', 'crit_pct', 'z_warn', 'z_crit'] as $field) {
-                    if (isset($source[$field]) && is_numeric($source[$field])) {
-                        $values[$field] = (float) $source[$field];
-                    }
-                }
+        return in_array($normalized, self::SMTP_SECURE_MODES, true) ? $normalized : 'none';
+    }
+
+    /**
+     * @param mixed $input
+     * @param array<int, int> $current
+     * @return array<int, int>
+     */
+    private static function sanitizeRefreshIntervals(mixed $input, array $current): array
+    {
+        if (is_string($input)) {
+            $parts = preg_split('/[\s,]+/', $input) ?: [];
+        } elseif (is_array($input)) {
+            $parts = $input;
+        } else {
+            $parts = [];
+        }
+
+        $intervals = [];
+
+        foreach ($parts as $value) {
+            if (! is_string($value) && ! is_numeric($value)) {
+                continue;
             }
-            unset($values);
-        }
 
-        if (isset($input['baseline']) && is_array($input['baseline'])) {
-            foreach (['window_days', 'seasonality', 'ewma_alpha', 'cusum_k', 'cusum_h'] as $field) {
-                if (! isset($input['baseline'][$field])) {
-                    continue;
-                }
-                $value = $input['baseline'][$field];
-                $policy['baseline'][$field] = is_numeric($value) ? (float) $value : sanitize_text_field((string) $value);
+            $seconds = absint($value);
+            if ($seconds < 30 || $seconds > 3600) {
+                continue;
             }
-            $policy['baseline']['window_days'] = (int) $policy['baseline']['window_days'];
+
+            $intervals[] = $seconds;
         }
 
-        if (isset($input['routing']) && is_array($input['routing'])) {
-            foreach ($policy['routing'] as $channel => &$config) {
-                $source = $input['routing'][$channel] ?? [];
-                $config['enabled'] = ! empty($source['enabled']);
-                foreach ($config as $key => &$value) {
-                    if ($key === 'enabled' || ! isset($source[$key])) {
-                        continue;
-                    }
-                    $raw = (string) $source[$key];
-                    $value = str_contains($key, 'url') ? esc_url_raw($raw) : sanitize_text_field($raw);
-                }
-                unset($value);
-            }
-            unset($config);
+        if (! is_array($current) || $current === []) {
+            $current = Options::defaultGlobalSettings()['overview']['refresh_intervals'];
         }
 
-        if (isset($policy['routing']['email']['digest_window_min']) && isset($input['routing']['email']['digest_window_min'])) {
-            $policy['routing']['email']['digest_window_min'] = (int) $input['routing']['email']['digest_window_min'];
+        if ($intervals === []) {
+            $intervals = array_map('absint', $current);
         }
 
-        if (isset($input['cooldown_min'])) {
-            $policy['cooldown_min'] = (int) $input['cooldown_min'];
-        }
-        if (isset($input['max_per_window'])) {
-            $policy['max_per_window'] = (int) $input['max_per_window'];
+        $intervals = array_values(array_unique(array_map('absint', $intervals)));
+        sort($intervals);
+
+        if ($intervals === []) {
+            $intervals = Options::defaultGlobalSettings()['overview']['refresh_intervals'];
         }
 
-        return $policy;
+        return $intervals;
     }
 }

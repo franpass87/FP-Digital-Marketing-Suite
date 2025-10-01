@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace FP\DMS\Admin\Pages;
 
+use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Entities\Template;
 use FP\DMS\Domain\Repos\TemplatesRepo;
+use function wp_unslash;
 
 class TemplatesPage
 {
@@ -17,6 +19,7 @@ class TemplatesPage
 
         $repo = new TemplatesRepo();
         self::handleActions($repo);
+        NoticeStore::flash('fpdms_templates');
 
         $editing = null;
         if (isset($_GET['action'], $_GET['template']) && $_GET['action'] === 'edit') {
@@ -34,32 +37,51 @@ class TemplatesPage
 
     private static function handleActions(TemplatesRepo $repo): void
     {
-        if (! empty($_POST['fpdms_template_nonce']) && wp_verify_nonce(sanitize_text_field($_POST['fpdms_template_nonce']), 'fpdms_save_template')) {
-            $id = isset($_POST['template_id']) ? (int) $_POST['template_id'] : 0;
+        $post = wp_unslash($_POST);
+        if (! empty($post['fpdms_template_nonce']) && wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_template_nonce'] ?? '')), 'fpdms_save_template')) {
+            $id = isset($post['template_id']) ? (int) $post['template_id'] : 0;
             $data = [
-                'name' => sanitize_text_field($_POST['name'] ?? ''),
-                'description' => sanitize_text_field($_POST['description'] ?? ''),
-                'content' => wp_kses_post($_POST['content'] ?? ''),
-                'is_default' => ! empty($_POST['is_default']) ? 1 : 0,
+                'name' => sanitize_text_field($post['name'] ?? ''),
+                'description' => sanitize_text_field($post['description'] ?? ''),
+                'content' => wp_kses_post($post['content'] ?? ''),
+                'is_default' => ! empty($post['is_default']) ? 1 : 0,
             ];
 
             if ($id > 0) {
-                $repo->update($id, $data);
-                add_settings_error('fpdms_templates', 'fpdms_template_saved', __('Template updated.', 'fp-dms'), 'updated');
+                if ($repo->update($id, $data)) {
+                    NoticeStore::enqueue('fpdms_templates', 'fpdms_template_saved', __('Template updated.', 'fp-dms'));
+                } else {
+                    NoticeStore::enqueue('fpdms_templates', 'fpdms_template_error', __('Failed to update template.', 'fp-dms'), 'error');
+                }
             } else {
                 $repo->create($data);
-                add_settings_error('fpdms_templates', 'fpdms_template_saved', __('Template created.', 'fp-dms'), 'updated');
+                NoticeStore::enqueue('fpdms_templates', 'fpdms_template_saved', __('Template created.', 'fp-dms'));
             }
+
+            self::redirectToIndex();
+            return;
         }
 
-        if (isset($_GET['action'], $_GET['template']) && $_GET['action'] === 'delete') {
-            $templateId = (int) $_GET['template'];
-            $nonce = sanitize_text_field($_GET['_wpnonce'] ?? '');
+        $query = wp_unslash($_GET);
+        if (isset($query['action'], $query['template']) && $query['action'] === 'delete') {
+            $templateId = (int) $query['template'];
+            $nonce = sanitize_text_field((string) ($query['_wpnonce'] ?? ''));
             if (wp_verify_nonce($nonce, 'fpdms_delete_template_' . $templateId)) {
-                $repo->delete($templateId);
-                add_settings_error('fpdms_templates', 'fpdms_template_deleted', __('Template deleted.', 'fp-dms'), 'updated');
+                if ($repo->delete($templateId)) {
+                    NoticeStore::enqueue('fpdms_templates', 'fpdms_template_deleted', __('Template deleted.', 'fp-dms'));
+                } else {
+                    NoticeStore::enqueue('fpdms_templates', 'fpdms_template_error', __('Failed to delete template.', 'fp-dms'), 'error');
+                }
+                self::redirectToIndex();
             }
         }
+    }
+
+    private static function redirectToIndex(): void
+    {
+        $url = admin_url('admin.php?page=fp-dms-templates');
+        wp_safe_redirect($url);
+        exit;
     }
 
     private static function renderForm(?Template $template): void

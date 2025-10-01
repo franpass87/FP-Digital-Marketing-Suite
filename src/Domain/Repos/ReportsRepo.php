@@ -70,6 +70,11 @@ class ReportsRepo
             array_push($params, ...$statuses);
         }
 
+        if (isset($criteria['created_before'])) {
+            $where[] = 'created_at < %s';
+            $params[] = (string) $criteria['created_before'];
+        }
+
         $sql = 'SELECT * FROM ' . $this->table . ' WHERE ' . implode(' AND ', $where) . ' ORDER BY created_at DESC';
         $prepared = $params ? $wpdb->prepare($sql, $params) : $sql;
         $rows = $wpdb->get_results($prepared, ARRAY_A);
@@ -150,12 +155,12 @@ class ReportsRepo
             $formats[] = '%s';
         }
 
-        $payload['updated_at'] = current_time('mysql');
-        $formats[] = '%s';
-
-        if (empty($payload)) {
+        if ($payload === []) {
             return true;
         }
+
+        $payload['updated_at'] = current_time('mysql');
+        $formats[] = '%s';
 
         $result = $wpdb->update($this->table, $payload, ['id' => $id], $formats, ['%d']);
 

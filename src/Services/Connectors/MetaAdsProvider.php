@@ -6,6 +6,7 @@ namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
+use function __;
 
 class MetaAdsProvider implements DataSourceProviderInterface
 {
@@ -124,8 +125,11 @@ class MetaAdsProvider implements DataSourceProviderInterface
             ];
 
             foreach ($metrics as $key => $value) {
-                if ($value <= 0 && ! in_array($key, ['cost', 'revenue'], true)) {
+                if ($value < 0) {
                     continue;
+                }
+                if (! isset($daily[$date])) {
+                    $daily[$date] = [];
                 }
                 $daily[$date][$key] = round(($daily[$date][$key] ?? 0.0) + $value, 2);
                 $totals[$key] = ($totals[$key] ?? 0.0) + $value;

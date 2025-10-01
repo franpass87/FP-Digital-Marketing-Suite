@@ -6,6 +6,7 @@ namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
+use function __;
 
 class GoogleAdsProvider implements DataSourceProviderInterface
 {
@@ -122,8 +123,7 @@ class GoogleAdsProvider implements DataSourceProviderInterface
             ];
 
             foreach ($metrics as $key => $value) {
-                if ($value <= 0 && ! in_array($key, ['cost', 'revenue'], true)) {
-                    // allow zero for spend/revenue
+                if ($value < 0) {
                     continue;
                 }
                 if (! isset($daily[$date])) {

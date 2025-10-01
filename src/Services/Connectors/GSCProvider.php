@@ -6,6 +6,7 @@ namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
+use function __;
 
 class GSCProvider implements DataSourceProviderInterface
 {
