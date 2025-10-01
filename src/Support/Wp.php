@@ -372,6 +372,29 @@ final class Wp
         return '';
     }
 
+    public static function wpErrorMessage(mixed $value): string
+    {
+        if (\function_exists('is_wp_error') && \is_wp_error($value)) {
+            $message = $value->get_error_message();
+
+            return \is_string($message) ? \trim($message) : '';
+        }
+
+        if (! \is_array($value)) {
+            return '';
+        }
+
+        if (isset($value['error_message']) && \is_string($value['error_message'])) {
+            return \trim($value['error_message']);
+        }
+
+        if (isset($value['error']) && \is_string($value['error'])) {
+            return \trim($value['error']);
+        }
+
+        return '';
+    }
+
     public static function generatePassword(int $length = 12, bool $specialChars = true, bool $extraSpecialChars = false): string
     {
         if (\function_exists('wp_generate_password')) {
