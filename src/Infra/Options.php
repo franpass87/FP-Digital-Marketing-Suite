@@ -224,7 +224,15 @@ class Options
                 'teams' => ['enabled' => false, 'webhook_url' => ''],
                 'telegram' => ['enabled' => false, 'bot_token' => '', 'chat_id' => ''],
                 'webhook' => ['enabled' => true, 'url' => '', 'hmac_secret' => ''],
-                'sms_twilio' => ['enabled' => false, 'sid' => '', 'token' => '', 'from' => '', 'to' => ''],
+                'sms_twilio' => [
+                    'enabled' => false,
+                    'sid' => '',
+                    'token' => '',
+                    'from' => '',
+                    'to' => '',
+                    'messaging_service_sid' => '',
+                    'status_callback' => '',
+                ],
             ],
             'cooldown_min' => 30,
             'max_per_window' => 5,
@@ -354,13 +362,14 @@ class Options
                     }
                     $raw = (string) $source[$key];
                     $lowerKey = strtolower($key);
-                    if (str_contains($lowerKey, 'url')) {
+                    if (str_contains($lowerKey, 'url') || str_contains($lowerKey, 'callback')) {
                         $value = Wp::escUrlRaw($raw);
                     } elseif (
                         str_contains($lowerKey, 'token') ||
                         str_contains($lowerKey, 'secret') ||
                         str_contains($lowerKey, 'pass') ||
-                        str_contains($lowerKey, 'key')
+                        str_contains($lowerKey, 'key') ||
+                        str_contains($lowerKey, 'sid')
                     ) {
                         $value = trim($raw);
                     } else {
@@ -454,7 +463,7 @@ class Options
             'teams' => ['webhook_url'],
             'telegram' => ['bot_token'],
             'webhook' => ['url', 'hmac_secret'],
-            'sms_twilio' => ['sid', 'token', 'from', 'to'],
+            'sms_twilio' => ['sid', 'token', 'from', 'to', 'messaging_service_sid'],
         ];
     }
 }

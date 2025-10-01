@@ -10,7 +10,7 @@ use FP\DMS\Infra\Notifiers\EmailNotifier;
 use FP\DMS\Infra\Notifiers\SlackNotifier;
 use FP\DMS\Infra\Notifiers\TeamsNotifier;
 use FP\DMS\Infra\Notifiers\TelegramNotifier;
-use FP\DMS\Infra\Notifiers\TwilioNotifierStub;
+use FP\DMS\Infra\Notifiers\TwilioNotifier;
 use FP\DMS\Infra\Notifiers\WebhookNotifier;
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\Period;
@@ -123,7 +123,7 @@ class NotificationRouter
                     ))->send(['body' => $webhookBody]);
                     break;
                 case 'sms_twilio':
-                    $success = (new TwilioNotifierStub((array) $config))->send([
+                    $success = (new TwilioNotifier((array) $config))->send([
                         'text' => $summaryText,
                     ]);
                     break;

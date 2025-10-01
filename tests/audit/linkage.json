@@ -2462,19 +2462,19 @@
             "reference_count": 0,
             "references": []
         },
-        "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub::__construct": {
-            "class": "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub",
+        "FP\\DMS\\Infra\\Notifiers\\TwilioNotifier::__construct": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\TwilioNotifier",
             "method": "__construct",
             "visibility": "public",
-            "declared_in": "src/Infra/Notifiers/TwilioNotifierStub.php",
+            "declared_in": "src/Infra/Notifiers/TwilioNotifier.php",
             "reference_count": 0,
             "references": []
         },
-        "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub::send": {
-            "class": "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub",
+        "FP\\DMS\\Infra\\Notifiers\\TwilioNotifier::send": {
+            "class": "FP\\DMS\\Infra\\Notifiers\\TwilioNotifier",
             "method": "send",
             "visibility": "public",
-            "declared_in": "src/Infra/Notifiers/TwilioNotifierStub.php",
+            "declared_in": "src/Infra/Notifiers/TwilioNotifier.php",
             "reference_count": 0,
             "references": []
         },
@@ -2908,10 +2908,10 @@
                     "context": "Logger::logChannel('ANOM', sprintf('email_failed client=%d metric=%s', $client->id ?? 0, $metric));"
                 },
                 {
-                    "file": "src/Infra/Notifiers/TwilioNotifierStub.php",
-                    "line": 25,
+                    "file": "src/Infra/Notifiers/TwilioNotifier.php",
+                    "line": 174,
                     "type": "static_call",
-                    "context": "Logger::logChannel('ANOM', sprintf('twilio_stub from=%s to=%s message=%s', $from, $to, substr($text, 0, 120)));"
+                    "context": "Logger::logChannel('ANOM', sprintf('twilio_failed to=%s status=%d body=%s', md5($recipient), $code, $bodySummary));"
                 },
                 {
                     "file": "src/Infra/Logger.php",
@@ -4419,7 +4419,7 @@
             "src/Infra/Notifiers/SlackNotifier.php",
             "src/Infra/Notifiers/TelegramNotifier.php",
             "src/Infra/Notifiers/EmailNotifier.php",
-            "src/Infra/Notifiers/TwilioNotifierStub.php",
+            "src/Infra/Notifiers/TwilioNotifier.php",
             "src/Infra/Notifiers/BaseNotifier.php",
             "src/Infra/Cron.php",
             "src/Infra/PdfRenderer.php",

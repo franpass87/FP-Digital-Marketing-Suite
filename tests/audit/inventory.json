@@ -1170,9 +1170,9 @@
         },
         {
             "type": "class",
-            "name": "FP\\DMS\\Infra\\Notifiers\\TwilioNotifierStub",
-            "short_name": "TwilioNotifierStub",
-            "file": "src/Infra/Notifiers/TwilioNotifierStub.php",
+            "name": "FP\\DMS\\Infra\\Notifiers\\TwilioNotifier",
+            "short_name": "TwilioNotifier",
+            "file": "src/Infra/Notifiers/TwilioNotifier.php",
             "methods": [
                 {
                     "name": "__construct",
