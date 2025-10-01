@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace FP\DMS\Services\Connectors;
 
+use DateTimeImmutable;
+use Exception;
+use FP\DMS\Support\Period;
+
 class Normalizer
 {
     /** @var string[] */
@@ -64,5 +68,20 @@ class Normalizer
         }
 
         return array_values($bucket);
+    }
+
+    public static function isWithinPeriod(Period $period, string $date): bool
+    {
+        if ($date === '') {
+            return false;
+        }
+
+        try {
+            $day = new DateTimeImmutable($date);
+        } catch (Exception $exception) {
+            return false;
+        }
+
+        return $day >= $period->start && $day <= $period->end;
     }
 }

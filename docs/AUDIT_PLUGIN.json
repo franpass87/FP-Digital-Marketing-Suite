@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "plugin": "FP Digital Marketing Suite",
+    "date": "2025-10-01",
+    "wp_min": "6.6",
+    "php_targets": ["8.2", "8.3"]
+  },
+  "summary": {
+    "files_scanned": 103,
+    "files_total": 103,
+    "issues_total": 3,
+    "by_severity": {
+      "critical": 0,
+      "high": 2,
+      "medium": 1,
+      "low": 0
+    }
+  },
+  "issues": [
+    {
+      "id": "ISSUE-001",
+      "severity": "high",
+      "category": ["functional", "cron", "rest"],
+      "file": "src/Http/Routes.php",
+      "line": 42,
+      "snippet": "register_rest_route('fpdms/v1', '/tick', ['methods' => 'POST', 'callback' => [self::class, 'handleTick'], 'permission_callback' => '__return_true']);",
+      "diagnosis": "The fallback cron REST route only allows POST but the settings screen exposes a GET URL, so operators following the guidance will trigger 404/405 responses and the queue never runs.",
+      "impact": "Remote cron integrations silently fail, blocking scheduled report generation and notifications.",
+      "repro": [
+        "Copy the \"Cron Fallback Endpoint\" URL from the settings page.",
+        "Send a GET request to that URL (default for many cron services).",
+        "Observe the REST API returns no route and no queue tick occurs."
+      ],
+      "proposed_fix": "Allow both GET and POST (or update the generated URL to require POST) when registering the tick route while keeping the shared key validation in handleTick().",
+      "effort": "S",
+      "tags": ["cron", "rest", "ux"]
+    },
+    {
+      "id": "ISSUE-002",
+      "severity": "medium",
+      "category": ["security", "encryption"],
+      "file": "src/Support/Security.php",
+      "line": 16,
+      "snippet": "if (! self::isEncryptionAvailable()) {\n    return $plain;\n}",
+      "diagnosis": "When libsodium is unavailable the encrypt() helper returns the plaintext unchanged, so datasource auth blobs and routing secrets are persisted without protection on common shared hosts.",
+      "impact": "Secrets such as API tokens, SMTP credentials and webhook keys are stored in clear text inside the database, exposing them to backups or low-privilege users.",
+      "repro": [
+        "Run the plugin on a PHP build without libsodium.",
+        "Save a datasource credential or anomaly routing secret.",
+        "Inspect the database row; the secret value is stored verbatim."
+      ],
+      "proposed_fix": "Introduce a hardened fallback (e.g. AES-256 via OpenSSL with an IV stored alongside the cipher) and throw an explicit error when no secure encryption backend is available, updating decrypt() accordingly.",
+      "effort": "M",
+      "tags": ["credentials", "encryption", "shared-hosting"]
+    },
+    {
+      "id": "ISSUE-003",
+      "severity": "high",
+      "category": ["functional", "reporting", "data-integrity"],
+      "file": "src/Services/Connectors/GoogleAdsProvider.php",
+      "line": 40,
+      "snippet": "foreach ($summary['daily'] as $date => $metrics) { $rows[] = Normalizer::ensureKeys(['source' => 'google_ads', 'date' => (string) $date] + self::mapMetrics($metrics)); }",
+      "diagnosis": "CSV-based connectors return every cached day regardless of the requested Period and the overview assembler blindly sums those rows, so totals for a narrow window include stale metrics from previous weeks.",
+      "impact": "Dashboards and PDF reports display inflated KPIs and anomalies for the selected date range, eroding trust in the plugin output.",
+      "repro": [
+        "Import a CSV summary covering an entire month.",
+        "Request a report for a single week within that month.",
+        "Notice the totals still reflect the whole month instead of the selected week."
+      ],
+      "proposed_fix": "Skip connector rows whose date falls outside $period->start/$period->end (and guard in Assembler::collectSeries) before merging so only in-range metrics contribute to totals.",
+      "effort": "M",
+      "tags": ["csv", "reports", "overview", "kpi"]
+    }
+  ],
+  "conflicts": [],
+  "compat": {
+    "deprecated": [],
+    "php_warnings": ["Plugin header still declares Requires PHP 8.1; align with 8.2/8.3 support target."]
+  },
+  "perf": {
+    "hotspots": [],
+    "autoload_options": [],
+    "cron": []
+  },
+  "i18n": {
+    "domain_issues": [],
+    "missing": []
+  },
+  "tests": {
+    "gaps": ["No coverage around REST cron fallback, credential encryption fallbacks, or period filtering for CSV summaries."],
+    "suggestions": ["Add integration tests to cover tick route method handling, encryption fallbacks, and the new date-window enforcement on CSV connectors."]
+  }
+}
