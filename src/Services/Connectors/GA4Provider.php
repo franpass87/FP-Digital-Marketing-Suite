@@ -48,6 +48,10 @@ class GA4Provider implements DataSourceProviderInterface
                 if ($dateString === 'total') {
                     $dateString = $period->end->format('Y-m-d');
                 }
+                if (! Normalizer::isWithinPeriod($period, $dateString)) {
+                    continue;
+                }
+
                 $rows[] = Normalizer::ensureKeys(array_merge(
                     ['source' => 'ga4', 'date' => $dateString],
                     self::mapMetrics($metrics)

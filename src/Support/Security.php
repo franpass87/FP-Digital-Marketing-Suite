@@ -4,13 +4,32 @@ declare(strict_types=1);
 
 namespace FP\DMS\Support;
 
+use RuntimeException;
+use function base64_decode;
+use function base64_encode;
+use function function_exists;
+use function in_array;
+use function is_array;
+use function openssl_cipher_iv_length;
+use function openssl_decrypt;
+use function openssl_encrypt;
+use function openssl_get_cipher_methods;
+use function random_bytes;
+use function strlen;
+use function str_starts_with;
+use function substr;
+
 class Security
 {
+    private const OPENSSL_PREFIX = 'openssl:';
+    private const OPENSSL_METHOD = 'aes-256-gcm';
+    private const OPENSSL_TAG_LENGTH = 16;
+
     private static bool $notice_hooked = false;
 
     public static function isEncryptionAvailable(): bool
     {
-        return function_exists('sodium_crypto_secretbox');
+        return self::isSodiumAvailable() || self::isOpenSslAvailable();
     }
 
     public static function encrypt(string $plain): string
@@ -19,14 +38,18 @@ class Security
             return $plain;
         }
 
-        if (! self::isEncryptionAvailable()) {
-            return $plain;
+        if (self::isSodiumAvailable()) {
+            $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+            $cipher = sodium_crypto_secretbox($plain, $nonce, self::getKey());
+
+            return base64_encode($nonce . $cipher);
         }
 
-        $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
-        $cipher = sodium_crypto_secretbox($plain, $nonce, self::getKey());
+        if (self::isOpenSslAvailable()) {
+            return self::encryptWithOpenSsl($plain);
+        }
 
-        return base64_encode($nonce . $cipher);
+        throw new RuntimeException('No secure encryption backend is available.');
     }
 
     public static function decrypt(string $encoded, ?bool &$failed = null): string
@@ -37,13 +60,26 @@ class Security
             return $encoded;
         }
 
-        if (! self::isEncryptionAvailable()) {
+        if (str_starts_with($encoded, self::OPENSSL_PREFIX)) {
+            if (! self::isOpenSslAvailable()) {
+                $failed = true;
+
+                return $encoded;
+            }
+
+            return self::decryptWithOpenSsl($encoded, $failed);
+        }
+
+        if (! self::isSodiumAvailable()) {
+            $failed = true;
+
             return $encoded;
         }
 
         $decoded = base64_decode($encoded, true);
         if ($decoded === false || strlen($decoded) < SODIUM_CRYPTO_SECRETBOX_NONCEBYTES) {
             $failed = true;
+
             return $encoded;
         }
 
@@ -53,6 +89,7 @@ class Security
 
         if ($plain === false) {
             $failed = true;
+
             return $encoded;
         }
 
@@ -89,5 +126,77 @@ class Security
         $hash = hash('sha256', $salt, true);
 
         return substr($hash, 0, SODIUM_CRYPTO_SECRETBOX_KEYBYTES);
+    }
+
+    private static function isSodiumAvailable(): bool
+    {
+        return function_exists('sodium_crypto_secretbox');
+    }
+
+    private static function isOpenSslAvailable(): bool
+    {
+        if (! function_exists('openssl_encrypt') || ! function_exists('openssl_decrypt')) {
+            return false;
+        }
+
+        $methods = openssl_get_cipher_methods();
+
+        return is_array($methods) && in_array(self::OPENSSL_METHOD, $methods, true);
+    }
+
+    private static function encryptWithOpenSsl(string $plain): string
+    {
+        $ivLength = openssl_cipher_iv_length(self::OPENSSL_METHOD);
+        if ($ivLength === false || $ivLength <= 0) {
+            throw new RuntimeException('Invalid OpenSSL IV length.');
+        }
+
+        $iv = random_bytes($ivLength);
+        $tag = '';
+        $cipher = openssl_encrypt($plain, self::OPENSSL_METHOD, self::getKey(), OPENSSL_RAW_DATA, $iv, $tag, '', self::OPENSSL_TAG_LENGTH);
+
+        if ($cipher === false || $tag === '') {
+            throw new RuntimeException('Unable to encrypt payload with OpenSSL.');
+        }
+
+        return self::OPENSSL_PREFIX . base64_encode($iv . $tag . $cipher);
+    }
+
+    private static function decryptWithOpenSsl(string $encoded, ?bool &$failed): string
+    {
+        $payload = substr($encoded, strlen(self::OPENSSL_PREFIX));
+        $decoded = base64_decode($payload, true);
+        if ($decoded === false) {
+            $failed = true;
+
+            return $encoded;
+        }
+
+        $ivLength = openssl_cipher_iv_length(self::OPENSSL_METHOD);
+        if ($ivLength === false || $ivLength <= 0) {
+            $failed = true;
+
+            return $encoded;
+        }
+
+        $minimumLength = $ivLength + self::OPENSSL_TAG_LENGTH + 1;
+        if (strlen($decoded) < $minimumLength) {
+            $failed = true;
+
+            return $encoded;
+        }
+
+        $iv = substr($decoded, 0, $ivLength);
+        $tag = substr($decoded, $ivLength, self::OPENSSL_TAG_LENGTH);
+        $cipher = substr($decoded, $ivLength + self::OPENSSL_TAG_LENGTH);
+
+        $plain = openssl_decrypt($cipher, self::OPENSSL_METHOD, self::getKey(), OPENSSL_RAW_DATA, $iv, $tag);
+        if ($plain === false) {
+            $failed = true;
+
+            return $encoded;
+        }
+
+        return $plain;
     }
 }

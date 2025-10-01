@@ -9,6 +9,7 @@ use DateTimeImmutable;
 use Exception;
 use FP\DMS\Domain\Entities\DataSource;
 use FP\DMS\Domain\Repos\DataSourcesRepo;
+use FP\DMS\Services\Connectors\Normalizer;
 use FP\DMS\Services\Connectors\ProviderFactory;
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
@@ -406,6 +407,10 @@ class Assembler
                 $date = isset($row['date']) ? (string) $row['date'] : '';
                 $normalizedDate = $this->safeDate($date, $period->end);
                 if (! $normalizedDate) {
+                    continue;
+                }
+
+                if (! Normalizer::isWithinPeriod($period, $normalizedDate)) {
                     continue;
                 }
 

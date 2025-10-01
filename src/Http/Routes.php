@@ -40,7 +40,7 @@ class Routes
         OverviewRoutes::register();
 
         register_rest_route('fpdms/v1', '/tick', [
-            'methods' => 'POST',
+            'methods' => ['GET', 'POST'],
             'callback' => [self::class, 'handleTick'],
             'permission_callback' => '__return_true',
         ]);
