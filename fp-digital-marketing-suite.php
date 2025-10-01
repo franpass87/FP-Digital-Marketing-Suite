@@ -3,7 +3,7 @@
  * Plugin Name: FP Digital Marketing Suite
  * Plugin URI: https://francescopasseri.com
  * Description: Automated marketing reports for a private WordPress site.
- * Version: 0.1.0
+ * Version: 0.1.1
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Author: Francesco Passeri
@@ -34,7 +34,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-const FP_DMS_VERSION = '0.1.0';
+const FP_DMS_VERSION = '0.1.1';
 const FP_DMS_PLUGIN_FILE = __FILE__;
 const FP_DMS_PLUGIN_DIR = __DIR__;
 
