@@ -12,6 +12,7 @@ use FP\DMS\Domain\Repos\DataSourcesRepo;
 use FP\DMS\Services\Connectors\ProviderFactory;
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 use Throwable;
 use function __;
 use function array_filter;
@@ -20,7 +21,6 @@ use function array_map;
 use function count;
 use function is_array;
 use function is_numeric;
-use function sanitize_key;
 
 class Assembler
 {
@@ -443,7 +443,7 @@ class Assembler
      */
     private function mapMetrics(string $source, array $row): array
     {
-        $source = sanitize_key($source);
+        $source = Wp::sanitizeKey($source);
         $map = self::SOURCE_METRICS[$source] ?? null;
         if ($map === null) {
             return [];

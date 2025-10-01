@@ -6,6 +6,7 @@ namespace FP\DMS\Domain\Repos;
 
 use FP\DMS\Domain\Entities\Anomaly;
 use FP\DMS\Infra\DB;
+use FP\DMS\Support\Wp;
 use wpdb;
 
 class AnomaliesRepo
@@ -57,8 +58,8 @@ class AnomaliesRepo
             'client_id' => (int) ($data['client_id'] ?? 0),
             'type' => (string) ($data['type'] ?? ''),
             'severity' => (string) ($data['severity'] ?? 'info'),
-            'payload' => wp_json_encode($payloadData),
-            'detected_at' => (string) ($data['detected_at'] ?? current_time('mysql')),
+            'payload' => Wp::jsonEncode($payloadData) ?: '[]',
+            'detected_at' => (string) ($data['detected_at'] ?? Wp::currentTime('mysql')),
             'notified' => empty($data['notified']) ? 0 : 1,
             'algo' => isset($data['algo']) ? (string) $data['algo'] : null,
             'score' => isset($data['score']) ? (float) $data['score'] : null,
@@ -106,7 +107,7 @@ class AnomaliesRepo
 
         $result = $wpdb->update(
             $this->table,
-            ['payload' => wp_json_encode($payload)],
+            ['payload' => Wp::jsonEncode($payload) ?: '[]'],
             ['id' => $id],
             ['%s'],
             ['%d']

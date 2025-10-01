@@ -8,13 +8,12 @@ use DateTimeZone;
 use Exception;
 use FP\DMS\Domain\Entities\Client;
 use FP\DMS\Infra\DB;
+use FP\DMS\Support\Wp;
 use wpdb;
 
 use function explode;
 use function is_array;
 use function is_string;
-use function is_email;
-use function sanitize_email;
 use function strtolower;
 use function trim;
 
@@ -66,11 +65,11 @@ class ClientsRepo
     {
         global $wpdb;
 
-        $now = current_time('mysql');
+        $now = Wp::currentTime('mysql');
         $payload = [
             'name' => (string) ($data['name'] ?? ''),
-            'email_to' => wp_json_encode($this->sanitizeEmailList($data['email_to'] ?? [])),
-            'email_cc' => wp_json_encode($this->sanitizeEmailList($data['email_cc'] ?? [])),
+            'email_to' => Wp::jsonEncode($this->sanitizeEmailList($data['email_to'] ?? [])) ?: '[]',
+            'email_cc' => Wp::jsonEncode($this->sanitizeEmailList($data['email_cc'] ?? [])) ?: '[]',
             'timezone' => $this->normalizeTimezone((string) ($data['timezone'] ?? ''), 'UTC'),
             'notes' => (string) ($data['notes'] ?? ''),
             'created_at' => $now,
@@ -107,11 +106,11 @@ class ClientsRepo
 
         $payload = [
             'name' => $name,
-            'email_to' => wp_json_encode($this->sanitizeEmailList($emailToInput)),
-            'email_cc' => wp_json_encode($this->sanitizeEmailList($emailCcInput)),
+            'email_to' => Wp::jsonEncode($this->sanitizeEmailList($emailToInput)) ?: '[]',
+            'email_cc' => Wp::jsonEncode($this->sanitizeEmailList($emailCcInput)) ?: '[]',
             'timezone' => $timezone,
             'notes' => $notes,
-            'updated_at' => current_time('mysql'),
+            'updated_at' => Wp::currentTime('mysql'),
         ];
 
         $result = $wpdb->update($this->table, $payload, ['id' => $id], ['%s', '%s', '%s', '%s', '%s', '%s'], ['%d']);
@@ -150,8 +149,8 @@ class ClientsRepo
                 continue;
             }
 
-            $normalized = sanitize_email(trim($email));
-            if ($normalized === '' || ! is_email($normalized)) {
+            $normalized = Wp::sanitizeEmail(trim($email));
+            if ($normalized === '' || ! Wp::isEmail($normalized)) {
                 continue;
             }
 

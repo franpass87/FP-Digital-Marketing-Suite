@@ -14,6 +14,7 @@ use FP\DMS\Infra\PdfRenderer;
 use FP\DMS\Services\Connectors\DataSourceProviderInterface;
 use FP\DMS\Services\Connectors\Normalizer;
 use FP\DMS\Support\I18n;
+use FP\DMS\Support\Wp;
 use FP\DMS\Support\Period;
 use RuntimeException;
 
@@ -32,7 +33,7 @@ class ReportBuilder
     public function generate(ReportJob $job, Client $client, array $providers, Period $period, Template $template, array $previousMetrics = []): ?ReportJob
     {
         $collected = $this->collectData($providers, $period, $previousMetrics);
-        $timestamp = current_time('mysql');
+        $timestamp = Wp::currentTime('mysql');
         $meta = array_merge(
             $job->meta,
             $collected,
@@ -197,15 +198,15 @@ class ReportBuilder
      */
     private function determinePath(Client $client, Period $period): array
     {
-        $upload = wp_upload_dir();
+        $upload = Wp::uploadDir();
         if (! empty($upload['error']) || empty($upload['basedir'])) {
             throw new RuntimeException(I18n::__('Uploads directory is not available.'));
         }
         $subdir = 'fpdms/' . $period->start->format('Y') . '/' . $period->start->format('m');
-        $slug = sanitize_title($client->name ?: 'client');
+        $slug = Wp::sanitizeTitle($client->name ?: 'client');
         $filename = $slug . '-' . $period->start->format('Ymd') . '-' . $period->end->format('Ymd') . '.pdf';
-        $relative = trailingslashit($subdir) . $filename;
-        $absolute = trailingslashit($upload['basedir']) . $relative;
+        $relative = Wp::trailingSlashIt($subdir) . $filename;
+        $absolute = Wp::trailingSlashIt($upload['basedir']) . $relative;
 
         return [$absolute, $relative];
     }

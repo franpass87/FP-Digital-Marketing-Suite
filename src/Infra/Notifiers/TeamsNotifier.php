@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Infra\Notifiers;
 
 use FP\DMS\Infra\Logger;
+use FP\DMS\Support\Wp;
 
 class TeamsNotifier implements BaseNotifier
 {
@@ -34,13 +35,13 @@ class TeamsNotifier implements BaseNotifier
             ],
         ];
 
-        $response = wp_remote_post($this->webhookUrl, [
+        $response = Wp::remotePost($this->webhookUrl, [
             'headers' => ['Content-Type' => 'application/json'],
-            'body' => wp_json_encode($body),
+            'body' => Wp::jsonEncode($body) ?: '[]',
             'timeout' => 5,
         ]);
 
-        if (is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) >= 300) {
+        if (Wp::isWpError($response) || Wp::remoteRetrieveResponseCode($response) >= 300) {
             Logger::logChannel('ANOM', sprintf('teams_failed url=%s', md5($this->webhookUrl)));
 
             return false;

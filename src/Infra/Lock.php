@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FP\DMS\Infra;
 
+use FP\DMS\Support\Wp;
 use wpdb;
 
 class Lock
@@ -58,7 +59,7 @@ class Lock
     {
         global $wpdb;
         $table = DB::table('locks');
-        $now = current_time('mysql');
+        $now = Wp::currentTime('mysql');
 
         $sql = $wpdb->prepare(
             "INSERT INTO {$table} (lock_key, owner, acquired_at) VALUES (%s, %s, %s)",

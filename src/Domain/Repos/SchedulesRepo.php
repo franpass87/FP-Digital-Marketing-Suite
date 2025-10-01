@@ -6,6 +6,7 @@ namespace FP\DMS\Domain\Repos;
 
 use FP\DMS\Domain\Entities\Schedule;
 use FP\DMS\Infra\DB;
+use FP\DMS\Support\Wp;
 use wpdb;
 
 class SchedulesRepo
@@ -85,10 +86,10 @@ class SchedulesRepo
     public function create(array $data): ?Schedule
     {
         global $wpdb;
-        $now = current_time('mysql');
+        $now = Wp::currentTime('mysql');
         $payload = [
             'client_id' => (int) ($data['client_id'] ?? 0),
-            'cron_key' => (string) ($data['cron_key'] ?? wp_generate_password(20, false, false)),
+            'cron_key' => (string) ($data['cron_key'] ?? Wp::generatePassword(20, false, false)),
             'frequency' => (string) ($data['frequency'] ?? 'monthly'),
             'next_run_at' => $data['next_run_at'] ?? null,
             'last_run_at' => $data['last_run_at'] ?? null,
@@ -132,7 +133,7 @@ class SchedulesRepo
             'last_run_at' => $lastRunAt,
             'active' => $active ? 1 : 0,
             'template_id' => $templateId,
-            'updated_at' => current_time('mysql'),
+            'updated_at' => Wp::currentTime('mysql'),
         ];
 
         $result = $wpdb->update($this->table, $payload, ['id' => $id], ['%s', '%s', '%s', '%d', '%d', '%s'], ['%d']);

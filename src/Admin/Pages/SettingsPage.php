@@ -7,11 +7,9 @@ namespace FP\DMS\Admin\Pages;
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\Validation;
 use function __;
-use function absint;
+use FP\DMS\Support\Wp;
 use function in_array;
-use function sanitize_key;
 use function strtolower;
-use function wp_unslash;
 
 class SettingsPage
 {
@@ -153,25 +151,25 @@ class SettingsPage
             return;
         }
 
-        $nonce = sanitize_text_field((string) wp_unslash($_POST['fpdms_settings_nonce']));
+        $nonce = Wp::sanitizeTextField(Wp::unslash($_POST['fpdms_settings_nonce'] ?? ''));
 
         if (! wp_verify_nonce($nonce, 'fpdms_save_settings')) {
             return;
         }
 
-        $post = wp_unslash($_POST);
+        $post = Wp::unslash($_POST);
 
-        $action = sanitize_text_field((string) ($post['fpdms_settings_action'] ?? 'save'));
+        $action = Wp::sanitizeTextField($post['fpdms_settings_action'] ?? 'save');
         $settings = Options::getGlobalSettings();
 
         if ($action === 'regenerate') {
-            $settings['tick_key'] = wp_generate_password(32, false, false);
+            $settings['tick_key'] = Wp::generatePassword(32, false, false);
             Options::updateGlobalSettings($settings);
             add_settings_error('fpdms_settings', 'fpdms_settings_tick', __('Tick key regenerated.', 'fp-dms'), 'updated');
             return;
         }
 
-        $email = sanitize_email((string) ($post['owner_email'] ?? ''));
+        $email = Wp::sanitizeEmail($post['owner_email'] ?? '');
         if ($email !== '' && ! Validation::isEmailList([$email])) {
             add_settings_error('fpdms_settings', 'fpdms_settings_email', __('Owner email is not valid.', 'fp-dms'));
         } else {
@@ -193,14 +191,14 @@ class SettingsPage
         $logoUrl = esc_url_raw((string) ($brandingInput['logo_url'] ?? ''));
         $settings['pdf_branding']['logo_url'] = Validation::safeUrl($logoUrl) ? $logoUrl : '';
 
-        $primary = sanitize_text_field((string) ($brandingInput['primary_color'] ?? '#1d4ed8'));
+        $primary = Wp::sanitizeTextField($brandingInput['primary_color'] ?? '#1d4ed8');
         $settings['pdf_branding']['primary_color'] = Validation::isHexColor($primary) ? $primary : '#1d4ed8';
-        $settings['pdf_branding']['footer_text'] = wp_kses_post((string) ($brandingInput['footer_text'] ?? ''));
+        $settings['pdf_branding']['footer_text'] = Wp::ksesPost((string) ($brandingInput['footer_text'] ?? ''));
 
         $mailInput = isset($post['mail']) && is_array($post['mail']) ? $post['mail'] : [];
         $smtpInput = isset($mailInput['smtp']) && is_array($mailInput['smtp']) ? $mailInput['smtp'] : [];
 
-        $settings['mail']['smtp']['host'] = sanitize_text_field((string) ($smtpInput['host'] ?? ''));
+        $settings['mail']['smtp']['host'] = Wp::sanitizeTextField($smtpInput['host'] ?? '');
 
         $defaultPort = (int) Options::defaultGlobalSettings()['mail']['smtp']['port'];
         $currentPort = (int) ($settings['mail']['smtp']['port'] ?? $defaultPort);
@@ -208,15 +206,15 @@ class SettingsPage
             $currentPort = $defaultPort;
         }
 
-        $submittedPort = isset($smtpInput['port']) ? absint($smtpInput['port']) : 0;
+        $submittedPort = isset($smtpInput['port']) ? Wp::absInt($smtpInput['port']) : 0;
         if ($submittedPort < 1 || $submittedPort > 65535) {
             $submittedPort = $currentPort;
         }
         $settings['mail']['smtp']['port'] = $submittedPort;
 
-        $secure = isset($smtpInput['secure']) ? sanitize_key((string) $smtpInput['secure']) : 'none';
+        $secure = isset($smtpInput['secure']) ? Wp::sanitizeKey($smtpInput['secure']) : 'none';
         $settings['mail']['smtp']['secure'] = self::normaliseSecureMode($secure);
-        $settings['mail']['smtp']['user'] = sanitize_text_field((string) ($smtpInput['user'] ?? ''));
+        $settings['mail']['smtp']['user'] = Wp::sanitizeTextField($smtpInput['user'] ?? '');
 
         $existingCipher = isset($settings['mail']['smtp']['pass_cipher']) && is_string($settings['mail']['smtp']['pass_cipher'])
             ? $settings['mail']['smtp']['pass_cipher']
@@ -274,7 +272,7 @@ class SettingsPage
                 continue;
             }
 
-            $seconds = absint($value);
+            $seconds = Wp::absInt($value);
             if ($seconds < 30 || $seconds > 3600) {
                 continue;
             }
@@ -287,10 +285,10 @@ class SettingsPage
         }
 
         if ($intervals === []) {
-            $intervals = array_map('absint', $current);
+            $intervals = array_map([Wp::class, 'absInt'], $current);
         }
 
-        $intervals = array_values(array_unique(array_map('absint', $intervals)));
+        $intervals = array_values(array_unique(array_map([Wp::class, 'absInt'], $intervals)));
         sort($intervals);
 
         if ($intervals === []) {

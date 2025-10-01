@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Services\Reports;
 
+use FP\DMS\Support\Wp;
+
 class TokenEngine
 {
     /**
@@ -49,20 +51,24 @@ class TokenEngine
             return (string) $value;
         }
 
-        return is_array($value) ? wp_json_encode($value) : '';
+        if (is_array($value)) {
+            return Wp::jsonEncode($value) ?: '';
+        }
+
+        return '';
     }
 
     private function applyFilter(string $value, string $filter): string
     {
         $filter = trim($filter);
         if ($filter === 'number') {
-            return number_format_i18n((float) $value);
+            return Wp::numberFormatI18n((float) $value);
         }
 
         if ($filter !== '') {
             $timestamp = strtotime($value);
             if ($timestamp !== false) {
-                return wp_date($filter, $timestamp);
+                return Wp::date($filter, $timestamp);
             }
         }
 

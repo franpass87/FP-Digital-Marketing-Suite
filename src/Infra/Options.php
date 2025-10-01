@@ -7,6 +7,7 @@ namespace FP\DMS\Infra;
 use DateTimeZone;
 use Exception;
 use FP\DMS\Support\Security;
+use FP\DMS\Support\Wp;
 
 class Options
 {
@@ -55,7 +56,7 @@ class Options
             $refresh = self::defaultGlobalSettings()['overview']['refresh_intervals'];
         }
 
-        $refresh = array_values(array_filter(array_map('absint', $refresh), static fn(int $value): bool => $value > 0));
+        $refresh = array_values(array_filter(array_map([Wp::class, 'absInt'], $refresh), static fn(int $value): bool => $value > 0));
         if ($refresh === []) {
             $refresh = self::defaultGlobalSettings()['overview']['refresh_intervals'];
         }
@@ -103,7 +104,7 @@ class Options
                 $intervals = self::defaultGlobalSettings()['overview']['refresh_intervals'];
             }
 
-            $intervals = array_values(array_filter(array_map('absint', $intervals), static fn(int $value): bool => $value > 0));
+            $intervals = array_values(array_filter(array_map([Wp::class, 'absInt'], $intervals), static fn(int $value): bool => $value > 0));
             if ($intervals === []) {
                 $intervals = self::defaultGlobalSettings()['overview']['refresh_intervals'];
             }
@@ -134,7 +135,7 @@ class Options
     {
         $settings = self::getGlobalSettings();
         if (empty($settings['tick_key'])) {
-            $settings['tick_key'] = wp_generate_password(32, false, false);
+            $settings['tick_key'] = Wp::generatePassword(32, false, false);
             self::updateGlobalSettings($settings);
         }
 
@@ -163,7 +164,7 @@ class Options
 
     public static function regenerateQaKey(): string
     {
-        $key = wp_generate_password(40, false, false);
+        $key = Wp::generatePassword(40, false, false);
         update_option(self::QA_KEY, $key, false);
 
         return $key;
@@ -304,7 +305,7 @@ class Options
                 $policy['baseline']['window_days'] = max(1, (int) $baseline['window_days']);
             }
             if (isset($baseline['seasonality'])) {
-                $policy['baseline']['seasonality'] = sanitize_text_field((string) $baseline['seasonality']);
+                $policy['baseline']['seasonality'] = Wp::sanitizeTextField($baseline['seasonality']);
             }
             if (isset($baseline['ewma_alpha']) && is_numeric($baseline['ewma_alpha'])) {
                 $alpha = (float) $baseline['ewma_alpha'];
@@ -320,14 +321,14 @@ class Options
 
         $muteInput = isset($input['mute']) && is_array($input['mute']) ? $input['mute'] : [];
         if (isset($muteInput['start'])) {
-            $policy['mute']['start'] = sanitize_text_field((string) $muteInput['start']);
+            $policy['mute']['start'] = Wp::sanitizeTextField($muteInput['start']);
         }
         if (isset($muteInput['end'])) {
-            $policy['mute']['end'] = sanitize_text_field((string) $muteInput['end']);
+            $policy['mute']['end'] = Wp::sanitizeTextField($muteInput['end']);
         }
-        $timezoneFallback = $policy['mute']['tz'] ?? wp_timezone_string();
+        $timezoneFallback = $policy['mute']['tz'] ?? Wp::timezoneString();
         if (isset($muteInput['tz'])) {
-            $candidate = sanitize_text_field((string) $muteInput['tz']);
+            $candidate = Wp::sanitizeTextField($muteInput['tz']);
             if ($candidate === '') {
                 $policy['mute']['tz'] = $timezoneFallback;
             } else {
@@ -354,7 +355,7 @@ class Options
                     $raw = (string) $source[$key];
                     $lowerKey = strtolower($key);
                     if (str_contains($lowerKey, 'url')) {
-                        $value = esc_url_raw($raw);
+                        $value = Wp::escUrlRaw($raw);
                     } elseif (
                         str_contains($lowerKey, 'token') ||
                         str_contains($lowerKey, 'secret') ||
@@ -363,7 +364,7 @@ class Options
                     ) {
                         $value = trim($raw);
                     } else {
-                        $value = sanitize_text_field($raw);
+                        $value = Wp::sanitizeTextField($raw);
                     }
                 }
                 unset($value);

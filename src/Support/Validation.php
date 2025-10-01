@@ -17,7 +17,7 @@ class Validation
     public static function isEmailList(array $emails): bool
     {
         foreach ($emails as $email) {
-            if (! is_string($email) || ! is_email($email)) {
+            if (! is_string($email) || ! Wp::isEmail($email)) {
                 return false;
             }
         }
@@ -41,7 +41,7 @@ class Validation
             return false;
         }
 
-        $sanitized = esc_url_raw($value);
+        $sanitized = Wp::escUrlRaw($value);
 
         return $sanitized !== '' && filter_var($sanitized, FILTER_VALIDATE_URL) !== false;
     }

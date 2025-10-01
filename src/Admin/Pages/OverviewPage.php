@@ -10,7 +10,7 @@ use FP\DMS\Support\UserPrefs;
 
 use const FP_DMS_PLUGIN_FILE;
 use const FP_DMS_VERSION;
-use function absint;
+use FP\DMS\Support\Wp;
 use function add_action;
 use function add_query_arg;
 use function admin_url;
@@ -30,7 +30,6 @@ use function rest_url;
 use function wp_create_nonce;
 use function wp_enqueue_script;
 use function wp_enqueue_style;
-use function wp_json_encode;
 
 class OverviewPage
 {
@@ -350,7 +349,8 @@ class OverviewPage
             ],
         ];
 
-        echo '<script type="application/json" id="fpdms-overview-config">' . wp_json_encode($config) . '</script>';
+        $json = Wp::jsonEncode($config) ?: '[]';
+        echo '<script type="application/json" id="fpdms-overview-config">' . $json . '</script>';
     }
 
     /**
@@ -365,7 +365,7 @@ class OverviewPage
 
         if (is_array($configured)) {
             foreach ($configured as $value) {
-                $interval = absint($value);
+                $interval = Wp::absInt($value);
                 if ($interval < 30 || $interval > 3600) {
                     continue;
                 }

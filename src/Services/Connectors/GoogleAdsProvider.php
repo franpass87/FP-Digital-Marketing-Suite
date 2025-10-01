@@ -6,6 +6,7 @@ namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 use function __;
 
 class GoogleAdsProvider implements DataSourceProviderInterface
@@ -146,7 +147,7 @@ class GoogleAdsProvider implements DataSourceProviderInterface
             'metrics' => $totals,
             'daily' => $daily,
             'rows' => count($daily),
-            'last_ingested_at' => current_time('mysql'),
+            'last_ingested_at' => Wp::currentTime('mysql'),
         ];
     }
 
@@ -160,18 +161,18 @@ class GoogleAdsProvider implements DataSourceProviderInterface
             return [];
         }
 
-        $header = str_getcsv(array_shift($lines) ?: '');
+        $header = str_getcsv(array_shift($lines) ?: '', ',', '"', '\\');
         if (! $header) {
             return [];
         }
 
-        $keys = array_map(static fn($value) => sanitize_key((string) $value), $header);
+        $keys = array_map(static fn($value) => Wp::sanitizeKey($value), $header);
         $rows = [];
         foreach ($lines as $line) {
             if (trim($line) === '') {
                 continue;
             }
-            $data = str_getcsv($line);
+            $data = str_getcsv($line, ',', '"', '\\');
             if (! $data) {
                 continue;
             }
@@ -192,7 +193,7 @@ class GoogleAdsProvider implements DataSourceProviderInterface
             return null;
         }
 
-        return wp_date('Y-m-d', $timestamp);
+        return Wp::date('Y-m-d', $timestamp);
     }
 
     private static function toNumber(string $value): float

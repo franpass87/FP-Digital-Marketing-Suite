@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Infra;
 
+use FP\DMS\Support\Wp;
+
 class Logger
 {
     public static function log(string $message): void
@@ -43,11 +45,17 @@ class Logger
 
     public static function logChannel(string $channel, string $message): void
     {
-        $upload = wp_upload_dir();
-        $dir = trailingslashit($upload['basedir']) . 'fpdms-logs';
-        wp_mkdir_p($dir);
-        $file = trailingslashit($dir) . 'fpdms.log';
-        $line = sprintf('[%s] [%s] %s%s', wp_date('Y-m-d H:i:s'), strtoupper($channel), $message, PHP_EOL);
+        $upload = Wp::uploadDir();
+        $dir = Wp::trailingSlashIt($upload['basedir']) . 'fpdms-logs';
+
+        try {
+            Wp::mkdirP($dir);
+        } catch (\RuntimeException) {
+            return;
+        }
+
+        $file = Wp::trailingSlashIt($dir) . 'fpdms.log';
+        $line = sprintf('[%s] [%s] %s%s', Wp::date('Y-m-d H:i:s'), strtoupper($channel), $message, PHP_EOL);
         file_put_contents($file, $line, FILE_APPEND);
     }
 }

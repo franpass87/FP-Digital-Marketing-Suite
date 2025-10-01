@@ -14,8 +14,7 @@ use FP\DMS\Infra\Notifiers\TwilioNotifierStub;
 use FP\DMS\Infra\Notifiers\WebhookNotifier;
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\Period;
-use function is_email;
-use function sanitize_email;
+use FP\DMS\Support\Wp;
 
 class NotificationRouter
 {
@@ -34,7 +33,12 @@ class NotificationRouter
         }
 
         $routing = is_array($policy['routing'] ?? null) ? $policy['routing'] : [];
-        $digest = (int) ($routing['email']['digest_window_min'] ?? 15);
+        $emailRouting = isset($routing['email']) && is_array($routing['email'])
+            ? $routing['email']
+            : [];
+        $digest = isset($emailRouting['digest_window_min'])
+            ? (int) $emailRouting['digest_window_min']
+            : 15;
         $cooldown = (int) ($policy['cooldown_min'] ?? 30);
         $maxPerWindow = (int) ($policy['max_per_window'] ?? 5);
 
@@ -103,7 +107,7 @@ class NotificationRouter
                 case 'teams':
                     $success = (new TeamsNotifier((string) ($config['webhook_url'] ?? '')))->send([
                         'title' => sprintf('Anomaly alert – %s', $client->name),
-                        'text' => nl2br(esc_html($summaryText)),
+                        'text' => nl2br(Wp::escHtml($summaryText)),
                     ]);
                     break;
                 case 'telegram':
@@ -158,8 +162,8 @@ class NotificationRouter
         }
 
         $settings = Options::getGlobalSettings();
-        $owner = isset($settings['owner_email']) ? sanitize_email((string) $settings['owner_email']) : '';
-        if ($owner !== '' && is_email($owner) && ! in_array($owner, $recipients, true)) {
+        $owner = isset($settings['owner_email']) ? Wp::sanitizeEmail($settings['owner_email']) : '';
+        if ($owner !== '' && Wp::isEmail($owner) && ! in_array($owner, $recipients, true)) {
             $recipients[] = $owner;
         }
 
@@ -174,8 +178,8 @@ class NotificationRouter
     {
         $clean = [];
         foreach ($emails as $email) {
-            $sanitized = sanitize_email((string) $email);
-            if ($sanitized === '' || ! is_email($sanitized) || in_array($sanitized, $clean, true)) {
+            $sanitized = Wp::sanitizeEmail($email);
+            if ($sanitized === '' || ! Wp::isEmail($sanitized) || in_array($sanitized, $clean, true)) {
                 continue;
             }
             $clean[] = $sanitized;
@@ -192,10 +196,10 @@ class NotificationRouter
             $metric = (string) ($anomaly['metric'] ?? 'metric');
             $severity = strtoupper((string) ($anomaly['severity'] ?? 'warn'));
             $delta = isset($anomaly['delta_percent']) && $anomaly['delta_percent'] !== null
-                ? number_format_i18n((float) $anomaly['delta_percent'], 1) . '%'
+                ? Wp::numberFormatI18n((float) $anomaly['delta_percent'], 1) . '%'
                 : 'n/a';
             $z = isset($anomaly['z_score']) && $anomaly['z_score'] !== null
-                ? number_format_i18n((float) $anomaly['z_score'], 2)
+                ? Wp::numberFormatI18n((float) $anomaly['z_score'], 2)
                 : 'n/a';
             $lines[] = sprintf('%s %s Δ %s z=%s', $severity, $metric, $delta, $z);
         }
@@ -218,7 +222,7 @@ class NotificationRouter
             return;
         }
         $key = 'fpdms_anom_digest_' . md5($clientId . $metric . $severity);
-        set_transient($key, 1, $minutes * MINUTE_IN_SECONDS);
+        set_transient($key, 1, $minutes * Wp::minuteInSeconds());
     }
 
     private function isCoolingDown(int $clientId, string $metric, string $severity, int $minutes): bool
@@ -237,7 +241,7 @@ class NotificationRouter
             return;
         }
         $key = 'fpdms_anom_cool_' . md5($clientId . $metric . $severity);
-        set_transient($key, 1, $minutes * MINUTE_IN_SECONDS);
+        set_transient($key, 1, $minutes * Wp::minuteInSeconds());
     }
 
     private function isWindowCapped(int $clientId, int $limit, int $windowMinutes): bool
@@ -263,7 +267,7 @@ class NotificationRouter
         $data = get_transient($key);
         $count = is_array($data) ? (int) ($data['count'] ?? 0) : 0;
         $count++;
-        set_transient($key, ['count' => $count], $windowMinutes * MINUTE_IN_SECONDS);
+        set_transient($key, ['count' => $count], $windowMinutes * Wp::minuteInSeconds());
     }
 
     private function isMuted(array $mute, Client $client): bool

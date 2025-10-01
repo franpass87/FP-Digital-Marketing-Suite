@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Domain\Entities;
 
+use FP\DMS\Support\Wp;
+
 class ReportJob
 {
     public function __construct(
@@ -49,7 +51,7 @@ class ReportJob
             'period_end' => $this->periodEnd,
             'status' => $this->status,
             'storage_path' => $this->storagePath,
-            'meta' => wp_json_encode($this->meta),
+            'meta' => Wp::jsonEncode($this->meta) ?: '[]',
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
         ];

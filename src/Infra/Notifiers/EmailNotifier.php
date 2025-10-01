@@ -9,6 +9,7 @@ use FP\DMS\Infra\Logger;
 use FP\DMS\Infra\Mailer;
 use FP\DMS\Support\I18n;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 
 class EmailNotifier implements BaseNotifier
 {
@@ -53,24 +54,24 @@ class EmailNotifier implements BaseNotifier
             if (! is_array($anomaly)) {
                 continue;
             }
-            $metric = esc_html((string) ($anomaly['metric'] ?? I18n::__('metric')));
-            $severity = esc_html((string) ($anomaly['severity'] ?? 'warn'));
+            $metric = Wp::escHtml((string) ($anomaly['metric'] ?? I18n::__('metric')));
+            $severity = Wp::escHtml((string) ($anomaly['severity'] ?? 'warn'));
             $delta = isset($anomaly['delta_percent']) && $anomaly['delta_percent'] !== null
-                ? number_format_i18n((float) $anomaly['delta_percent'], 2) . '%'
+                ? Wp::numberFormatI18n((float) $anomaly['delta_percent'], 2) . '%'
                 : I18n::__('n/a');
-            $items .= '<li><strong>' . $metric . '</strong> – ' . esc_html(sprintf(I18n::__('%s (%s)'), $delta, $severity)) . '</li>';
+            $items .= '<li><strong>' . $metric . '</strong> – ' . Wp::escHtml(sprintf(I18n::__('%s (%s)'), $delta, $severity)) . '</li>';
         }
 
         return sprintf(
             '<p>%s</p><ul>%s</ul><p><small>%s</small></p>',
-            esc_html(sprintf(
+            Wp::escHtml(sprintf(
                 I18n::__('The anomaly detector flagged the following metrics for %s (%s → %s).'),
                 $client->name,
                 $period->start->format('Y-m-d'),
                 $period->end->format('Y-m-d')
             )),
             $items,
-            esc_html(I18n::__('You can adjust thresholds from the FP Suite dashboard.'))
+            Wp::escHtml(I18n::__('You can adjust thresholds from the FP Suite dashboard.'))
         );
     }
 }

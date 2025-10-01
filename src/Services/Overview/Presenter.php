@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace FP\DMS\Services\Overview;
 
+use FP\DMS\Support\Wp;
 use function __;
 use function abs;
-use function number_format_i18n;
 use function sprintf;
 
 class Presenter
@@ -17,7 +17,7 @@ class Presenter
             $precision = 1;
         }
 
-        return number_format_i18n($value, $precision);
+        return Wp::numberFormatI18n($value, $precision);
     }
 
     /**
@@ -43,7 +43,7 @@ class Presenter
             $sign = '-';
         }
 
-        $formatted = sprintf('%s%s%%', $sign, number_format_i18n(abs($raw), $precision));
+        $formatted = sprintf('%s%s%%', $sign, Wp::numberFormatI18n(abs($raw), $precision));
 
         return [
             'raw' => $raw,

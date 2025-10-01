@@ -9,6 +9,7 @@ use FP\DMS\Domain\Entities\DataSource;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Domain\Repos\DataSourcesRepo;
 use FP\DMS\Services\Connectors\ProviderFactory;
+use FP\DMS\Support\Wp;
 use WP_Error;
 
 class DataSourcesPage
@@ -65,13 +66,13 @@ class DataSourcesPage
     private static function handleActions(ClientsRepo $clientsRepo, DataSourcesRepo $repo): void
     {
         if (! empty($_POST['fpdms_datasource_action'])) {
-            $nonce = sanitize_text_field($_POST['fpdms_datasource_nonce'] ?? '');
+            $nonce = Wp::sanitizeTextField($_POST['fpdms_datasource_nonce'] ?? '');
             if (! wp_verify_nonce($nonce, 'fpdms_manage_datasource')) {
                 add_settings_error('fpdms_datasources', 'fpdms_datasources_nonce', __('Security check failed. Please try again.', 'fp-dms'));
                 self::storeAndRedirect((int) ($_POST['client_id'] ?? 0));
             }
 
-            $action = sanitize_key($_POST['fpdms_datasource_action']);
+            $action = Wp::sanitizeKey($_POST['fpdms_datasource_action']);
             $clientId = (int) ($_POST['client_id'] ?? 0);
 
             if ($clientId <= 0 || ! $clientsRepo->find($clientId)) {
@@ -81,7 +82,7 @@ class DataSourcesPage
 
             if ($action === 'save') {
                 $id = (int) ($_POST['data_source_id'] ?? 0);
-                $type = sanitize_key($_POST['type'] ?? '');
+                $type = Wp::sanitizeKey($_POST['type'] ?? '');
 
                 if ($type === '') {
                     add_settings_error('fpdms_datasources', 'fpdms_datasources_type', __('Select a connector type.', 'fp-dms'));
@@ -143,7 +144,7 @@ class DataSourcesPage
 
         if (isset($_GET['action'], $_GET['source']) && $_GET['action'] === 'delete') {
             $id = (int) $_GET['source'];
-            $nonce = sanitize_text_field($_GET['_wpnonce'] ?? '');
+            $nonce = Wp::sanitizeTextField($_GET['_wpnonce'] ?? '');
             $dataSource = $repo->find($id);
             $clientId = $dataSource?->clientId ?? (int) ($_GET['client'] ?? 0);
 
@@ -416,8 +417,8 @@ class DataSourcesPage
 
         switch ($type) {
             case 'ga4':
-                $serviceAccount = isset($_POST['auth']['service_account']) ? trim((string) wp_unslash($_POST['auth']['service_account'])) : '';
-                $propertyId = sanitize_text_field($_POST['config']['property_id'] ?? '');
+                $serviceAccount = isset($_POST['auth']['service_account']) ? trim((string) Wp::unslash($_POST['auth']['service_account'])) : '';
+                $propertyId = Wp::sanitizeTextField($_POST['config']['property_id'] ?? '');
                 if ($serviceAccount === '' || $propertyId === '') {
                     return new WP_Error('fpdms_datasource_missing', __('Service account JSON and property ID are required for GA4.', 'fp-dms'));
                 }
@@ -425,7 +426,7 @@ class DataSourcesPage
                 $config['property_id'] = $propertyId;
                 break;
             case 'gsc':
-                $serviceAccount = isset($_POST['auth']['service_account']) ? trim((string) wp_unslash($_POST['auth']['service_account'])) : '';
+                $serviceAccount = isset($_POST['auth']['service_account']) ? trim((string) Wp::unslash($_POST['auth']['service_account'])) : '';
                 $siteUrl = esc_url_raw($_POST['config']['site_url'] ?? '');
                 if ($serviceAccount === '' || $siteUrl === '') {
                     return new WP_Error('fpdms_datasource_missing', __('Service account JSON and site URL are required for Google Search Console.', 'fp-dms'));
@@ -435,7 +436,7 @@ class DataSourcesPage
                 break;
             case 'google_ads':
             case 'meta_ads':
-                $accountName = sanitize_text_field($_POST['config']['account_name'] ?? '');
+                $accountName = Wp::sanitizeTextField($_POST['config']['account_name'] ?? '');
                 if ($accountName === '') {
                     return new WP_Error('fpdms_datasource_missing', __('Account label is required for ads CSV connectors.', 'fp-dms'));
                 }
@@ -479,7 +480,7 @@ class DataSourcesPage
                 }
                 break;
             case 'csv_generic':
-                $label = sanitize_text_field($_POST['config']['source_label'] ?? '');
+                $label = Wp::sanitizeTextField($_POST['config']['source_label'] ?? '');
                 if ($label === '') {
                     return new WP_Error('fpdms_datasource_missing', __('Provide a label for the custom CSV data source.', 'fp-dms'));
                 }
@@ -539,7 +540,7 @@ class DataSourcesPage
             return new WP_Error('fpdms_datasource_csv', __('The CSV file appears to be empty.', 'fp-dms'));
         }
 
-        $keys = array_map(static fn($value) => sanitize_key((string) $value), $header);
+        $keys = array_map(static fn($value) => Wp::sanitizeKey($value), $header);
         $aliases = [
             'date' => ['date', 'day'],
             'users' => ['users'],
@@ -623,7 +624,7 @@ class DataSourcesPage
             'metrics' => array_map(static fn(float $value): float => round($value, 2), $totals),
             'daily' => $daily,
             'rows' => $rows,
-            'last_ingested_at' => current_time('mysql'),
+            'last_ingested_at' => Wp::currentTime('mysql'),
         ];
     }
 
@@ -650,7 +651,7 @@ class DataSourcesPage
             return null;
         }
 
-        return wp_date('Y-m-d', $timestamp);
+        return Wp::date('Y-m-d', $timestamp);
     }
 
     private static function formatSummary(DataSource $dataSource): string
@@ -717,10 +718,10 @@ class DataSourcesPage
     {
         $rounded = round($value, 2);
         if (abs($rounded - round($rounded)) < 0.01) {
-            return number_format_i18n((int) round($rounded));
+            return Wp::numberFormatI18n((int) round($rounded));
         }
 
-        return number_format_i18n($rounded, 2);
+        return Wp::numberFormatI18n($rounded, 2);
     }
 
     private static function formatDateTime(string $datetime): string
@@ -730,6 +731,6 @@ class DataSourcesPage
             return $datetime;
         }
 
-        return wp_date('Y-m-d H:i', $timestamp);
+        return Wp::date('Y-m-d H:i', $timestamp);
     }
 }

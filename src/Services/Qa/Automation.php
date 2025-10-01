@@ -23,6 +23,7 @@ use FP\DMS\Services\Connectors\CsvGenericProvider;
 use FP\DMS\Services\Connectors\GoogleAdsProvider;
 use FP\DMS\Services\Connectors\MetaAdsProvider;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 
 class Automation
 {
@@ -109,7 +110,7 @@ CSV;
         }
 
         $locks = 'OK';
-        $lockOwner = 'qa-rest-' . wp_generate_password(6, false, false);
+        $lockOwner = 'qa-rest-' . Wp::generatePassword(6, false, false);
         if (Lock::acquire('queue-global', $lockOwner, 30)) {
             try {
                 Queue::tick();
@@ -232,14 +233,14 @@ CSV;
         $settings = Options::getGlobalSettings();
         $webhook = $settings['error_webhook_url'] ?? '';
         if ($webhook && ! empty($anomalies)) {
-            wp_remote_post($webhook, [
+            Wp::remotePost($webhook, [
                 'headers' => ['Content-Type' => 'application/json'],
-                'body' => wp_json_encode([
+                'body' => Wp::jsonEncode([
                     'client' => $client->name,
                     'period' => $period,
                     'anomalies' => $anomalies,
                     'qa' => true,
-                ]),
+                ]) ?: '[]',
                 'timeout' => 5,
             ]);
         }
@@ -380,8 +381,8 @@ CSV;
         $reportsDeleted = 0;
         foreach ($reportsRepo->forClient($clientId) as $report) {
             if ($report->storagePath) {
-                $upload = wp_upload_dir();
-                $absolute = trailingslashit($upload['basedir']) . ltrim($report->storagePath, '/');
+                $upload = Wp::uploadDir();
+                $absolute = Wp::trailingSlashIt($upload['basedir']) . ltrim($report->storagePath, '/');
                 if (file_exists($absolute)) {
                     @unlink($absolute);
                 }
@@ -484,7 +485,7 @@ CSV;
             $existing[$dataSource->type] = $dataSource->id;
         }
 
-        $now = current_time('mysql');
+        $now = Wp::currentTime('mysql');
         $definitions = [
             'google_ads' => [
                 'config' => [
@@ -543,7 +544,7 @@ CSV;
         $schedule = $this->resolveSchedule($client);
         $templates = new TemplatesRepo();
         $templateId = $templates->findDefault()?->id;
-        $nextRun = current_time('mysql');
+        $nextRun = Wp::currentTime('mysql');
 
         if ($schedule) {
             $repo->update($schedule->id ?? 0, [

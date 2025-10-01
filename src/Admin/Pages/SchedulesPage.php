@@ -13,8 +13,7 @@ use FP\DMS\Domain\Repos\SchedulesRepo;
 use FP\DMS\Domain\Repos\TemplatesRepo;
 use FP\DMS\Infra\Queue;
 use FP\DMS\Support\I18n;
-use function wp_timezone;
-use function wp_unslash;
+use FP\DMS\Support\Wp;
 
 class SchedulesPage
 {
@@ -60,11 +59,11 @@ class SchedulesPage
 
     private static function handleActions(SchedulesRepo $repo, ClientsRepo $clientsRepo): void
     {
-        $post = wp_unslash($_POST);
+        $post = Wp::unslash($_POST);
 
-        if (! empty($post['fpdms_schedule_nonce']) && wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_schedule_nonce'] ?? '')), 'fpdms_save_schedule')) {
+        if (! empty($post['fpdms_schedule_nonce']) && wp_verify_nonce(Wp::sanitizeTextField($post['fpdms_schedule_nonce'] ?? ''), 'fpdms_save_schedule')) {
             $clientId = (int) ($post['client_id'] ?? 0);
-            $frequency = self::normalizeFrequency(sanitize_text_field((string) ($post['frequency'] ?? 'monthly')));
+            $frequency = self::normalizeFrequency(Wp::sanitizeTextField($post['frequency'] ?? 'monthly'));
             $templateId = isset($post['template_id']) ? (int) $post['template_id'] : null;
             $active = ! empty($post['active']) ? 1 : 0;
 
@@ -84,10 +83,10 @@ class SchedulesPage
             exit;
         }
 
-        $query = wp_unslash($_GET);
+        $query = Wp::unslash($_GET);
         if (isset($query['action'], $query['schedule']) && $query['action'] === 'run') {
             $scheduleId = (int) $query['schedule'];
-            $nonce = sanitize_text_field((string) ($query['_wpnonce'] ?? ''));
+            $nonce = Wp::sanitizeTextField($query['_wpnonce'] ?? '');
             if (wp_verify_nonce($nonce, 'fpdms_run_schedule_' . $scheduleId)) {
                 self::runSchedule($scheduleId);
                 NoticeStore::enqueue('fpdms_schedules', 'fpdms_schedule_run', __('Schedule queued.', 'fp-dms'), 'updated');
@@ -99,7 +98,7 @@ class SchedulesPage
 
     private static function calculateInitialNextRunAt(string $frequency, ?string $timezone): string
     {
-        $siteTz = wp_timezone();
+        $siteTz = Wp::timezone();
         $clientTz = $siteTz;
 
         if (is_string($timezone) && $timezone !== '') {
@@ -227,7 +226,7 @@ class SchedulesPage
         ]);
 
         if ($links) {
-            echo '<div class="tablenav"><div class="tablenav-pages">' . wp_kses_post($links) . '</div></div>';
+            echo '<div class="tablenav"><div class="tablenav-pages">' . Wp::ksesPost($links) . '</div></div>';
         }
     }
 
@@ -263,26 +262,26 @@ class SchedulesPage
      */
     private static function calculatePeriod(string $frequency): array
     {
-        $now = current_time('timestamp');
+        $now = Wp::currentTime('timestamp');
         switch ($frequency) {
             case 'daily':
                 $start = strtotime('-1 day', $now);
                 return [
-                    'start' => wp_date('Y-m-d', $start),
-                    'end' => wp_date('Y-m-d', $start),
+                    'start' => Wp::date('Y-m-d', $start),
+                    'end' => Wp::date('Y-m-d', $start),
                 ];
             case 'weekly':
                 $start = strtotime('-7 days', $now);
                 return [
-                    'start' => wp_date('Y-m-d', $start),
-                    'end' => wp_date('Y-m-d', $now),
+                    'start' => Wp::date('Y-m-d', $start),
+                    'end' => Wp::date('Y-m-d', $now),
                 ];
             default:
                 $firstDay = strtotime('first day of last month', $now);
                 $lastDay = strtotime('last day of last month', $now);
                 return [
-                    'start' => wp_date('Y-m-d', $firstDay),
-                    'end' => wp_date('Y-m-d', $lastDay),
+                    'start' => Wp::date('Y-m-d', $firstDay),
+                    'end' => Wp::date('Y-m-d', $lastDay),
                 ];
         }
     }

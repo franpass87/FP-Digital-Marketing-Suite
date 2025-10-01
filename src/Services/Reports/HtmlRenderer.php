@@ -7,6 +7,7 @@ namespace FP\DMS\Services\Reports;
 use FP\DMS\Domain\Entities\Template;
 use FP\DMS\Support\Arr;
 use FP\DMS\Support\I18n;
+use FP\DMS\Support\Wp;
 
 class HtmlRenderer
 {
@@ -34,19 +35,19 @@ class HtmlRenderer
         }
 
         if (! empty($context['report']['empty'])) {
-            $fallback = '<div class="fpdms-empty">' . esc_html($context['report']['empty_message'] ?? I18n::__('No data available for this period.')) . '</div>';
-            $body .= $fallback;
+            $emptyMessage = (string) ($context['report']['empty_message'] ?? I18n::__('No data available for this period.'));
+            $body .= '<div class="fpdms-empty">' . Wp::escHtml($emptyMessage) . '</div>';
         }
 
-        $color = sanitize_hex_color($context['branding']['primary_color'] ?? '#1d4ed8') ?: '#1d4ed8';
-        $logo = esc_url($context['branding']['logo_url'] ?? '');
-        $footer = wp_kses_post($context['branding']['footer_text'] ?? '');
+        $color = Wp::sanitizeHexColor($context['branding']['primary_color'] ?? '#1d4ed8') ?: '#1d4ed8';
+        $logo = Wp::escUrl($context['branding']['logo_url'] ?? '');
+        $footer = Wp::ksesPost($context['branding']['footer_text'] ?? '');
 
-        $logoHtml = $logo ? '<img src="' . esc_url($logo) . '" alt="logo" style="max-width:200px;">' : '';
+        $logoHtml = $logo !== '' ? '<img src="' . $logo . '" alt="logo" style="max-width:200px;">' : '';
 
         return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' .
             'body{font-family:sans-serif;color:#111;margin:0;padding:40px;background:#f3f4f6;}' .
-            'h1,h2,h3{color:' . esc_attr($color) . ';margin:0;}' .
+            'h1,h2,h3{color:' . Wp::escAttr($color) . ';margin:0;}' .
             '.section{background:#fff;padding:24px;border-radius:12px;margin-bottom:24px;box-shadow:0 1px 2px rgba(15,23,42,0.08);}' .
             '.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-top:16px;}' .
             '.kpi{padding:16px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;}' .
@@ -64,8 +65,8 @@ class HtmlRenderer
             '.fpdms-empty{margin-top:16px;padding:20px;border:1px dashed #94a3b8;border-radius:10px;background:#fff;text-align:center;font-style:italic;color:#475569;}' .
             '.footer{margin-top:24px;font-size:12px;color:#64748b;text-align:center;}' .
             '</style></head><body>' .
-            '<div class="section report-cover">' . $logoHtml . '<h1>' . esc_html($context['client']['name'] ?? '') . '</h1>' .
-            '<p style="color:#475569;margin-top:8px;">' . esc_html($context['period']['label'] ?? '') . '</p></div>' .
+            '<div class="section report-cover">' . $logoHtml . '<h1>' . Wp::escHtml((string) ($context['client']['name'] ?? '')) . '</h1>' .
+            '<p style="color:#475569;margin-top:8px;">' . Wp::escHtml((string) ($context['period']['label'] ?? '')) . '</p></div>' .
             '<div class="report-body">' . $body . '</div>' .
             '<div class="footer">' . $footer . '</div>' .
             '</body></html>';
@@ -91,35 +92,38 @@ class HtmlRenderer
     {
         $totals = is_array($context['kpi']['totals'] ?? null) ? $context['kpi']['totals'] : [];
         $metrics = [
-            'users' => __('Users', 'fp-dms'),
-            'sessions' => __('Sessions', 'fp-dms'),
-            'clicks' => __('Clicks', 'fp-dms'),
-            'impressions' => __('Impressions', 'fp-dms'),
-            'cost' => __('Cost', 'fp-dms'),
-            'conversions' => __('Conversions', 'fp-dms'),
-            'revenue' => __('Revenue', 'fp-dms'),
+            'users' => I18n::__('Users'),
+            'sessions' => I18n::__('Sessions'),
+            'clicks' => I18n::__('Clicks'),
+            'impressions' => I18n::__('Impressions'),
+            'cost' => I18n::__('Cost'),
+            'conversions' => I18n::__('Conversions'),
+            'revenue' => I18n::__('Revenue'),
         ];
 
         $cards = '';
         foreach ($metrics as $key => $label) {
-            $value = number_format_i18n((float) Arr::get($totals, $key, 0.0), in_array($key, ['cost', 'revenue'], true) ? 2 : 0);
-            $cards .= '<div class="kpi"><span>' . esc_html($label) . '</span><strong style="font-size:20px;">' . esc_html($value) . '</strong></div>';
+            $value = Wp::numberFormatI18n(
+                (float) Arr::get($totals, $key, 0.0),
+                in_array($key, ['cost', 'revenue'], true) ? 2 : 0
+            );
+            $cards .= '<div class="kpi"><span>' . Wp::escHtml($label) . '</span><strong style="font-size:20px;">' . Wp::escHtml($value) . '</strong></div>';
         }
 
-        return '<div class="section"><h2>' . esc_html__('Key performance indicators', 'fp-dms') . '</h2><div class="kpi-grid">' . $cards . '</div></div>';
+        return '<div class="section"><h2>' . Wp::escHtml(I18n::__('Key performance indicators')) . '</h2><div class="kpi-grid">' . $cards . '</div></div>';
     }
 
     private function buildTrendsSection(array $context): string
     {
         $trends = is_array($context['trends'] ?? null) ? $context['trends'] : [];
         $labels = [
-            'users' => __('Users', 'fp-dms'),
-            'sessions' => __('Sessions', 'fp-dms'),
-            'clicks' => __('Clicks', 'fp-dms'),
-            'impressions' => __('Impressions', 'fp-dms'),
-            'conversions' => __('Conversions', 'fp-dms'),
-            'cost' => __('Cost', 'fp-dms'),
-            'revenue' => __('Revenue', 'fp-dms'),
+            'users' => I18n::__('Users'),
+            'sessions' => I18n::__('Sessions'),
+            'clicks' => I18n::__('Clicks'),
+            'impressions' => I18n::__('Impressions'),
+            'conversions' => I18n::__('Conversions'),
+            'cost' => I18n::__('Cost'),
+            'revenue' => I18n::__('Revenue'),
         ];
 
         $tables = '';
@@ -141,7 +145,7 @@ class HtmlRenderer
             return '';
         }
 
-        return '<div class="section"><h2>' . esc_html(I18n::__('Trend comparison')) . '</h2><div class="tables-wrap trend-tables">' . $tables . '</div></div>';
+        return '<div class="section"><h2>' . Wp::escHtml(I18n::__('Trend comparison')) . '</h2><div class="tables-wrap trend-tables">' . $tables . '</div></div>';
     }
 
     /**
@@ -153,17 +157,23 @@ class HtmlRenderer
         $rows = '';
         foreach ($labels as $metric => $label) {
             $row = is_array($data[$metric] ?? null) ? $data[$metric] : [];
-            $current = number_format_i18n((float) Arr::get($row, 'current', 0.0), in_array($metric, ['cost', 'revenue'], true) ? 2 : 0);
-            $previous = number_format_i18n((float) Arr::get($row, 'previous', 0.0), in_array($metric, ['cost', 'revenue'], true) ? 2 : 0);
+            $current = Wp::numberFormatI18n(
+                (float) Arr::get($row, 'current', 0.0),
+                in_array($metric, ['cost', 'revenue'], true) ? 2 : 0
+            );
+            $previous = Wp::numberFormatI18n(
+                (float) Arr::get($row, 'previous', 0.0),
+                in_array($metric, ['cost', 'revenue'], true) ? 2 : 0
+            );
             $delta = (float) Arr::get($row, 'delta', 0.0);
             $pct = Arr::get($row, 'delta_pct');
             $class = $delta >= 0 ? 'trend-up' : 'trend-down';
             $arrow = $delta >= 0 ? '↑' : '↓';
             $pctString = $pct === null ? '—' : sprintf('%s%.1f%%', $arrow, abs((float) $pct));
-            $rows .= '<tr><td>' . esc_html($label) . '</td><td>' . esc_html($current) . '</td><td>' . esc_html($previous) . '</td><td class="' . esc_attr($class) . '">' . esc_html($pctString) . '</td></tr>';
+            $rows .= '<tr><td>' . Wp::escHtml($label) . '</td><td>' . Wp::escHtml($current) . '</td><td>' . Wp::escHtml($previous) . '</td><td class="' . Wp::escAttr($class) . '">' . Wp::escHtml($pctString) . '</td></tr>';
         }
 
-        return '<div><h3>' . esc_html($heading) . '</h3><table class="trend-table"><thead><tr><th>' . esc_html__('Metric', 'fp-dms') . '</th><th>' . esc_html__('Current', 'fp-dms') . '</th><th>' . esc_html__('Previous', 'fp-dms') . '</th><th>' . esc_html__('Δ %', 'fp-dms') . '</th></tr></thead><tbody>' . $rows . '</tbody></table></div>';
+        return '<div><h3>' . Wp::escHtml($heading) . '</h3><table class="trend-table"><thead><tr><th>' . Wp::escHtml(I18n::__('Metric')) . '</th><th>' . Wp::escHtml(I18n::__('Current')) . '</th><th>' . Wp::escHtml(I18n::__('Previous')) . '</th><th>' . Wp::escHtml(I18n::__('Δ %')) . '</th></tr></thead><tbody>' . $rows . '</tbody></table></div>';
     }
 
     private function buildGscSection(array $context): string
@@ -174,10 +184,10 @@ class HtmlRenderer
             return '';
         }
 
-        $queryTable = $this->renderSimpleTable($queries, __('Top queries', 'fp-dms'));
-        $pagesTable = $this->renderSimpleTable($pages, __('Top pages', 'fp-dms'));
+        $queryTable = $this->renderSimpleTable($queries, I18n::__('Top queries'));
+        $pagesTable = $this->renderSimpleTable($pages, I18n::__('Top pages'));
 
-        return '<div class="section"><h2>' . esc_html__('Search Console insights', 'fp-dms') . '</h2><div class="tables-wrap">' . $queryTable . $pagesTable . '</div></div>';
+        return '<div class="section"><h2>' . Wp::escHtml(I18n::__('Search Console insights')) . '</h2><div class="tables-wrap">' . $queryTable . $pagesTable . '</div></div>';
     }
 
     private function buildAnomaliesSection(array $context): string
@@ -192,14 +202,16 @@ class HtmlRenderer
             if (! is_array($anomaly)) {
                 continue;
             }
-            $metric = esc_html((string) ($anomaly['metric'] ?? __('Metric', 'fp-dms')));
-            $severity = esc_html((string) ($anomaly['severity'] ?? 'warn'));
-            $delta = isset($anomaly['delta_percent']) ? number_format_i18n((float) $anomaly['delta_percent'], 1) . '%' : '';
-            $class = 'severity-' . strtolower($severity);
-            $items .= '<li class="' . esc_attr($class) . '">' . esc_html(sprintf('%s (%s)', $metric, $delta)) . '</li>';
+            $metric = (string) ($anomaly['metric'] ?? I18n::__('Metric'));
+            $severity = strtolower((string) ($anomaly['severity'] ?? 'warn'));
+            $delta = isset($anomaly['delta_percent'])
+                ? Wp::numberFormatI18n((float) $anomaly['delta_percent'], 1) . '%'
+                : '';
+            $label = $delta !== '' ? sprintf('%s (%s)', $metric, $delta) : $metric;
+            $items .= '<li class="' . Wp::escAttr('severity-' . $severity) . '">' . Wp::escHtml($label) . '</li>';
         }
 
-        return '<div class="section"><h2>' . esc_html__('Anomalies detected', 'fp-dms') . '</h2><ul class="anomalies">' . $items . '</ul></div>';
+        return '<div class="section"><h2>' . Wp::escHtml(I18n::__('Anomalies detected')) . '</h2><ul class="anomalies">' . $items . '</ul></div>';
     }
 
     /**
@@ -216,12 +228,12 @@ class HtmlRenderer
             if (is_array($item)) {
                 $label = isset($item['name']) ? (string) $item['name'] : (string) ($item['label'] ?? reset($item) ?? '');
                 $value = isset($item['value']) ? (float) $item['value'] : (float) ($item['clicks'] ?? $item['sessions'] ?? 0);
-                $rows .= '<tr><td>' . esc_html($label) . '</td><td>' . esc_html(number_format_i18n($value, 0)) . '</td></tr>';
+                $rows .= '<tr><td>' . Wp::escHtml($label) . '</td><td>' . Wp::escHtml(Wp::numberFormatI18n($value, 0)) . '</td></tr>';
             } else {
-                $rows .= '<tr><td colspan="2">' . esc_html((string) $item) . '</td></tr>';
+                $rows .= '<tr><td colspan="2">' . Wp::escHtml((string) $item) . '</td></tr>';
             }
         }
 
-        return '<div><h3>' . esc_html($heading) . '</h3><table><tbody>' . $rows . '</tbody></table></div>';
+        return '<div><h3>' . Wp::escHtml($heading) . '</h3><table><tbody>' . $rows . '</tbody></table></div>';
     }
 }

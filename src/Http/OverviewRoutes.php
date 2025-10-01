@@ -16,30 +16,23 @@ use FP\DMS\Services\Anomalies\Detector;
 use FP\DMS\Services\Overview\Assembler;
 use FP\DMS\Services\Overview\Cache;
 use FP\DMS\Services\Overview\Presenter;
+use FP\DMS\Support\Wp;
 use FP\DMS\Support\Period;
 use FP\DMS\Support\UserPrefs;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
-use function absint;
 use function array_map;
 use function get_current_user_id;
 use function get_transient;
-use function sanitize_text_field;
 use function in_array;
 use function microtime;
 use function is_array;
 use function is_numeric;
-use function sanitize_key;
-use function number_format_i18n;
 use function set_transient;
 use function str_replace;
 use function ucwords;
-use function wp_timezone_string;
-use function wp_date;
-use function rest_sanitize_boolean;
 use function wp_verify_nonce;
-use function wp_unslash;
 use Throwable;
 
 class OverviewRoutes
@@ -67,23 +60,23 @@ class OverviewRoutes
                 ],
                 'from' => [
                     'required' => false,
-                    'sanitize_callback' => 'sanitize_text_field',
+                    'sanitize_callback' => [Wp::class, 'sanitizeTextField'],
                 ],
                 'to' => [
                     'required' => false,
-                    'sanitize_callback' => 'sanitize_text_field',
+                    'sanitize_callback' => [Wp::class, 'sanitizeTextField'],
                 ],
                 'preset' => [
                     'required' => false,
-                    'sanitize_callback' => 'sanitize_key',
+                    'sanitize_callback' => [Wp::class, 'sanitizeKey'],
                 ],
                 'auto_refresh' => [
                     'required' => false,
-                    'sanitize_callback' => 'rest_sanitize_boolean',
+                    'sanitize_callback' => [Wp::class, 'restSanitizeBoolean'],
                 ],
                 'refresh_interval' => [
                     'required' => false,
-                    'sanitize_callback' => 'absint',
+                    'sanitize_callback' => [Wp::class, 'absInt'],
                 ],
             ],
         ]);
@@ -99,15 +92,15 @@ class OverviewRoutes
                 ],
                 'metric' => [
                     'required' => true,
-                    'sanitize_callback' => 'sanitize_key',
+                    'sanitize_callback' => [Wp::class, 'sanitizeKey'],
                 ],
                 'from' => [
                     'required' => false,
-                    'sanitize_callback' => 'sanitize_text_field',
+                    'sanitize_callback' => [Wp::class, 'sanitizeTextField'],
                 ],
                 'to' => [
                     'required' => false,
-                    'sanitize_callback' => 'sanitize_text_field',
+                    'sanitize_callback' => [Wp::class, 'sanitizeTextField'],
                 ],
             ],
         ]);
@@ -147,11 +140,11 @@ class OverviewRoutes
                 ],
                 'from' => [
                     'required' => false,
-                    'sanitize_callback' => 'sanitize_text_field',
+                    'sanitize_callback' => [Wp::class, 'sanitizeTextField'],
                 ],
                 'to' => [
                     'required' => false,
-                    'sanitize_callback' => 'sanitize_text_field',
+                    'sanitize_callback' => [Wp::class, 'sanitizeTextField'],
                 ],
             ],
         ]);
@@ -176,15 +169,15 @@ class OverviewRoutes
         }
 
         $presetParam = $request->get_param('preset');
-        $preset = $presetParam ? sanitize_key((string) $presetParam) : 'last7';
-        $range = self::resolveRange($request, $client->timezone ?: wp_timezone_string(), $preset);
+        $preset = $presetParam ? Wp::sanitizeKey($presetParam) : 'last7';
+        $range = self::resolveRange($request, $client->timezone ?: Wp::timezoneString(), $preset);
         if ($range instanceof WP_Error) {
             return $range;
         }
 
-        $autoRefresh = rest_sanitize_boolean($request->get_param('auto_refresh'));
+        $autoRefresh = Wp::restSanitizeBoolean($request->get_param('auto_refresh'));
         $intervalParam = $request->get_param('refresh_interval');
-        $refreshInterval = $intervalParam !== null ? absint($intervalParam) : 60;
+        $refreshInterval = $intervalParam !== null ? Wp::absInt($intervalParam) : 60;
 
         UserPrefs::rememberOverviewPreferences($clientId, $range['preset'], $range['range']['from'], $range['range']['to'], (bool) $autoRefresh, $refreshInterval);
 
@@ -211,7 +204,7 @@ class OverviewRoutes
             'client_id' => $clientId,
             'range' => $range['range'],
             'summary' => $summary,
-            'refreshed_at' => wp_date('c'),
+            'refreshed_at' => Wp::date('c'),
         ];
 
         $cache->set($clientId, 'summary', $payload, 120, $context);
@@ -231,7 +224,7 @@ class OverviewRoutes
         }
 
         $clientId = (int) $request->get_param('client_id');
-        $metric = sanitize_key((string) $request->get_param('metric'));
+        $metric = Wp::sanitizeKey($request->get_param('metric'));
         if ($metric === '') {
             return new WP_Error('rest_invalid_param', __('Missing metric parameter.', 'fp-dms'), ['status' => 400]);
         }
@@ -243,8 +236,8 @@ class OverviewRoutes
         }
 
         $presetParam = $request->get_param('preset');
-        $preset = $presetParam ? sanitize_key((string) $presetParam) : 'last7';
-        $range = self::resolveRange($request, $client->timezone ?: wp_timezone_string(), $preset);
+        $preset = $presetParam ? Wp::sanitizeKey($presetParam) : 'last7';
+        $range = self::resolveRange($request, $client->timezone ?: Wp::timezoneString(), $preset);
         if ($range instanceof WP_Error) {
             return $range;
         }
@@ -313,7 +306,7 @@ class OverviewRoutes
         $payload = [
             'client_id' => $clientId,
             'sources' => self::decorateStatus($status),
-            'checked_at' => wp_date('c'),
+            'checked_at' => Wp::date('c'),
         ];
 
         $cache->set($clientId, 'status', $payload, 180);
@@ -343,7 +336,7 @@ class OverviewRoutes
             return new WP_Error('rest_not_found', __('Client not found.', 'fp-dms'), ['status' => 404]);
         }
 
-        $timezoneName = $client->timezone ?: wp_timezone_string();
+        $timezoneName = $client->timezone ?: Wp::timezoneString();
         try {
             $tz = new DateTimeZone($timezoneName ?: 'UTC');
         } catch (Exception $exception) {
@@ -352,8 +345,8 @@ class OverviewRoutes
 
         $fromParam = $request->get_param('from');
         $toParam = $request->get_param('to');
-        $from = $fromParam ? sanitize_text_field((string) $fromParam) : '';
-        $to = $toParam ? sanitize_text_field((string) $toParam) : '';
+        $from = $fromParam ? Wp::sanitizeTextField($fromParam) : '';
+        $to = $toParam ? Wp::sanitizeTextField($toParam) : '';
 
         if ($from === '' || $to === '') {
             $end = new DateTimeImmutable('now', $tz);
@@ -414,7 +407,7 @@ class OverviewRoutes
             return new WP_Error('rest_not_found', __('Client not found.', 'fp-dms'), ['status' => 404]);
         }
 
-        $timezoneName = $client->timezone ?: wp_timezone_string();
+        $timezoneName = $client->timezone ?: Wp::timezoneString();
         try {
             $tz = new DateTimeZone($timezoneName ?: 'UTC');
         } catch (Exception $exception) {
@@ -423,8 +416,8 @@ class OverviewRoutes
 
         $fromParam = $request->get_param('from');
         $toParam = $request->get_param('to');
-        $from = $fromParam ? sanitize_text_field((string) $fromParam) : '';
-        $to = $toParam ? sanitize_text_field((string) $toParam) : '';
+        $from = $fromParam ? Wp::sanitizeTextField($fromParam) : '';
+        $to = $toParam ? Wp::sanitizeTextField($toParam) : '';
 
         if ($from === '' || $to === '') {
             $end = new DateTimeImmutable('now', $tz);
@@ -617,7 +610,11 @@ class OverviewRoutes
                     $anomaly['delta_formatted'] = (string) $anomaly['delta']['formatted'];
                 } elseif (is_numeric($anomaly['delta'])) {
                     $value = (float) $anomaly['delta'];
-                    $anomaly['delta_formatted'] = sprintf('%s%s%%', $value > 0 ? '+' : '', number_format_i18n($value, 1));
+                    $anomaly['delta_formatted'] = sprintf(
+                        '%s%s%%',
+                        $value > 0 ? '+' : '',
+                        Wp::numberFormatI18n($value, 1)
+                    );
                 }
             }
 
@@ -674,6 +671,6 @@ class OverviewRoutes
             return false;
         }
 
-        return wp_verify_nonce(wp_unslash($nonce), 'wp_rest') !== false;
+        return wp_verify_nonce(Wp::unslash($nonce), 'wp_rest') !== false;
     }
 }
