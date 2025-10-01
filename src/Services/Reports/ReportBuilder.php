@@ -15,6 +15,7 @@ use FP\DMS\Services\Connectors\DataSourceProviderInterface;
 use FP\DMS\Services\Connectors\Normalizer;
 use FP\DMS\Support\I18n;
 use FP\DMS\Support\Period;
+use RuntimeException;
 
 class ReportBuilder
 {
@@ -186,7 +187,7 @@ class ReportBuilder
             'trends' => $trends,
             'report' => [
                 'empty' => ! empty($meta['empty']),
-                'empty_message' => I18n::__('Nessun dato disponibile nel periodo'),
+                'empty_message' => I18n::__('No data available for this period.'),
             ],
         ];
     }
@@ -197,6 +198,9 @@ class ReportBuilder
     private function determinePath(Client $client, Period $period): array
     {
         $upload = wp_upload_dir();
+        if (! empty($upload['error']) || empty($upload['basedir'])) {
+            throw new RuntimeException(I18n::__('Uploads directory is not available.'));
+        }
         $subdir = 'fpdms/' . $period->start->format('Y') . '/' . $period->start->format('m');
         $slug = sanitize_title($client->name ?: 'client');
         $filename = $slug . '-' . $period->start->format('Ymd') . '-' . $period->end->format('Ymd') . '.pdf';
@@ -325,7 +329,7 @@ class ReportBuilder
                 continue;
             }
 
-            if (is_numeric($value) && (float) $value !== 0.0) {
+            if (is_numeric($value)) {
                 return true;
             }
         }

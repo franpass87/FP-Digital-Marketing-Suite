@@ -6,6 +6,7 @@ namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
+use function __;
 
 class ClarityCsvProvider implements DataSourceProviderInterface
 {
@@ -117,8 +118,11 @@ class ClarityCsvProvider implements DataSourceProviderInterface
             ];
 
             foreach ($metrics as $metric => $value) {
-                if ($value <= 0) {
+                if ($value < 0) {
                     continue;
+                }
+                if (! isset($daily[$date])) {
+                    $daily[$date] = [];
                 }
                 $daily[$date][$metric] = round(($daily[$date][$metric] ?? 0.0) + $value, 2);
                 $totals[$metric] = ($totals[$metric] ?? 0.0) + $value;

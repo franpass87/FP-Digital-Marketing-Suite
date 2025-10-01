@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Services\Connectors;
 
+use function __;
+
 class ProviderFactory
 {
     public static function create(string $type, array $auth, array $config): ?DataSourceProviderInterface

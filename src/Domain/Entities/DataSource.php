@@ -13,6 +13,7 @@ class DataSource
         public int $clientId,
         public string $type,
         public array $auth,
+        public ?string $authCipher,
         public array $config,
         public bool $active,
         public string $createdAt,
@@ -25,11 +26,17 @@ class DataSource
      */
     public static function fromRow(array $row): self
     {
+        $cipher = is_string($row['auth'] ?? null) ? (string) $row['auth'] : '[]';
+        $failed = false;
+        $decoded = Security::decrypt($cipher, $failed);
+        $auth = $failed ? [] : self::decodeJson($decoded);
+
         return new self(
             isset($row['id']) ? (int) $row['id'] : null,
             (int) ($row['client_id'] ?? 0),
             (string) ($row['type'] ?? ''),
-            self::decodeJson(Security::decrypt(is_string($row['auth'] ?? null) ? (string) $row['auth'] : '[]')),
+            $auth,
+            $failed ? $cipher : null,
             self::decodeJson($row['config'] ?? '[]'),
             (bool) ($row['active'] ?? false),
             (string) ($row['created_at'] ?? ''),
@@ -42,11 +49,20 @@ class DataSource
      */
     public function toRow(): array
     {
+        $authJson = wp_json_encode($this->auth);
+        if (! is_string($authJson)) {
+            $authJson = '[]';
+        }
+
+        $authValue = $this->authCipher !== null && $this->authCipher !== ''
+            ? $this->authCipher
+            : Security::encrypt($authJson);
+
         return [
             'id' => $this->id,
             'client_id' => $this->clientId,
             'type' => $this->type,
-            'auth' => wp_json_encode($this->auth),
+            'auth' => $authValue,
             'config' => wp_json_encode($this->config),
             'active' => $this->active ? 1 : 0,
             'created_at' => $this->createdAt,

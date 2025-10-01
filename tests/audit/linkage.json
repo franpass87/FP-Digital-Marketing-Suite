@@ -4090,7 +4090,7 @@
                     "file": "src/Services/Reports/HtmlRenderer.php",
                     "line": 37,
                     "type": "static_call",
-                    "context": "$fallback = '<div class=\"fpdms-empty\">' . esc_html($context['report']['empty_message'] ?? I18n::__('Nessun dato disponibile nel periodo')) . '</div>';"
+                    "context": "$fallback = '<div class=\"fpdms-empty\">' . esc_html($context['report']['empty_message'] ?? I18n::__('No data available for this period.')) . '</div>';"
                 },
                 {
                     "file": "src/Services/Reports/HtmlRenderer.php",
@@ -4114,7 +4114,7 @@
                     "file": "src/Services/Reports/ReportBuilder.php",
                     "line": 189,
                     "type": "static_call",
-                    "context": "'empty_message' => I18n::__('Nessun dato disponibile nel periodo'),"
+                    "context": "'empty_message' => I18n::__('No data available for this period.'),"
                 }
             ]
         },

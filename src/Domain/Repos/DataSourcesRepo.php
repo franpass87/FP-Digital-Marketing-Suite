@@ -86,21 +86,37 @@ class DataSourcesRepo
     {
         global $wpdb;
 
-        $auth = wp_json_encode($data['auth'] ?? []);
+        $current = $this->find($id);
+        if (! $current) {
+            return false;
+        }
+
+        $type = array_key_exists('type', $data) ? (string) $data['type'] : $current->type;
+        $hasNewAuth = array_key_exists('auth', $data) && is_array($data['auth']);
+        $authData = $hasNewAuth ? $data['auth'] : $current->auth;
+        $configData = array_key_exists('config', $data) && is_array($data['config']) ? $data['config'] : $current->config;
+        $active = array_key_exists('active', $data) ? ! empty($data['active']) : $current->active;
+
+        $auth = wp_json_encode($authData);
         if (! is_string($auth)) {
             $auth = '[]';
         }
+        $authCipher = $hasNewAuth
+            ? Security::encrypt($auth)
+            : ($current->authCipher !== null && $current->authCipher !== ''
+                ? $current->authCipher
+                : Security::encrypt($auth));
 
-        $config = wp_json_encode($data['config'] ?? []);
+        $config = wp_json_encode($configData);
         if (! is_string($config)) {
             $config = '[]';
         }
 
         $payload = [
-            'type' => (string) ($data['type'] ?? ''),
-            'auth' => Security::encrypt($auth),
+            'type' => $type,
+            'auth' => $authCipher,
             'config' => $config,
-            'active' => empty($data['active']) ? 0 : 1,
+            'active' => $active ? 1 : 0,
             'updated_at' => current_time('mysql'),
         ];
 

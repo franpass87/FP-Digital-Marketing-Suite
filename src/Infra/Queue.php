@@ -18,6 +18,7 @@ use FP\DMS\Domain\Repos\TemplatesRepo;
 use FP\DMS\Services\Connectors\DataSourceProviderInterface;
 use FP\DMS\Services\Connectors\ProviderFactory;
 use FP\DMS\Services\Anomalies\Detector;
+use function __;
 use FP\DMS\Services\Reports\HtmlRenderer;
 use FP\DMS\Services\Reports\ReportBuilder;
 use FP\DMS\Services\Reports\TokenEngine;

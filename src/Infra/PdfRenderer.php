@@ -7,6 +7,7 @@ namespace FP\DMS\Infra;
 use Mpdf\Mpdf;
 use Mpdf\Output\Destination;
 use RuntimeException;
+use function __;
 
 class PdfRenderer
 {
@@ -17,6 +18,9 @@ class PdfRenderer
         }
 
         $uploadDir = wp_upload_dir();
+        if (! empty($uploadDir['error']) || empty($uploadDir['basedir'])) {
+            throw new RuntimeException(__('Uploads directory is not available. Check WordPress configuration.', 'fp-dms'));
+        }
         $tempDir = trailingslashit($uploadDir['basedir']) . 'fpdms-temp';
         wp_mkdir_p($tempDir);
         wp_mkdir_p(dirname($targetPath));

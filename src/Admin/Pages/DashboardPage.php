@@ -13,7 +13,7 @@ class DashboardPage
         }
 
         echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('DashboardPage_TITLE', 'fp-dms') . '</h1>';
+        echo '<h1>' . esc_html__('Dashboard', 'fp-dms') . '</h1>';
         echo '<p>' . esc_html__('This section is under construction.', 'fp-dms') . '</p>';
         echo '</div>';
     }

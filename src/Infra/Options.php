@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Infra;
 
+use DateTimeZone;
+use Exception;
 use FP\DMS\Support\Security;
 
 class Options
@@ -12,6 +14,7 @@ class Options
     private const LAST_TICK = 'fpdms_last_tick_at';
     private const QA_KEY = 'fpdms_qa_key';
     private const ANOMALY_POLICY_PREFIX = 'fpdms_anomaly_policy_';
+    private const SMTP_SECURE_MODES = ['none', 'ssl', 'tls'];
 
     public static function getGlobalSettings(): array
     {
@@ -23,10 +26,45 @@ class Options
         $settings = array_replace_recursive(self::defaultGlobalSettings(), $value);
 
         if (isset($settings['mail']['smtp']['pass']) && is_string($settings['mail']['smtp']['pass'])) {
-            $settings['mail']['smtp']['pass'] = Security::decrypt($settings['mail']['smtp']['pass']);
+            $cipher = $settings['mail']['smtp']['pass'];
+            $failed = false;
+            $plain = Security::decrypt($cipher, $failed);
+
+            $settings['mail']['smtp']['pass_cipher'] = $cipher;
+            $settings['mail']['smtp']['pass'] = $failed ? '' : $plain;
+        } else {
+            $settings['mail']['smtp']['pass'] = '';
+            $settings['mail']['smtp']['pass_cipher'] = '';
         }
 
-        $settings['anomaly_policy'] = self::normaliseAnomalyPolicy($settings['anomaly_policy'] ?? []);
+        if (isset($settings['mail']['smtp'])) {
+            $settings['mail']['smtp']['secure'] = self::normaliseSmtpSecure($settings['mail']['smtp']['secure'] ?? 'none');
+            $port = isset($settings['mail']['smtp']['port']) ? (int) $settings['mail']['smtp']['port'] : self::defaultGlobalSettings()['mail']['smtp']['port'];
+            if ($port < 1 || $port > 65535) {
+                $port = self::defaultGlobalSettings()['mail']['smtp']['port'];
+            }
+            $settings['mail']['smtp']['port'] = $port;
+        }
+
+        if (! isset($settings['overview']) || ! is_array($settings['overview'])) {
+            $settings['overview'] = self::defaultGlobalSettings()['overview'];
+        }
+
+        $refresh = $settings['overview']['refresh_intervals'] ?? [];
+        if (! is_array($refresh)) {
+            $refresh = self::defaultGlobalSettings()['overview']['refresh_intervals'];
+        }
+
+        $refresh = array_values(array_filter(array_map('absint', $refresh), static fn(int $value): bool => $value > 0));
+        if ($refresh === []) {
+            $refresh = self::defaultGlobalSettings()['overview']['refresh_intervals'];
+        }
+        sort($refresh);
+        $settings['overview']['refresh_intervals'] = $refresh;
+
+        $policySource = is_array($settings['anomaly_policy'] ?? null) ? $settings['anomaly_policy'] : [];
+        $policyResult = self::sanitizeAnomalyPolicyInput($policySource, self::defaultAnomalyPolicy());
+        $settings['anomaly_policy'] = $policyResult['policy'];
         $settings['anomaly_policy']['routing'] = self::decryptRouting($settings['anomaly_policy']['routing']);
 
         return $settings;
@@ -36,13 +74,60 @@ class Options
     {
         $merged = array_replace_recursive(self::defaultGlobalSettings(), $settings);
 
-        if (isset($merged['mail']['smtp']['pass']) && is_string($merged['mail']['smtp']['pass'])) {
-            $merged['mail']['smtp']['pass'] = Security::encrypt($merged['mail']['smtp']['pass']);
+        if (isset($merged['mail']['smtp'])) {
+            $merged['mail']['smtp']['secure'] = self::normaliseSmtpSecure($merged['mail']['smtp']['secure'] ?? 'none');
+            $port = isset($merged['mail']['smtp']['port']) ? (int) $merged['mail']['smtp']['port'] : self::defaultGlobalSettings()['mail']['smtp']['port'];
+            if ($port < 1 || $port > 65535) {
+                $port = self::defaultGlobalSettings()['mail']['smtp']['port'];
+            }
+            $merged['mail']['smtp']['port'] = $port;
+
+            $cipher = is_string($merged['mail']['smtp']['pass_cipher'] ?? null)
+                ? (string) $merged['mail']['smtp']['pass_cipher']
+                : '';
+
+            if (isset($merged['mail']['smtp']['pass']) && is_string($merged['mail']['smtp']['pass']) && $merged['mail']['smtp']['pass'] !== '') {
+                $merged['mail']['smtp']['pass'] = Security::encrypt($merged['mail']['smtp']['pass']);
+            } elseif ($cipher !== '') {
+                $merged['mail']['smtp']['pass'] = $cipher;
+            } else {
+                $merged['mail']['smtp']['pass'] = '';
+            }
+
+            unset($merged['mail']['smtp']['pass_cipher']);
         }
 
-        $merged['anomaly_policy'] = self::prepareAnomalyPolicyForStorage($merged['anomaly_policy'] ?? []);
+        if (isset($merged['overview']['refresh_intervals'])) {
+            $intervals = $merged['overview']['refresh_intervals'];
+            if (! is_array($intervals)) {
+                $intervals = self::defaultGlobalSettings()['overview']['refresh_intervals'];
+            }
+
+            $intervals = array_values(array_filter(array_map('absint', $intervals), static fn(int $value): bool => $value > 0));
+            if ($intervals === []) {
+                $intervals = self::defaultGlobalSettings()['overview']['refresh_intervals'];
+            }
+
+            sort($intervals);
+            $merged['overview']['refresh_intervals'] = $intervals;
+        }
+
+        $policySource = is_array($merged['anomaly_policy'] ?? null) ? $merged['anomaly_policy'] : [];
+        $policyResult = self::sanitizeAnomalyPolicyInput($policySource, self::defaultAnomalyPolicy());
+        $merged['anomaly_policy'] = self::prepareAnomalyPolicyForStorage($policyResult['policy']);
 
         update_option(self::GLOBAL_SETTINGS, $merged, false);
+    }
+
+    private static function normaliseSmtpSecure(mixed $value): string
+    {
+        if (! is_string($value)) {
+            return 'none';
+        }
+
+        $normalized = strtolower($value);
+
+        return in_array($normalized, self::SMTP_SECURE_MODES, true) ? $normalized : 'none';
     }
 
     public static function ensureDefaults(): void
@@ -96,7 +181,7 @@ class Options
             'mail' => [
                 'smtp' => [
                     'host' => '',
-                    'port' => '',
+                    'port' => 587,
                     'secure' => 'none',
                     'user' => '',
                     'pass' => '',
@@ -105,6 +190,9 @@ class Options
             'retention_days' => 90,
             'error_webhook_url' => '',
             'tick_key' => '',
+            'overview' => [
+                'refresh_intervals' => [60, 120],
+            ],
             'anomaly_policy' => self::defaultAnomalyPolicy(),
         ];
     }
@@ -156,13 +244,16 @@ class Options
 
         $stored['routing'] = self::decryptRouting($stored['routing'] ?? []);
         $policy = array_replace_recursive($global, $stored);
+        $result = self::sanitizeAnomalyPolicyInput($policy, $global);
 
-        return self::normaliseAnomalyPolicy($policy);
+        return $result['policy'];
     }
 
     public static function updateAnomalyPolicy(int $clientId, array $policy): void
     {
-        $normalized = self::prepareAnomalyPolicyForStorage($policy);
+        $current = $clientId > 0 ? self::getAnomalyPolicy($clientId) : self::defaultAnomalyPolicy();
+        $result = self::sanitizeAnomalyPolicyInput($policy, $current);
+        $normalized = self::prepareAnomalyPolicyForStorage($result['policy']);
         update_option(self::ANOMALY_POLICY_PREFIX . $clientId, $normalized, false);
     }
 
@@ -180,6 +271,118 @@ class Options
         $base = self::defaultAnomalyPolicy();
 
         return array_replace_recursive($base, $policy);
+    }
+
+    /**
+     * @param array<string,mixed> $input
+     * @param array<string,mixed> $current
+     * @return array{policy: array<string,mixed>, errors: array<string,bool>}
+     */
+    public static function sanitizeAnomalyPolicyInput(array $input, array $current): array
+    {
+        $policy = self::normaliseAnomalyPolicy($current);
+        $errors = [];
+
+        if (isset($input['metrics']) && is_array($input['metrics'])) {
+            foreach ($policy['metrics'] as $metric => &$values) {
+                $source = $input['metrics'][$metric] ?? [];
+                foreach (['warn_pct', 'crit_pct', 'z_warn', 'z_crit'] as $field) {
+                    if (! isset($source[$field]) || ! is_numeric($source[$field])) {
+                        continue;
+                    }
+
+                    $value = (float) $source[$field];
+                    $values[$field] = max(0.0, $value);
+                }
+            }
+            unset($values);
+        }
+
+        if (isset($input['baseline']) && is_array($input['baseline'])) {
+            $baseline = $input['baseline'];
+            if (isset($baseline['window_days'])) {
+                $policy['baseline']['window_days'] = max(1, (int) $baseline['window_days']);
+            }
+            if (isset($baseline['seasonality'])) {
+                $policy['baseline']['seasonality'] = sanitize_text_field((string) $baseline['seasonality']);
+            }
+            if (isset($baseline['ewma_alpha']) && is_numeric($baseline['ewma_alpha'])) {
+                $alpha = (float) $baseline['ewma_alpha'];
+                $policy['baseline']['ewma_alpha'] = max(0.0, min(1.0, $alpha));
+            }
+            if (isset($baseline['cusum_k']) && is_numeric($baseline['cusum_k'])) {
+                $policy['baseline']['cusum_k'] = max(0.0, (float) $baseline['cusum_k']);
+            }
+            if (isset($baseline['cusum_h']) && is_numeric($baseline['cusum_h'])) {
+                $policy['baseline']['cusum_h'] = max(0.0, (float) $baseline['cusum_h']);
+            }
+        }
+
+        $muteInput = isset($input['mute']) && is_array($input['mute']) ? $input['mute'] : [];
+        if (isset($muteInput['start'])) {
+            $policy['mute']['start'] = sanitize_text_field((string) $muteInput['start']);
+        }
+        if (isset($muteInput['end'])) {
+            $policy['mute']['end'] = sanitize_text_field((string) $muteInput['end']);
+        }
+        $timezoneFallback = $policy['mute']['tz'] ?? wp_timezone_string();
+        if (isset($muteInput['tz'])) {
+            $candidate = sanitize_text_field((string) $muteInput['tz']);
+            if ($candidate === '') {
+                $policy['mute']['tz'] = $timezoneFallback;
+            } else {
+                try {
+                    new DateTimeZone($candidate);
+                    $policy['mute']['tz'] = $candidate;
+                } catch (Exception $exception) {
+                    $policy['mute']['tz'] = $timezoneFallback;
+                    $errors['invalid_mute_timezone'] = true;
+                }
+            }
+        }
+
+        if (isset($input['routing']) && is_array($input['routing'])) {
+            foreach ($policy['routing'] as $channel => &$config) {
+                $source = isset($input['routing'][$channel]) && is_array($input['routing'][$channel])
+                    ? $input['routing'][$channel]
+                    : [];
+                $config['enabled'] = ! empty($source['enabled']);
+                foreach ($config as $key => &$value) {
+                    if ($key === 'enabled' || ! isset($source[$key])) {
+                        continue;
+                    }
+                    $raw = (string) $source[$key];
+                    $lowerKey = strtolower($key);
+                    if (str_contains($lowerKey, 'url')) {
+                        $value = esc_url_raw($raw);
+                    } elseif (
+                        str_contains($lowerKey, 'token') ||
+                        str_contains($lowerKey, 'secret') ||
+                        str_contains($lowerKey, 'pass') ||
+                        str_contains($lowerKey, 'key')
+                    ) {
+                        $value = trim($raw);
+                    } else {
+                        $value = sanitize_text_field($raw);
+                    }
+                }
+                unset($value);
+            }
+            unset($config);
+        }
+
+        if (isset($input['routing']['email']['digest_window_min'])) {
+            $policy['routing']['email']['digest_window_min'] = max(1, (int) $input['routing']['email']['digest_window_min']);
+        }
+
+        if (isset($input['cooldown_min'])) {
+            $policy['cooldown_min'] = max(1, (int) $input['cooldown_min']);
+        }
+        if (isset($input['max_per_window'])) {
+            $policy['max_per_window'] = max(0, (int) $input['max_per_window']);
+        }
+
+        return ['policy' => $policy, 'errors' => $errors];
     }
 
     /**

@@ -29,8 +29,10 @@ class Security
         return base64_encode($nonce . $cipher);
     }
 
-    public static function decrypt(string $encoded): string
+    public static function decrypt(string $encoded, ?bool &$failed = null): string
     {
+        $failed = false;
+
         if ($encoded === '') {
             return $encoded;
         }
@@ -41,6 +43,7 @@ class Security
 
         $decoded = base64_decode($encoded, true);
         if ($decoded === false || strlen($decoded) < SODIUM_CRYPTO_SECRETBOX_NONCEBYTES) {
+            $failed = true;
             return $encoded;
         }
 
@@ -49,7 +52,8 @@ class Security
         $plain = sodium_crypto_secretbox_open($cipher, $nonce, self::getKey());
 
         if ($plain === false) {
-            return '';
+            $failed = true;
+            return $encoded;
         }
 
         return $plain;

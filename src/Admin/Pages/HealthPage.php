@@ -7,6 +7,7 @@ namespace FP\DMS\Admin\Pages;
 use FP\DMS\Domain\Repos\SchedulesRepo;
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\I18n;
+use function wp_unslash;
 
 class HealthPage
 {
@@ -46,15 +47,16 @@ class HealthPage
 
     private static function handleActions(): void
     {
-        if (empty($_POST['fpdms_health_nonce'])) {
+        $post = wp_unslash($_POST);
+        if (empty($post['fpdms_health_nonce'])) {
             return;
         }
 
-        if (! wp_verify_nonce(sanitize_text_field($_POST['fpdms_health_nonce']), 'fpdms_health_action')) {
+        if (! wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_health_nonce'] ?? '')), 'fpdms_health_action')) {
             return;
         }
 
-        $action = sanitize_text_field($_POST['fpdms_health_action'] ?? '');
+        $action = sanitize_text_field((string) ($post['fpdms_health_action'] ?? ''));
         if ($action === 'force_tick') {
             do_action('fpdms/health/force_tick');
             add_settings_error('fpdms_health', 'fpdms_health_tick', I18n::__('Tick executed.'), 'updated');

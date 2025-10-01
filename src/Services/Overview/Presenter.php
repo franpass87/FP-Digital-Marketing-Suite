@@ -28,17 +28,22 @@ class Presenter
         if ($previous === 0.0) {
             if ($current === 0.0) {
                 $raw = 0.0;
-                $direction = 'flat';
             } else {
-                $raw = 100.0;
-                $direction = $current > 0 ? 'up' : 'down';
+                $raw = $current > 0 ? 100.0 : -100.0;
             }
         } else {
             $raw = (($current - $previous) / abs($previous)) * 100;
-            $direction = $raw > 0 ? 'up' : ($raw < 0 ? 'down' : 'flat');
         }
 
-        $formatted = sprintf('%s%s%%', $raw > 0 ? '+' : '', number_format_i18n($raw, $precision));
+        $direction = $raw > 0 ? 'up' : ($raw < 0 ? 'down' : 'flat');
+        $sign = '';
+        if ($raw > 0) {
+            $sign = '+';
+        } elseif ($raw < 0) {
+            $sign = '-';
+        }
+
+        $formatted = sprintf('%s%s%%', $sign, number_format_i18n(abs($raw), $precision));
 
         return [
             'raw' => $raw,

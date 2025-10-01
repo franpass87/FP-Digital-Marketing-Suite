@@ -5,20 +5,26 @@ declare(strict_types=1);
 namespace FP\DMS\Admin\Pages;
 
 use FP\DMS\Domain\Repos\ClientsRepo;
+use FP\DMS\Infra\Options;
 use FP\DMS\Support\UserPrefs;
 
 use const FP_DMS_PLUGIN_FILE;
 use const FP_DMS_VERSION;
+use function absint;
 use function add_action;
 use function add_query_arg;
 use function admin_url;
 use function array_map;
+use function array_unique;
+use function array_values;
 use function current_user_can;
 use function esc_attr;
 use function esc_html;
 use function esc_html__;
 use function esc_url;
 use function esc_url_raw;
+use function is_array;
+use function sort;
 use function plugins_url;
 use function rest_url;
 use function wp_create_nonce;
@@ -51,7 +57,7 @@ class OverviewPage
     /**
      * @var int[]
      */
-    private const REFRESH_INTERVALS = [60, 120];
+    private const DEFAULT_REFRESH_INTERVALS = [60, 120];
 
     public static function registerAssetsHook(string $hook): void
     {
@@ -142,6 +148,7 @@ class OverviewPage
             'last7' => esc_html__('Last 7 days', 'fp-dms'),
             'last14' => esc_html__('Last 14 days', 'fp-dms'),
             'last28' => esc_html__('Last 28 days', 'fp-dms'),
+            'last30' => esc_html__('Last 30 days', 'fp-dms'),
             'this_month' => esc_html__('This month', 'fp-dms'),
             'last_month' => esc_html__('Last month', 'fp-dms'),
             'custom' => esc_html__('Custom', 'fp-dms'),
@@ -171,13 +178,15 @@ class OverviewPage
         echo '</div>';
         echo '</div>';
 
+        $refreshIntervals = self::refreshIntervals();
+
         echo '<div class="fpdms-overview-refresh" aria-live="polite">';
         echo '<label for="fpdms-overview-refresh-toggle">';
         echo '<input type="checkbox" id="fpdms-overview-refresh-toggle">';
         echo '<span>' . esc_html__('Auto-refresh', 'fp-dms') . '</span>';
         echo '</label>';
         echo '<select id="fpdms-overview-refresh-interval" aria-label="' . esc_attr__('Auto-refresh interval', 'fp-dms') . '">';
-        foreach (self::REFRESH_INTERVALS as $seconds) {
+        foreach ($refreshIntervals as $seconds) {
             echo '<option value="' . esc_attr((string) $seconds) . '">' . esc_html(sprintf(/* translators: %d is seconds */ __('Every %d seconds', 'fp-dms'), $seconds)) . '</option>';
         }
         echo '</select>';
@@ -297,6 +306,9 @@ class OverviewPage
     {
         $preferences = UserPrefs::getOverviewPreferences();
 
+        $refreshIntervals = self::refreshIntervals();
+        $defaultRefreshInterval = $refreshIntervals[0] ?? self::DEFAULT_REFRESH_INTERVALS[0];
+
         $config = [
             'nonce' => wp_create_nonce('wp_rest'),
             'endpoints' => [
@@ -313,8 +325,8 @@ class OverviewPage
             'kpis' => self::KPI_LABELS,
             'trendMetrics' => self::TREND_METRICS,
             'preferences' => $preferences,
-            'refreshIntervals' => self::REFRESH_INTERVALS,
-            'defaultRefreshInterval' => self::REFRESH_INTERVALS[0] ?? 60,
+            'refreshIntervals' => $refreshIntervals,
+            'defaultRefreshInterval' => $defaultRefreshInterval,
             'i18n' => [
                 'noData' => esc_html__('No data available.', 'fp-dms'),
                 'loading' => esc_html__('Loading…', 'fp-dms'),
@@ -341,5 +353,36 @@ class OverviewPage
         echo '<script type="application/json" id="fpdms-overview-config">' . wp_json_encode($config) . '</script>';
     }
 
+    /**
+     * @return int[]
+     */
+    private static function refreshIntervals(): array
+    {
+        $settings = Options::getGlobalSettings();
+        $configured = $settings['overview']['refresh_intervals'] ?? null;
+
+        $intervals = [];
+
+        if (is_array($configured)) {
+            foreach ($configured as $value) {
+                $interval = absint($value);
+                if ($interval < 30 || $interval > 3600) {
+                    continue;
+                }
+                $intervals[] = $interval;
+            }
+        }
+
+        if ($intervals === []) {
+            $intervals = self::DEFAULT_REFRESH_INTERVALS;
+        }
+
+        $intervals = array_values(array_unique($intervals));
+        $intervals = array_values(array_filter($intervals, static fn(int $seconds): bool => $seconds >= 30 && $seconds <= 3600));
+        sort($intervals);
+
+        return $intervals === [] ? self::DEFAULT_REFRESH_INTERVALS : $intervals;
+    }
 
 }
+

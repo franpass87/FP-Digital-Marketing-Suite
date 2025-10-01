@@ -34,13 +34,13 @@ class HtmlRenderer
         }
 
         if (! empty($context['report']['empty'])) {
-            $fallback = '<div class="fpdms-empty">' . esc_html($context['report']['empty_message'] ?? I18n::__('Nessun dato disponibile nel periodo')) . '</div>';
+            $fallback = '<div class="fpdms-empty">' . esc_html($context['report']['empty_message'] ?? I18n::__('No data available for this period.')) . '</div>';
             $body .= $fallback;
         }
 
         $color = sanitize_hex_color($context['branding']['primary_color'] ?? '#1d4ed8') ?: '#1d4ed8';
         $logo = esc_url($context['branding']['logo_url'] ?? '');
-        $footer = esc_html($context['branding']['footer_text'] ?? '');
+        $footer = wp_kses_post($context['branding']['footer_text'] ?? '');
 
         $logoHtml = $logo ? '<img src="' . esc_url($logo) . '" alt="logo" style="max-width:200px;">' : '';
 

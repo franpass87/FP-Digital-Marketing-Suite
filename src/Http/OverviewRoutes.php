@@ -26,6 +26,7 @@ use function array_map;
 use function get_current_user_id;
 use function get_transient;
 use function sanitize_text_field;
+use function in_array;
 use function microtime;
 use function is_array;
 use function is_numeric;
@@ -43,6 +44,16 @@ use Throwable;
 
 class OverviewRoutes
 {
+    public const PRESET_WHITELIST = [
+        'last7',
+        'last14',
+        'last28',
+        'last30',
+        'this_month',
+        'last_month',
+        'custom',
+    ];
+
     public static function register(): void
     {
         register_rest_route('fpdms/v1', '/overview/summary', [
@@ -126,7 +137,7 @@ class OverviewRoutes
         ]);
 
         register_rest_route('fpdms/v1', '/overview/anomalies', [
-            'methods' => 'POST',
+            'methods' => ['GET', 'POST'],
             'callback' => [self::class, 'handleAnomalies'],
             'permission_callback' => [self::class, 'checkPermissions'],
             'args' => [
@@ -316,6 +327,11 @@ class OverviewRoutes
             return new WP_Error('rest_forbidden', __('Invalid or missing nonce.', 'fp-dms'), ['status' => 403]);
         }
 
+        $rateLimit = self::enforceRateLimit('run');
+        if ($rateLimit instanceof WP_Error) {
+            return $rateLimit;
+        }
+
         $clientId = (int) $request->get_param('client_id');
         if ($clientId <= 0) {
             return new WP_Error('rest_invalid_param', __('Missing client_id parameter.', 'fp-dms'), ['status' => 400]);
@@ -380,6 +396,11 @@ class OverviewRoutes
     {
         if (! self::verifyNonce($request)) {
             return new WP_Error('rest_forbidden', __('Invalid or missing nonce.', 'fp-dms'), ['status' => 403]);
+        }
+
+        $rateLimit = self::enforceRateLimit('anomalies');
+        if ($rateLimit instanceof WP_Error) {
+            return $rateLimit;
         }
 
         $clientId = (int) $request->get_param('client_id');
@@ -451,10 +472,17 @@ class OverviewRoutes
     private static function resolveRange(WP_REST_Request $request, string $timezone, string $preset): array|WP_Error
     {
         $normalizedPreset = $preset !== '' ? $preset : 'last7';
+        if (! in_array($normalizedPreset, self::PRESET_WHITELIST, true)) {
+            $normalizedPreset = 'last7';
+        }
         $from = trim((string) $request->get_param('from'));
         $to = trim((string) $request->get_param('to'));
 
-        if ($from === '' || $to === '') {
+        if ($normalizedPreset === 'custom') {
+            if ($from === '' || $to === '') {
+                return new WP_Error('rest_invalid_param', __('Custom ranges require both start and end dates.', 'fp-dms'), ['status' => 400]);
+            }
+        } elseif ($from === '' || $to === '') {
             $defaults = self::defaultRangeForPreset($normalizedPreset, $timezone);
             $from = $defaults['from'];
             $to = $defaults['to'];
@@ -496,6 +524,10 @@ class OverviewRoutes
         switch ($preset) {
             case 'last14':
                 $start = $today->sub(new DateInterval('P13D'));
+                $end = $today;
+                break;
+            case 'last30':
+                $start = $today->sub(new DateInterval('P29D'));
                 $end = $today;
                 break;
             case 'last28':
