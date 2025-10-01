@@ -23,6 +23,7 @@ use FP\DMS\Services\Reports\HtmlRenderer;
 use FP\DMS\Services\Reports\ReportBuilder;
 use FP\DMS\Services\Reports\TokenEngine;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 
 class Queue
 {
@@ -88,7 +89,7 @@ class Queue
 
             $reports->update($job->id ?? 0, [
                 'status' => 'running',
-                'meta' => array_merge($job->meta, ['started_at' => current_time('mysql')]),
+                'meta' => array_merge($job->meta, ['started_at' => Wp::currentTime('mysql')]),
             ]);
 
             return $reports->find($job->id ?? 0);
@@ -108,7 +109,7 @@ class Queue
             Logger::log(sprintf('LOCK_CONTENDED:client-%d', $job->clientId));
             $reports->update($job->id ?? 0, [
                 'status' => 'queued',
-                'meta' => array_merge($job->meta, ['lock_contended_at' => current_time('mysql')]),
+                'meta' => array_merge($job->meta, ['lock_contended_at' => Wp::currentTime('mysql')]),
             ]);
         }
     }
@@ -143,7 +144,7 @@ class Queue
             $template = $templates->findDefault();
         }
         if (! $template) {
-            $template = new \FP\DMS\Domain\Entities\Template(null, 'Default', 'Auto generated', '<div class="kpi-grid">{{client.name}}</div>', true, current_time('mysql'), current_time('mysql'));
+            $template = new \FP\DMS\Domain\Entities\Template(null, 'Default', 'Auto generated', '<div class="kpi-grid">{{client.name}}</div>', true, Wp::currentTime('mysql'), Wp::currentTime('mysql'));
         }
 
         $providers = self::buildProviders($dataSources->forClient($client->id ?? 0));
@@ -182,7 +183,7 @@ class Queue
         $mailer = new Mailer();
         $mailSent = $mailer->sendReport($client, $result, $period);
         $latest = $reports->find($result->id ?? 0) ?? $result;
-        $mailTimestamp = current_time('mysql');
+        $mailTimestamp = Wp::currentTime('mysql');
         $meta = array_merge($latest->meta, [
             'mail_status' => $mailSent ? 'sent' : 'failed',
             'mail_attempted_at' => $mailTimestamp,
@@ -242,7 +243,7 @@ class Queue
     {
         $schedules = new SchedulesRepo();
         $clients = new ClientsRepo();
-        $now = current_time('mysql');
+        $now = Wp::currentTime('mysql');
 
         foreach ($schedules->dueSchedules($now) as $schedule) {
             $client = $clients->find($schedule->clientId);
@@ -280,7 +281,7 @@ class Queue
      */
     private static function determineSchedulePeriod(Schedule $schedule, ?string $timezone): array
     {
-        $tz = $timezone ? new DateTimeZone($timezone) : wp_timezone();
+        $tz = $timezone ? new DateTimeZone($timezone) : Wp::timezone();
         $now = new DateTimeImmutable('now', $tz);
 
         switch ($schedule->frequency) {
@@ -307,9 +308,9 @@ class Queue
 
     private static function calculateNextRunAt(string $frequency, ?string $currentNext = null): string
     {
-        $base = $currentNext ? strtotime($currentNext) : current_time('timestamp');
+        $base = $currentNext ? strtotime($currentNext) : Wp::currentTime('timestamp');
         if (! $base) {
-            $base = current_time('timestamp');
+            $base = Wp::currentTime('timestamp');
         }
 
         switch ($frequency) {
@@ -326,10 +327,10 @@ class Queue
         }
 
         if (! $next) {
-            $next = $base + DAY_IN_SECONDS;
+            $next = $base + Wp::dayInSeconds();
         }
 
-        return wp_date('Y-m-d H:i:s', $next);
+        return Wp::date('Y-m-d H:i:s', $next);
     }
 
     private static function markScheduleCompletion(ReportJob $job): void
@@ -346,7 +347,7 @@ class Queue
         }
 
         $updates = [
-            'last_run_at' => current_time('mysql'),
+            'last_run_at' => Wp::currentTime('mysql'),
         ];
 
         if (! empty($job->meta['schedule_next_run_at'])) {
@@ -413,9 +414,9 @@ class Queue
             return;
         }
 
-        wp_remote_post($webhook, [
+        Wp::remotePost($webhook, [
             'headers' => ['Content-Type' => 'application/json'],
-            'body' => wp_json_encode([
+            'body' => Wp::jsonEncode([
                 'client' => $client->name,
                 'client_id' => $client->id,
                 'report_id' => $report->id,
@@ -424,7 +425,7 @@ class Queue
                     'start' => $period->start->format('Y-m-d'),
                     'end' => $period->end->format('Y-m-d'),
                 ],
-            ]),
+            ]) ?: '[]',
             'timeout' => 5,
         ]);
     }

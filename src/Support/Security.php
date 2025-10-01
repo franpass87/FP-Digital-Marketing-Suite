@@ -85,7 +85,7 @@ class Security
 
     private static function getKey(): string
     {
-        $salt = wp_salt('fpdms');
+        $salt = Wp::salt('fpdms');
         $hash = hash('sha256', $salt, true);
 
         return substr($hash, 0, SODIUM_CRYPTO_SECRETBOX_KEYBYTES);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Domain\Entities;
 
+use FP\DMS\Support\Wp;
+
 class Anomaly
 {
     public function __construct(
@@ -59,7 +61,7 @@ class Anomaly
             'client_id' => $this->clientId,
             'type' => $this->type,
             'severity' => $this->severity,
-            'payload' => wp_json_encode($this->payload),
+            'payload' => Wp::jsonEncode($this->payload) ?: '[]',
             'detected_at' => $this->detectedAt,
             'notified' => $this->notified ? 1 : 0,
             'algo' => $this->algo,

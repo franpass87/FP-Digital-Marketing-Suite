@@ -7,7 +7,7 @@ namespace FP\DMS\Admin\Pages;
 use FP\DMS\Domain\Repos\SchedulesRepo;
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\I18n;
-use function wp_unslash;
+use FP\DMS\Support\Wp;
 
 class HealthPage
 {
@@ -47,16 +47,16 @@ class HealthPage
 
     private static function handleActions(): void
     {
-        $post = wp_unslash($_POST);
+        $post = Wp::unslash($_POST);
         if (empty($post['fpdms_health_nonce'])) {
             return;
         }
 
-        if (! wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_health_nonce'] ?? '')), 'fpdms_health_action')) {
+        if (! wp_verify_nonce(Wp::sanitizeTextField($post['fpdms_health_nonce'] ?? ''), 'fpdms_health_action')) {
             return;
         }
 
-        $action = sanitize_text_field((string) ($post['fpdms_health_action'] ?? ''));
+        $action = Wp::sanitizeTextField($post['fpdms_health_action'] ?? '');
         if ($action === 'force_tick') {
             do_action('fpdms/health/force_tick');
             add_settings_error('fpdms_health', 'fpdms_health_tick', I18n::__('Tick executed.'), 'updated');
@@ -71,7 +71,7 @@ class HealthPage
 
         $diff = human_time_diff($timestamp, time());
 
-        return sprintf(I18n::__('%1$s ago (%2$s)'), $diff, wp_date('Y-m-d H:i:s', $timestamp));
+        return sprintf(I18n::__('%1$s ago (%2$s)'), $diff, Wp::date('Y-m-d H:i:s', $timestamp));
     }
 
     private static function determineStatus(int $lastTick): string
@@ -95,6 +95,6 @@ class HealthPage
             return $datetime;
         }
 
-        return wp_date('Y-m-d H:i:s', $timestamp);
+        return Wp::date('Y-m-d H:i:s', $timestamp);
     }
 }

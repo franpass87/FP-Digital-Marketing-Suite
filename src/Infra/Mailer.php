@@ -8,12 +8,8 @@ use FP\DMS\Domain\Entities\Client;
 use FP\DMS\Domain\Entities\ReportJob;
 use FP\DMS\Support\I18n;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 use PHPMailer\PHPMailer\PHPMailer;
-use function is_email;
-use function sanitize_email;
-use function trailingslashit;
-use function wp_upload_dir;
-use function wp_normalize_path;
 use function ltrim;
 use function str_starts_with;
 use function file_exists;
@@ -31,8 +27,8 @@ class Mailer
         $primary = $this->sanitizeEmails($client->emailTo);
         $cc = $this->sanitizeEmails($client->emailCc);
 
-        $owner = isset($settings['owner_email']) ? sanitize_email((string) $settings['owner_email']) : '';
-        if ($owner !== '' && ! is_email($owner)) {
+        $owner = isset($settings['owner_email']) ? Wp::sanitizeEmail($settings['owner_email']) : '';
+        if ($owner !== '' && ! Wp::isEmail($owner)) {
             $owner = '';
         }
 
@@ -56,7 +52,7 @@ class Mailer
 
         /* translators: 1: client name, 2: period start date, 3: period end date */
         $subject = sprintf(I18n::__('[Report] %1$s – %2$s to %3$s'), $client->name, $period->start->format('Y-m-d'), $period->end->format('Y-m-d'));
-        $body = '<p>' . esc_html(sprintf(I18n::__('Attached you will find the latest marketing report for %s.'), $client->name)) . '</p>';
+        $body = '<p>' . Wp::escHtml(sprintf(I18n::__('Attached you will find the latest marketing report for %s.'), $client->name)) . '</p>';
 
         if ($owner !== '' && ! in_array($owner, $primary, true) && ! in_array($owner, $cc, true)) {
             $headers[] = 'Bcc: ' . $owner;
@@ -67,21 +63,21 @@ class Mailer
             return false;
         }
 
-        $upload = wp_upload_dir();
+        $upload = Wp::uploadDir();
         if (! empty($upload['error']) || empty($upload['basedir'])) {
             Logger::log('MAIL_ATTACHMENT_DIR_MISSING ' . (string) ($upload['error'] ?? 'unknown'));
 
             return false;
         }
-        $baseDir = trailingslashit(wp_normalize_path($upload['basedir']));
-        $relative = wp_normalize_path(ltrim((string) $report->storagePath, '/\\'));
+        $baseDir = Wp::trailingSlashIt(Wp::normalizePath($upload['basedir']));
+        $relative = Wp::normalizePath(ltrim((string) $report->storagePath, '/\\'));
         if ($relative === '') {
             Logger::log('MAIL_ATTACHMENT_INVALID_PATH empty_relative');
 
             return false;
         }
 
-        $attachment = wp_normalize_path($baseDir . $relative);
+        $attachment = Wp::normalizePath($baseDir . $relative);
         if (! str_starts_with($attachment, $baseDir)) {
             Logger::log(sprintf('MAIL_ATTACHMENT_INVALID_PATH path="%s"', $report->storagePath));
 
@@ -148,8 +144,8 @@ class Mailer
     public function sendAnomalyAlert(Client $client, array $anomalies, Period $period): bool
     {
         $settings = Options::getGlobalSettings();
-        $owner = $settings['owner_email'] ?? '';
-        if (! is_string($owner) || $owner === '') {
+        $owner = Wp::sanitizeEmail($settings['owner_email'] ?? '');
+        if ($owner === '' || ! Wp::isEmail($owner)) {
             return false;
         }
 
@@ -157,15 +153,17 @@ class Mailer
         $metric = is_array($first) && isset($first['metric']) ? (string) $first['metric'] : 'metric';
         $severity = is_array($first) && isset($first['severity']) ? (string) $first['severity'] : 'warn';
         $subject = self::buildAnomalySubject($client, $metric, $severity);
-        $body = '<p>' . esc_html(sprintf(I18n::__('The anomaly detector flagged the following metrics for %s.'), $client->name)) . '</p><ul>';
+        $body = '<p>' . Wp::escHtml(sprintf(I18n::__('The anomaly detector flagged the following metrics for %s.'), $client->name)) . '</p><ul>';
         foreach ($anomalies as $anomaly) {
             if (! is_array($anomaly)) {
                 continue;
             }
-            $metric = esc_html((string) ($anomaly['metric'] ?? I18n::__('metric')));
-            $delta = isset($anomaly['delta_percent']) ? number_format_i18n((float) $anomaly['delta_percent'], 1) . '%' : I18n::__('n/a');
-            $severity = esc_html((string) ($anomaly['severity'] ?? 'warn'));
-            $body .= '<li><strong>' . $metric . '</strong> – ' . esc_html(sprintf(I18n::__('Δ %s (%s)'), $delta, $severity)) . '</li>';
+            $metric = Wp::escHtml((string) ($anomaly['metric'] ?? I18n::__('metric')));
+            $delta = isset($anomaly['delta_percent'])
+                ? Wp::numberFormatI18n((float) $anomaly['delta_percent'], 1) . '%'
+                : I18n::__('n/a');
+            $severity = Wp::escHtml((string) ($anomaly['severity'] ?? 'warn'));
+            $body .= '<li><strong>' . $metric . '</strong> – ' . Wp::escHtml(sprintf(I18n::__('Δ %s (%s)'), $delta, $severity)) . '</li>';
         }
         $body .= '</ul>';
 
@@ -186,8 +184,8 @@ class Mailer
     {
         $clean = [];
         foreach ($emails as $email) {
-            $sanitized = sanitize_email((string) $email);
-            if ($sanitized === '' || ! is_email($sanitized)) {
+            $sanitized = Wp::sanitizeEmail($email);
+            if ($sanitized === '' || ! Wp::isEmail($sanitized)) {
                 continue;
             }
             if (! in_array($sanitized, $clean, true)) {

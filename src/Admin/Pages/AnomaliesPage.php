@@ -10,12 +10,10 @@ use FP\DMS\Infra\Options;
 use FP\DMS\Services\Anomalies\Detector;
 use FP\DMS\Support\I18n;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 use function is_array;
 use function is_numeric;
-use function sanitize_key;
-use function sanitize_text_field;
 use function str_contains;
-use function wp_unslash;
 
 class AnomaliesPage
 {
@@ -40,7 +38,7 @@ class AnomaliesPage
         }
 
         $clientId = isset($_GET['client_id']) ? (int) $_GET['client_id'] : 0;
-        $tab = isset($_GET['tab']) ? sanitize_key((string) $_GET['tab']) : 'anomalies';
+        $tab = isset($_GET['tab']) ? Wp::sanitizeKey($_GET['tab']) : 'anomalies';
         $anomalies = $clientId > 0 ? $repo->recentForClient($clientId, 50) : $repo->recent(50);
 
         echo '<div class="wrap">';
@@ -100,17 +98,17 @@ class AnomaliesPage
                 $payload = $anomaly->payload;
                 $metric = isset($payload['metric']) ? (string) $payload['metric'] : $anomaly->type;
                 $delta = isset($payload['delta_percent']) && is_numeric($payload['delta_percent'])
-                    ? number_format_i18n((float) $payload['delta_percent'], 2) . '%'
+                    ? Wp::numberFormatI18n((float) $payload['delta_percent'], 2) . '%'
                     : I18n::__('n/a');
                 $zScore = isset($payload['z_score']) && is_numeric($payload['z_score'])
-                    ? number_format_i18n((float) $payload['z_score'], 2)
+                    ? Wp::numberFormatI18n((float) $payload['z_score'], 2)
                     : I18n::__('n/a');
                 $note = isset($payload['note']) ? (string) $payload['note'] : '';
                 $resolved = ! empty($payload['resolved']);
                 $clientName = $clientsMap[$anomaly->clientId] ?? I18n::__('Unknown client');
 
                 echo '<tr>';
-                echo '<td>' . esc_html(wp_date('Y-m-d H:i', strtotime($anomaly->detectedAt))) . '</td>';
+                echo '<td>' . esc_html(Wp::date('Y-m-d H:i', strtotime($anomaly->detectedAt))) . '</td>';
                 echo '<td>' . esc_html($clientName) . '</td>';
                 echo '<td>' . esc_html($metric) . '</td>';
                 echo '<td>' . esc_html(ucfirst($anomaly->severity)) . '</td>';
@@ -137,12 +135,12 @@ class AnomaliesPage
 
     private static function handleActions(AnomaliesRepo $repo): void
     {
-        $post = wp_unslash($_POST);
+        $post = Wp::unslash($_POST);
         if (empty($post['fpdms_anomaly_nonce'])) {
             return;
         }
 
-        if (! wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_anomaly_nonce'] ?? '')), 'fpdms_anomaly_update')) {
+        if (! wp_verify_nonce(Wp::sanitizeTextField($post['fpdms_anomaly_nonce'] ?? ''), 'fpdms_anomaly_update')) {
             return;
         }
 
@@ -158,7 +156,7 @@ class AnomaliesPage
 
         $payload = $anomaly->payload;
         $payload['resolved'] = ! empty($post['resolved']);
-        $payload['note'] = sanitize_text_field((string) ($post['note'] ?? ''));
+        $payload['note'] = Wp::sanitizeTextField($post['note'] ?? '');
 
         if ($repo->updatePayload($id, $payload)) {
             add_settings_error('fpdms_anomalies', 'fpdms_anomaly_saved', I18n::__('Anomaly updated.'), 'updated');
@@ -169,17 +167,17 @@ class AnomaliesPage
 
     private static function handlePolicyActions(): void
     {
-        $post = wp_unslash($_POST);
+        $post = Wp::unslash($_POST);
         if (empty($post['fpdms_anomaly_policy_nonce'])) {
             return;
         }
 
-        if (! wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_anomaly_policy_nonce'] ?? '')), 'fpdms_anomaly_policy')) {
+        if (! wp_verify_nonce(Wp::sanitizeTextField($post['fpdms_anomaly_policy_nonce'] ?? ''), 'fpdms_anomaly_policy')) {
             return;
         }
 
         $clientId = (int) ($post['client_id'] ?? 0);
-        $action = sanitize_text_field((string) ($post['fpdms_policy_action'] ?? 'save'));
+        $action = Wp::sanitizeTextField($post['fpdms_policy_action'] ?? 'save');
 
         if ($action === 'reset') {
             Options::deleteAnomalyPolicy($clientId);
@@ -316,7 +314,7 @@ class AnomaliesPage
      */
     private static function sanitizePolicyInput(int $clientId): array
     {
-        $post = wp_unslash($_POST);
+        $post = Wp::unslash($_POST);
 
         $input = [];
         if (isset($post['metrics']) && is_array($post['metrics'])) {

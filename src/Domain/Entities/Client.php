@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Domain\Entities;
 
+use FP\DMS\Support\Wp;
+
 class Client
 {
     public function __construct(
@@ -43,8 +45,8 @@ class Client
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'email_to' => wp_json_encode($this->emailTo),
-            'email_cc' => wp_json_encode($this->emailCc),
+            'email_to' => Wp::jsonEncode($this->emailTo) ?: '[]',
+            'email_cc' => Wp::jsonEncode($this->emailCc) ?: '[]',
             'timezone' => $this->timezone,
             'notes' => $this->notes,
             'created_at' => $this->createdAt,

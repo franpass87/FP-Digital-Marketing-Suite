@@ -6,6 +6,7 @@ namespace FP\DMS\Domain\Repos;
 
 use FP\DMS\Domain\Entities\ReportJob;
 use FP\DMS\Infra\DB;
+use FP\DMS\Support\Wp;
 use wpdb;
 
 class ReportsRepo
@@ -114,14 +115,14 @@ class ReportsRepo
     public function create(array $data): ?ReportJob
     {
         global $wpdb;
-        $now = current_time('mysql');
+        $now = Wp::currentTime('mysql');
         $payload = [
             'client_id' => (int) ($data['client_id'] ?? 0),
             'period_start' => (string) ($data['period_start'] ?? ''),
             'period_end' => (string) ($data['period_end'] ?? ''),
             'status' => (string) ($data['status'] ?? 'queued'),
             'storage_path' => $data['storage_path'] ?? null,
-            'meta' => wp_json_encode($data['meta'] ?? []),
+            'meta' => Wp::jsonEncode($data['meta'] ?? []) ?: '[]',
             'created_at' => $now,
             'updated_at' => $now,
         ];
@@ -151,7 +152,7 @@ class ReportsRepo
         }
 
         if (array_key_exists('meta', $data)) {
-            $payload['meta'] = wp_json_encode($data['meta']);
+            $payload['meta'] = Wp::jsonEncode($data['meta']) ?: '[]';
             $formats[] = '%s';
         }
 
@@ -159,7 +160,7 @@ class ReportsRepo
             return true;
         }
 
-        $payload['updated_at'] = current_time('mysql');
+        $payload['updated_at'] = Wp::currentTime('mysql');
         $formats[] = '%s';
 
         $result = $wpdb->update($this->table, $payload, ['id' => $id], $formats, ['%d']);

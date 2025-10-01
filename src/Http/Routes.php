@@ -14,14 +14,12 @@ use FP\DMS\Infra\Queue;
 use FP\DMS\Infra\NotificationRouter;
 use FP\DMS\Services\Anomalies\Detector;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 use FP\DMS\Services\Qa\Automation;
 use Throwable;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
-use function wp_upload_dir;
-use function trailingslashit;
-use function wp_normalize_path;
 use function ltrim;
 use function str_starts_with;
 use function file_exists;
@@ -188,17 +186,17 @@ class Routes
             return new WP_Error('rest_not_found', __('Report not available.', 'fp-dms'), ['status' => 404]);
         }
 
-        $upload = wp_upload_dir();
+        $upload = Wp::uploadDir();
         if (! empty($upload['error']) || empty($upload['basedir'])) {
             return new WP_Error('rest_upload_unavailable', __('Uploads directory is not available.', 'fp-dms'), ['status' => 500]);
         }
-        $baseDir = trailingslashit(wp_normalize_path($upload['basedir']));
-        $relative = wp_normalize_path(ltrim((string) $report->storagePath, '/\\'));
+        $baseDir = Wp::trailingSlashIt(Wp::normalizePath($upload['basedir']));
+        $relative = Wp::normalizePath(ltrim((string) $report->storagePath, '/\\'));
         if ($relative === '') {
             return new WP_Error('rest_invalid_report_path', __('Report path is invalid.', 'fp-dms'), ['status' => 403]);
         }
 
-        $path = wp_normalize_path($baseDir . $relative);
+        $path = Wp::normalizePath($baseDir . $relative);
         if (! str_starts_with($path, $baseDir)) {
             return new WP_Error('rest_invalid_report_path', __('Report path is invalid.', 'fp-dms'), ['status' => 403]);
         }
@@ -430,8 +428,8 @@ class Routes
     private static function resolvePeriod(WP_REST_Request $request, ?string $timezone): array|WP_Error
     {
         $periodParam = $request->get_param('period');
-        $period = $periodParam ? sanitize_key((string) $periodParam) : 'last_month';
-        $tz = $timezone ? new \DateTimeZone($timezone) : wp_timezone();
+        $period = $periodParam ? Wp::sanitizeKey($periodParam) : 'last_month';
+        $tz = $timezone ? new \DateTimeZone($timezone) : Wp::timezone();
 
         try {
             $now = new DateTimeImmutable('now', $tz);
@@ -452,8 +450,8 @@ class Routes
                 }
 
                 try {
-                    $start = new DateTimeImmutable(sanitize_text_field((string) $from), $tz);
-                    $end = new DateTimeImmutable(sanitize_text_field((string) $to), $tz);
+                    $start = new DateTimeImmutable(Wp::sanitizeTextField($from), $tz);
+                    $end = new DateTimeImmutable(Wp::sanitizeTextField($to), $tz);
                 } catch (Exception $e) {
                     return new WP_Error('rest_invalid_param', __('Invalid custom dates supplied.', 'fp-dms'), ['status' => 400]);
                 }
@@ -497,7 +495,7 @@ class Routes
 
     private static function enforceQaRateLimit(string $action, int $seconds): ?WP_Error
     {
-        $key = 'fpdms_qa_rate_' . sanitize_key($action);
+        $key = 'fpdms_qa_rate_' . Wp::sanitizeKey($action);
         $last = get_transient($key);
         if (is_numeric($last) && (time() - (int) $last) < $seconds) {
             return new WP_Error('too_many_requests', __('QA automation is cooling down. Try again shortly.', 'fp-dms'), ['status' => 429]);

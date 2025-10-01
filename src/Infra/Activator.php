@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Infra;
 
 use FP\DMS\Domain\Repos\TemplatesRepo;
+use FP\DMS\Support\Wp;
 
 class Activator
 {
@@ -18,7 +19,7 @@ class Activator
         }
 
         if (! wp_next_scheduled('fpdms_retention_cleanup')) {
-            wp_schedule_event(time() + DAY_IN_SECONDS, 'daily', 'fpdms_retention_cleanup');
+            wp_schedule_event(time() + Wp::dayInSeconds(), 'daily', 'fpdms_retention_cleanup');
         }
 
         self::ensureDefaultTemplate();

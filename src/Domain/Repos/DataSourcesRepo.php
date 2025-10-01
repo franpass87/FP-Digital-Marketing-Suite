@@ -7,6 +7,7 @@ namespace FP\DMS\Domain\Repos;
 use FP\DMS\Domain\Entities\DataSource;
 use FP\DMS\Infra\DB;
 use FP\DMS\Support\Security;
+use FP\DMS\Support\Wp;
 use wpdb;
 
 class DataSourcesRepo
@@ -50,16 +51,9 @@ class DataSourcesRepo
     {
         global $wpdb;
 
-        $now = current_time('mysql');
-        $auth = wp_json_encode($data['auth'] ?? []);
-        if (! is_string($auth)) {
-            $auth = '[]';
-        }
-
-        $config = wp_json_encode($data['config'] ?? []);
-        if (! is_string($config)) {
-            $config = '[]';
-        }
+        $now = Wp::currentTime('mysql');
+        $auth = Wp::jsonEncode($data['auth'] ?? []) ?: '[]';
+        $config = Wp::jsonEncode($data['config'] ?? []) ?: '[]';
 
         $payload = [
             'client_id' => (int) ($data['client_id'] ?? 0),
@@ -97,27 +91,21 @@ class DataSourcesRepo
         $configData = array_key_exists('config', $data) && is_array($data['config']) ? $data['config'] : $current->config;
         $active = array_key_exists('active', $data) ? ! empty($data['active']) : $current->active;
 
-        $auth = wp_json_encode($authData);
-        if (! is_string($auth)) {
-            $auth = '[]';
-        }
+        $auth = Wp::jsonEncode($authData) ?: '[]';
         $authCipher = $hasNewAuth
             ? Security::encrypt($auth)
             : ($current->authCipher !== null && $current->authCipher !== ''
                 ? $current->authCipher
                 : Security::encrypt($auth));
 
-        $config = wp_json_encode($configData);
-        if (! is_string($config)) {
-            $config = '[]';
-        }
+        $config = Wp::jsonEncode($configData) ?: '[]';
 
         $payload = [
             'type' => $type,
             'auth' => $authCipher,
             'config' => $config,
             'active' => $active ? 1 : 0,
-            'updated_at' => current_time('mysql'),
+            'updated_at' => Wp::currentTime('mysql'),
         ];
 
         $result = $wpdb->update($this->table, $payload, ['id' => $id], ['%s', '%s', '%s', '%d', '%s'], ['%d']);

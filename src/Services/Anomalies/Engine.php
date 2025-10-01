@@ -7,6 +7,7 @@ namespace FP\DMS\Services\Anomalies;
 use FP\DMS\Domain\Repos\AnomaliesRepo;
 use FP\DMS\Infra\Logger;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 
 class Engine
 {
@@ -146,7 +147,7 @@ class Engine
                 'z' => $zResult['z'],
                 'p_value' => $pValue,
                 'window' => count($series),
-                'detected_at' => current_time('mysql'),
+                'detected_at' => Wp::currentTime('mysql'),
             ]);
 
             Logger::logAnomaly($clientId, $metric, $severity, [

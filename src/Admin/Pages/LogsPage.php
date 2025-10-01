@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FP\DMS\Admin\Pages;
 
+use FP\DMS\Support\Wp;
 use function __;
 
 class LogsPage
@@ -43,7 +44,7 @@ class LogsPage
      */
     private static function readLogs(): array
     {
-        $upload = wp_upload_dir();
+        $upload = Wp::uploadDir();
         if (! empty($upload['error']) || empty($upload['basedir'])) {
             return [
                 'content' => '',
@@ -52,7 +53,7 @@ class LogsPage
             ];
         }
 
-        $file = trailingslashit($upload['basedir']) . 'fpdms-logs/fpdms.log';
+        $file = Wp::trailingSlashIt($upload['basedir']) . 'fpdms-logs/fpdms.log';
         if (! file_exists($file)) {
             return ['content' => '', 'truncated' => false, 'error' => ''];
         }

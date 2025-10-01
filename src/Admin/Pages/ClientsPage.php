@@ -8,9 +8,8 @@ use DateTimeZone;
 use Exception;
 use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Repos\ClientsRepo;
+use FP\DMS\Support\Wp;
 use function __;
-use function is_email;
-use function wp_unslash;
 
 class ClientsPage
 {
@@ -40,17 +39,17 @@ class ClientsPage
 
     private static function handleActions(ClientsRepo $repo): void
     {
-        $post = wp_unslash($_POST);
+        $post = Wp::unslash($_POST);
 
-        if (! empty($post['fpdms_client_nonce']) && wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_client_nonce'] ?? '')), 'fpdms_save_client')) {
+        if (! empty($post['fpdms_client_nonce']) && wp_verify_nonce(Wp::sanitizeTextField($post['fpdms_client_nonce'] ?? ''), 'fpdms_save_client')) {
             $id = isset($post['client_id']) ? (int) $post['client_id'] : 0;
             $existing = $id > 0 ? $repo->find($id) : null;
             $data = [
-                'name' => sanitize_text_field((string) ($post['name'] ?? '')),
+                'name' => Wp::sanitizeTextField($post['name'] ?? ''),
                 'email_to' => self::sanitizeEmails((string) ($post['email_to'] ?? '')),
                 'email_cc' => self::sanitizeEmails((string) ($post['email_cc'] ?? '')),
-                'timezone' => sanitize_text_field((string) ($post['timezone'] ?? 'UTC')),
-                'notes' => wp_kses_post((string) ($post['notes'] ?? '')),
+                'timezone' => Wp::sanitizeTextField($post['timezone'] ?? 'UTC'),
+                'notes' => Wp::ksesPost((string) ($post['notes'] ?? '')),
             ];
 
             $fallbackTz = $existing?->timezone ?? 'UTC';
@@ -86,10 +85,10 @@ class ClientsPage
             exit;
         }
 
-        $query = wp_unslash($_GET);
+        $query = Wp::unslash($_GET);
         if (isset($query['action'], $query['client']) && $query['action'] === 'delete') {
             $clientId = (int) $query['client'];
-            $nonce = sanitize_text_field((string) ($query['_wpnonce'] ?? ''));
+            $nonce = Wp::sanitizeTextField($query['_wpnonce'] ?? '');
             if (wp_verify_nonce($nonce, 'fpdms_delete_client_' . $clientId)) {
                 $repo->delete($clientId);
                 NoticeStore::enqueue('fpdms_clients', 'fpdms_client_deleted', __('Client deleted.', 'fp-dms'), 'updated');
@@ -185,8 +184,8 @@ class ClientsPage
         $parts = array_filter(array_map('trim', explode(',', $value)));
         $valid = [];
         foreach ($parts as $email) {
-            $sanitized = sanitize_email($email);
-            if ($sanitized === '' || ! is_email($sanitized)) {
+            $sanitized = Wp::sanitizeEmail($email);
+            if ($sanitized === '' || ! Wp::isEmail($sanitized)) {
                 continue;
             }
 

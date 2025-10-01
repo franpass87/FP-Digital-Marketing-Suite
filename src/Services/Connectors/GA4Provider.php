@@ -6,6 +6,7 @@ namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 use function __;
 
 class GA4Provider implements DataSourceProviderInterface
@@ -164,7 +165,7 @@ class GA4Provider implements DataSourceProviderInterface
             'metrics' => $totals,
             'daily' => $daily,
             'rows' => count($daily),
-            'last_ingested_at' => current_time('mysql'),
+            'last_ingested_at' => Wp::currentTime('mysql'),
         ];
     }
 
@@ -175,6 +176,6 @@ class GA4Provider implements DataSourceProviderInterface
             return null;
         }
 
-        return wp_date('Y-m-d', $timestamp);
+        return Wp::date('Y-m-d', $timestamp);
     }
 }

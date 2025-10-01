@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Domain\Entities;
 
+use FP\DMS\Support\Wp;
+
 use FP\DMS\Support\Security;
 
 class DataSource
@@ -49,7 +51,7 @@ class DataSource
      */
     public function toRow(): array
     {
-        $authJson = wp_json_encode($this->auth);
+        $authJson = Wp::jsonEncode($this->auth) ?: '{}';
         if (! is_string($authJson)) {
             $authJson = '[]';
         }
@@ -63,7 +65,7 @@ class DataSource
             'client_id' => $this->clientId,
             'type' => $this->type,
             'auth' => $authValue,
-            'config' => wp_json_encode($this->config),
+            'config' => Wp::jsonEncode($this->config) ?: '{}',
             'active' => $this->active ? 1 : 0,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,

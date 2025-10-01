@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FP\DMS\Infra;
 
+use FP\DMS\Support\Wp;
 use Mpdf\Mpdf;
 use Mpdf\Output\Destination;
 use RuntimeException;
@@ -17,13 +18,18 @@ class PdfRenderer
             throw new RuntimeException(__('mPDF library is not available. Run composer install on the server.', 'fp-dms'));
         }
 
-        $uploadDir = wp_upload_dir();
+        $uploadDir = Wp::uploadDir();
         if (! empty($uploadDir['error']) || empty($uploadDir['basedir'])) {
             throw new RuntimeException(__('Uploads directory is not available. Check WordPress configuration.', 'fp-dms'));
         }
-        $tempDir = trailingslashit($uploadDir['basedir']) . 'fpdms-temp';
-        wp_mkdir_p($tempDir);
-        wp_mkdir_p(dirname($targetPath));
+        $tempDir = Wp::trailingSlashIt($uploadDir['basedir']) . 'fpdms-temp';
+
+        try {
+            Wp::mkdirP($tempDir);
+            Wp::mkdirP((string) dirname($targetPath));
+        } catch (RuntimeException $exception) {
+            throw new RuntimeException(sprintf(__('Unable to prepare report directories: %s', 'fp-dms'), $exception->getMessage()), 0, $exception);
+        }
 
         $mpdf = new Mpdf([
             'tempDir' => $tempDir,

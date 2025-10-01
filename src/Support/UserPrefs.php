@@ -7,9 +7,9 @@ namespace FP\DMS\Support;
 use DateTimeImmutable;
 use FP\DMS\Http\OverviewRoutes;
 use FP\DMS\Infra\Options;
+use FP\DMS\Support\Wp;
 
 use function abs;
-use function absint;
 use function array_filter;
 use function array_map;
 use function array_values;
@@ -17,7 +17,6 @@ use function get_current_user_id;
 use function get_user_meta;
 use function is_array;
 use function is_numeric;
-use function sanitize_key;
 use function sort;
 use function trim;
 use function update_user_meta;
@@ -65,8 +64,8 @@ final class UserPrefs
         }
 
         $meta['overview'] = [
-            'client_id' => absint($clientId),
-            'preset' => self::normalizePreset(sanitize_key($preset)),
+            'client_id' => Wp::absInt($clientId),
+            'preset' => self::normalizePreset(Wp::sanitizeKey($preset)),
             'from' => self::sanitizeDate($from),
             'to' => self::sanitizeDate($to),
             'auto_refresh' => $autoRefresh,
@@ -90,7 +89,7 @@ final class UserPrefs
 
     private static function sanitizeInterval(int $seconds): int
     {
-        $seconds = absint($seconds);
+        $seconds = Wp::absInt($seconds);
         $allowed = self::allowedRefreshIntervals();
 
         if ($allowed === []) {
@@ -133,10 +132,10 @@ final class UserPrefs
         $allowed = self::allowedRefreshIntervals();
         $defaultInterval = $allowed[0] ?? 60;
 
-        $preset = isset($prefs['preset']) ? sanitize_key((string) $prefs['preset']) : '';
+        $preset = isset($prefs['preset']) ? Wp::sanitizeKey($prefs['preset']) : '';
 
         return [
-            'client_id' => isset($prefs['client_id']) ? absint((int) $prefs['client_id']) : 0,
+            'client_id' => isset($prefs['client_id']) ? Wp::absInt($prefs['client_id']) : 0,
             'preset' => self::normalizePreset($preset),
             'from' => isset($prefs['from']) ? self::sanitizeDate((string) $prefs['from']) : '',
             'to' => isset($prefs['to']) ? self::sanitizeDate((string) $prefs['to']) : '',
@@ -172,7 +171,7 @@ final class UserPrefs
             $configured = Options::defaultGlobalSettings()['overview']['refresh_intervals'];
         }
 
-        $intervals = array_values(array_filter(array_map('absint', $configured), static fn(int $value): bool => $value > 0));
+        $intervals = array_values(array_filter(array_map([Wp::class, 'absInt'], $configured), static fn(int $value): bool => $value > 0));
         if ($intervals === []) {
             $intervals = Options::defaultGlobalSettings()['overview']['refresh_intervals'];
         }

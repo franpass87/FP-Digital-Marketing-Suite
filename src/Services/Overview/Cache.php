@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace FP\DMS\Services\Overview;
 
+use FP\DMS\Support\Wp;
 use function delete_transient;
 use function get_transient;
 use function is_scalar;
 use function ksort;
 use function md5;
-use function sanitize_key;
 use function set_transient;
 use function substr;
-use function wp_json_encode;
 
 class Cache
 {
@@ -20,7 +19,7 @@ class Cache
 
     public function __construct(?string $prefix = null)
     {
-        $this->prefix = $prefix ? sanitize_key($prefix) : 'fpdms_overview';
+        $this->prefix = $prefix ? Wp::sanitizeKey($prefix) : 'fpdms_overview';
     }
 
     /**
@@ -63,12 +62,13 @@ class Cache
             if (! is_scalar($value)) {
                 continue;
             }
-            $normalized[sanitize_key((string) $key)] = (string) $value;
+            $normalized[Wp::sanitizeKey($key)] = (string) $value;
         }
 
-        $payload = ['client' => $clientId, 'section' => sanitize_key($section)] + $normalized;
+        $payload = ['client' => $clientId, 'section' => Wp::sanitizeKey($section)] + $normalized;
         ksort($payload);
-        $hash = md5((string) wp_json_encode($payload));
+        $encoded = Wp::jsonEncode($payload) ?: '';
+        $hash = md5($encoded);
 
         return substr($this->prefix . '_' . $clientId . '_' . $hash, 0, 172);
     }

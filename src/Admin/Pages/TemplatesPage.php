@@ -7,7 +7,7 @@ namespace FP\DMS\Admin\Pages;
 use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Entities\Template;
 use FP\DMS\Domain\Repos\TemplatesRepo;
-use function wp_unslash;
+use FP\DMS\Support\Wp;
 
 class TemplatesPage
 {
@@ -37,13 +37,13 @@ class TemplatesPage
 
     private static function handleActions(TemplatesRepo $repo): void
     {
-        $post = wp_unslash($_POST);
-        if (! empty($post['fpdms_template_nonce']) && wp_verify_nonce(sanitize_text_field((string) ($post['fpdms_template_nonce'] ?? '')), 'fpdms_save_template')) {
+        $post = Wp::unslash($_POST);
+        if (! empty($post['fpdms_template_nonce']) && wp_verify_nonce(Wp::sanitizeTextField($post['fpdms_template_nonce'] ?? ''), 'fpdms_save_template')) {
             $id = isset($post['template_id']) ? (int) $post['template_id'] : 0;
             $data = [
-                'name' => sanitize_text_field($post['name'] ?? ''),
-                'description' => sanitize_text_field($post['description'] ?? ''),
-                'content' => wp_kses_post($post['content'] ?? ''),
+                'name' => Wp::sanitizeTextField($post['name'] ?? ''),
+                'description' => Wp::sanitizeTextField($post['description'] ?? ''),
+                'content' => Wp::ksesPost($post['content'] ?? ''),
                 'is_default' => ! empty($post['is_default']) ? 1 : 0,
             ];
 
@@ -62,10 +62,10 @@ class TemplatesPage
             return;
         }
 
-        $query = wp_unslash($_GET);
+        $query = Wp::unslash($_GET);
         if (isset($query['action'], $query['template']) && $query['action'] === 'delete') {
             $templateId = (int) $query['template'];
-            $nonce = sanitize_text_field((string) ($query['_wpnonce'] ?? ''));
+            $nonce = Wp::sanitizeTextField($query['_wpnonce'] ?? '');
             if (wp_verify_nonce($nonce, 'fpdms_delete_template_' . $templateId)) {
                 if ($repo->delete($templateId)) {
                     NoticeStore::enqueue('fpdms_templates', 'fpdms_template_deleted', __('Template deleted.', 'fp-dms'));

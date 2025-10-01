@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Infra\Notifiers;
 
 use FP\DMS\Infra\Logger;
+use FP\DMS\Support\Wp;
 
 class TelegramNotifier implements BaseNotifier
 {
@@ -24,7 +25,7 @@ class TelegramNotifier implements BaseNotifier
         }
 
         $url = sprintf('https://api.telegram.org/bot%s/sendMessage', $this->botToken);
-        $response = wp_remote_post($url, [
+        $response = Wp::remotePost($url, [
             'body' => [
                 'chat_id' => $this->chatId,
                 'text' => $text,
@@ -33,7 +34,7 @@ class TelegramNotifier implements BaseNotifier
             'timeout' => 5,
         ]);
 
-        if (is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) >= 300) {
+        if (Wp::isWpError($response) || Wp::remoteRetrieveResponseCode($response) >= 300) {
             Logger::logChannel('ANOM', sprintf('telegram_failed chat=%s', $this->chatId));
 
             return false;

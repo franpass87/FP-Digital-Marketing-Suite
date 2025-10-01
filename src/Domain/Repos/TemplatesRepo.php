@@ -6,6 +6,7 @@ namespace FP\DMS\Domain\Repos;
 
 use FP\DMS\Domain\Entities\Template;
 use FP\DMS\Infra\DB;
+use FP\DMS\Support\Wp;
 use wpdb;
 
 class TemplatesRepo
@@ -55,7 +56,7 @@ class TemplatesRepo
     public function create(array $data): ?Template
     {
         global $wpdb;
-        $now = current_time('mysql');
+        $now = Wp::currentTime('mysql');
         $payload = [
             'name' => (string) ($data['name'] ?? ''),
             'description' => (string) ($data['description'] ?? ''),
@@ -100,7 +101,7 @@ class TemplatesRepo
             'description' => $description,
             'content' => $content,
             'is_default' => $isDefault,
-            'updated_at' => current_time('mysql'),
+            'updated_at' => Wp::currentTime('mysql'),
         ];
 
         $result = $wpdb->update($this->table, $payload, ['id' => $id], ['%s', '%s', '%s', '%d', '%s'], ['%d']);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Infra\Notifiers;
 
 use FP\DMS\Infra\Logger;
+use FP\DMS\Support\Wp;
 
 class SlackNotifier implements BaseNotifier
 {
@@ -23,13 +24,13 @@ class SlackNotifier implements BaseNotifier
             return false;
         }
 
-        $response = wp_remote_post($this->webhookUrl, [
+        $response = Wp::remotePost($this->webhookUrl, [
             'headers' => ['Content-Type' => 'application/json'],
-            'body' => wp_json_encode(['text' => $text]),
+            'body' => Wp::jsonEncode(['text' => $text]) ?: '[]',
             'timeout' => 5,
         ]);
 
-        if (is_wp_error($response) || (int) wp_remote_retrieve_response_code($response) >= 300) {
+        if (Wp::isWpError($response) || Wp::remoteRetrieveResponseCode($response) >= 300) {
             Logger::logChannel('ANOM', sprintf('slack_failed url=%s', md5($this->webhookUrl)));
 
             return false;

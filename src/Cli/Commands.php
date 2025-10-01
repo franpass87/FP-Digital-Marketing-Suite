@@ -21,6 +21,7 @@ use FP\DMS\Infra\Options;
 use FP\DMS\Infra\Queue;
 use FP\DMS\Services\Anomalies\Detector;
 use FP\DMS\Support\Period;
+use FP\DMS\Support\Wp;
 use WP_CLI;
 
 class Commands
@@ -376,7 +377,7 @@ class Commands
 
         $templates = new TemplatesRepo();
         $templateId = $templates->findDefault()?->id;
-        $nextRun = current_time('mysql');
+        $nextRun = Wp::currentTime('mysql');
 
         if ($schedule) {
             $repo->update($schedule->id ?? 0, [
@@ -479,7 +480,7 @@ class Commands
             ),
             'daily' => $normalizedDaily,
             'rows' => count($daily),
-            'last_ingested_at' => current_time('mysql'),
+            'last_ingested_at' => Wp::currentTime('mysql'),
         ];
     }
 
@@ -535,7 +536,7 @@ class Commands
 
         try {
             if ($probeLock) {
-                $owner = 'qa-lock-' . wp_generate_password(6, false, false);
+                $owner = 'qa-lock-' . Wp::generatePassword(6, false, false);
                 if (Lock::acquire('queue-global', $owner, 30)) {
                     try {
                         Queue::tick();
