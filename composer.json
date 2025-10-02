@@ -1,9 +1,22 @@
 {
   "name": "fp/digital-marketing-suite",
-  "description": "Automated marketing reports for a private WP site",
+  "description": "Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.",
+  "homepage": "https://francescopasseri.com",
   "type": "wordpress-plugin",
+  "authors": [
+    {
+      "name": "Francesco Passeri",
+      "email": "info@francescopasseri.com",
+      "homepage": "https://francescopasseri.com",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/francescopasseri/FP-Digital-Marketing-Suite/issues",
+    "source": "https://github.com/francescopasseri/FP-Digital-Marketing-Suite"
+  },
   "require": {
-    "php": ">=8.0",
+    "php": ">=8.1",
     "mpdf/mpdf": "^8.2"
   },
   "autoload": {
@@ -29,6 +42,9 @@
       "rm -rf vendor",
       "@composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader",
       "composer dump-autoload -o --classmap-authoritative"
-    ]
+    ],
+    "sync:author": "node tools/sync-author-metadata.js --apply=true",
+    "sync:docs": "node tools/sync-author-metadata.js --docs --apply=true",
+    "changelog:from-git": "npx conventional-changelog -p angular -i CHANGELOG.md -s || true"
   }
 }
