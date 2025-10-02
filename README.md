@@ -1,97 +1,100 @@
 # FP Digital Marketing Suite
 
-## Overview
-FP Digital Marketing Suite is a private WordPress plugin to automate marketing performance reporting, anomaly detection, and enterprise-grade alerting across multiple channels.
+> Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.
+
+| Field | Value |
+| ----- | ----- |
+| Name | FP Digital Marketing Suite |
+| Version | 0.1.1 |
+| Author | [Francesco Passeri](https://francescopasseri.com) |
+| Author Email | info@francescopasseri.com |
+| Requires WordPress | 6.4 |
+| Tested up to | 6.4 |
+| Requires PHP | 8.1 |
+| License | [GPLv2 or later](https://www.gnu.org/licenses/gpl-2.0.html) |
+
+## About
+
+FP Digital Marketing Suite centralises scheduled marketing reports, connector management, PDF rendering, anomaly detection, and alert routing inside a private WordPress installation. It is built for agencies that need reproducible client deliverables without exposing dashboards publicly.
 
 ## Features
-- Clients & datasources (GA4, GSC, Google Ads/Meta Ads CSV, Clarity CSV, Generic CSV)
-- Report builder with HTML-to-PDF rendering (logo, brand colors, templates)
-- Scheduling & reliable cron (system cron + fallback REST tick)
-- Email delivery with retry/backoff logic
-- Advanced anomaly detection engine:
-  - Baseline comparisons, z-score, EWMA, CUSUM, seasonal decomposition
-  - Policies per client including thresholds and mute windows
-- Multi-channel notifications:
-  - Email (digest + retry)
-  - Slack / Teams webhooks
-  - Telegram bot messaging
-  - Generic Webhook with HMAC signing
-  - Twilio SMS stub integration
-- Comprehensive admin UI: Clients, Data Sources, Schedules, Templates, Settings, Logs, Health, QA Automation
-- REST API + WP-CLI command coverage
-- QA Automation suite (seed/run/anomalies/status/cleanup via Admin or REST)
-- GitHub Actions workflow for source/release ZIPs, checksums, and tagged releases
-- Client Overview dashboard for real-time KPI snapshots, anomalies, connector health, and quick remediation actions
 
-## Client Overview Dashboard
-The **FP Suite → Overview** page surfaces real-time KPI cards, inline sparklines, anomaly snapshots, datasource health, and job controls per client without waiting for PDF reports. Filters support date presets and custom ranges, auto-refresh can be toggled per user, and responses are cached briefly to stay responsive. REST endpoints under `/wp-json/fpdms/v1/overview/*` power the UI so data can also be consumed programmatically.
+- Client-centric data sources for Google Analytics 4, Google Search Console, Google Ads, Meta Ads CSV, Clarity CSV, and generic CSV exports.
+- Drag-and-drop HTML templates with token replacement and PDF rendering for branded deliverables.
+- Hardened scheduling engine with a custom five-minute cron interval, background queue, and fallback REST tick endpoint.
+- Advanced anomaly detection stack combining z-score, EWMA, CUSUM, and seasonal baselines with per-client thresholds and mute windows.
+- Multi-channel notifications (email with retry, Slack, Microsoft Teams, Telegram, generic webhooks, Twilio SMS audit log).
+- Extensive admin UI covering Clients, Data Sources, Schedules, Templates, Settings, Logs, Health, Overview, QA Automation, and Anomalies.
+- REST API namespace and WP-CLI commands for automation and QA workflows.
 
 ## Installation
-1. Place the plugin folder under `wp-content/plugins/`.
-2. Run `composer install --no-dev` inside the plugin directory (installs mPDF dependencies).
-3. Add `define('DISABLE_WP_CRON', true);` to `wp-config.php`.
-4. Configure a system cron job every 5 minutes:
+
+1. Upload the plugin to `wp-content/plugins/` or install it from the WordPress admin.
+2. Run `composer install --no-dev` in the plugin directory to pull in the PDF renderer.
+3. Activate the plugin and visit **FP Suite → Settings** to configure branding assets, SMTP credentials, retention, and alert routing.
+4. Disable WP-Cron and schedule a system cron every five minutes:
    ```bash
-   */5 * * * * curl -sS https://YOUR_SITE/wp-cron.php?doing_wp_cron=1 >/dev/null 2>&1
+   */5 * * * * curl -sS https://YOUR-SITE/wp-cron.php?doing_wp_cron=1 >/dev/null 2>&1
    ```
-   Or with WP-CLI:
+   Or, using WP-CLI:
    ```bash
-   */5 * * * * wp --path=/var/www/html cron event run --due-now --quiet
+   */5 * * * * wp --path=/path/to/wp cron event run --due-now --quiet
    ```
 
-## QA Automation
-Admin interface: **FP Suite → QA Automation**
-- Controls: Seed, Run Report, Trigger Anomalies, Show Status, Cleanup, Run All
-- Inline JSON output for each action
+## Usage
 
-REST endpoints (requires `X-FPDMS-QA-KEY` header):
-- `POST /wp-json/fpdms/v1/qa/seed`
-- `POST /wp-json/fpdms/v1/qa/run`
-- `POST /wp-json/fpdms/v1/qa/anomalies`
-- `POST /wp-json/fpdms/v1/qa/all`
-- `GET /wp-json/fpdms/v1/qa/status`
-- `POST /wp-json/fpdms/v1/qa/cleanup`
+### Admin workflow
 
-## Advanced Anomalies
-- Algorithms: z-score, EWMA, CUSUM, seasonal baseline
-- Per-client thresholds with warning and critical levels
-- Supports mute windows, rolling baselines, and daily/weekly seasonality
-- Logs detailed anomaly context including score and expected vs. actual metrics
+- Configure clients, connectors, and scheduling policies from the FP Suite menu.
+- Build and preview HTML report templates before enabling automated PDF delivery.
+- Monitor queue health, cron status, and anomaly summaries in **FP Suite → Overview** and **FP Suite → Health**.
+- Trigger QA automation to seed fixtures, run end-to-end tests, simulate anomalies, and clean up data safely.
 
-## Notifications
-- Email with retry/backoff and digest batching
-- Slack / Teams webhook delivery
-- Telegram bot messaging
-- Generic Webhook (JSON payload + HMAC signature)
-- Optional Twilio SMS stub (logs for audit only)
-- Routing, cooldowns, and deduplication to avoid alert fatigue
+### REST endpoints
 
-## Cron/Build
-- System cron integration is preferred for reliability
-- Fallback REST tick endpoint protected by QA key
-- Locking via transient plus DB row to avoid overlapping runs
-- Health page reports last tick, next run, and supports manual “Force Tick”
+- `POST /wp-json/fpdms/v1/tick?key=YOUR_SECRET` — force the queue when cron is paused (rate limited to one call every 120 seconds).
+- QA automation namespace (`/wp-json/fpdms/v1/qa/*`) supports seeding, running, anomaly simulation, status checks, and cleanup with the `X-FPDMS-QA-KEY` header or `qa_key` parameter.
+- Anomaly engine endpoints:
+  - `POST /wp-json/fpdms/v1/anomalies/evaluate?client_id=ID&from=YYYY-MM-DD&to=YYYY-MM-DD`
+  - `POST /wp-json/fpdms/v1/anomalies/notify?client_id=ID`
 
-## CI/CD
-- GitHub Actions workflow `.github/workflows/build-zip.yml`:
-  - Runs PHP linting
-  - Builds source and release ZIP packages plus checksums
-  - Uploads build artifacts
-  - Publishes a GitHub Release when tags are pushed
+### WP-CLI commands
 
-## Release process
-- Bump the plugin version and build the distributable ZIP locally:
-  ```bash
-  bash build.sh --bump=patch
-  ```
-- Optionally set an explicit semantic version:
-  ```bash
-  bash build.sh --set-version=1.2.3
-  ```
-- Grab the generated archive under `build/` and upload it to WordPress.
-- Tag the release to trigger the GitHub Action that publishes the packaged ZIP (`git tag v1.2.3 && git push origin v1.2.3`).
+- `wp fpdms run --client=ID --from=YYYY-MM-DD --to=YYYY-MM-DD`
+- `wp fpdms queue:list`
+- `wp fpdms anomalies:scan --client=ID`
+- `wp fpdms anomalies:evaluate --client=ID [--from=YYYY-MM-DD --to=YYYY-MM-DD]`
+- `wp fpdms anomalies:notify --client=ID`
+- `wp fpdms repair:db`
+
+## Hooks & Filters
+
+| Hook | Type | Description |
+| ---- | ---- | ----------- |
+| `fpdms_cron_tick` | Action | Triggered every queue cycle to process scheduled marketing jobs. |
+| `fpdms/health/force_tick` | Action | Invoked when administrators request an immediate queue tick from the Health page. |
+| `fpdms_retention_cleanup` | Action | Daily cron event that purges stale reports and queue artifacts. |
+| `cron_schedules` | Filter | Extended with the custom `fpdms_5min` interval (300 seconds). |
+| `phpmailer_init` | Action | Used to configure the mailer before outbound notifications are sent. |
+
+The plugin text domain is `fp-dms` and translations live under `languages/`.
+
+## Support
+
+- Email: [info@francescopasseri.com](mailto:info@francescopasseri.com)
+- Issues: [GitHub Issues](https://github.com/francescopasseri/FP-Digital-Marketing-Suite/issues)
+- Documentation: see the `docs/` directory for architecture, overview, and FAQ guides.
+
+## Development
+
+Install dependencies and keep metadata in sync with:
+
+```bash
+composer sync:author
+npm run sync:docs
+npm run changelog:from-git
+```
 
 ## Changelog
-### v0.1.0
-- Initial release with enterprise features
-- Added QA automation, anomaly detection engine, multi-channel notifications, and CI/CD build pipeline
+
+Refer to [CHANGELOG.md](./CHANGELOG.md) for release notes (Keep a Changelog, SemVer).

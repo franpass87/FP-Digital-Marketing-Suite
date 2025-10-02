@@ -2,7 +2,7 @@
 /**
  * Plugin Name: FP Digital Marketing Suite
  * Plugin URI: https://francescopasseri.com
- * Description: Automated marketing reports for a private WordPress site.
+ * Description: Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.
  * Version: 0.1.1
  * Requires at least: 6.4
  * Requires PHP: 8.1
