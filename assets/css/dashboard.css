@@ -1,0 +1,227 @@
+.fpdms-dashboard-wrap {
+    max-width: 1100px;
+}
+
+.fpdms-dashboard-intro {
+    color: #555d66;
+    font-size: 15px;
+    margin-bottom: 24px;
+}
+
+.fpdms-dashboard-section {
+    margin-bottom: 36px;
+}
+
+.fpdms-dashboard-section h2 {
+    font-size: 20px;
+    margin-bottom: 18px;
+}
+
+.fpdms-dashboard-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.fpdms-dashboard-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fpdms-dashboard-card h3 {
+    font-size: 16px;
+    margin: 0;
+    color: #1d2327;
+}
+
+.fpdms-dashboard-card-value {
+    font-size: 32px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.fpdms-dashboard-card p {
+    margin: 0;
+    color: #555d66;
+}
+
+.fpdms-dashboard-card-link {
+    align-self: flex-start;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.fpdms-dashboard-card-link:hover,
+.fpdms-dashboard-card-link:focus {
+    text-decoration: underline;
+}
+
+.fpdms-dashboard-schedule-card {
+    align-items: flex-start;
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+}
+
+.fpdms-dashboard-schedule-primary {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: #1d2327;
+}
+
+.fpdms-dashboard-meta {
+    color: #555d66;
+    font-size: 13px;
+    margin: 0;
+}
+
+.fpdms-dashboard-timestamp {
+    color: #6c7781;
+    font-size: 12px;
+    margin: 0;
+}
+
+.fpdms-dashboard-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+}
+
+.fpdms-dashboard-column {
+    flex: 1 1 320px;
+    min-width: 280px;
+}
+
+.fpdms-dashboard-column h3 {
+    font-size: 16px;
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.fpdms-dashboard-empty {
+    color: #6c7781;
+    font-style: italic;
+}
+
+.fpdms-dashboard-list {
+    list-style: none;
+    margin: 0 0 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fpdms-dashboard-list li {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    padding: 16px;
+}
+
+.fpdms-dashboard-list-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.fpdms-dashboard-inline-link {
+    font-weight: 600;
+}
+
+.fpdms-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    padding: 2px 10px;
+}
+
+.fpdms-badge-neutral {
+    background: #f6f7f7;
+    color: #1d2327;
+}
+
+.fpdms-badge-success {
+    background: #e7f5ee;
+    color: #036636;
+}
+
+.fpdms-badge-warning {
+    background: #fff4e5;
+    color: #8a4600;
+}
+
+.fpdms-badge-danger {
+    background: #fdecea;
+    color: #b3261e;
+}
+
+.fpdms-badge-info {
+    background: #e8f1ff;
+    color: #0a3c86;
+}
+
+.fpdms-dashboard-links {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.fpdms-dashboard-link-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px;
+    text-decoration: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fpdms-dashboard-link-card h3 {
+    font-size: 16px;
+    margin: 0;
+}
+
+.fpdms-dashboard-link-card p {
+    color: #555d66;
+    margin: 0;
+}
+
+.fpdms-dashboard-link-card:hover,
+.fpdms-dashboard-link-card:focus {
+    border-color: #2271b1;
+    box-shadow: 0 3px 12px rgba(34, 113, 177, 0.18);
+}
+
+@media (max-width: 600px) {
+    .fpdms-dashboard-card {
+        padding: 16px;
+    }
+
+    .fpdms-dashboard-card-value {
+        font-size: 28px;
+    }
+
+    .fpdms-dashboard-schedule-card {
+        padding: 16px;
+    }
+}

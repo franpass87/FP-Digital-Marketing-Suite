@@ -15,7 +15,7 @@ class ProviderFactory
             'gsc' => new GSCProvider($auth, $config),
             'google_ads' => new GoogleAdsProvider($auth, $config),
             'meta_ads' => new MetaAdsProvider($auth, $config),
-            'clarity' => new ClarityCsvProvider($auth, $config),
+            'clarity' => new ClarityProvider($auth, $config),
             'csv_generic' => new CsvGenericProvider($auth, $config),
             default => null,
         };
@@ -29,7 +29,13 @@ class ProviderFactory
         return [
             'ga4' => [
                 'label' => __('Google Analytics 4', 'fp-dms'),
+                'summary' => __('Sync engagement metrics directly from GA4.', 'fp-dms'),
                 'description' => __('Use a service account JSON with access to the GA4 property.', 'fp-dms'),
+                'steps' => [
+                    __('Create or reuse a Google Cloud service account with access to the GA4 property.', 'fp-dms'),
+                    __('Share the service account email with the property (Admin → Property Access Management).', 'fp-dms'),
+                    __('Copy the numeric Property ID from GA4 Admin → Property Settings.', 'fp-dms'),
+                ],
                 'fields' => [
                     'auth' => [
                         'service_account' => [
@@ -49,7 +55,13 @@ class ProviderFactory
             ],
             'gsc' => [
                 'label' => __('Google Search Console', 'fp-dms'),
+                'summary' => __('Bring in organic search queries and clicks.', 'fp-dms'),
                 'description' => __('Provide a service account JSON and the verified site URL.', 'fp-dms'),
+                'steps' => [
+                    __('Generate a service account JSON and add the client email as an owner in Search Console.', 'fp-dms'),
+                    __('Confirm the property you want to track is verified in the same Search Console account.', 'fp-dms'),
+                    __('Copy the exact site URL (including protocol) from the property settings.', 'fp-dms'),
+                ],
                 'fields' => [
                     'auth' => [
                         'service_account' => [
@@ -68,52 +80,109 @@ class ProviderFactory
                 ],
             ],
             'google_ads' => [
-                'label' => __('Google Ads (CSV)', 'fp-dms'),
-                'description' => __('Upload the CSV export produced from the Google Ads reports UI.', 'fp-dms'),
+                'label' => __('Google Ads', 'fp-dms'),
+                'summary' => __('Automate ad spend, clicks, and conversions.', 'fp-dms'),
+                'description' => __('Connect using your Google Ads API credentials to keep campaigns in sync automatically.', 'fp-dms'),
+                'steps' => [
+                    __('Ensure your Google Ads developer token is approved and ready for production use.', 'fp-dms'),
+                    __('Create an OAuth client (Desktop app) and generate a refresh token for the Google Ads account.', 'fp-dms'),
+                    __('Copy the customer ID (and manager ID if used) exactly as it appears in Google Ads.', 'fp-dms'),
+                ],
                 'fields' => [
-                    'config' => [
-                        'account_name' => [
+                    'auth' => [
+                        'developer_token' => [
                             'type' => 'text',
-                            'label' => __('Account Label', 'fp-dms'),
-                            'description' => __('Friendly name for the ads account shown in reports.', 'fp-dms'),
+                            'label' => __('Developer Token', 'fp-dms'),
+                            'description' => __('Token from the Google Ads API center.', 'fp-dms'),
+                        ],
+                        'client_id' => [
+                            'type' => 'text',
+                            'label' => __('OAuth Client ID', 'fp-dms'),
+                            'description' => __('Installed application client ID.', 'fp-dms'),
+                        ],
+                        'client_secret' => [
+                            'type' => 'text',
+                            'label' => __('OAuth Client Secret', 'fp-dms'),
+                            'description' => __('Secret paired with the client ID.', 'fp-dms'),
+                        ],
+                        'refresh_token' => [
+                            'type' => 'text',
+                            'label' => __('Refresh Token', 'fp-dms'),
+                            'description' => __('Generated after authorising the Google Ads account.', 'fp-dms'),
                         ],
                     ],
-                    'uploads' => [
-                        'csv_file' => [
-                            'label' => __('CSV Upload', 'fp-dms'),
-                            'description' => __('Provide a recent CSV export; data is summarized and stored securely.', 'fp-dms'),
+                    'config' => [
+                        'customer_id' => [
+                            'type' => 'text',
+                            'label' => __('Customer ID', 'fp-dms'),
+                            'description' => __('Google Ads account in 000-000-0000 format.', 'fp-dms'),
+                        ],
+                        'login_customer_id' => [
+                            'type' => 'text',
+                            'label' => __('Manager Account ID (optional)', 'fp-dms'),
+                            'description' => __('Required when authenticating through a manager account.', 'fp-dms'),
                         ],
                     ],
                 ],
             ],
             'meta_ads' => [
-                'label' => __('Meta Ads (CSV)', 'fp-dms'),
-                'description' => __('Upload the CSV export from Meta Ads reporting.', 'fp-dms'),
+                'label' => __('Meta Ads', 'fp-dms'),
+                'summary' => __('Sync Facebook and Instagram campaign performance.', 'fp-dms'),
+                'description' => __('Use a long-lived access token to connect your Meta Ads account.', 'fp-dms'),
+                'steps' => [
+                    __('Create a system user or long-lived access token with ads_read permission.', 'fp-dms'),
+                    __('Note the ad account ID (act_123...) you plan to report on.', 'fp-dms'),
+                    __('Optional: copy the Pixel ID if you want to include behaviour signals.', 'fp-dms'),
+                ],
                 'fields' => [
-                    'config' => [
-                        'account_name' => [
-                            'type' => 'text',
-                            'label' => __('Account Label', 'fp-dms'),
-                            'description' => __('Friendly name for the Meta Ads account shown in reports.', 'fp-dms'),
+                    'auth' => [
+                        'access_token' => [
+                            'type' => 'textarea',
+                            'label' => __('Access Token', 'fp-dms'),
+                            'description' => __('System user or long-lived access token with ads_read permission.', 'fp-dms'),
                         ],
                     ],
-                    'uploads' => [
-                        'csv_file' => [
-                            'label' => __('CSV Upload', 'fp-dms'),
-                            'description' => __('Provide a recent CSV export; metrics will be aggregated and stored.', 'fp-dms'),
+                    'config' => [
+                        'account_id' => [
+                            'type' => 'text',
+                            'label' => __('Ad Account ID', 'fp-dms'),
+                            'description' => __('ID in the format act_1234567890.', 'fp-dms'),
+                        ],
+                        'pixel_id' => [
+                            'type' => 'text',
+                            'label' => __('Pixel ID (optional)', 'fp-dms'),
+                            'description' => __('Used for conversion and behaviour insights.', 'fp-dms'),
                         ],
                     ],
                 ],
             ],
             'clarity' => [
-                'label' => __('Microsoft Clarity (CSV)', 'fp-dms'),
-                'description' => __('Upload the CSV summary exported from Clarity. Optional webhook URL is used for live alerts.', 'fp-dms'),
+                'label' => __('Microsoft Clarity', 'fp-dms'),
+                'summary' => __('Capture behaviour analytics and UX anomalies.', 'fp-dms'),
+                'description' => __('Connect with the Clarity API to pull behaviour analytics automatically.', 'fp-dms'),
+                'steps' => [
+                    __('Create or open your Clarity project and generate an API key.', 'fp-dms'),
+                    __('Copy the project ID from the Clarity setup or settings page.', 'fp-dms'),
+                    __('Optional: add the site URL or webhook to receive anomaly alerts.', 'fp-dms'),
+                ],
                 'fields' => [
+                    'auth' => [
+                        'api_key' => [
+                            'type' => 'text',
+                            'label' => __('API Key', 'fp-dms'),
+                            'description' => __('Generated from the Clarity project settings.', 'fp-dms'),
+                        ],
+                    ],
                     'config' => [
+                        'project_id' => [
+                            'type' => 'text',
+                            'label' => __('Project ID', 'fp-dms'),
+                            'description' => __('Unique identifier of the Clarity project.', 'fp-dms'),
+                        ],
                         'site_url' => [
                             'type' => 'url',
-                            'label' => __('Site URL', 'fp-dms'),
-                            'description' => __('Tracked site URL.', 'fp-dms'),
+                            'label' => __('Site URL (optional)', 'fp-dms'),
+                            'description' => __('Used for reference within reports.', 'fp-dms'),
                         ],
                         'webhook_url' => [
                             'type' => 'url',
@@ -121,17 +190,17 @@ class ProviderFactory
                             'description' => __('Notifications are sent to this webhook when anomalies are detected.', 'fp-dms'),
                         ],
                     ],
-                    'uploads' => [
-                        'csv_file' => [
-                            'label' => __('CSV Upload', 'fp-dms'),
-                            'description' => __('Provide the exported CSV; only aggregated metrics are stored.', 'fp-dms'),
-                        ],
-                    ],
                 ],
             ],
             'csv_generic' => [
                 'label' => __('Generic CSV Data Source', 'fp-dms'),
+                'summary' => __('Upload any normalized CSV for custom metrics.', 'fp-dms'),
                 'description' => __('Upload any normalized CSV to include custom metrics in the report.', 'fp-dms'),
+                'steps' => [
+                    __('Name the data source so it can be identified in dashboards and reports.', 'fp-dms'),
+                    __('Export a CSV with a date column plus any metrics you want to track.', 'fp-dms'),
+                    __('Upload the CSV file; the suite will summarise the metrics automatically.', 'fp-dms'),
+                ],
                 'fields' => [
                     'config' => [
                         'source_label' => [

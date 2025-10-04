@@ -61,16 +61,16 @@
 .fpdms-overview-wrap.is-loading .fpdms-overview-spinner{display:inline-block;animation:fpdms-spin 1s linear infinite;}
 @keyframes fpdms-spin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
 @media (prefers-color-scheme:dark){
-    .fpdms-overview-wrap{color:#e5e7eb;}
-    .fpdms-overview-controls,.fpdms-overview-section{background:#111827;border-color:#1f2937;}
-    .fpdms-kpi-card,.fpdms-trend-card,.fpdms-status-item{background:#1f2937;border-color:#374151;}
-    .fpdms-overview-presets button{background:#1f2937;border-color:#374151;color:#e5e7eb;}
-    .fpdms-overview-presets button.is-active{background:#2563eb;border-color:#2563eb;color:#fff;}
-    .fpdms-overview-refresh label{color:#e5e7eb;}
-    .fpdms-overview-refresh-note{color:#9ca3af;}
-    #fpdms-overview-status-updated{color:#9ca3af;}
-    .fpdms-overview-error{background:#7f1d1d;color:#fee2e2;}
-    .fpdms-overview-action-status{color:#60a5fa;}
-    .fpdms-overview-action-status[data-status="success"]{color:#6ee7b7;}
-    .fpdms-overview-action-status[data-status="error"]{color:#fca5a5;}
+    .fpdms-overview-wrap{color:#111827;}
+    .fpdms-overview-controls,.fpdms-overview-section{background:#ffffff;border-color:#d1d5db;}
+    .fpdms-kpi-card,.fpdms-trend-card,.fpdms-status-item{background:#fdfdfd;border-color:#d5d8dc;}
+    .fpdms-overview-presets button{background:#f6f7f7;border-color:#d1d5db;color:#1f2933;}
+    .fpdms-overview-presets button.is-active{background:#2271b1;border-color:#2271b1;color:#fff;}
+    .fpdms-overview-refresh label{color:#1f2933;}
+    .fpdms-overview-refresh-note{color:#4b5563;}
+    #fpdms-overview-status-updated{color:#6b7280;}
+    .fpdms-overview-error{background:#f8d7da;color:#58151c;}
+    .fpdms-overview-action-status{color:#2563eb;}
+    .fpdms-overview-action-status[data-status="success"]{color:#116149;}
+    .fpdms-overview-action-status[data-status="error"]{color:#9b1c1c;}
 }

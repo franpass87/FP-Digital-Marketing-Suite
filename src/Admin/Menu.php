@@ -39,7 +39,7 @@ class Menu
             56
         );
 
-        add_submenu_page('fp-dms-dashboard', __('Dashboard', 'fp-dms'), __('Dashboard', 'fp-dms'), 'manage_options', 'fp-dms-dashboard', [DashboardPage::class, 'render']);
+        $dashboardHook = add_submenu_page('fp-dms-dashboard', __('Dashboard', 'fp-dms'), __('Dashboard', 'fp-dms'), 'manage_options', 'fp-dms-dashboard', [DashboardPage::class, 'render']);
         $overviewHook = add_submenu_page('fp-dms-dashboard', __('Overview', 'fp-dms'), __('Overview', 'fp-dms'), 'manage_options', 'fp-dms-overview', [OverviewPage::class, 'render']);
         add_submenu_page('fp-dms-dashboard', __('Clients', 'fp-dms'), __('Clients', 'fp-dms'), 'manage_options', 'fp-dms-clients', [ClientsPage::class, 'render']);
         add_submenu_page('fp-dms-dashboard', __('Data Sources', 'fp-dms'), __('Data Sources', 'fp-dms'), 'manage_options', 'fp-dms-datasources', [DataSourcesPage::class, 'render']);
@@ -53,6 +53,11 @@ class Menu
 
         if ($hook) {
             add_action('load-' . $hook, [self::class, 'enqueue_assets']);
+            DashboardPage::registerAssetsHook($hook);
+        }
+
+        if (! empty($dashboardHook)) {
+            DashboardPage::registerAssetsHook($dashboardHook);
         }
 
         if (! empty($overviewHook)) {

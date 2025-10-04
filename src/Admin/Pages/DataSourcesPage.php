@@ -25,6 +25,7 @@ class DataSourcesPage
 
         self::handleActions($clientsRepo, $dataSourcesRepo);
         self::bootNotices();
+        self::outputInlineAssets();
 
         $clients = $clientsRepo->all();
         echo '<div class="wrap">';
@@ -43,8 +44,10 @@ class DataSourcesPage
         settings_errors('fpdms_datasources');
 
         if ($selectedClient) {
-            echo '<p>' . esc_html(sprintf(__('Manage the data sources linked to %s. Use the forms below to add connectors or ingest CSV exports.', 'fp-dms'), $selectedClient->name)) . '</p>';
+            echo '<p>' . esc_html(sprintf(__('Manage the data sources linked to %s. Configure direct connectors with API credentials or import custom files where needed.', 'fp-dms'), $selectedClient->name)) . '</p>';
         }
+
+        self::renderGuidedIntro();
 
         $dataSources = $selectedClientId ? $dataSourcesRepo->forClient($selectedClientId) : [];
         $editing = null;
@@ -258,6 +261,7 @@ class DataSourcesPage
 
         $currentType = $editing->type ?? (array_key_first($definitions) ?? 'ga4');
         $isActive = $editing ? $editing->active : true;
+        $isEditing = $editing !== null;
 
         echo '<div class="card" style="margin-top:20px;padding:20px;max-width:960px;">';
         echo '<h2>' . esc_html($editing ? __('Edit data source', 'fp-dms') : __('Add data source', 'fp-dms')) . '</h2>';
@@ -266,13 +270,27 @@ class DataSourcesPage
         echo '<input type="hidden" name="fpdms_datasource_action" value="save">';
         echo '<input type="hidden" name="client_id" value="' . esc_attr((string) $clientId) . '">';
         echo '<input type="hidden" name="data_source_id" value="' . esc_attr((string) ($editing->id ?? 0)) . '">';
+        if ($isEditing) {
+            echo '<input type="hidden" name="type" value="' . esc_attr($currentType) . '">';
+        }
+
+        self::renderConnectorCards($definitions, $currentType, $isEditing);
+        self::renderGuidanceBlocks($definitions, $currentType);
+
         echo '<table class="form-table">';
         echo '<tbody>';
-        echo '<tr><th scope="row"><label for="fpdms-datasource-type">' . esc_html__('Connector type', 'fp-dms') . '</label></th><td><select name="type" id="fpdms-datasource-type">';
-        foreach ($definitions as $type => $definition) {
-            echo '<option value="' . esc_attr($type) . '"' . selected($currentType, $type, false) . '>' . esc_html($definition['label'] ?? ucfirst($type)) . '</option>';
+        if ($isEditing) {
+            $currentLabel = $definitions[$currentType]['label'] ?? ucfirst($currentType);
+            echo '<tr><th scope="row">' . esc_html__('Connector', 'fp-dms') . '</th><td><strong>' . esc_html((string) $currentLabel) . '</strong>';
+            echo '<p class="description">' . esc_html__('To switch connectors, create a new data source for the desired platform.', 'fp-dms') . '</p></td></tr>';
+        } else {
+            echo '<tr class="fpdms-datasource-select-row"><th scope="row"><label for="fpdms-datasource-type">' . esc_html__('Connector type', 'fp-dms') . '</label></th><td><select name="type" id="fpdms-datasource-type">';
+            foreach ($definitions as $type => $definition) {
+                $label = $definition['label'] ?? ucfirst($type);
+                echo '<option value="' . esc_attr($type) . '"' . selected($currentType, $type, false) . '>' . esc_html($label) . '</option>';
+            }
+            echo '</select></td></tr>';
         }
-        echo '</select></td></tr>';
         echo '<tr><th scope="row">' . esc_html__('Status', 'fp-dms') . '</th><td><label><input type="checkbox" name="active" value="1"' . checked($isActive, true, false) . '> ' . esc_html__('Active', 'fp-dms') . '</label></td></tr>';
         echo '</tbody>';
 
@@ -305,11 +323,12 @@ class DataSourcesPage
         }
 
         echo '</table>';
+        echo '<p class="description fpdms-guided-save-note">' . esc_html__('Step 3 — Save and then test the connection once your credentials are added.', 'fp-dms') . '</p>';
         submit_button($editing ? __('Update data source', 'fp-dms') : __('Add data source', 'fp-dms'));
         echo '</form>';
         echo '</div>';
 
-        echo '<script>document.addEventListener("DOMContentLoaded",function(){var select=document.getElementById("fpdms-datasource-type");if(!select){return;}var toggle=function(){var current=select.value;document.querySelectorAll(".fpdms-ds-fields").forEach(function(group){group.style.display=group.getAttribute("data-type")===current?"table-row-group":"none";});};select.addEventListener("change",toggle);toggle();});</script>';
+        echo '<script>document.addEventListener("DOMContentLoaded",function(){var select=document.getElementById("fpdms-datasource-type");var groups=document.querySelectorAll(".fpdms-ds-fields");var guides=document.querySelectorAll(".fpdms-guidance-block");var cards=document.querySelectorAll(".fpdms-connector-card");var update=function(type){if(!type){return;}if(select&&select.value!==type){select.value=type;}groups.forEach(function(group){group.style.display=group.getAttribute("data-type")===type?"table-row-group":"none";});guides.forEach(function(guide){guide.style.display=guide.getAttribute("data-type")===type?"block":"none";});cards.forEach(function(card){var active=card.getAttribute("data-type")===type;card.classList.toggle("is-active",active);if(active){card.setAttribute("aria-pressed","true");}else{card.setAttribute("aria-pressed","false");}});};if(cards.length){document.body.classList.add("fpdms-has-guided-picker");cards.forEach(function(card){if(card.hasAttribute("data-locked")){return;}card.addEventListener("click",function(event){event.preventDefault();update(card.getAttribute("data-type"));if(select){select.dispatchEvent(new Event("change"));}});});}if(select){select.addEventListener("change",function(){update(select.value);});update(select.value);}else if(cards.length){var activeCard=document.querySelector(".fpdms-connector-card.is-active");update(activeCard?activeCard.getAttribute("data-type"):cards[0].getAttribute("data-type"));}});</script>';
     }
 
     private static function renderInputRow(string $name, array $info, string $value): void
@@ -352,9 +371,9 @@ class DataSourcesPage
             return;
         }
 
-        echo '<tr><th scope="row">' . esc_html__('Current summary', 'fp-dms') . '</th><td>';
+        echo '<tr><th scope="row">' . esc_html__('Current snapshot', 'fp-dms') . '</th><td>';
         echo '<p>' . esc_html(self::formatSummary($dataSource)) . '</p>';
-        echo '<p class="description">' . esc_html__('Upload a new CSV to refresh the aggregated metrics.', 'fp-dms') . '</p>';
+        echo '<p class="description">' . esc_html__('Re-run the sync or provide a fresh data file to update these metrics.', 'fp-dms') . '</p>';
         echo '</td></tr>';
     }
 
@@ -435,48 +454,58 @@ class DataSourcesPage
                 $config['site_url'] = $siteUrl;
                 break;
             case 'google_ads':
+                $developerToken = Wp::sanitizeTextField($_POST['auth']['developer_token'] ?? '');
+                $clientId = Wp::sanitizeTextField($_POST['auth']['client_id'] ?? '');
+                $clientSecret = Wp::sanitizeTextField($_POST['auth']['client_secret'] ?? '');
+                $refreshToken = Wp::sanitizeTextField($_POST['auth']['refresh_token'] ?? '');
+                $customerId = Wp::sanitizeTextField($_POST['config']['customer_id'] ?? '');
+                $loginCustomerId = Wp::sanitizeTextField($_POST['config']['login_customer_id'] ?? '');
+
+                if ($developerToken === '' || $clientId === '' || $clientSecret === '' || $refreshToken === '' || $customerId === '') {
+                    return new WP_Error('fpdms_datasource_missing', __('Complete all required Google Ads API credentials.', 'fp-dms'));
+                }
+
+                $auth['developer_token'] = $developerToken;
+                $auth['client_id'] = $clientId;
+                $auth['client_secret'] = $clientSecret;
+                $auth['refresh_token'] = $refreshToken;
+                $config['customer_id'] = $customerId;
+                if ($loginCustomerId !== '') {
+                    $config['login_customer_id'] = $loginCustomerId;
+                }
+                break;
             case 'meta_ads':
-                $accountName = Wp::sanitizeTextField($_POST['config']['account_name'] ?? '');
-                if ($accountName === '') {
-                    return new WP_Error('fpdms_datasource_missing', __('Account label is required for ads CSV connectors.', 'fp-dms'));
+                $token = isset($_POST['auth']['access_token']) ? trim((string) Wp::unslash($_POST['auth']['access_token'])) : '';
+                $accountId = Wp::sanitizeTextField($_POST['config']['account_id'] ?? '');
+                $pixelId = Wp::sanitizeTextField($_POST['config']['pixel_id'] ?? '');
+
+                if ($token === '' || $accountId === '') {
+                    return new WP_Error('fpdms_datasource_missing', __('Access token and ad account ID are required for Meta Ads.', 'fp-dms'));
                 }
-                $config['account_name'] = $accountName;
-                $summary = self::ingestCsvSummary('csv_file');
-                if ($summary instanceof WP_Error) {
-                    return $summary;
-                }
-                if ($summary === null && (! $existing || $existing->type !== $type || empty($existing->config['summary']))) {
-                    return new WP_Error('fpdms_datasource_csv', __('Upload a CSV export to initialise this connector.', 'fp-dms'));
-                }
-                if ($summary === null && $existing && isset($existing->config['summary'])) {
-                    $summary = $existing->config['summary'];
-                }
-                if (is_array($summary)) {
-                    $config['summary'] = $summary;
+
+                $auth['access_token'] = $token;
+                $config['account_id'] = $accountId;
+                if ($pixelId !== '') {
+                    $config['pixel_id'] = $pixelId;
                 }
                 break;
             case 'clarity':
+                $apiKey = Wp::sanitizeTextField($_POST['auth']['api_key'] ?? '');
+                $projectId = Wp::sanitizeTextField($_POST['config']['project_id'] ?? '');
                 $siteUrl = esc_url_raw($_POST['config']['site_url'] ?? '');
-                if ($siteUrl === '') {
-                    return new WP_Error('fpdms_datasource_missing', __('Site URL is required for Microsoft Clarity.', 'fp-dms'));
-                }
-                $config['site_url'] = $siteUrl;
                 $webhook = esc_url_raw($_POST['config']['webhook_url'] ?? '');
-                if ($webhook) {
+
+                if ($apiKey === '' || $projectId === '') {
+                    return new WP_Error('fpdms_datasource_missing', __('API key and project ID are required for Microsoft Clarity.', 'fp-dms'));
+                }
+
+                $auth['api_key'] = $apiKey;
+                $config['project_id'] = $projectId;
+                if ($siteUrl !== '') {
+                    $config['site_url'] = $siteUrl;
+                }
+                if ($webhook !== '') {
                     $config['webhook_url'] = $webhook;
-                }
-                $summary = self::ingestCsvSummary('csv_file');
-                if ($summary instanceof WP_Error) {
-                    return $summary;
-                }
-                if ($summary === null && (! $existing || $existing->type !== $type || empty($existing->config['summary']))) {
-                    return new WP_Error('fpdms_datasource_csv', __('Upload the Clarity CSV export to populate metrics.', 'fp-dms'));
-                }
-                if ($summary === null && $existing && isset($existing->config['summary'])) {
-                    $summary = $existing->config['summary'];
-                }
-                if (is_array($summary)) {
-                    $config['summary'] = $summary;
                 }
                 break;
             case 'csv_generic':
@@ -668,6 +697,29 @@ class DataSourcesPage
         if (! empty($config['site_url'])) {
             $details[] = sprintf(__('Site: %s', 'fp-dms'), $config['site_url']);
         }
+        switch ($dataSource->type) {
+            case 'google_ads':
+                if (! empty($config['customer_id'])) {
+                    $details[] = sprintf(__('Customer ID: %s', 'fp-dms'), $config['customer_id']);
+                }
+                if (! empty($config['login_customer_id'])) {
+                    $details[] = sprintf(__('Manager ID: %s', 'fp-dms'), $config['login_customer_id']);
+                }
+                break;
+            case 'meta_ads':
+                if (! empty($config['account_id'])) {
+                    $details[] = sprintf(__('Ad account: %s', 'fp-dms'), $config['account_id']);
+                }
+                if (! empty($config['pixel_id'])) {
+                    $details[] = sprintf(__('Pixel: %s', 'fp-dms'), $config['pixel_id']);
+                }
+                break;
+            case 'clarity':
+                if (! empty($config['project_id'])) {
+                    $details[] = sprintf(__('Project: %s', 'fp-dms'), $config['project_id']);
+                }
+                break;
+        }
 
         $summary = $config['summary'] ?? null;
         if (is_array($summary)) {
@@ -690,7 +742,7 @@ class DataSourcesPage
         }
 
         if (empty($details)) {
-            return __('No summary available.', 'fp-dms');
+            return __('Awaiting first sync.', 'fp-dms');
         }
 
         return implode(' • ', $details);
@@ -732,5 +784,106 @@ class DataSourcesPage
         }
 
         return Wp::date('Y-m-d H:i', $timestamp);
+    }
+
+    private static function outputInlineAssets(): void
+    {
+        static $rendered = false;
+        if ($rendered) {
+            return;
+        }
+        $rendered = true;
+
+        echo '<style>
+            .fpdms-guide-intro{margin:20px 0;padding:16px 20px;border-left:4px solid #2271b1;background:#f0f6fc;max-width:960px;}
+            .fpdms-guide-intro h2{margin:0 0 8px;font-size:18px;}
+            .fpdms-guide-intro ol{margin:0;padding-left:20px;}
+            .fpdms-guide-intro li{margin-bottom:4px;}
+            .fpdms-connector-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0;}
+            .fpdms-connector-card{background:#fff;border:1px solid #c3c4c7;border-radius:6px;padding:16px;text-align:left;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,0.04);transition:border-color .2s,box-shadow .2s;background-image:none;}
+            .fpdms-connector-card strong{display:block;font-size:15px;margin-bottom:6px;color:#1d2327;}
+            .fpdms-connector-card span{display:block;color:#50575e;font-size:13px;line-height:1.4;}
+            .fpdms-connector-card.is-active{border-color:#2271b1;box-shadow:0 0 0 1px #2271b1;}
+            .fpdms-connector-card.is-disabled{cursor:not-allowed;opacity:.6;}
+            .fpdms-guidance{margin:12px 0 4px;}
+            .fpdms-guidance h3{margin:0 0 4px;font-size:16px;}
+            .fpdms-guidance p.description{margin-top:0;}
+            .fpdms-guidance-block{padding:12px 16px;border:1px solid #dcdcde;border-radius:4px;margin-bottom:8px;background:#fff;}
+            .fpdms-guidance-block ol{margin:0;padding-left:20px;}
+            .fpdms-guidance-block li{margin-bottom:6px;line-height:1.4;}
+            .fpdms-guided-save-note{margin-top:12px;font-weight:600;}
+            body.fpdms-has-guided-picker .fpdms-datasource-select-row{display:none;}
+        </style>';
+    }
+
+    private static function renderGuidedIntro(): void
+    {
+        echo '<div class="fpdms-guide-intro">';
+        echo '<h2>' . esc_html__('Guided setup', 'fp-dms') . '</h2>';
+        echo '<ol>';
+        echo '<li>' . esc_html__('Pick the integration you want to connect.', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Follow the checklist for the credentials required by that platform.', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Save the data source and optionally run a connection test.', 'fp-dms') . '</li>';
+        echo '</ol>';
+        echo '</div>';
+    }
+
+    private static function renderConnectorCards(array $definitions, string $currentType, bool $isEditing): void
+    {
+        echo '<div class="fpdms-guidance">';
+        echo '<h3>' . esc_html__('Step 1 — Choose your integration', 'fp-dms') . '</h3>';
+        echo '<p class="description">' . esc_html__('Select a connector to see the exact credentials you will need.', 'fp-dms') . '</p>';
+        echo '<div class="fpdms-connector-grid">';
+        foreach ($definitions as $type => $definition) {
+            $label = $definition['label'] ?? ucfirst($type);
+            $summary = $definition['summary'] ?? '';
+            $classes = ['fpdms-connector-card'];
+            if ($type === $currentType) {
+                $classes[] = 'is-active';
+            }
+            $locked = $isEditing && $type !== $currentType;
+            if ($locked) {
+                $classes[] = 'is-disabled';
+            }
+            echo '<button type="button" class="' . esc_attr(implode(' ', $classes)) . '" data-type="' . esc_attr($type) . '" aria-pressed="' . ($type === $currentType ? 'true' : 'false') . '"';
+            if ($locked) {
+                echo ' data-locked="1"';
+            }
+            echo '>';
+            echo '<strong>' . esc_html($label) . '</strong>';
+            if ($summary !== '') {
+                echo '<span>' . esc_html($summary) . '</span>';
+            }
+            echo '</button>';
+        }
+        echo '</div>';
+        if ($isEditing) {
+            echo '<p class="description">' . esc_html__('This connection already uses the selected platform. Create an additional data source if you need another integration.', 'fp-dms') . '</p>';
+        }
+        echo '</div>';
+    }
+
+    private static function renderGuidanceBlocks(array $definitions, string $currentType): void
+    {
+        echo '<div class="fpdms-guidance">';
+        echo '<h3>' . esc_html__('Step 2 — Prepare the required credentials', 'fp-dms') . '</h3>';
+        echo '<p class="description">' . esc_html__('Each connector has a short checklist so nothing is missed during setup.', 'fp-dms') . '</p>';
+        foreach ($definitions as $type => $definition) {
+            $display = $type === $currentType ? 'block' : 'none';
+            echo '<div class="fpdms-guidance-block" data-type="' . esc_attr($type) . '" style="display:' . esc_attr($display) . ';">';
+            if (! empty($definition['description'])) {
+                echo '<p class="description">' . esc_html((string) $definition['description']) . '</p>';
+            }
+            $steps = $definition['steps'] ?? [];
+            if (! empty($steps)) {
+                echo '<ol>';
+                foreach ($steps as $step) {
+                    echo '<li>' . esc_html((string) $step) . '</li>';
+                }
+                echo '</ol>';
+            }
+            echo '</div>';
+        }
+        echo '</div>';
     }
 }
