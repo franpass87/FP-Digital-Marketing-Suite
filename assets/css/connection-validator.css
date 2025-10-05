@@ -1,0 +1,477 @@
+/**
+ * Connection Validator UI Styles
+ * 
+ * Provides visual feedback for real-time validation.
+ */
+
+/* Field Container States */
+.fpdms-field {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.fpdms-field input,
+.fpdms-field textarea {
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.fpdms-field--valid input,
+.fpdms-field--valid textarea {
+    border-color: #46b450;
+    box-shadow: 0 0 0 1px #46b450;
+}
+
+.fpdms-field--error input,
+.fpdms-field--error textarea {
+    border-color: #dc3232;
+    box-shadow: 0 0 0 1px #dc3232;
+}
+
+.fpdms-field--warning input,
+.fpdms-field--warning textarea {
+    border-color: #ffb900;
+    box-shadow: 0 0 0 1px #ffb900;
+}
+
+/* Validation Messages */
+.fpdms-field-message {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.fpdms-field-message--success {
+    background-color: #ecf7ed;
+    border-left: 3px solid #46b450;
+    color: #2e7d32;
+}
+
+.fpdms-field-message--error {
+    background-color: #fef2f2;
+    border-left: 3px solid #dc3232;
+    color: #c62828;
+}
+
+.fpdms-field-message--warning {
+    background-color: #fffbf0;
+    border-left: 3px solid #ffb900;
+    color: #f57f17;
+}
+
+.fpdms-field-message small {
+    display: block;
+    margin-top: 4px;
+    opacity: 0.8;
+}
+
+/* Service Account Info Display */
+.fpdms-field-info {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+.fpdms-sa-info {
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.fpdms-sa-info strong {
+    color: #2e7d32;
+}
+
+/* Auto-Format Suggestion */
+.fpdms-field-autoformat {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: #e3f2fd;
+    border-radius: 4px;
+    border: 1px solid #2196f3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.fpdms-field-autoformat code {
+    padding: 2px 6px;
+    background: white;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #1976d2;
+}
+
+.fpdms-btn-apply-format {
+    margin-left: 12px;
+    background: #2196f3 !important;
+    border-color: #1976d2 !important;
+    color: white !important;
+    text-shadow: none !important;
+}
+
+.fpdms-btn-apply-format:hover {
+    background: #1976d2 !important;
+    border-color: #1565c0 !important;
+}
+
+/* Loading State */
+.fpdms-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #fff9e6;
+    border-radius: 4px;
+    border: 1px solid #ffeb3b;
+    margin-top: 8px;
+    font-size: 13px;
+}
+
+.fpdms-loading .spinner {
+    float: none;
+    margin: 0;
+}
+
+/* Validation Icons */
+.fpdms-field--valid::after,
+.fpdms-field--error::after,
+.fpdms-field--warning::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    pointer-events: none;
+}
+
+.fpdms-field--valid input ~ .fpdms-validation-icon::before {
+    content: '✓';
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    color: #46b450;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.fpdms-field--error input ~ .fpdms-validation-icon::before {
+    content: '✕';
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    color: #dc3232;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Connection Wizard Styles */
+.fpdms-wizard {
+    max-width: 800px;
+    margin: 20px auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.fpdms-wizard-header {
+    padding: 24px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.fpdms-wizard-title {
+    margin: 0 0 12px 0;
+    font-size: 24px;
+    color: #1d2327;
+}
+
+.fpdms-wizard-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.fpdms-wizard-step-indicator {
+    flex: 1;
+    height: 4px;
+    background: #e0e0e0;
+    border-radius: 2px;
+    transition: background 0.3s ease;
+}
+
+.fpdms-wizard-step-indicator.active {
+    background: #2196f3;
+}
+
+.fpdms-wizard-step-indicator.completed {
+    background: #46b450;
+}
+
+.fpdms-wizard-body {
+    padding: 32px 24px;
+}
+
+.fpdms-wizard-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fpdms-wizard-nav {
+    display: flex;
+    gap: 12px;
+}
+
+/* Template Selection */
+.fpdms-templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.fpdms-template-card {
+    padding: 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.fpdms-template-card:hover {
+    border-color: #2196f3;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
+    transform: translateY(-2px);
+}
+
+.fpdms-template-card.selected {
+    border-color: #2196f3;
+    background: #e3f2fd;
+}
+
+.fpdms-template-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.fpdms-template-name {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 8px;
+    color: #1d2327;
+}
+
+.fpdms-template-description {
+    font-size: 13px;
+    color: #646970;
+    margin-bottom: 12px;
+}
+
+.fpdms-template-stats {
+    font-size: 12px;
+    color: #787c82;
+}
+
+.fpdms-template-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.fpdms-template-tag {
+    padding: 4px 8px;
+    background: #f0f0f1;
+    border-radius: 3px;
+    font-size: 11px;
+    color: #50575e;
+}
+
+/* Help Panel */
+.fpdms-help-panel {
+    padding: 16px;
+    background: #f8f9fa;
+    border-left: 4px solid #2196f3;
+    border-radius: 4px;
+    margin: 20px 0;
+}
+
+.fpdms-help-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1d2327;
+}
+
+.fpdms-help-content {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #50575e;
+}
+
+.fpdms-help-content ol,
+.fpdms-help-content ul {
+    margin: 12px 0;
+    padding-left: 24px;
+}
+
+.fpdms-help-content li {
+    margin: 8px 0;
+}
+
+.fpdms-help-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #2196f3;
+    text-decoration: none;
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+.fpdms-help-link:hover {
+    text-decoration: underline;
+}
+
+/* Resource Discovery List */
+.fpdms-resource-list {
+    margin: 20px 0;
+}
+
+.fpdms-resource-item {
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.fpdms-resource-item:hover {
+    border-color: #2196f3;
+    background: #f5f5f5;
+}
+
+.fpdms-resource-item.selected {
+    border-color: #2196f3;
+    background: #e3f2fd;
+    box-shadow: 0 0 0 1px #2196f3;
+}
+
+.fpdms-resource-name {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+    color: #1d2327;
+}
+
+.fpdms-resource-id {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #787c82;
+}
+
+.fpdms-resource-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #646970;
+}
+
+.fpdms-resource-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Empty State */
+.fpdms-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #646970;
+}
+
+.fpdms-empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.fpdms-empty-state-message {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.fpdms-empty-state-hint {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .fpdms-wizard {
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .fpdms-templates-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fpdms-wizard-footer {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .fpdms-wizard-nav {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fpdms-field-message,
+.fpdms-field-autoformat,
+.fpdms-loading {
+    animation: fadeIn 0.3s ease;
+}
+
+/* WordPress Admin Compatibility */
+.wrap .fpdms-wizard {
+    background: white;
+}
+
+.fpdms-wizard .button-primary {
+    background: #2196f3;
+    border-color: #1976d2;
+    text-shadow: none;
+    box-shadow: none;
+}
+
+.fpdms-wizard .button-primary:hover {
+    background: #1976d2;
+    border-color: #1565c0;
+}
