@@ -17,7 +17,7 @@ class GSCProvider implements DataSourceProviderInterface
 
     public function testConnection(): ConnectionResult
     {
-        $json = $this->auth['service_account'] ?? '';
+        $json = $this->resolveServiceAccount();
         $siteUrl = $this->config['site_url'] ?? '';
 
         if (! $json || ! $siteUrl) {
@@ -177,5 +177,20 @@ class GSCProvider implements DataSourceProviderInterface
         }
 
         return Wp::date('Y-m-d', $timestamp);
+    }
+
+    private function resolveServiceAccount(): string
+    {
+        $source = $this->auth['credential_source'] ?? 'manual';
+        if ($source === 'constant') {
+            $constant = $this->auth['service_account_constant'] ?? '';
+            if (! is_string($constant) || $constant === '' || ! defined($constant)) {
+                return '';
+            }
+            $value = constant($constant);
+            return is_string($value) ? $value : '';
+        }
+
+        return (string) ($this->auth['service_account'] ?? '');
     }
 }

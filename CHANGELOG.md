@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Client logos can be selected from the Clients page and are rendered automatically across generated reports.
+- Template creation supports curated presets powered by reusable blueprints and drafts.
+- GA4 and Google Search Console connectors accept credentials from secure `wp-config.php` constants in addition to JSON uploads.
 
 ## [0.1.1] - 2025-10-02
 ### Changed

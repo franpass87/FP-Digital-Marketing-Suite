@@ -468,7 +468,7 @@ CSV;
             $repo->update($client->id ?? 0, $payload);
             $client = $repo->find($client->id ?? 0) ?? $client;
         } else {
-            $client = $repo->create($payload) ?? new Client(null, self::CLIENT_NAME, [self::CLIENT_EMAIL], [], 'Europe/Rome', self::QA_NOTES, '', '');
+            $client = $repo->create($payload) ?? new Client(null, self::CLIENT_NAME, [self::CLIENT_EMAIL], [], 'Europe/Rome', self::QA_NOTES, null, '', '');
         }
 
         return $client;

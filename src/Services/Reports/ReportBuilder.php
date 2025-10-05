@@ -17,6 +17,10 @@ use FP\DMS\Support\I18n;
 use FP\DMS\Support\Wp;
 use FP\DMS\Support\Period;
 use RuntimeException;
+use function is_array;
+use function is_string;
+use function wp_get_attachment_image_url;
+use function wp_get_attachment_url;
 
 class ReportBuilder
 {
@@ -146,7 +150,14 @@ class ReportBuilder
      */
     private function buildContext(Client $client, Period $period, array $meta): array
     {
-        $branding = Options::getGlobalSettings()['pdf_branding'];
+        $settings = Options::getGlobalSettings();
+        $branding = is_array($settings['pdf_branding'] ?? null) ? $settings['pdf_branding'] : [];
+        $clientLogoUrl = $this->resolveClientLogoUrl($client);
+        if ($clientLogoUrl !== '') {
+            $branding['logo_url'] = $clientLogoUrl;
+        } else {
+            $branding['logo_url'] = (string) ($branding['logo_url'] ?? '');
+        }
         $daily = is_array($meta['metrics_daily'] ?? null) ? $meta['metrics_daily'] : [];
         $totals = is_array($meta['kpi_total'] ?? null) ? $meta['kpi_total'] : [];
         $previousTotals = is_array($meta['previous_totals'] ?? null) ? $meta['previous_totals'] : [];
@@ -161,6 +172,7 @@ class ReportBuilder
             'client' => [
                 'name' => $client->name,
                 'timezone' => $client->timezone,
+                'logo_url' => $clientLogoUrl,
             ],
             'period' => [
                 'start' => $period->start->format('Y-m-d'),
@@ -336,5 +348,24 @@ class ReportBuilder
         }
 
         return false;
+    }
+
+    private function resolveClientLogoUrl(Client $client): string
+    {
+        if ($client->logoId === null) {
+            return '';
+        }
+
+        $url = wp_get_attachment_image_url($client->logoId, 'full');
+        if (is_string($url) && $url !== '') {
+            return $url;
+        }
+
+        $fallback = wp_get_attachment_url($client->logoId);
+        if (is_string($fallback)) {
+            return $fallback;
+        }
+
+        return '';
     }
 }

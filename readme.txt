@@ -18,7 +18,8 @@ FP Digital Marketing Suite centralises scheduled marketing reports, data source 
 = Highlights =
 
 * Connect Google Analytics 4, Google Search Console, Google Ads, Meta Ads CSV, Clarity CSV, and generic CSV data sources per client.
-* Build HTML templates with branding tokens and render them to PDF for automated delivery.
+* Supply GA4 and GSC credentials via JSON uploads or secure `wp-config.php` constants instead of pasting secrets in the UI.
+* Build HTML templates with reusable presets, branding tokens, and render them to PDF for automated delivery.
 * Schedule recurring jobs with a hardened cron runner, background queue, and REST-based fallback tick endpoint.
 * Detect anomalies with z-score, EWMA, CUSUM, and seasonal baselines; route alerts per client with thresholds and mute windows.
 * Deliver notifications by email (with retry), Slack, Microsoft Teams, Telegram, generic webhooks, and a Twilio SMS audit stub.
@@ -40,7 +41,7 @@ FP Digital Marketing Suite centralises scheduled marketing reports, data source 
 
 == Usage ==
 
-* Configure clients, connectors, and scheduling rules from the FP Suite admin menu.
+* Configure clients (logo included), connectors, and scheduling rules from the FP Suite admin menu.
 * Build branded report templates and preview HTML output before enabling automatic PDF delivery.
 * Monitor queue health, cron status, and anomaly summaries from **FP Suite → Overview** and **FP Suite → Health**.
 * Trigger QA automation from the dedicated admin page to seed fixtures, execute end-to-end runs, and validate anomaly routing.

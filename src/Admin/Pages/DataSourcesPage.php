@@ -11,6 +11,7 @@ use FP\DMS\Domain\Repos\DataSourcesRepo;
 use FP\DMS\Services\Connectors\ProviderFactory;
 use FP\DMS\Support\Wp;
 use WP_Error;
+use function selected;
 
 class DataSourcesPage
 {
@@ -340,6 +341,22 @@ class DataSourcesPage
         echo '<tr><th scope="row"><label>' . esc_html($label) . '</label></th><td>';
         if ($type === 'textarea') {
             echo '<textarea name="' . esc_attr($name) . '" rows="6" class="large-text code">' . esc_textarea($value) . '</textarea>';
+        } elseif ($type === 'select') {
+            $options = [];
+            if (isset($info['options']) && is_array($info['options'])) {
+                $options = $info['options'];
+            }
+            $current = $value;
+            if ($current === '' && isset($info['default'])) {
+                $current = (string) $info['default'];
+            }
+            echo '<select name="' . esc_attr($name) . '" class="regular-text">';
+            foreach ($options as $optionValue => $optionLabel) {
+                $optionValue = (string) $optionValue;
+                $optionLabel = (string) $optionLabel;
+                echo '<option value="' . esc_attr($optionValue) . '"' . selected($current, $optionValue, false) . '>' . esc_html($optionLabel) . '</option>';
+            }
+            echo '</select>';
         } else {
             $inputType = $type === 'url' ? 'url' : 'text';
             echo '<input type="' . esc_attr($inputType) . '" class="regular-text" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '">';
@@ -436,21 +453,65 @@ class DataSourcesPage
 
         switch ($type) {
             case 'ga4':
+                $credentialSource = isset($_POST['auth']['credential_source']) ? Wp::sanitizeTextField($_POST['auth']['credential_source']) : 'manual';
                 $serviceAccount = isset($_POST['auth']['service_account']) ? trim((string) Wp::unslash($_POST['auth']['service_account'])) : '';
+                $serviceAccountConstant = isset($_POST['auth']['service_account_constant']) ? Wp::sanitizeTextField($_POST['auth']['service_account_constant']) : '';
                 $propertyId = Wp::sanitizeTextField($_POST['config']['property_id'] ?? '');
-                if ($serviceAccount === '' || $propertyId === '') {
+                if ($propertyId === '') {
                     return new WP_Error('fpdms_datasource_missing', __('Service account JSON and property ID are required for GA4.', 'fp-dms'));
                 }
-                $auth['service_account'] = $serviceAccount;
+
+                $auth['credential_source'] = $credentialSource === 'constant' ? 'constant' : 'manual';
+                if ($auth['credential_source'] === 'constant') {
+                    if ($serviceAccountConstant === '') {
+                        return new WP_Error('fpdms_datasource_missing', __('Provide the name of the wp-config constant that stores the GA4 service account JSON.', 'fp-dms'));
+                    }
+                    if (! defined($serviceAccountConstant)) {
+                        return new WP_Error('fpdms_datasource_missing', __('The specified wp-config constant is not defined.', 'fp-dms'));
+                    }
+                    $constantValue = constant($serviceAccountConstant);
+                    if (! is_string($constantValue) || trim($constantValue) === '') {
+                        return new WP_Error('fpdms_datasource_missing', __('The wp-config constant must return the raw service account JSON string.', 'fp-dms'));
+                    }
+                    $auth['service_account_constant'] = $serviceAccountConstant;
+                } else {
+                    if ($serviceAccount === '') {
+                        return new WP_Error('fpdms_datasource_missing', __('Service account JSON and property ID are required for GA4.', 'fp-dms'));
+                    }
+                    $auth['service_account'] = $serviceAccount;
+                }
+
                 $config['property_id'] = $propertyId;
                 break;
             case 'gsc':
+                $credentialSource = isset($_POST['auth']['credential_source']) ? Wp::sanitizeTextField($_POST['auth']['credential_source']) : 'manual';
                 $serviceAccount = isset($_POST['auth']['service_account']) ? trim((string) Wp::unslash($_POST['auth']['service_account'])) : '';
+                $serviceAccountConstant = isset($_POST['auth']['service_account_constant']) ? Wp::sanitizeTextField($_POST['auth']['service_account_constant']) : '';
                 $siteUrl = esc_url_raw($_POST['config']['site_url'] ?? '');
-                if ($serviceAccount === '' || $siteUrl === '') {
+                if ($siteUrl === '') {
                     return new WP_Error('fpdms_datasource_missing', __('Service account JSON and site URL are required for Google Search Console.', 'fp-dms'));
                 }
-                $auth['service_account'] = $serviceAccount;
+
+                $auth['credential_source'] = $credentialSource === 'constant' ? 'constant' : 'manual';
+                if ($auth['credential_source'] === 'constant') {
+                    if ($serviceAccountConstant === '') {
+                        return new WP_Error('fpdms_datasource_missing', __('Provide the name of the wp-config constant that stores the Search Console service account JSON.', 'fp-dms'));
+                    }
+                    if (! defined($serviceAccountConstant)) {
+                        return new WP_Error('fpdms_datasource_missing', __('The specified wp-config constant is not defined.', 'fp-dms'));
+                    }
+                    $constantValue = constant($serviceAccountConstant);
+                    if (! is_string($constantValue) || trim($constantValue) === '') {
+                        return new WP_Error('fpdms_datasource_missing', __('The wp-config constant must return the raw service account JSON string.', 'fp-dms'));
+                    }
+                    $auth['service_account_constant'] = $serviceAccountConstant;
+                } else {
+                    if ($serviceAccount === '') {
+                        return new WP_Error('fpdms_datasource_missing', __('Service account JSON and site URL are required for Google Search Console.', 'fp-dms'));
+                    }
+                    $auth['service_account'] = $serviceAccount;
+                }
+
                 $config['site_url'] = $siteUrl;
                 break;
             case 'google_ads':

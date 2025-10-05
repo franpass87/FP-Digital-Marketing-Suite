@@ -10,6 +10,11 @@ use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Support\Wp;
 use function __;
+use function esc_html__;
+use function esc_url;
+use function get_post;
+use function wp_enqueue_media;
+use function wp_get_attachment_image_url;
 
 class ClientsPage
 {
@@ -50,6 +55,7 @@ class ClientsPage
                 'email_cc' => self::sanitizeEmails((string) ($post['email_cc'] ?? '')),
                 'timezone' => Wp::sanitizeTextField($post['timezone'] ?? 'UTC'),
                 'notes' => Wp::ksesPost((string) ($post['notes'] ?? '')),
+                'logo_id' => self::sanitizeLogoId($post['logo_id'] ?? null),
             ];
 
             $fallbackTz = $existing?->timezone ?? 'UTC';
@@ -107,13 +113,14 @@ class ClientsPage
         echo '<table class="widefat striped">';
         echo '<thead><tr>';
         echo '<th>' . esc_html__('Name', 'fp-dms') . '</th>';
+        echo '<th>' . esc_html__('Logo', 'fp-dms') . '</th>';
         echo '<th>' . esc_html__('Emails', 'fp-dms') . '</th>';
         echo '<th>' . esc_html__('Timezone', 'fp-dms') . '</th>';
         echo '<th>' . esc_html__('Actions', 'fp-dms') . '</th>';
         echo '</tr></thead><tbody>';
 
         if (empty($clients)) {
-            echo '<tr><td colspan="4">' . esc_html__('No clients found.', 'fp-dms') . '</td></tr>';
+            echo '<tr><td colspan="5">' . esc_html__('No clients found.', 'fp-dms') . '</td></tr>';
         }
 
         foreach ($clients as $client) {
@@ -130,6 +137,12 @@ class ClientsPage
 
             echo '<tr>';
             echo '<td>' . esc_html($client->name) . '</td>';
+            $logo = $client->logoId ? wp_get_attachment_image_url($client->logoId, 'thumbnail') : false;
+            if ($logo) {
+                echo '<td><img src="' . esc_url((string) $logo) . '" alt="' . esc_attr($client->name) . '" style="max-width:60px;height:auto;"></td>';
+            } else {
+                echo '<td><span style="color:#94a3b8;">' . esc_html__('—', 'fp-dms') . '</span></td>';
+            }
             echo '<td>' . esc_html(implode(', ', array_merge($client->emailTo, $client->emailCc))) . '</td>';
             echo '<td>' . esc_html($client->timezone) . '</td>';
             echo '<td>';
@@ -147,6 +160,11 @@ class ClientsPage
         $title = $client ? __('Edit Client', 'fp-dms') : __('Add Client', 'fp-dms');
         $emailTo = $client ? implode(', ', $client->emailTo) : '';
         $emailCc = $client ? implode(', ', $client->emailCc) : '';
+
+        wp_enqueue_media();
+        $logoId = $client?->logoId ?? null;
+        $logoUrl = $logoId ? wp_get_attachment_image_url($logoId, 'medium') : false;
+        $logoSrc = $logoUrl ? (string) $logoUrl : '';
 
         echo '<div class="card" style="max-width:800px;margin-top:20px;padding:20px;">';
         echo '<h2>' . esc_html($title) . '</h2>';
@@ -167,12 +185,87 @@ class ClientsPage
         echo '<tr><th scope="row"><label for="fpdms-timezone">' . esc_html__('Timezone', 'fp-dms') . '</label></th>';
         echo '<td><input name="timezone" type="text" id="fpdms-timezone" class="regular-text" value="' . esc_attr($client->timezone ?? 'UTC') . '"></td></tr>';
 
+        echo '<tr><th scope="row"><label>' . esc_html__('Logo', 'fp-dms') . '</label></th>';
+        echo '<td>';
+        echo '<div id="fpdms-logo-preview" style="margin-bottom:12px;max-width:200px;min-height:60px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">';
+        if ($logoSrc !== '') {
+            echo '<img src="' . esc_url($logoSrc) . '" alt="' . esc_attr($client->name ?? '') . '" style="max-width:100%;height:auto;">';
+        } else {
+            echo '<span style="color:#64748b;">' . esc_html__('No logo selected', 'fp-dms') . '</span>';
+        }
+        echo '</div>';
+        echo '<input type="hidden" name="logo_id" id="fpdms-logo-id" value="' . esc_attr($logoId ? (string) $logoId : '') . '">';
+        echo '<button type="button" class="button" id="fpdms-logo-select">' . esc_html__('Select logo', 'fp-dms') . '</button> ';
+        $removeStyle = $logoId ? '' : 'style="display:none;"';
+        echo '<button type="button" class="button-link-delete" id="fpdms-logo-remove" ' . $removeStyle . '>' . esc_html__('Remove logo', 'fp-dms') . '</button>';
+        echo '<p class="description" style="margin-top:8px;">' . esc_html__('Pick an image from the media library to personalise reports for this client.', 'fp-dms') . '</p>';
+        echo '</td></tr>';
+
         echo '<tr><th scope="row"><label for="fpdms-notes">' . esc_html__('Notes', 'fp-dms') . '</label></th>';
         echo '<td><textarea name="notes" id="fpdms-notes" class="large-text" rows="4">' . esc_textarea($client->notes ?? '') . '</textarea></td></tr>';
 
         echo '</tbody></table>';
         submit_button($client ? __('Update Client', 'fp-dms') : __('Add Client', 'fp-dms'));
         echo '</form>';
+        echo '<script type="text/javascript">
+        (function($){
+            if (typeof wp === "undefined" || !wp.media) {
+                return;
+            }
+            var frame;
+            var selectButton = $("#fpdms-logo-select");
+            var removeButton = $("#fpdms-logo-remove");
+            var input = $("#fpdms-logo-id");
+            var preview = $("#fpdms-logo-preview");
+
+            function renderPreview(url){
+                preview.empty();
+                if (url) {
+                    preview.append($("<img>").attr("src", url).attr("alt", "logo").css({"max-width":"100%","height":"auto"}));
+                } else {
+                    preview.append($("<span>").text(selectButton.data("placeholder")).css({color: '#64748b'}));
+                }
+            }
+
+            selectButton.data("placeholder", "' . esc_js(__('No logo selected', 'fp-dms')) . '");
+
+            selectButton.on("click", function(e){
+                e.preventDefault();
+                if (frame) {
+                    frame.open();
+                    return;
+                }
+
+                frame = wp.media({
+                    title: "' . esc_js(__('Choose logo', 'fp-dms')) . '",
+                    button: { text: "' . esc_js(__('Use image', 'fp-dms')) . '" },
+                    library: { type: "image" },
+                    multiple: false
+                });
+
+                frame.on("select", function(){
+                    var attachment = frame.state().get("selection").first().toJSON();
+                    input.val(attachment.id);
+                    var previewUrl = attachment.sizes && attachment.sizes.medium ? attachment.sizes.medium.url : attachment.url;
+                    renderPreview(previewUrl);
+                    removeButton.show();
+                });
+
+                frame.open();
+            });
+
+            removeButton.on("click", function(e){
+                e.preventDefault();
+                input.val("");
+                renderPreview("");
+                removeButton.hide();
+            });
+
+            if (!input.val()) {
+                renderPreview("");
+            }
+        })(jQuery);
+        </script>';
         echo '</div>';
     }
 
@@ -198,6 +291,21 @@ class ClientsPage
         }
 
         return array_values($valid);
+    }
+
+    private static function sanitizeLogoId(mixed $value): ?int
+    {
+        $id = Wp::absInt($value);
+        if ($id <= 0) {
+            return null;
+        }
+
+        $post = get_post($id);
+        if (! $post || $post->post_type !== 'attachment') {
+            return null;
+        }
+
+        return $id;
     }
 
     private static function normalizeTimezone(string $timezone, string $fallback): string
