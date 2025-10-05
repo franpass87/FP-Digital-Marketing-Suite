@@ -8,8 +8,6 @@ use DateTimeZone;
 use Exception;
 use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Repos\ClientsRepo;
-use FP\DMS\Services\Connectors\CentralServiceAccount;
-use FP\DMS\Services\Connectors\ClientConnectorValidator;
 use FP\DMS\Support\Wp;
 use function __;
 use function esc_attr;
@@ -19,8 +17,6 @@ use function esc_js;
 use function esc_textarea;
 use function esc_url;
 use function get_post;
-use function sprintf;
-use function wp_create_nonce;
 use function wp_enqueue_media;
 use function wp_enqueue_script;
 use function wp_get_attachment_image_url;
@@ -65,10 +61,6 @@ class ClientsPage
                 'timezone' => Wp::sanitizeTextField($post['timezone'] ?? 'UTC'),
                 'notes' => Wp::ksesPost((string) ($post['notes'] ?? '')),
                 'logo_id' => self::sanitizeLogoId($post['logo_id'] ?? null),
-                'ga4_property_id' => ClientConnectorValidator::sanitizeGa4PropertyId($post['ga4_property_id'] ?? ''),
-                'ga4_stream_id' => ClientConnectorValidator::sanitizeGa4StreamId($post['ga4_stream_id'] ?? ''),
-                'ga4_measurement_id' => ClientConnectorValidator::sanitizeGa4MeasurementId($post['ga4_measurement_id'] ?? ''),
-                'gsc_site_property' => ClientConnectorValidator::sanitizeGscSiteProperty($post['gsc_site_property'] ?? ''),
             ];
 
             $fallbackTz = $existing?->timezone ?? 'UTC';
@@ -179,15 +171,8 @@ class ClientsPage
         $logoId = $client?->logoId ?? null;
         $logoUrl = $logoId ? wp_get_attachment_image_url($logoId, 'medium') : false;
         $logoSrc = $logoUrl ? (string) $logoUrl : '';
-        $ga4PropertyId = $client?->ga4PropertyId ?? '';
-        $ga4StreamId = $client?->ga4StreamId ?? '';
-        $ga4MeasurementId = $client?->ga4MeasurementId ?? '';
-        $gscSiteProperty = $client?->gscSiteProperty ?? '';
-        $ajaxNonce = wp_create_nonce('fpdms_test_connector');
-        $hasGa4ServiceAccount = CentralServiceAccount::getJson('ga4') !== '';
-        $hasGscServiceAccount = CentralServiceAccount::getJson('gsc') !== '';
-        $documentationUrl = 'https://github.com/francescopasseri/FP-Digital-Marketing-Suite/blob/main/docs/faq.md';
-
+        $clientName = $client->name ?? '';
+        $logoAlt = $clientName !== '' ? $clientName : __('Client logo', 'fp-dms');
         echo '<div class="card" style="max-width:800px;margin-top:20px;padding:20px;">';
         echo '<h2>' . esc_html($title) . '</h2>';
         echo '<form method="post">';
@@ -209,9 +194,9 @@ class ClientsPage
 
         echo '<tr><th scope="row"><label>' . esc_html__('Logo', 'fp-dms') . '</label></th>';
         echo '<td>';
-        echo '<div id="fpdms-logo-preview" style="margin-bottom:12px;max-width:200px;min-height:60px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">';
+        echo '<div id="fpdms-logo-preview" data-client-name="' . esc_attr($clientName) . '" style="margin-bottom:12px;max-width:200px;min-height:60px;display:flex;align-items:center;justify-content:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;">';
         if ($logoSrc !== '') {
-            echo '<img src="' . esc_url($logoSrc) . '" alt="' . esc_attr($client->name ?? '') . '" style="max-width:100%;height:auto;">';
+            echo '<img src="' . esc_url($logoSrc) . '" alt="' . esc_attr($logoAlt) . '" style="max-width:100%;height:auto;">';
         } else {
             echo '<span style="color:#64748b;">' . esc_html__('No logo selected', 'fp-dms') . '</span>';
         }
@@ -227,73 +212,12 @@ class ClientsPage
         echo '<td><textarea name="notes" id="fpdms-notes" class="large-text" rows="4">' . esc_textarea($client->notes ?? '') . '</textarea></td></tr>';
 
         echo '</tbody></table>';
-        echo '<input type="hidden" id="fpdms-test-connector-nonce" value="' . esc_attr($ajaxNonce) . '">';
-        echo '<div class="fpdms-connectors" style="margin-top:24px;">';
-        echo '<h2>' . esc_html__('Connettori dati', 'fp-dms') . '</h2>';
-        echo '<div class="notice notice-info"><p>' . esc_html__('Il plugin usa un account di servizio centrale; non serve caricare JSON per cliente.', 'fp-dms') . '</p></div>';
-
-        if (! $hasGa4ServiceAccount) {
-            /* translators: 1: constant name, 2: opening link tag, 3: closing link tag */
-            $ga4DocMessage = sprintf(
-                esc_html__('Definisci la costante %1$s in wp-config.php oppure carica il JSON centrale. Consulta la %2$sdocumentazione%3$s.', 'fp-dms'),
-                'FPDMS_GA4_SERVICE_ACCOUNT',
-                '<a href="' . esc_url($documentationUrl) . '" target="_blank" rel="noopener noreferrer">',
-                '</a>'
-            );
-            echo '<div class="notice notice-error"><p>' . Wp::ksesPost($ga4DocMessage) . '</p></div>';
-        }
-
-        if (! $hasGscServiceAccount) {
-            /* translators: 1: constant name, 2: opening link tag, 3: closing link tag */
-            $gscDocMessage = sprintf(
-                esc_html__('Definisci la costante %1$s in wp-config.php oppure carica il JSON centrale. Consulta la %2$sdocumentazione%3$s.', 'fp-dms'),
-                'FPDMS_GSC_SERVICE_ACCOUNT',
-                '<a href="' . esc_url($documentationUrl) . '" target="_blank" rel="noopener noreferrer">',
-                '</a>'
-            );
-            echo '<div class="notice notice-error"><p>' . Wp::ksesPost($gscDocMessage) . '</p></div>';
-        }
-
-        echo '<h2 class="nav-tab-wrapper" id="fpdms-connector-tabs">';
-        echo '<a href="#" class="nav-tab nav-tab-active" data-target="ga4">' . esc_html__('Google Analytics 4', 'fp-dms') . '</a>';
-        echo '<a href="#" class="nav-tab" data-target="gsc">' . esc_html__('Google Search Console', 'fp-dms') . '</a>';
-        echo '</h2>';
-
-        echo '<div class="fpdms-connector-panel is-active" id="fpdms-connector-panel-ga4">';
-        echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row"><label for="fpdms-ga4-property-id">' . esc_html__('ID proprietà GA4', 'fp-dms') . '</label></th>';
-        echo '<td><input name="ga4_property_id" type="text" id="fpdms-ga4-property-id" class="regular-text" value="' . esc_attr($ga4PropertyId) . '" placeholder="123456789">';
-        echo '<p class="description">' . esc_html__('Inserisci l’ID numerico della proprietà GA4.', 'fp-dms') . '</p></td></tr>';
-        echo '<tr><th scope="row"><label for="fpdms-ga4-stream-id">' . esc_html__('ID stream GA4', 'fp-dms') . '</label></th>';
-        echo '<td><input name="ga4_stream_id" type="text" id="fpdms-ga4-stream-id" class="regular-text" value="' . esc_attr($ga4StreamId) . '" placeholder="1234567890">';
-        echo '<p class="description">' . esc_html__('Inserisci lo stream Web associato (valore numerico).', 'fp-dms') . '</p></td></tr>';
-        echo '<tr><th scope="row"><label for="fpdms-ga4-measurement-id">' . esc_html__('Measurement ID', 'fp-dms') . '</label></th>';
-        echo '<td><input name="ga4_measurement_id" type="text" id="fpdms-ga4-measurement-id" class="regular-text" value="' . esc_attr($ga4MeasurementId) . '" placeholder="G-XXXXXXX">';
-        echo '<p class="description">' . esc_html__('Formato es. G-XXXXXXXX per il tag di misurazione.', 'fp-dms') . '</p></td></tr>';
-        echo '</tbody></table>';
-        echo '<p><button type="button" class="button fpdms-test-connector" data-connector="ga4"' . ($hasGa4ServiceAccount ? '' : ' disabled') . '>' . esc_html__('Verifica connessione', 'fp-dms') . '</button> <span class="fpdms-connector-status" data-target="ga4"></span></p>';
-        echo '</div>';
-
-        echo '<div class="fpdms-connector-panel" id="fpdms-connector-panel-gsc">';
-        echo '<table class="form-table"><tbody>';
-        echo '<tr><th scope="row"><label for="fpdms-gsc-site-property">' . esc_html__('Proprietà Search Console', 'fp-dms') . '</label></th>';
-        echo '<td><input name="gsc_site_property" type="text" id="fpdms-gsc-site-property" class="regular-text" value="' . esc_attr($gscSiteProperty) . '" placeholder="https://example.com/">';
-        echo '<p class="description">' . esc_html__('Usa l’identificatore esatto (es. sc-domain:example.com o URL completo).', 'fp-dms') . '</p></td></tr>';
-        echo '</tbody></table>';
-        echo '<p><button type="button" class="button fpdms-test-connector" data-connector="gsc"' . ($hasGscServiceAccount ? '' : ' disabled') . '>' . esc_html__('Verifica connessione', 'fp-dms') . '</button> <span class="fpdms-connector-status" data-target="gsc"></span></p>';
-        echo '</div>';
-
-        echo '</div>';
-        echo '<style>.fpdms-connector-panel{display:none;margin-top:16px;}.fpdms-connector-panel.is-active{display:block;}.fpdms-connector-status{margin-left:12px;font-weight:600;}.fpdms-connector-status.success{color:#047857;}.fpdms-connector-status.error{color:#b91c1c;}</style>';
-
         submit_button($client ? __('Update Client', 'fp-dms') : __('Add Client', 'fp-dms'));
         echo '</form>';
         $placeholderText = esc_js(__('No logo selected', 'fp-dms'));
         $chooseLogoText = esc_js(__('Choose logo', 'fp-dms'));
         $useImageText = esc_js(__('Use image', 'fp-dms'));
-        $testingText = esc_js(__('Verifica in corso…', 'fp-dms'));
-        $successText = esc_js(__('Connessione verificata.', 'fp-dms'));
-        $genericErrorText = esc_js(__('Impossibile verificare la connessione.', 'fp-dms'));
+        $defaultAltText = esc_js(__('Client logo', 'fp-dms'));
 
         $scriptLines = [
             '<script type="text/javascript">',
@@ -303,46 +227,52 @@ class ClientsPage
             '    var removeButton = $("#fpdms-logo-remove");',
             '    var input = $("#fpdms-logo-id");',
             '    var preview = $("#fpdms-logo-preview");',
-            '    var testingText = "' . $testingText . '";',
-            '    var successText = "' . $successText . '";',
-            '    var genericErrorText = "' . $genericErrorText . '";',
-            '    var connectorTabs = $("#fpdms-connector-tabs .nav-tab");',
-            '    var connectorPanels = $(".fpdms-connector-panel");',
-            '    var ajaxNonce = $("#fpdms-test-connector-nonce").val();',
+            '    var nameField = $("#fpdms-name");',
+            '    var placeholder = "' . $placeholderText . '";',
+            '    var clientName = preview.data("client-name") || "";',
+            '    var fallbackAlt = "' . $defaultAltText . '";',
+            '    var defaultAlt = clientName ? clientName : fallbackAlt;',
             '',
-            '    function renderPreview(url){',
+            '    function renderPreview(url, alt){',
             '        preview.empty();',
             '        if (url) {',
-            '            preview.append($("<img>").attr("src", url).attr("alt", "logo").css({"max-width":"100%","height":"auto"}));',
+            '            var altText = alt || defaultAlt;',
+            '            preview.append($("<img>").attr({src: url, alt: altText}).css({"max-width":"100%","height":"auto"}));',
             '        } else {',
-            '            preview.append($("<span>").text(selectButton.data("placeholder")).css({color: "#64748b"}));',
+            '            preview.append($("<span>").text(placeholder).css({color: "#64748b"}));',
             '        }',
             '    }',
             '',
-            '    selectButton.data("placeholder", "' . $placeholderText . '");',
+            '    function updateDefaultAlt(){',
+            '        var candidate = $.trim(nameField.val());',
+            '        defaultAlt = candidate !== "" ? candidate : fallbackAlt;',
+            '        preview.attr("data-client-name", defaultAlt);',
+            '        var img = preview.find("img");',
+            '        if (img.length) {',
+            '            img.attr("alt", defaultAlt);',
+            '        }',
+            '    }',
             '',
             '    if (typeof wp !== "undefined" && wp.media) {',
             '        selectButton.on("click", function(e){',
             '            e.preventDefault();',
-            '            if (frame) {',
-            '                frame.open();',
-            '                return;',
+            '            if (!frame) {',
+            '                frame = wp.media({',
+            '                    title: "' . $chooseLogoText . '",',
+            '                    button: { text: "' . $useImageText . '" },',
+            '                    library: { type: "image" },',
+            '                    multiple: false',
+            '                });',
+            '',
+            '                frame.on("select", function(){',
+            '                    var attachment = frame.state().get("selection").first().toJSON();',
+            '                    input.val(attachment.id);',
+            '                    var previewUrl = attachment.sizes && attachment.sizes.medium ? attachment.sizes.medium.url : attachment.url;',
+            '                    var alt = attachment.alt || attachment.title || defaultAlt;',
+            '                    renderPreview(previewUrl, alt);',
+            '                    removeButton.show();',
+            '                });',
             '            }',
-            '',
-            '            frame = wp.media({',
-            '                title: "' . $chooseLogoText . '",',
-            '                button: { text: "' . $useImageText . '" },',
-            '                library: { type: "image" },',
-            '                multiple: false',
-            '            });',
-            '',
-            '            frame.on("select", function(){',
-            '                var attachment = frame.state().get("selection").first().toJSON();',
-            '                input.val(attachment.id);',
-            '                var previewUrl = attachment.sizes && attachment.sizes.medium ? attachment.sizes.medium.url : attachment.url;',
-            '                renderPreview(previewUrl);',
-            '                removeButton.show();',
-            '            });',
             '',
             '            frame.open();',
             '        });',
@@ -353,72 +283,18 @@ class ClientsPage
             '            renderPreview("");',
             '            removeButton.hide();',
             '        });',
+            '    } else {',
+            '        selectButton.on("click", function(e){',
+            '            e.preventDefault();',
+            '        });',
             '    }',
+            '',
+            '    nameField.on("input change", updateDefaultAlt);',
+            '    updateDefaultAlt();',
             '',
             '    if (!input.val()) {',
             '        renderPreview("");',
             '    }',
-            '',
-            '    function activateConnector(tab){',
-            '        if (!tab || !tab.length) {',
-            '            return;',
-            '        }',
-            '        connectorTabs.removeClass("nav-tab-active");',
-            '        var current = $(tab);',
-            '        current.addClass("nav-tab-active");',
-            '        var target = current.data("target");',
-            '        connectorPanels.removeClass("is-active");',
-            '        if (target) {',
-            '            $("#fpdms-connector-panel-" + target).addClass("is-active");',
-            '        }',
-            '    }',
-            '',
-            '    connectorTabs.on("click", function(e){',
-            '        e.preventDefault();',
-            '        activateConnector($(this));',
-            '    });',
-            '',
-            '    if (connectorTabs.length) {',
-            '        activateConnector(connectorTabs.first());',
-            '    }',
-            '',
-            '    $(".fpdms-test-connector").on("click", function(e){',
-            '        e.preventDefault();',
-            '        var button = $(this);',
-            '        if (button.is(":disabled")) {',
-            '            return;',
-            '        }',
-            '        var connector = button.data("connector");',
-            '        var status = $(".fpdms-connector-status[data-target=\"" + connector + "\"]");',
-            '        var payload = {',
-            '            action: "fpdms_test_connector",',
-            '            _ajax_nonce: ajaxNonce,',
-            '            connector_type: connector,',
-            '            client_id: $("input[name=client_id]").val() || "0"',
-            '        };',
-            '        if (connector === "ga4") {',
-            '            payload.property_id = $("#fpdms-ga4-property-id").val();',
-            '            payload.stream_id = $("#fpdms-ga4-stream-id").val();',
-            '            payload.measurement_id = $("#fpdms-ga4-measurement-id").val();',
-            '        } else {',
-            '            payload.site_property = $("#fpdms-gsc-site-property").val();',
-            '        }',
-            '        status.removeClass("success error").text(testingText);',
-            '        button.prop("disabled", true);',
-            '        $.post(ajaxurl, payload).done(function(response){',
-            '            if (response && response.success && response.data && response.data.ok) {',
-            '                status.text(response.data.message || successText).removeClass("error").addClass("success");',
-            '            } else if (response && response.data) {',
-            '                status.text(response.data.message || genericErrorText).removeClass("success").addClass("error");',
-            '            } else {',
-            '                status.text(genericErrorText).removeClass("success").addClass("error");',
-            '            }',
-            '        }).fail(function(){',
-            '            status.text(genericErrorText).removeClass("success").addClass("error");',
-            '        }).always(function(){',
-            '            button.prop("disabled", false);',
-            '        });',
-            '    });',
             '})(jQuery);',
             '</script>',
         ];
