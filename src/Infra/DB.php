@@ -43,6 +43,10 @@ class DB
                 logo_id BIGINT UNSIGNED NULL,
                 timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
                 notes LONGTEXT NULL,
+                ga4_property_id VARCHAR(32) NULL,
+                ga4_stream_id VARCHAR(32) NULL,
+                ga4_measurement_id VARCHAR(32) NULL,
+                gsc_site_property VARCHAR(255) NULL,
                 created_at DATETIME NOT NULL,
                 updated_at DATETIME NOT NULL,
                 PRIMARY KEY  (id)

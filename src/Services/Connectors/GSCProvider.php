@@ -8,6 +8,7 @@ use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
 use FP\DMS\Support\Wp;
 use function __;
+use function apply_filters;
 
 class GSCProvider implements DataSourceProviderInterface
 {
@@ -191,6 +192,15 @@ class GSCProvider implements DataSourceProviderInterface
             return is_string($value) ? $value : '';
         }
 
-        return (string) ($this->auth['service_account'] ?? '');
+        $serviceAccount = (string) ($this->auth['service_account'] ?? '');
+
+        /**
+         * Allow developers to source the Search Console service account JSON dynamically.
+         *
+         * @param string $serviceAccount JSON payload used to authenticate with Search Console.
+         * @param array<string, mixed> $auth Raw authentication data saved with the data source.
+         * @param array<string, mixed> $config Connector configuration for the data source.
+         */
+        return (string) apply_filters('fpdms/connector/gsc/service_account', $serviceAccount, $this->auth, $this->config);
     }
 }

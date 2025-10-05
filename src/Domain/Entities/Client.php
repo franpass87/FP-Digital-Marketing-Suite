@@ -18,6 +18,10 @@ class Client
         public ?int $logoId,
         public string $createdAt,
         public string $updatedAt,
+        public ?string $ga4PropertyId = null,
+        public ?string $ga4StreamId = null,
+        public ?string $ga4MeasurementId = null,
+        public ?string $gscSiteProperty = null,
     ) {
     }
 
@@ -36,6 +40,10 @@ class Client
             self::normalizeLogoId($row['logo_id'] ?? null),
             (string) ($row['created_at'] ?? ''),
             (string) ($row['updated_at'] ?? ''),
+            self::nullableString($row['ga4_property_id'] ?? null),
+            self::nullableString($row['ga4_stream_id'] ?? null),
+            self::nullableString($row['ga4_measurement_id'] ?? null),
+            self::nullableString($row['gsc_site_property'] ?? null),
         );
     }
 
@@ -54,6 +62,10 @@ class Client
             'logo_id' => $this->logoId,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
+            'ga4_property_id' => $this->ga4PropertyId,
+            'ga4_stream_id' => $this->ga4StreamId,
+            'ga4_measurement_id' => $this->ga4MeasurementId,
+            'gsc_site_property' => $this->gscSiteProperty,
         ];
     }
 
@@ -82,5 +94,16 @@ class Client
         }
 
         return $id;
+    }
+
+    private static function nullableString(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 }

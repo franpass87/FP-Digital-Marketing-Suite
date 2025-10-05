@@ -32,10 +32,12 @@ class ProviderFactory
                 'summary' => __('Sync engagement metrics directly from GA4.', 'fp-dms'),
                 'description' => __('Use a service account JSON with access to the GA4 property or load it from wp-config.', 'fp-dms'),
                 'steps' => [
-                    __('Create or reuse a Google Cloud service account with access to the GA4 property.', 'fp-dms'),
-                    __('Share the service account email with the property (Admin → Property Access Management).', 'fp-dms'),
-                    __('Optionally define a wp-config constant that contains the JSON if you prefer not to paste it here.', 'fp-dms'),
-                    __('Copy the numeric Property ID from GA4 Admin → Property Settings.', 'fp-dms'),
+                    __('Create or reuse a Google Cloud service account and download the JSON key for GA4.', 'fp-dms'),
+                    __('Share the service account email with the property (Admin → Property Access Management) using the Editor role or higher.', 'fp-dms'),
+                    __('Decide how to provide the JSON: set “Credential Source” to “Use wp-config constant” and enter the constant name (e.g. FPDMS_GA4_SERVICE_ACCOUNT) or choose “Paste JSON manually” and paste the entire file.', 'fp-dms'),
+                    __('Advanced: developers can filter fpdms/connector/ga4/service_account to load the JSON from secrets managers or external stores.', 'fp-dms'),
+                    __('Copy the numeric Property ID from GA4 Admin → Property Settings and paste it into the form.', 'fp-dms'),
+                    __('Save the data source and click “Test connection” to confirm the suite can read the property.', 'fp-dms'),
                 ],
                 'fields' => [
                     'auth' => [
@@ -74,10 +76,12 @@ class ProviderFactory
                 'summary' => __('Bring in organic search queries and clicks.', 'fp-dms'),
                 'description' => __('Provide a service account JSON (or load it from wp-config) and the verified site URL.', 'fp-dms'),
                 'steps' => [
-                    __('Generate a service account JSON and add the client email as an owner in Search Console.', 'fp-dms'),
-                    __('Optionally define a wp-config constant that contains the JSON if you prefer not to paste it here.', 'fp-dms'),
-                    __('Confirm the property you want to track is verified in the same Search Console account.', 'fp-dms'),
-                    __('Copy the exact site URL (including protocol) from the property settings.', 'fp-dms'),
+                    __('Generate a service account JSON and download the key for Google Search Console.', 'fp-dms'),
+                    __('Add the service account email as a full owner in Search Console (Settings → Users and permissions).', 'fp-dms'),
+                    __('Pick how you will load the JSON: select “Use wp-config constant” and enter the constant name (e.g. FPDMS_GSC_SERVICE_ACCOUNT) or keep “Paste JSON manually” and paste the key.', 'fp-dms'),
+                    __('Advanced: developers can filter fpdms/connector/gsc/service_account to load the JSON from secrets managers or external stores.', 'fp-dms'),
+                    __('Confirm the property you want to track is verified in the same Search Console account and copy the exact site URL or domain identifier.', 'fp-dms'),
+                    __('Save the data source and use “Test connection” to verify clicks and impressions can be retrieved.', 'fp-dms'),
                 ],
                 'fields' => [
                     'auth' => [
