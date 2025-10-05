@@ -1,0 +1,271 @@
+# Cursor Rules for Connection Wizard Development
+
+## Code Style
+
+### PHP
+- Use strict_types in all files
+- Follow PSR-12 coding standard
+- Type-hint all parameters and return types
+- Use property promotion in constructors
+- Prefer readonly properties where applicable
+- Use match expressions over switch
+- Always use <?php declare(strict_types=1); at file start
+
+### JavaScript
+- Use ES6+ features
+- Prefer const over let
+- Use arrow functions
+- Async/await over promises
+- JSDoc for public methods
+
+### CSS
+- BEM naming convention
+- Mobile-first approach
+- Use CSS Grid/Flexbox
+- Avoid !important
+- Prefix with fpdms-
+
+## Architecture
+
+### Wizard Steps
+- Extend AbstractWizardStep
+- Implement all interface methods
+- Use renderTextField/renderTextareaField helpers
+- Return ['valid' => bool, 'errors' => array] from validate()
+- Use process() for data transformation
+
+### Validation
+- Client-side validation first (UX)
+- Server-side validation always (Security)
+- Return structured validation objects
+- Include suggestions in error messages
+
+### Error Handling
+- Use ConnectorException for all connector errors
+- Always provide context array
+- Use ErrorTranslator for user-facing messages
+- Log technical details separately
+
+## Security
+
+### Always
+- Verify nonces on AJAX calls
+- Check user capabilities
+- Sanitize all input
+- Escape all output
+- Use prepared statements
+- Never log sensitive data
+
+### Never
+- Trust client-side validation alone
+- Expose internal errors to users
+- Store credentials in plaintext logs
+- Use eval() or similar
+- Disable error reporting in dev
+
+## Testing
+
+### Unit Tests
+- Test happy path
+- Test error cases
+- Test edge cases
+- Mock external dependencies
+- Use data providers
+- Assert return types
+
+### Manual Testing
+- Test all providers
+- Test with invalid data
+- Test error scenarios
+- Test on different browsers
+- Test mobile responsive
+
+## Documentation
+
+### PHPDoc
+- Document all public methods
+- Include @param with types
+- Include @return with types
+- Include @throws when applicable
+- Add usage examples for complex methods
+
+### Inline Comments
+- Explain why, not what
+- Comment complex logic
+- Document workarounds
+- Note TODOs with context
+
+## Best Practices
+
+### DRY
+- Extract common functionality
+- Use base classes
+- Create helper methods
+- Share validation logic
+
+### SOLID
+- Single responsibility per class
+- Open for extension
+- Depend on interfaces
+- Inject dependencies
+
+### Performance
+- Debounce user input
+- Cache expensive operations
+- Minimize DOM operations
+- Lazy load when possible
+
+## Naming Conventions
+
+### Classes
+- PascalCase
+- Descriptive names
+- Suffix with purpose: Step, Validator, Handler
+
+### Methods
+- camelCase
+- Verb-noun format: validateField, renderForm
+- Boolean methods: is*, has*, should*
+
+### Variables
+- camelCase
+- Descriptive names
+- Avoid abbreviations
+- Use plural for arrays
+
+### Constants
+- SCREAMING_SNAKE_CASE
+- Group related constants
+
+## File Organization
+
+### Wizard Steps
+```
+src/Admin/ConnectionWizard/Steps/
+├── IntroStep.php
+├── ServiceAccountStep.php
+└── [Provider]ConfigStep.php
+```
+
+### Tests
+```
+tests/Unit/
+├── [Class]Test.php
+└── Fixtures/
+```
+
+### Documentation
+```
+docs/
+├── IMPLEMENTATION_GUIDE.md
+├── README-*.md
+└── examples/
+```
+
+## Git Commit Messages
+
+Format: `type(scope): message`
+
+Types:
+- feat: New feature
+- fix: Bug fix
+- docs: Documentation
+- style: Formatting
+- refactor: Code restructuring
+- test: Adding tests
+- chore: Maintenance
+
+Examples:
+- `feat(wizard): add Google Ads customer step`
+- `fix(validator): handle edge case in date validation`
+- `docs(guide): add troubleshooting section`
+
+## Common Patterns
+
+### Wizard Step Template
+```php
+class MyStep extends AbstractWizardStep
+{
+    public function __construct(string $id, string $provider)
+    {
+        parent::__construct($id, __('Title', 'fp-dms'), __('Description', 'fp-dms'));
+    }
+
+    public function render(array $data): string
+    {
+        ob_start();
+        ?>
+        <div class="fpdms-my-step">
+            <!-- UI -->
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    public function validate(array $data): array
+    {
+        // Validation logic
+        return ['valid' => true];
+    }
+
+    public function getHelp(): array
+    {
+        return [
+            'title' => __('Help Title', 'fp-dms'),
+            'content' => __('Help content', 'fp-dms'),
+        ];
+    }
+}
+```
+
+### Validation Pattern
+```javascript
+validateField(value) {
+    if (isEmpty(value)) {
+        return {
+            valid: false,
+            error: 'Field required',
+            severity: 'error'
+        };
+    }
+
+    if (!isValidFormat(value)) {
+        return {
+            valid: false,
+            error: 'Invalid format',
+            suggestion: 'Example: correct-format',
+            autoFormat: formatValue(value)
+        };
+    }
+
+    return { valid: true };
+}
+```
+
+## Avoid
+
+### Anti-patterns
+- God classes
+- Global state
+- Deep nesting
+- Magic numbers
+- Copy-paste code
+
+### Bad Practices
+- Suppressing errors
+- Hardcoded values
+- Tight coupling
+- No error handling
+- Missing type hints
+
+## Resources
+
+- PSR-12: https://www.php-fig.org/psr/psr-12/
+- WordPress Coding Standards: https://developer.wordpress.org/coding-standards/
+- PHPUnit: https://phpunit.de/documentation.html
+- JavaScript Best Practices: https://github.com/airbnb/javascript
+
+---
+
+**Last Updated**: 2025-10-05
+**Version**: 1.0
