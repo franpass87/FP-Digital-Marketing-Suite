@@ -16,6 +16,7 @@
 declare(strict_types=1);
 
 use FP\DMS\Admin\Menu;
+use FP\DMS\Admin\Support\Ajax\TestConnector;
 use FP\DMS\Cli\Commands;
 use FP\DMS\Http\Routes;
 use FP\DMS\Infra\Activator;
@@ -84,6 +85,7 @@ function fp_dms_bootstrap(): void
     }
 
     Security::registerAdminNotice();
+    TestConnector::register();
     Menu::init();
 }
 add_action('init', 'fp_dms_bootstrap');

@@ -8,6 +8,7 @@ use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
 use FP\DMS\Support\Wp;
 use function __;
+use function apply_filters;
 
 class GA4Provider implements DataSourceProviderInterface
 {
@@ -195,6 +196,15 @@ class GA4Provider implements DataSourceProviderInterface
             return is_string($value) ? $value : '';
         }
 
-        return (string) ($this->auth['service_account'] ?? '');
+        $serviceAccount = (string) ($this->auth['service_account'] ?? '');
+
+        /**
+         * Allow developers to load the GA4 service account JSON from custom locations.
+         *
+         * @param string $serviceAccount JSON payload used to authenticate with GA4.
+         * @param array<string, mixed> $auth Raw authentication data saved with the data source.
+         * @param array<string, mixed> $config Connector configuration for the data source.
+         */
+        return (string) apply_filters('fpdms/connector/ga4/service_account', $serviceAccount, $this->auth, $this->config);
     }
 }
