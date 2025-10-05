@@ -207,65 +207,73 @@ class ClientsPage
         echo '</tbody></table>';
         submit_button($client ? __('Update Client', 'fp-dms') : __('Add Client', 'fp-dms'));
         echo '</form>';
-        echo '<script type="text/javascript">
-        (function($){
-            if (typeof wp === "undefined" || !wp.media) {
-                return;
-            }
-            var frame;
-            var selectButton = $("#fpdms-logo-select");
-            var removeButton = $("#fpdms-logo-remove");
-            var input = $("#fpdms-logo-id");
-            var preview = $("#fpdms-logo-preview");
+        $placeholderText = esc_js(__('No logo selected', 'fp-dms'));
+        $chooseLogoText = esc_js(__('Choose logo', 'fp-dms'));
+        $useImageText = esc_js(__('Use image', 'fp-dms'));
 
-            function renderPreview(url){
-                preview.empty();
-                if (url) {
-                    preview.append($("<img>").attr("src", url).attr("alt", "logo").css({"max-width":"100%","height":"auto"}));
-                } else {
-                    preview.append($("<span>").text(selectButton.data("placeholder")).css({color: '#64748b'}));
-                }
-            }
+        $scriptLines = [
+            '<script type="text/javascript">',
+            '(function($){',
+            '    if (typeof wp === "undefined" || !wp.media) {',
+            '        return;',
+            '    }',
+            '    var frame;',
+            '    var selectButton = $("#fpdms-logo-select");',
+            '    var removeButton = $("#fpdms-logo-remove");',
+            '    var input = $("#fpdms-logo-id");',
+            '    var preview = $("#fpdms-logo-preview");',
+            '',
+            '    function renderPreview(url){',
+            '        preview.empty();',
+            '        if (url) {',
+            '            preview.append($("<img>").attr("src", url).attr("alt", "logo").css({"max-width":"100%","height":"auto"}));',
+            '        } else {',
+            '            preview.append($("<span>").text(selectButton.data("placeholder")).css({color: "#64748b"}));',
+            '        }',
+            '    }',
+            '',
+            "    selectButton.data(\"placeholder\", \"{$placeholderText}\");",
+            '',
+            '    selectButton.on("click", function(e){',
+            '        e.preventDefault();',
+            '        if (frame) {',
+            '            frame.open();',
+            '            return;',
+            '        }',
+            '',
+            '        frame = wp.media({',
+            "            title: \"{$chooseLogoText}\",",
+            "            button: { text: \"{$useImageText}\" },",
+            '            library: { type: "image" },',
+            '            multiple: false',
+            '        });',
+            '',
+            '        frame.on("select", function(){',
+            '            var attachment = frame.state().get("selection").first().toJSON();',
+            '            input.val(attachment.id);',
+            '            var previewUrl = attachment.sizes && attachment.sizes.medium ? attachment.sizes.medium.url : attachment.url;',
+            '            renderPreview(previewUrl);',
+            '            removeButton.show();',
+            '        });',
+            '',
+            '        frame.open();',
+            '    });',
+            '',
+            '    removeButton.on("click", function(e){',
+            '        e.preventDefault();',
+            '        input.val("");',
+            '        renderPreview("");',
+            '        removeButton.hide();',
+            '    });',
+            '',
+            '    if (!input.val()) {',
+            '        renderPreview("");',
+            '    }',
+            '})(jQuery);',
+            '</script>',
+        ];
 
-            selectButton.data("placeholder", "' . esc_js(__('No logo selected', 'fp-dms')) . '");
-
-            selectButton.on("click", function(e){
-                e.preventDefault();
-                if (frame) {
-                    frame.open();
-                    return;
-                }
-
-                frame = wp.media({
-                    title: "' . esc_js(__('Choose logo', 'fp-dms')) . '",
-                    button: { text: "' . esc_js(__('Use image', 'fp-dms')) . '" },
-                    library: { type: "image" },
-                    multiple: false
-                });
-
-                frame.on("select", function(){
-                    var attachment = frame.state().get("selection").first().toJSON();
-                    input.val(attachment.id);
-                    var previewUrl = attachment.sizes && attachment.sizes.medium ? attachment.sizes.medium.url : attachment.url;
-                    renderPreview(previewUrl);
-                    removeButton.show();
-                });
-
-                frame.open();
-            });
-
-            removeButton.on("click", function(e){
-                e.preventDefault();
-                input.val("");
-                renderPreview("");
-                removeButton.hide();
-            });
-
-            if (!input.val()) {
-                renderPreview("");
-            }
-        })(jQuery);
-        </script>';
+        echo implode("\n", $scriptLines);
         echo '</div>';
     }
 
