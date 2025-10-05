@@ -16,6 +16,7 @@ use function is_array;
 use function is_string;
 use function strtolower;
 use function trim;
+use function get_post;
 
 class ClientsRepo
 {
@@ -66,6 +67,7 @@ class ClientsRepo
         global $wpdb;
 
         $now = Wp::currentTime('mysql');
+        $logoId = $this->normalizeLogoId($data['logo_id'] ?? null);
         $payload = [
             'name' => (string) ($data['name'] ?? ''),
             'email_to' => Wp::jsonEncode($this->sanitizeEmailList($data['email_to'] ?? [])) ?: '[]',
@@ -75,8 +77,13 @@ class ClientsRepo
             'created_at' => $now,
             'updated_at' => $now,
         ];
+        $formats = ['%s', '%s', '%s', '%s', '%s', '%s', '%s'];
+        if ($logoId !== null) {
+            $payload['logo_id'] = $logoId;
+            $formats[] = '%d';
+        }
 
-        $inserted = $wpdb->insert($this->table, $payload, ['%s', '%s', '%s', '%s', '%s', '%s', '%s']);
+        $inserted = $wpdb->insert($this->table, $payload, $formats);
         if ($inserted === false) {
             return null;
         }
@@ -100,6 +107,8 @@ class ClientsRepo
         $timezoneInput = array_key_exists('timezone', $data) ? (string) $data['timezone'] : $current->timezone;
         $timezone = $this->normalizeTimezone($timezoneInput, $current->timezone);
         $notes = array_key_exists('notes', $data) ? (string) $data['notes'] : $current->notes;
+        $logoInput = array_key_exists('logo_id', $data) ? $data['logo_id'] : $current->logoId;
+        $logoId = $this->normalizeLogoId($logoInput);
 
         $emailToInput = array_key_exists('email_to', $data) ? $data['email_to'] : $current->emailTo;
         $emailCcInput = array_key_exists('email_cc', $data) ? $data['email_cc'] : $current->emailCc;
@@ -110,10 +119,11 @@ class ClientsRepo
             'email_cc' => Wp::jsonEncode($this->sanitizeEmailList($emailCcInput)) ?: '[]',
             'timezone' => $timezone,
             'notes' => $notes,
+            'logo_id' => $logoId,
             'updated_at' => Wp::currentTime('mysql'),
         ];
 
-        $result = $wpdb->update($this->table, $payload, ['id' => $id], ['%s', '%s', '%s', '%s', '%s', '%s'], ['%d']);
+        $result = $wpdb->update($this->table, $payload, ['id' => $id], ['%s', '%s', '%s', '%s', '%s', '%d', '%s'], ['%d']);
 
         return $result !== false;
     }
@@ -175,5 +185,20 @@ class ClientsRepo
         } catch (Exception $exception) {
             return $fallback;
         }
+    }
+
+    private function normalizeLogoId(mixed $value): ?int
+    {
+        $id = Wp::absInt($value);
+        if ($id <= 0) {
+            return null;
+        }
+
+        $post = get_post($id);
+        if (! $post || $post->post_type !== 'attachment') {
+            return null;
+        }
+
+        return $id;
     }
 }

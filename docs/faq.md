@@ -12,6 +12,12 @@ Templates live in the WordPress database while generated PDFs are written to the
 ## Can I add a custom data connector?
 Yes. Implement `FP\\DMS\\Services\\Connectors\\DataSourceProviderInterface`, provide the necessary credential form fields, and register the provider via `ProviderFactory`. The admin UI will then expose it when creating or editing data sources.
 
+## Posso evitare di incollare JSON delle credenziali GA4 o GSC?
+Sì. Imposta costanti dedicate in `wp-config.php` (es. `define('FPDMS_GA4_SERVICE_ACCOUNT', '...');`) e selezionale dal menu a tendina "Origine credenziali" quando configuri la sorgente dati. Il plugin leggerà il JSON direttamente dalla costante senza salvarlo nel database.
+
+## Come funziona la libreria di preset per i template?
+La pagina **Template** consente di scegliere un blueprint preconfigurato. Quando selezioni un preset, il modulo viene popolato automaticamente con nome, descrizione e markup HTML di partenza, così puoi personalizzare solo gli elementi necessari prima di salvare.
+
 ## How do anomaly notifications avoid alert fatigue?
 Policies can define thresholds, mute windows, and cooldowns per channel. The notification router deduplicates alerts using transient locks and digest batching so clients only receive actionable updates.
 

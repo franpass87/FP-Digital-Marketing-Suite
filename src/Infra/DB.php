@@ -40,6 +40,7 @@ class DB
                 name VARCHAR(190) NOT NULL,
                 email_to LONGTEXT NULL,
                 email_cc LONGTEXT NULL,
+                logo_id BIGINT UNSIGNED NULL,
                 timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
                 notes LONGTEXT NULL,
                 created_at DATETIME NOT NULL,

@@ -7,6 +7,8 @@ namespace FP\DMS\Admin\Pages;
 use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Entities\Template;
 use FP\DMS\Domain\Repos\TemplatesRepo;
+use FP\DMS\Domain\Templates\TemplateBlueprints;
+use FP\DMS\Domain\Templates\TemplateDraft;
 use FP\DMS\Support\Wp;
 
 class TemplatesPage
@@ -40,21 +42,16 @@ class TemplatesPage
         $post = Wp::unslash($_POST);
         if (! empty($post['fpdms_template_nonce']) && wp_verify_nonce(Wp::sanitizeTextField($post['fpdms_template_nonce'] ?? ''), 'fpdms_save_template')) {
             $id = isset($post['template_id']) ? (int) $post['template_id'] : 0;
-            $data = [
-                'name' => Wp::sanitizeTextField($post['name'] ?? ''),
-                'description' => Wp::sanitizeTextField($post['description'] ?? ''),
-                'content' => Wp::ksesPost($post['content'] ?? ''),
-                'is_default' => ! empty($post['is_default']) ? 1 : 0,
-            ];
+            $draft = TemplateDraft::fromArray($post);
 
             if ($id > 0) {
-                if ($repo->update($id, $data)) {
+                if ($repo->update($id, $draft)) {
                     NoticeStore::enqueue('fpdms_templates', 'fpdms_template_saved', __('Template updated.', 'fp-dms'));
                 } else {
                     NoticeStore::enqueue('fpdms_templates', 'fpdms_template_error', __('Failed to update template.', 'fp-dms'), 'error');
                 }
             } else {
-                $repo->create($data);
+                $repo->create($draft);
                 NoticeStore::enqueue('fpdms_templates', 'fpdms_template_saved', __('Template created.', 'fp-dms'));
             }
 
@@ -93,6 +90,9 @@ class TemplatesPage
         wp_nonce_field('fpdms_save_template', 'fpdms_template_nonce');
         echo '<input type="hidden" name="template_id" value="' . esc_attr((string) ($template->id ?? 0)) . '">';
         echo '<table class="form-table"><tbody>';
+        if (! $template) {
+            self::renderBlueprintSelector();
+        }
         echo '<tr><th scope="row"><label for="fpdms-template-name">' . esc_html__('Name', 'fp-dms') . '</label></th><td><input class="regular-text" id="fpdms-template-name" type="text" name="name" value="' . esc_attr($template->name ?? '') . '" required></td></tr>';
         echo '<tr><th scope="row"><label for="fpdms-template-description">' . esc_html__('Description', 'fp-dms') . '</label></th><td><input class="regular-text" id="fpdms-template-description" type="text" name="description" value="' . esc_attr($template->description ?? '') . '"></td></tr>';
         echo '<tr><th scope="row"><label for="fpdms-template-content">' . esc_html__('Content', 'fp-dms') . '</label></th><td><textarea name="content" id="fpdms-template-content" class="large-text code" rows="12">' . esc_textarea($template->content ?? '') . '</textarea><p class="description">' . esc_html__('Use placeholders like {{client.name}}, {{period.start}}, {{kpi.ga4.users|number}}.', 'fp-dms') . '</p></td></tr>';
@@ -101,6 +101,39 @@ class TemplatesPage
         submit_button($template ? __('Update template', 'fp-dms') : __('Create template', 'fp-dms'));
         echo '</form>';
         echo '</div>';
+    }
+
+    private static function renderBlueprintSelector(): void
+    {
+        $blueprints = TemplateBlueprints::all();
+        if (empty($blueprints)) {
+            return;
+        }
+
+        $options = '<option value="">' . esc_html__('Start from scratch', 'fp-dms') . '</option>';
+        $data = [];
+        foreach ($blueprints as $blueprint) {
+            $options .= '<option value="' . esc_attr($blueprint->key) . '">' . esc_html($blueprint->name) . '</option>';
+            $data[$blueprint->key] = [
+                'name' => $blueprint->name,
+                'description' => $blueprint->description,
+                'content' => $blueprint->content,
+            ];
+        }
+
+        $defaultDescription = esc_html__('Pick a preset to pre-fill the template details with a structured layout.', 'fp-dms');
+        $json = Wp::jsonEncode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
+        if (! is_string($json)) {
+            $json = '{}';
+        }
+
+        echo '<tr><th scope="row"><label for="fpdms-template-blueprint">' . esc_html__('Blueprint', 'fp-dms') . '</label></th><td>';
+        echo '<select id="fpdms-template-blueprint" class="regular-text" style="max-width:320px;">' . $options . '</select>';
+        echo '<p class="description" id="fpdms-template-blueprint-description" data-default="' . esc_attr($defaultDescription) . '">' . $defaultDescription . '</p>';
+        echo '<button type="button" class="button" id="fpdms-apply-template-blueprint" disabled>' . esc_html__('Use preset', 'fp-dms') . '</button>';
+        echo '</td></tr>';
+
+        echo '<script>(function(){document.addEventListener("DOMContentLoaded",function(){var select=document.getElementById("fpdms-template-blueprint");if(!select){return;}var apply=document.getElementById("fpdms-apply-template-blueprint");var desc=document.getElementById("fpdms-template-blueprint-description");var textarea=document.getElementById("fpdms-template-content");var nameInput=document.getElementById("fpdms-template-name");var descriptionInput=document.getElementById("fpdms-template-description");if(!apply||!desc||!textarea){return;}var blueprints=' . $json . ';var markManual=function(el){if(!el){return;}el.addEventListener("input",function(){if(el.dataset){delete el.dataset.autofilled;}});};markManual(nameInput);markManual(descriptionInput);markManual(textarea);var fillField=function(el,value,force){if(!el){return;}var currentValue=typeof el.value==="string"?el.value:"";var currentTrimmed=typeof currentValue==="string"?currentValue.trim():"";if(force||!currentTrimmed||(el.dataset&&el.dataset.autofilled==="1")){if(currentValue!==value){el.value=value;if(el.dataset){el.dataset.autofilled="1";}if(el===textarea){el.dispatchEvent(new Event("input",{bubbles:true}));}}else if(el.dataset){el.dataset.autofilled="1";}}};var applyPreset=function(force){var key=select.value;if(!key||!blueprints[key]){return;}var preset=blueprints[key];fillField(nameInput,preset.name,force);fillField(descriptionInput,preset.description,force);fillField(textarea,preset.content,force);};var updateDescription=function(){var key=select.value;if(key&&blueprints[key]){desc.textContent=blueprints[key].description;apply.disabled=false;applyPreset(false);}else{desc.textContent=desc.dataset.default||"";apply.disabled=true;}};select.addEventListener("change",updateDescription);apply.addEventListener("click",function(){applyPreset(true);});updateDescription();});})();</script>';
     }
 
     /**

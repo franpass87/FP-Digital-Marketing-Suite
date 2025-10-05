@@ -15,6 +15,7 @@ use FP\DMS\Domain\Repos\DataSourcesRepo;
 use FP\DMS\Domain\Repos\ReportsRepo;
 use FP\DMS\Domain\Repos\SchedulesRepo;
 use FP\DMS\Domain\Repos\TemplatesRepo;
+use FP\DMS\Domain\Templates\TemplateBlueprints;
 use FP\DMS\Services\Connectors\DataSourceProviderInterface;
 use FP\DMS\Services\Connectors\ProviderFactory;
 use FP\DMS\Services\Anomalies\Detector;
@@ -144,7 +145,16 @@ class Queue
             $template = $templates->findDefault();
         }
         if (! $template) {
-            $template = new \FP\DMS\Domain\Entities\Template(null, 'Default', 'Auto generated', '<div class="kpi-grid">{{client.name}}</div>', true, Wp::currentTime('mysql'), Wp::currentTime('mysql'));
+            $draft = TemplateBlueprints::defaultDraft();
+            $template = new \FP\DMS\Domain\Entities\Template(
+                null,
+                $draft->name,
+                $draft->description,
+                $draft->content,
+                true,
+                Wp::currentTime('mysql'),
+                Wp::currentTime('mysql')
+            );
         }
 
         $providers = self::buildProviders($dataSources->forClient($client->id ?? 0));

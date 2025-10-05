@@ -4,8 +4,8 @@ FP Digital Marketing Suite automates marketing performance reporting, anomaly de
 
 ## Key Capabilities
 
-- **Data connectors**: GA4, Google Search Console, Google Ads, Meta Ads CSV, Microsoft Clarity CSV, and generic CSV imports per client.
-- **Report automation**: HTML templates with token replacement rendered to PDF and dispatched according to schedules.
+- **Data connectors**: GA4, Google Search Console, Google Ads, Meta Ads CSV, Microsoft Clarity CSV, and generic CSV imports per client, with credential sources configurable via JSON uploads or constants.
+- **Report automation**: HTML templates with reusable presets, token replacement, and PDF rendering dispatched according to schedules.
 - **Queue reliability**: Dedicated `fpdms_5min` cron interval, queue locking, retention cleanup, and REST fallback tick endpoint.
 - **Anomaly detection**: Combined z-score, EWMA, CUSUM, and seasonal baselines with per-client thresholds and mute windows.
 - **Notifications**: Email with retry/backoff, Slack, Microsoft Teams, Telegram, generic webhooks (with HMAC), and Twilio SMS audit logging.
@@ -13,7 +13,7 @@ FP Digital Marketing Suite automates marketing performance reporting, anomaly de
 
 ## Admin Experience
 
-- Configure clients, data sources, and retention under the FP Suite menu.
+- Configure clients (logo, contact, and retention metadata), data sources, and retention under the FP Suite menu.
 - Manage schedules, templates, and anomaly policies with inline validation and nonce-protected forms.
 - Monitor queue status from the Health page, trigger emergency ticks, and review last run metadata.
 - Use the Overview dashboard for live KPIs, sparklines, connector health, and anomaly highlights.

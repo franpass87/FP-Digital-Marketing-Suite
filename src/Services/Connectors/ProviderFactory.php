@@ -30,18 +30,34 @@ class ProviderFactory
             'ga4' => [
                 'label' => __('Google Analytics 4', 'fp-dms'),
                 'summary' => __('Sync engagement metrics directly from GA4.', 'fp-dms'),
-                'description' => __('Use a service account JSON with access to the GA4 property.', 'fp-dms'),
+                'description' => __('Use a service account JSON with access to the GA4 property or load it from wp-config.', 'fp-dms'),
                 'steps' => [
                     __('Create or reuse a Google Cloud service account with access to the GA4 property.', 'fp-dms'),
                     __('Share the service account email with the property (Admin → Property Access Management).', 'fp-dms'),
+                    __('Optionally define a wp-config constant that contains the JSON if you prefer not to paste it here.', 'fp-dms'),
                     __('Copy the numeric Property ID from GA4 Admin → Property Settings.', 'fp-dms'),
                 ],
                 'fields' => [
                     'auth' => [
+                        'credential_source' => [
+                            'type' => 'select',
+                            'label' => __('Credential Source', 'fp-dms'),
+                            'description' => __('Decide whether to paste the JSON or load it from a wp-config constant.', 'fp-dms'),
+                            'options' => [
+                                'manual' => __('Paste JSON manually', 'fp-dms'),
+                                'constant' => __('Use wp-config constant', 'fp-dms'),
+                            ],
+                            'default' => 'manual',
+                        ],
                         'service_account' => [
                             'type' => 'textarea',
                             'label' => __('Service Account JSON', 'fp-dms'),
                             'description' => __('Paste the entire JSON key for the service account.', 'fp-dms'),
+                        ],
+                        'service_account_constant' => [
+                            'type' => 'text',
+                            'label' => __('wp-config Constant', 'fp-dms'),
+                            'description' => __('Name of the constant (e.g. FPDMS_GA4_JSON) that returns the JSON string.', 'fp-dms'),
                         ],
                     ],
                     'config' => [
@@ -56,18 +72,34 @@ class ProviderFactory
             'gsc' => [
                 'label' => __('Google Search Console', 'fp-dms'),
                 'summary' => __('Bring in organic search queries and clicks.', 'fp-dms'),
-                'description' => __('Provide a service account JSON and the verified site URL.', 'fp-dms'),
+                'description' => __('Provide a service account JSON (or load it from wp-config) and the verified site URL.', 'fp-dms'),
                 'steps' => [
                     __('Generate a service account JSON and add the client email as an owner in Search Console.', 'fp-dms'),
+                    __('Optionally define a wp-config constant that contains the JSON if you prefer not to paste it here.', 'fp-dms'),
                     __('Confirm the property you want to track is verified in the same Search Console account.', 'fp-dms'),
                     __('Copy the exact site URL (including protocol) from the property settings.', 'fp-dms'),
                 ],
                 'fields' => [
                     'auth' => [
+                        'credential_source' => [
+                            'type' => 'select',
+                            'label' => __('Credential Source', 'fp-dms'),
+                            'description' => __('Decide whether to paste the JSON or load it from a wp-config constant.', 'fp-dms'),
+                            'options' => [
+                                'manual' => __('Paste JSON manually', 'fp-dms'),
+                                'constant' => __('Use wp-config constant', 'fp-dms'),
+                            ],
+                            'default' => 'manual',
+                        ],
                         'service_account' => [
                             'type' => 'textarea',
                             'label' => __('Service Account JSON', 'fp-dms'),
                             'description' => __('Paste the JSON key for the Search Console service account.', 'fp-dms'),
+                        ],
+                        'service_account_constant' => [
+                            'type' => 'text',
+                            'label' => __('wp-config Constant', 'fp-dms'),
+                            'description' => __('Name of the constant (e.g. FPDMS_GSC_JSON) that returns the JSON string.', 'fp-dms'),
                         ],
                     ],
                     'config' => [

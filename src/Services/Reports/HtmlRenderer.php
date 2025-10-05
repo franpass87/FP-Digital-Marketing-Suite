@@ -40,7 +40,7 @@ class HtmlRenderer
         }
 
         $color = Wp::sanitizeHexColor($context['branding']['primary_color'] ?? '#1d4ed8') ?: '#1d4ed8';
-        $logo = Wp::escUrl($context['branding']['logo_url'] ?? '');
+        $logo = Wp::escUrl($context['client']['logo_url'] ?? ($context['branding']['logo_url'] ?? ''));
         $footer = Wp::ksesPost($context['branding']['footer_text'] ?? '');
 
         $logoHtml = $logo !== '' ? '<img src="' . $logo . '" alt="logo" style="max-width:200px;">' : '';

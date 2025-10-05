@@ -3,11 +3,11 @@
 ## Core Modules
 
 - **Entry point**: `fp-digital-marketing-suite.php` bootstraps autoloading, registers REST routes, queues, mailer, and admin menu.
-- **Domain entities** (`src/Domain/Entities/*`): value objects for clients, schedules, data sources, templates, anomalies, and report jobs.
+- **Domain entities** (`src/Domain/Entities/*`): value objects for clients, schedules, data sources, templates (with reusable blueprints and drafts), anomalies, and report jobs.
 - **Repositories** (`src/Domain/Repos/*`): encapsulate persistence and hydration of domain entities from custom tables.
 - **Services** (`src/Services/*`):
-  - `Connectors` — providers for GA4, Google Search Console, Google Ads, Meta Ads CSV, Clarity CSV, and generic CSV imports.
-  - `Reports` — builders and HTML/PDF renderers powering scheduled deliverables.
+  - `Connectors` — providers for GA4, Google Search Console, Google Ads, Meta Ads CSV, Clarity CSV, and generic CSV imports, each supporting credential sources (JSON uploads or constants) and scoped validation.
+  - `Reports` — builders and HTML/PDF renderers powering scheduled deliverables, including template blueprints that seed new layouts with curated defaults.
   - `Overview` — cache, assembler, and presenter powering the admin dashboard tiles and sparklines.
   - `Anomalies` — baseline, detector, and engine classes combining statistical methods for alerting.
   - `Qa` — automation runner for seeding fixtures and executing synthetic flows.

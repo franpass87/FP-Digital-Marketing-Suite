@@ -15,6 +15,7 @@ class Client
         public array $emailCc,
         public string $timezone,
         public string $notes,
+        public ?int $logoId,
         public string $createdAt,
         public string $updatedAt,
     ) {
@@ -32,6 +33,7 @@ class Client
             self::decodeEmails($row['email_cc'] ?? '[]'),
             (string) ($row['timezone'] ?? 'UTC'),
             (string) ($row['notes'] ?? ''),
+            self::normalizeLogoId($row['logo_id'] ?? null),
             (string) ($row['created_at'] ?? ''),
             (string) ($row['updated_at'] ?? ''),
         );
@@ -49,6 +51,7 @@ class Client
             'email_cc' => Wp::jsonEncode($this->emailCc) ?: '[]',
             'timezone' => $this->timezone,
             'notes' => $this->notes,
+            'logo_id' => $this->logoId,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
         ];
@@ -65,5 +68,19 @@ class Client
         }
 
         return array_values(array_map('strval', $decoded));
+    }
+
+    private static function normalizeLogoId(mixed $value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $id = (int) $value;
+        if ($id <= 0) {
+            return null;
+        }
+
+        return $id;
     }
 }

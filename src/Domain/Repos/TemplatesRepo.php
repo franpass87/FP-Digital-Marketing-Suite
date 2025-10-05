@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Domain\Repos;
 
 use FP\DMS\Domain\Entities\Template;
+use FP\DMS\Domain\Templates\TemplateDraft;
 use FP\DMS\Infra\DB;
 use FP\DMS\Support\Wp;
 use wpdb;
@@ -50,18 +51,15 @@ class TemplatesRepo
         return is_array($row) ? Template::fromRow($row) : null;
     }
 
-    /**
-     * @param array<string,mixed> $data
-     */
-    public function create(array $data): ?Template
+    public function create(TemplateDraft $draft): ?Template
     {
         global $wpdb;
         $now = Wp::currentTime('mysql');
         $payload = [
-            'name' => (string) ($data['name'] ?? ''),
-            'description' => (string) ($data['description'] ?? ''),
-            'content' => (string) ($data['content'] ?? ''),
-            'is_default' => empty($data['is_default']) ? 0 : 1,
+            'name' => $draft->name,
+            'description' => $draft->description,
+            'content' => $draft->content,
+            'is_default' => $draft->isDefault ? 1 : 0,
             'created_at' => $now,
             'updated_at' => $now,
         ];
@@ -78,10 +76,7 @@ class TemplatesRepo
         return $this->find((int) $wpdb->insert_id);
     }
 
-    /**
-     * @param array<string,mixed> $data
-     */
-    public function update(int $id, array $data): bool
+    public function update(int $id, TemplateDraft $draft): bool
     {
         global $wpdb;
         $current = $this->find($id);
@@ -89,18 +84,11 @@ class TemplatesRepo
             return false;
         }
 
-        $name = array_key_exists('name', $data) ? (string) $data['name'] : $current->name;
-        $description = array_key_exists('description', $data) ? (string) $data['description'] : $current->description;
-        $content = array_key_exists('content', $data) ? (string) $data['content'] : $current->content;
-        $isDefault = array_key_exists('is_default', $data)
-            ? (! empty($data['is_default']) ? 1 : 0)
-            : ($current->isDefault ? 1 : 0);
-
         $payload = [
-            'name' => $name,
-            'description' => $description,
-            'content' => $content,
-            'is_default' => $isDefault,
+            'name' => $draft->name,
+            'description' => $draft->description,
+            'content' => $draft->content,
+            'is_default' => $draft->isDefault ? 1 : 0,
             'updated_at' => Wp::currentTime('mysql'),
         ];
 
