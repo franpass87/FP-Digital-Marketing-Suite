@@ -18,6 +18,7 @@ declare(strict_types=1);
 use FP\DMS\Admin\Menu;
 use FP\DMS\Admin\Support\Ajax\TestConnector;
 use FP\DMS\Cli\Commands;
+use FP\DMS\ConnectionWizardIntegration;
 use FP\DMS\Http\Routes;
 use FP\DMS\Infra\Activator;
 use FP\DMS\Infra\Cron;
@@ -87,5 +88,6 @@ function fp_dms_bootstrap(): void
     Security::registerAdminNotice();
     TestConnector::register();
     Menu::init();
+    ConnectionWizardIntegration::init();
 }
 add_action('init', 'fp_dms_bootstrap');

@@ -23,6 +23,8 @@ class ConnectionAjaxHandler
         add_action('wp_ajax_fpdms_test_connection_live', [self::class, 'handleTestConnection']);
         add_action('wp_ajax_fpdms_discover_resources', [self::class, 'handleDiscoverResources']);
         add_action('wp_ajax_fpdms_validate_field', [self::class, 'handleValidateField']);
+        add_action('wp_ajax_fpdms_wizard_load_step', [self::class, 'handleLoadWizardStep']);
+        add_action('wp_ajax_fpdms_save_connection', [self::class, 'handleSaveConnection']);
     }
 
     /**
@@ -365,5 +367,126 @@ class ConnectionAjaxHandler
             'valid' => true,
             'message' => __('Valid URL format', 'fp-dms'),
         ];
+    }
+
+    /**
+     * Handle loading a specific wizard step.
+     */
+    public static function handleLoadWizardStep(): void
+    {
+        // Verify nonce
+        if (!Security::verifyNonce($_POST['nonce'] ?? '', 'fpdms_connection_wizard')) {
+            wp_send_json_error([
+                'message' => __('Invalid security token', 'fp-dms'),
+            ], 403);
+            return;
+        }
+
+        // Check capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error([
+                'message' => __('Insufficient permissions', 'fp-dms'),
+            ], 403);
+            return;
+        }
+
+        $provider = sanitize_text_field($_POST['provider'] ?? '');
+        $step = isset($_POST['step']) ? intval($_POST['step']) : 0;
+        $dataJson = wp_unslash($_POST['data'] ?? '{}');
+        $data = json_decode($dataJson, true);
+
+        if (!$provider || !is_array($data)) {
+            wp_send_json_error([
+                'message' => __('Invalid request data', 'fp-dms'),
+            ], 400);
+            return;
+        }
+
+        try {
+            $wizard = new \FP\DMS\Admin\ConnectionWizard\ConnectionWizard($provider);
+            $wizard->setCurrentStep($step);
+            $wizard->setData($data);
+
+            $html = $wizard->render();
+
+            wp_send_json_success([
+                'html' => $html,
+                'step' => $step,
+            ]);
+        } catch (\Exception $e) {
+            wp_send_json_error([
+                'message' => __('Failed to load wizard step', 'fp-dms'),
+                'technical_details' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Handle saving a connection from the wizard.
+     */
+    public static function handleSaveConnection(): void
+    {
+        // Verify nonce
+        if (!Security::verifyNonce($_POST['nonce'] ?? '', 'fpdms_connection_wizard')) {
+            wp_send_json_error([
+                'message' => __('Invalid security token', 'fp-dms'),
+            ], 403);
+            return;
+        }
+
+        // Check capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error([
+                'message' => __('Insufficient permissions', 'fp-dms'),
+            ], 403);
+            return;
+        }
+
+        $provider = sanitize_text_field($_POST['provider'] ?? '');
+        $dataJson = wp_unslash($_POST['data'] ?? '{}');
+        $data = json_decode($dataJson, true);
+
+        if (!$provider || !is_array($data)) {
+            wp_send_json_error([
+                'message' => __('Invalid request data', 'fp-dms'),
+            ], 400);
+            return;
+        }
+
+        try {
+            // Extract client ID from data
+            $clientId = isset($data['client_id']) ? intval($data['client_id']) : 0;
+            
+            if ($clientId <= 0) {
+                throw new \RuntimeException(__('Client ID is required', 'fp-dms'));
+            }
+
+            // Prepare the payload for saving
+            $repo = new \FP\DMS\Domain\Repos\DataSourcesRepo();
+            
+            $payload = [
+                'type' => $provider,
+                'client_id' => $clientId,
+                'auth' => $data['auth'] ?? [],
+                'config' => $data['config'] ?? [],
+                'active' => true,
+            ];
+
+            $created = $repo->create($payload);
+
+            if ($created === null) {
+                throw new \RuntimeException(__('Failed to save connection', 'fp-dms'));
+            }
+
+            wp_send_json_success([
+                'message' => __('Connection saved successfully', 'fp-dms'),
+                'data_source_id' => $created->id,
+            ]);
+        } catch (\Exception $e) {
+            wp_send_json_error([
+                'message' => __('Failed to save connection', 'fp-dms'),
+                'technical_details' => $e->getMessage(),
+            ]);
+        }
     }
 }
