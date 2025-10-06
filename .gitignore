@@ -22,3 +22,24 @@ Thumbs.db
 *.otf
 *.woff
 *.woff2
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+.env.testing
+
+# Cache and logs
+storage/logs/*
+storage/cache/*
+!storage/logs/.gitkeep
+!storage/cache/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~

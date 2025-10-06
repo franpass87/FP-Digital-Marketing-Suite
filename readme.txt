@@ -10,6 +10,7 @@ License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.
+Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.
 
 == Description ==
 

@@ -12,9 +12,9 @@
   "scripts": {
     "sync:author": "node tools/sync-author-metadata.js --apply=true",
     "sync:docs": "node tools/sync-author-metadata.js --docs --apply=true",
-    "changelog:from-git": "npx conventional-changelog -p angular -i CHANGELOG.md -s || true"
+    "changelog:from-git": "conventional-changelog -p angular -i CHANGELOG.md -s || true"
   },
   "devDependencies": {
-    "conventional-changelog-cli": "^5.0.0"
+    "conventional-changelog-cli": "^4.1.0"
   }
 }

@@ -1,7 +1,8 @@
 {
   "name": "fp/digital-marketing-suite",
-  "description": "Automates marketing performance reporting, anomaly detection, and multi-channel alerts - standalone application.",
+  "description": "Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.",
   "homepage": "https://francescopasseri.com",
+  "license": "GPL-2.0-or-later",
   "type": "project",
   "authors": [
     {
@@ -55,16 +56,16 @@
   "scripts": {
     "build": [
       "rm -rf vendor",
-      "@composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader",
+      "@composer install --no-dev --prefer-source --no-interaction --optimize-autoloader --ignore-platform-reqs",
       "composer dump-autoload -o --classmap-authoritative"
     ],
     "post-install-cmd": [
-      "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+      "@php -r \"file_exists('.env') || copy('env.example', '.env');\""
     ],
     "serve": "php -S localhost:8080 -t public",
     "db:migrate": "php cli.php db:migrate",
     "sync:author": "node tools/sync-author-metadata.js --apply=true",
     "sync:docs": "node tools/sync-author-metadata.js --docs --apply=true",
-    "changelog:from-git": "npx conventional-changelog -p angular -i CHANGELOG.md -s || true"
+    "changelog:from-git": "conventional-changelog -p angular -i CHANGELOG.md -s || true"
   }
 }
