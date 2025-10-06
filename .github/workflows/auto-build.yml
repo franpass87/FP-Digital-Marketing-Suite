@@ -1,0 +1,164 @@
+name: Auto-Build Plugin ZIP
+
+on:
+  push:
+    branches:
+      - '**'  # Trigger on all branches
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  auto-build:
+    name: Build Plugin ZIP (Auto)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Validate PHP syntax
+        run: |
+          set -e
+          echo "Validating PHP syntax..."
+          find . -type f -name "*.php" -not -path "./vendor/*" -not -path "./build/*" | while read file; do
+            php -l "$file" || exit 1
+          done
+          echo "✅ All PHP files are valid"
+
+      - name: Validate composer.json
+        run: |
+          if [[ -f composer.json ]]; then
+            composer validate --no-check-all
+          fi
+
+      - name: Install Composer dependencies
+        run: |
+          if [[ -f composer.json ]]; then
+            composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+            composer dump-autoload -o --classmap-authoritative
+          fi
+
+      - name: Get plugin version
+        id: version
+        run: |
+          VERSION=$(grep -oP '^\s*\*\s*Version:\s*\K[^\s]+' fp-digital-marketing-suite.php | head -n1)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Detected version: ${VERSION}"
+
+      - name: Get branch name
+        id: branch
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          BRANCH_NAME_CLEAN=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9_-]/-/g')
+          echo "name=${BRANCH_NAME_CLEAN}" >> $GITHUB_OUTPUT
+          echo "Branch: ${BRANCH_NAME_CLEAN}"
+
+      - name: Build plugin ZIP
+        run: |
+          set -e
+          
+          BUILD_DIR="build/fp-digital-marketing-suite"
+          ZIP_NAME="fp-digital-marketing-suite-${{ steps.version.outputs.version }}-${{ steps.branch.outputs.name }}.zip"
+          
+          # Clean build directory
+          rm -rf build
+          mkdir -p "$BUILD_DIR"
+          
+          # Copy files excluding development files
+          rsync -a \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'tests' \
+            --exclude 'docs' \
+            --exclude 'node_modules' \
+            --exclude '*.md' \
+            --exclude '.idea' \
+            --exclude '.vscode' \
+            --exclude 'build' \
+            --exclude '.gitattributes' \
+            --exclude '.gitignore' \
+            --exclude '.phpunit.result.cache' \
+            --exclude 'phpunit.xml' \
+            --exclude 'composer.lock' \
+            --exclude 'tools' \
+            --exclude 'build.sh' \
+            ./ "$BUILD_DIR/"
+          
+          # Create ZIP
+          cd build
+          zip -rq "$ZIP_NAME" fp-digital-marketing-suite
+          
+          echo "ZIP_PATH=build/${ZIP_NAME}" >> $GITHUB_ENV
+          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
+          
+          # Show ZIP info
+          echo "✅ Created: ${ZIP_NAME}"
+          ls -lh "$ZIP_NAME"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-zip-${{ steps.branch.outputs.name }}
+          path: ${{ env.ZIP_PATH }}
+          retention-days: 14
+
+      - name: Upload to branch (if on feature branch)
+        if: github.ref != 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "✅ Build completed for branch: ${{ steps.branch.outputs.name }}"
+          echo "📦 Artifact uploaded as: plugin-zip-${{ steps.branch.outputs.name }}"
+          echo "Download from: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Comment on PR (if pull request)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('🤖 Auto-Build')
+            );
+            
+            const body = `🤖 **Auto-Build Complete**
+            
+            ✅ Plugin ZIP built successfully!
+            
+            📦 **Download:** [${process.env.ZIP_NAME}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            
+            🔖 Version: \`${{ steps.version.outputs.version }}\`
+            🌿 Branch: \`${{ steps.branch.outputs.name }}\``;
+            
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            }
