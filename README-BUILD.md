@@ -1,5 +1,15 @@
 # Build & Release Guide
 
+> 💡 **Novità:** Il plugin ora include un **sistema di build automatico**! 
+> 
+> - ✅ Build automatica dopo ogni commit
+> - ✅ Build su GitHub Actions per ogni branch  
+> - ✅ Setup con un comando: `./setup-hooks.sh`
+> 
+> Vedi **[README-AUTO-BUILD.md](README-AUTO-BUILD.md)** per la guida completa.
+
+---
+
 ## Prerequisites
 - PHP 8.2 with the `zip` extension
 - Composer 2.x available in `$PATH`

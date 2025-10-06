@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+#
+# Post-commit hook for auto-building plugin ZIP
+# This hook runs after every commit to keep the ZIP file updated
+#
+
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+BUILD_SCRIPT="${PROJECT_ROOT}/build.sh"
+
+# Check if auto-build is enabled
+AUTO_BUILD_ENABLED=$(git config --get hooks.autobuild || echo "true")
+
+if [[ "$AUTO_BUILD_ENABLED" != "true" ]]; then
+    echo -e "${YELLOW}ℹ Auto-build is disabled. Enable with: git config hooks.autobuild true${NC}"
+    exit 0
+fi
+
+echo -e "${GREEN}🔨 Auto-building plugin ZIP...${NC}"
+
+# Check if build script exists
+if [[ ! -f "$BUILD_SCRIPT" ]]; then
+    echo -e "${RED}❌ Build script not found: $BUILD_SCRIPT${NC}"
+    exit 0
+fi
+
+# Get current branch
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Run build in background to not slow down git
+(
+    cd "$PROJECT_ROOT"
+    
+    # Clean previous builds
+    rm -rf build/*.zip 2>/dev/null || true
+    
+    # Run build script
+    if bash "$BUILD_SCRIPT" 2>&1 | tee /tmp/plugin-build.log; then
+        echo -e "${GREEN}✅ Plugin ZIP built successfully${NC}"
+        
+        # Show ZIP info
+        if ls build/*.zip 1> /dev/null 2>&1; then
+            echo -e "${GREEN}📦 Created:${NC}"
+            ls -lh build/*.zip
+        fi
+    else
+        echo -e "${RED}❌ Build failed. Check /tmp/plugin-build.log for details${NC}"
+    fi
+) &
+
+# Don't wait for background job
+disown
+
+exit 0

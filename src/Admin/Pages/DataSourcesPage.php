@@ -266,6 +266,26 @@ class DataSourcesPage
 
         echo '<div class="card" style="margin-top:20px;padding:20px;max-width:960px;">';
         echo '<h2>' . esc_html($editing ? __('Edit data source', 'fp-dms') : __('Add data source', 'fp-dms')) . '</h2>';
+        
+        if (!$isEditing) {
+            echo '<div style="background: #e7f5ff; border-left: 4px solid #2271b1; padding: 12px 16px; margin: 16px 0;">';
+            echo '<p style="margin: 0 0 8px 0;"><strong>💡 ' . esc_html__('New: Use the Guided Setup Wizard', 'fp-dms') . '</strong></p>';
+            echo '<p style="margin: 0 0 12px 0; font-size: 13px;">' . esc_html__('Our step-by-step wizard makes it easy to configure connections with validation and helpful guidance.', 'fp-dms') . '</p>';
+            echo '<div class="fpdms-wizard-options" style="display: flex; gap: 8px; flex-wrap: wrap;">';
+            foreach ($definitions as $type => $definition) {
+                $wizardUrl = add_query_arg([
+                    'page' => 'fpdms-connection-wizard',
+                    'provider' => $type,
+                    'client' => $clientId,
+                ], admin_url('admin.php'));
+                echo '<a href="' . esc_url($wizardUrl) . '" class="button button-secondary">';
+                echo esc_html(sprintf(__('%s Wizard', 'fp-dms'), $definition['label'] ?? ucfirst($type)));
+                echo '</a>';
+            }
+            echo '</div>';
+            echo '</div>';
+            echo '<p style="text-align: center; margin: 16px 0; color: #666;">' . esc_html__('— or configure manually below —', 'fp-dms') . '</p>';
+        }
         echo '<form method="post" enctype="multipart/form-data">';
         wp_nonce_field('fpdms_manage_datasource', 'fpdms_datasource_nonce');
         echo '<input type="hidden" name="fpdms_datasource_action" value="save">';

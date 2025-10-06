@@ -35,16 +35,23 @@ class ConnectionWizardIntegration
     public static function enqueueAssets(string $hook): void
     {
         // Only load on data sources and wizard pages
-        if (!in_array($hook, ['toplevel_page_fpdms-data-sources', 'fpdms_page_fpdms-connection-wizard'])) {
+        $allowed_hooks = [
+            'toplevel_page_fp-dms-dashboard',
+            'fp-suite_page_fp-dms-datasources',
+            'admin_page_fpdms-connection-wizard'
+        ];
+        
+        if (!in_array($hook, $allowed_hooks, true)) {
             return;
         }
 
-        $version = defined('FPDMS_VERSION') ? FPDMS_VERSION : '1.0.0';
+        $version = defined('FP_DMS_VERSION') ? FP_DMS_VERSION : '1.0.0';
+        $pluginDir = defined('FP_DMS_PLUGIN_DIR') ? FP_DMS_PLUGIN_DIR : dirname(__DIR__);
 
         // Enqueue validator
         wp_enqueue_script(
             'fpdms-connection-validator',
-            plugins_url('assets/js/connection-validator.js', dirname(__FILE__)),
+            plugins_url('assets/js/connection-validator.js', $pluginDir . '/fp-digital-marketing-suite.php'),
             ['jquery'],
             $version,
             true
@@ -53,7 +60,7 @@ class ConnectionWizardIntegration
         // Enqueue wizard
         wp_enqueue_script(
             'fpdms-connection-wizard',
-            plugins_url('assets/js/connection-wizard.js', dirname(__FILE__)),
+            plugins_url('assets/js/connection-wizard.js', $pluginDir . '/fp-digital-marketing-suite.php'),
             ['jquery', 'fpdms-connection-validator'],
             $version,
             true
@@ -62,7 +69,7 @@ class ConnectionWizardIntegration
         // Enqueue styles
         wp_enqueue_style(
             'fpdms-connection-validator',
-            plugins_url('assets/css/connection-validator.css', dirname(__FILE__)),
+            plugins_url('assets/css/connection-validator.css', $pluginDir . '/fp-digital-marketing-suite.php'),
             [],
             $version
         );
@@ -139,9 +146,14 @@ class ConnectionWizardIntegration
         }
 
         $provider = $_GET['provider'] ?? '';
+        $clientId = isset($_GET['client']) ? intval($_GET['client']) : 0;
 
         if (empty($provider)) {
             wp_die(__('Invalid provider specified.', 'fp-dms'));
+        }
+
+        if ($clientId <= 0) {
+            wp_die(__('Invalid client specified. Please select a client first.', 'fp-dms'));
         }
 
         $wizard = new \FP\DMS\Admin\ConnectionWizard\ConnectionWizard($provider);
@@ -151,14 +163,21 @@ class ConnectionWizardIntegration
         $wizard->setCurrentStep($step);
 
         // Get saved data from session or query string
-        $data = [];
+        $data = ['client_id' => $clientId];
         if (isset($_GET['data'])) {
-            $data = json_decode(stripslashes($_GET['data']), true) ?: [];
+            $savedData = json_decode(stripslashes($_GET['data']), true) ?: [];
+            $data = array_merge($data, $savedData);
         }
         $wizard->setData($data);
 
         ?>
         <div class="wrap">
+            <h1><?php 
+                printf(
+                    esc_html__('%s Connection Wizard', 'fp-dms'),
+                    esc_html(ucfirst($provider))
+                );
+            ?></h1>
             <?php echo $wizard->render(); ?>
         </div>
         <?php
