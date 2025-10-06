@@ -1,13 +1,13 @@
-# FP Digital Marketing Suite - Creazione Installer .EXE Diretto
-# Questo script crea direttamente un installer .exe senza file .bat intermedi
+# FP Digital Marketing Suite - Fix Installer .EXE
+# Versione corretta e semplificata
 
 param(
-    [string]$OutputPath = ".\build\installer-exe"
+    [string]$OutputPath = ".\build\installer-exe-fixed"
 )
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "FP DIGITAL MARKETING SUITE" -ForegroundColor Cyan
-Write-Host "CREAZIONE INSTALLER .EXE DIRETTO" -ForegroundColor Cyan
+Write-Host "FIX INSTALLER .EXE" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -23,34 +23,14 @@ Set-Location $OutputPath
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "STEP 1: Download Inno Setup" -ForegroundColor Cyan
+Write-Host "Creazione script Inno Setup corretto" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Download Inno Setup
-$innoSetupUrl = "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe"
-$innoSetupFile = "innosetup-installer.exe"
-
-Write-Host "Scaricando Inno Setup..." -ForegroundColor Green
-try {
-    Invoke-WebRequest -Uri $innoSetupUrl -OutFile $innoSetupFile -UseBasicParsing
-    Write-Host "Inno Setup scaricato con successo!" -ForegroundColor Green
-} catch {
-    Write-Host "ERRORE: Download Inno Setup fallito!" -ForegroundColor Red
-    Write-Host "Controlla la connessione internet e riprova." -ForegroundColor Red
-    exit 1
-}
-
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "STEP 2: Creazione script Inno Setup" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
-
-# Crea script Inno Setup
+# Crea script Inno Setup corretto e semplificato
 $innoScript = @"
 ; FP Digital Marketing Suite - Installer Script
-; Generato automaticamente
+; Versione corretta e semplificata
 
 #define MyAppName "FP Digital Marketing Suite"
 #define MyAppVersion "1.0.0"
@@ -59,8 +39,6 @@ $innoScript = @"
 #define MyAppExeName "FP-DMS.exe"
 
 [Setup]
-; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
-; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{F1A2B3C4-D5E6-F7G8-H9I0-J1K2L3M4N5O6}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
@@ -72,7 +50,6 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=
 OutputDir=.
 OutputBaseFilename=FP-DMS-Installer
 SetupIconFile=
@@ -88,7 +65,7 @@ Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+; File che verranno scaricati durante l'installazione
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
@@ -103,9 +80,13 @@ procedure CurStepChanged(CurStep: TSetupStep);
 var
   DownloadPage: TDownloadWizardPage;
   TempFile: string;
+  ExtractPath: string;
 begin
   if CurStep = ssPostInstall then
   begin
+    // Crea directory applicazione
+    ExtractPath := ExpandConstant('{app}');
+    
     // Download PHP Desktop
     DownloadPage := CreateDownloadPage(SetupMessage(msgWizardPreparing), SetupMessage(msgPreparingDesc), nil);
     DownloadPage.Add('https://github.com/cztomczak/phpdesktop/releases/download/v57.0/phpdesktop-chrome-57.0-msvc-php-7.4.zip', 'phpdesktop.zip', '');
@@ -113,7 +94,7 @@ begin
     try
       DownloadPage.Show;
       try
-        DownloadPage.Download; // This downloads the files to {tmp}
+        DownloadPage.Download;
       except
         if DownloadPage.AbortedByUser then
           Log('Aborted by user.')
@@ -124,22 +105,29 @@ begin
       DownloadPage.Free;
     end;
     
-    // Extract PHP Desktop
+    // Estrai PHP Desktop
     TempFile := ExpandConstant('{tmp}\phpdesktop.zip');
     ExtractTemporaryFile('phpdesktop.zip');
-    ShellExec('', 'powershell.exe', '-Command "Expand-Archive -Path "' + TempFile + '" -DestinationPath "' + ExpandConstant('{app}') + '" -Force"', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode);
     
-    // Rename executable
+    // Usa PowerShell per estrarre
+    if not Exec('powershell.exe', '-Command "Expand-Archive -Path "' + TempFile + '" -DestinationPath "' + ExtractPath + '" -Force"', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode) then
+    begin
+      SuppressibleMsgBox('Errore durante l''estrazione di PHP Desktop', mbCriticalError, MB_OK, IDOK);
+      Exit;
+    end;
+    
+    // Rinomina eseguibile
     if FileExists(ExpandConstant('{app}\phpdesktop-chrome.exe')) then
       RenameFile(ExpandConstant('{app}\phpdesktop-chrome.exe'), ExpandConstant('{app}\{#MyAppExeName}'));
     
-    // Create application structure
+    // Crea struttura applicazione
     CreateDir(ExpandConstant('{app}\www\public'));
+    CreateDir(ExpandConstant('{app}\www\public\storage'));
     CreateDir(ExpandConstant('{app}\www\public\storage\logs'));
     CreateDir(ExpandConstant('{app}\www\public\storage\uploads'));
     CreateDir(ExpandConstant('{app}\www\public\storage\cache'));
     
-    // Create application files
+    // Crea file applicazione
     CreateApplicationFiles();
   end;
 end;
@@ -150,7 +138,7 @@ var
   SettingsFile: string;
   LauncherFile: string;
 begin
-  // Create index.php
+  // Crea index.php
   IndexFile := ExpandConstant('{app}\www\public\index.php');
   SaveStringToFile(IndexFile, '<?php' + #13#10, False);
   SaveStringToFile(IndexFile, 'session_start();' + #13#10, True);
@@ -175,7 +163,7 @@ begin
   SaveStringToFile(IndexFile, '?>' + #13#10, True);
   SaveStringToFile(IndexFile, '<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><title><?= $config["app_name"] ?> - Dashboard</title><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; } .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); } .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; } .logo h1 { font-size: 24px; margin-bottom: 5px; } .logo p { opacity: 0.9; font-size: 14px; } .user-info { text-align: right; } .user-info p { margin-bottom: 5px; } .btn { background: rgba(255,255,255,0.2); color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; border: 1px solid rgba(255,255,255,0.3); transition: background 0.3s; } .btn:hover { background: rgba(255,255,255,0.3); } .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; } .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; } .stat-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; } .stat-number { font-size: 36px; font-weight: bold; color: #667eea; margin-bottom: 10px; } .stat-label { color: #666; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; } .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; } .feature-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); } .feature-card h3 { color: #667eea; margin-bottom: 15px; } .feature-card p { color: #666; margin-bottom: 20px; line-height: 1.6; } .feature-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block; transition: transform 0.2s; } .feature-btn:hover { transform: translateY(-2px); } .system-info { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-top: 30px; } .system-info h3 { color: #667eea; margin-bottom: 15px; } .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; } .info-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; } .info-label { font-weight: 500; color: #333; } .info-value { color: #666; }</style></head><body><div class="header"><div class="header-content"><div class="logo"><h1><?= $config["app_name"] ?></h1><p>Portable Edition v<?= $config["version"] ?></p></div><div class="user-info"><p>Benvenuto, <?= htmlspecialchars($_SESSION["user_name"]) ?></p><p><?= htmlspecialchars($_SESSION["user_email"]) ?></p><a href="?logout=1" class="btn">Logout</a></div></div></div><div class="container"><div class="stats-grid"><div class="stat-card"><div class="stat-number"><?= $clientsCount ?></div><div class="stat-label">Clienti</div></div><div class="stat-card"><div class="stat-number"><?= $reportsCount ?></div><div class="stat-label">Report</div></div><div class="stat-card"><div class="stat-number"><?= $usersCount ?></div><div class="stat-label">Utenti</div></div></div><div class="features-grid"><div class="feature-card"><h3>Gestione Clienti</h3><p>Gestisci i tuoi clienti, le loro informazioni e i progetti di marketing digitale.</p><a href="#" class="feature-btn">Gestisci Clienti</a></div><div class="feature-card"><h3>Report e Analytics</h3><p>Crea report dettagliati e analisi per i tuoi clienti con grafici e statistiche.</p><a href="#" class="feature-btn">Crea Report</a></div><div class="feature-card"><h3>Configurazione</h3><p>Configura le impostazioni dell''applicazione, utenti e preferenze del sistema.</p><a href="#" class="feature-btn">Configura</a></div></div><div class="system-info"><h3>Informazioni Sistema</h3><div class="info-grid"><div class="info-item"><span class="info-label">Versione</span><span class="info-value"><?= $config["version"] ?></span></div><div class="info-item"><span class="info-label">Modalità</span><span class="info-value">Portable</span></div><div class="info-item"><span class="info-label">Database</span><span class="info-value">SQLite</span></div><div class="info-item"><span class="info-label">PHP Version</span><span class="info-value"><?= PHP_VERSION ?></span></div></div></div></div></body></html>' + #13#10, True);
   
-  // Create settings.json
+  // Crea settings.json
   SettingsFile := ExpandConstant('{app}\settings.json');
   SaveStringToFile(SettingsFile, '{' + #13#10, False);
   SaveStringToFile(SettingsFile, '    "title": "FP Digital Marketing Suite",' + #13#10, True);
@@ -203,7 +191,7 @@ begin
   SaveStringToFile(SettingsFile, '    }' + #13#10, True);
   SaveStringToFile(SettingsFile, '}' + #13#10, True);
   
-  // Create launcher
+  // Crea launcher
   LauncherFile := ExpandConstant('{app}\AVVIA-APPLICAZIONE.bat');
   SaveStringToFile(LauncherFile, '@echo off' + #13#10, False);
   SaveStringToFile(LauncherFile, 'title FP Digital Marketing Suite' + #13#10, True);
@@ -217,30 +205,11 @@ end;
 $innoScriptFile = "FP-DMS-Installer.iss"
 $innoScript | Out-File -FilePath $innoScriptFile -Encoding UTF8
 
-Write-Host "Script Inno Setup creato: $innoScriptFile" -ForegroundColor Green
+Write-Host "Script Inno Setup corretto creato: $innoScriptFile" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "STEP 3: Installazione Inno Setup" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
-
-Write-Host "Installando Inno Setup..." -ForegroundColor Green
-Write-Host "Segui le istruzioni nella finestra di installazione che si apre." -ForegroundColor Yellow
-Write-Host ""
-
-# Avvia installazione Inno Setup
-try {
-    Start-Process -FilePath $innoSetupFile -Wait
-    Write-Host "Inno Setup installato con successo!" -ForegroundColor Green
-} catch {
-    Write-Host "ERRORE: Installazione Inno Setup fallita!" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "STEP 4: Compilazione Installer .EXE" -ForegroundColor Cyan
+Write-Host "Compilazione con Inno Setup esistente" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -262,7 +231,7 @@ foreach ($path in $possiblePaths) {
 
 if ($innoSetupCompiler -eq "") {
     Write-Host "ERRORE: Inno Setup Compiler non trovato!" -ForegroundColor Red
-    Write-Host "Installa Inno Setup manualmente e riprova." -ForegroundColor Red
+    Write-Host "Installa Inno Setup prima e riprova." -ForegroundColor Red
     exit 1
 }
 
@@ -287,14 +256,9 @@ try {
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "STEP 5: Pulizia e Verifica" -ForegroundColor Cyan
+Write-Host "Verifica e Pulizia" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-
-# Rimuovi file temporanei
-if (Test-Path $innoSetupFile) {
-    Remove-Item $innoSetupFile -Force
-}
 
 # Verifica che l'installer sia stato creato
 $installerFile = "FP-DMS-Installer.exe"
@@ -336,53 +300,6 @@ if (Test-Path $installerFile) {
     Write-Host "========================================" -ForegroundColor Green
     Write-Host "PRONTO PER LA DISTRIBUZIONE!" -ForegroundColor Green
     Write-Host "========================================" -ForegroundColor Green
-    
-    # Crea README per distribuzione
-    $readmeContent = @"
-# FP Digital Marketing Suite - Installer
-
-## Installazione
-
-1. Eseguire `FP-DMS-Installer.exe`
-2. Seguire la procedura guidata di installazione
-3. L'installer scaricherà e configurerà tutto automaticamente
-4. Al termine, avviare l'applicazione dal desktop o menu Start
-
-## Primo Accesso
-
-- **Email**: admin@localhost
-- **Password**: admin123
-- **IMPORTANTE**: Cambiare la password dopo il primo accesso!
-
-## Caratteristiche
-
-- ✅ Installer professionale Windows
-- ✅ Download automatico di tutti i componenti
-- ✅ Configurazione automatica
-- ✅ Database SQLite embedded
-- ✅ Interfaccia moderna e intuitiva
-- ✅ Completamente portable
-- ✅ Nessuna conoscenza tecnica richiesta
-
-## Requisiti
-
-- Windows 7 o superiore
-- Connessione internet per il primo download
-- 100MB di spazio libero
-
-## Supporto
-
-- Email: info@francescopasseri.com
-- Web: https://francescopasseri.com
-
-## Licenza
-
-GPLv2 o successiva
-"@
-
-    $readmeContent | Out-File -FilePath "README.txt" -Encoding UTF8
-    
-    Write-Host "Documentazione creata: README.txt" -ForegroundColor Green
     
 } else {
     Write-Host "ERRORE: Installer .exe non trovato!" -ForegroundColor Red
