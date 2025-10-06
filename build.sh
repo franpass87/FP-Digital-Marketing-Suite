@@ -69,6 +69,14 @@ elif [[ "$BUMP_REQUESTED" == true ]]; then
   esac
 fi
 
+# Build assets with npm (if package.json exists)
+if [[ -f "${PROJECT_ROOT}/package.json" ]]; then
+  echo "Building assets with npm..."
+  npm install
+  npm run build
+  echo "✅ Assets built successfully"
+fi
+
 composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 composer dump-autoload -o --classmap-authoritative
 

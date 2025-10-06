@@ -38,6 +38,25 @@ jobs:
           done
           echo "✅ All PHP files are valid"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: |
+          if [[ -f package.json ]]; then
+            npm ci || npm install
+          fi
+
+      - name: Build assets with npm
+        run: |
+          if [[ -f package.json ]]; then
+            npm run build
+            echo "✅ Assets built successfully"
+          fi
+
       - name: Validate composer.json
         run: |
           if [[ -f composer.json ]]; then

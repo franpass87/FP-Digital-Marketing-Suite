@@ -1,0 +1,74 @@
+name: NPM Build Check
+
+on:
+  push:
+    paths:
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    paths:
+      - 'assets/**'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+jobs:
+  npm-build:
+    name: Verify NPM Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Run build
+        run: npm run build
+
+      - name: Verify assets exist
+        run: |
+          echo "Checking assets directory..."
+          ls -la assets/js/
+          ls -la assets/css/
+          
+          # Verify critical files exist
+          test -f assets/js/connection-validator.js || exit 1
+          test -f assets/js/connection-wizard.js || exit 1
+          test -f assets/js/overview.js || exit 1
+          test -f assets/css/connection-validator.css || exit 1
+          test -f assets/css/dashboard.css || exit 1
+          test -f assets/css/overview.css || exit 1
+          
+          echo "✅ All asset files present"
+
+      - name: Check for uncommitted changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "⚠️  Warning: Build created uncommitted changes"
+            git status --porcelain
+            echo ""
+            echo "Consider committing these changes:"
+            echo "  git add assets/"
+            echo "  git commit -m 'Update built assets'"
+          else
+            echo "✅ No uncommitted changes from build"
+          fi
+
+      - name: Summary
+        run: |
+          echo "### NPM Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Assets:**" >> $GITHUB_STEP_SUMMARY
+          echo "- JavaScript: $(find assets/js -name '*.js' | wc -l) files" >> $GITHUB_STEP_SUMMARY
+          echo "- CSS: $(find assets/css -name '*.css' | wc -l) files" >> $GITHUB_STEP_SUMMARY

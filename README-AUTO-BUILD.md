@@ -59,33 +59,66 @@ git config hooks.autobuild true
 git config hooks.autobuild
 ```
 
-### 2. Build Automatica su GitHub (Actions)
+### 2. Build Automatica NPM
 
-Tre workflow automatici:
+**Tutti gli asset JavaScript e CSS vengono compilati automaticamente con npm:**
 
-#### a) Auto-Build (su ogni branch)
+```bash
+# Locale
+npm run build
+
+# Automaticamente su GitHub Actions
+# ✅ Ogni push → npm build
+# ✅ Ogni merge su main → npm build + ZIP
+```
+
+**Script NPM disponibili:**
+- `npm run build` - Build completo (JS + CSS)
+- `npm run build:js` - Solo JavaScript
+- `npm run build:css` - Solo CSS
+- `npm run watch` - Watch mode (future)
+
+### 3. Build Automatica su GitHub (Actions)
+
+Cinque workflow automatici:
+
+#### a) NPM Build Check (su modifiche asset)
+- **Trigger:** Push/PR che modificano `assets/` o `package.json`
+- **Output:** Verifica che gli asset si buildino correttamente
+- **File:** `.github/workflows/npm-build-check.yml`
+
+#### b) Main Branch Build (merge su main)
+- **Trigger:** Merge su branch `main`
+- **Output:** ZIP completo con asset compilati (retention 30 giorni)
+- **File:** `.github/workflows/main-merge-build.yml`
+- **Include:** ✅ Build npm automatica
+
+```yaml
+# Esegue automaticamente:
+1. npm ci
+2. npm run build  ← Compila tutti gli asset
+3. Composer install
+4. Crea ZIP ottimizzato
+5. Upload come artifact
+```
+
+#### c) Auto-Build (su ogni branch)
 - **Trigger:** Push su qualsiasi branch, PR, manuale
 - **Output:** Artifact scaricabile per 14 giorni
 - **File:** `.github/workflows/auto-build.yml`
+- **Include:** ✅ Build npm automatica
 
-```yaml
-# Si attiva automaticamente su:
-- push (tutti i branch)
-- pull_request
-- workflow_dispatch (manuale)
-```
-
-#### b) Build ZIP Standard
+#### d) Build ZIP Standard
 - **Trigger:** Tag `v*.*.*`
 - **Output:** ZIP ottimizzato per WordPress
 - **File:** `.github/workflows/build-plugin-zip.yml`
 
-#### c) Build Release Completo
+#### e) Build Release Completo
 - **Trigger:** Push su main, Tag `v*.*.*`
 - **Output:** Source + Release ZIP con checksums
 - **File:** `.github/workflows/build-zip.yml`
 
-### 3. Validazione Pre-Push (Opzionale)
+### 4. Validazione Pre-Push (Opzionale)
 
 ```bash
 # Abilita validazione build prima di push

@@ -52,6 +52,20 @@ jobs:
           php-version: "8.2"
           coverage: none
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install npm dependencies and build assets
+        run: |
+          if [[ -f package.json ]]; then
+            npm ci || npm install
+            npm run build
+            echo "✅ Assets built with npm"
+          fi
+
       - name: PHP syntax check
         run: |
           set -e

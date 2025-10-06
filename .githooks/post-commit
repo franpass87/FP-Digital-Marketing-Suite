@@ -38,11 +38,17 @@ CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 (
     cd "$PROJECT_ROOT"
     
+    # Build assets with npm first
+    if [[ -f "package.json" ]]; then
+        echo -e "${GREEN}📦 Building assets with npm...${NC}"
+        npm run build 2>&1 | tee -a /tmp/plugin-build.log || true
+    fi
+    
     # Clean previous builds
     rm -rf build/*.zip 2>/dev/null || true
     
     # Run build script
-    if bash "$BUILD_SCRIPT" 2>&1 | tee /tmp/plugin-build.log; then
+    if bash "$BUILD_SCRIPT" 2>&1 | tee -a /tmp/plugin-build.log; then
         echo -e "${GREEN}✅ Plugin ZIP built successfully${NC}"
         
         # Show ZIP info

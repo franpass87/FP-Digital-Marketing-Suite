@@ -1,0 +1,199 @@
+name: Main Branch Build & Artifact
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-archive:
+    name: Build Plugin & Create Artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci || npm install
+
+      - name: Build assets with npm
+        run: |
+          echo "🔨 Building JavaScript and CSS assets..."
+          npm run build
+          echo "✅ Asset build complete"
+
+      - name: Verify built assets
+        run: |
+          echo "Verifying asset files..."
+          test -f assets/js/connection-validator.js || { echo "❌ Missing connection-validator.js"; exit 1; }
+          test -f assets/js/connection-wizard.js || { echo "❌ Missing connection-wizard.js"; exit 1; }
+          test -f assets/js/overview.js || { echo "❌ Missing overview.js"; exit 1; }
+          echo "✅ All JavaScript assets verified"
+          
+          test -f assets/css/connection-validator.css || { echo "❌ Missing connection-validator.css"; exit 1; }
+          test -f assets/css/dashboard.css || { echo "❌ Missing dashboard.css"; exit 1; }
+          test -f assets/css/overview.css || { echo "❌ Missing overview.css"; exit 1; }
+          echo "✅ All CSS assets verified"
+
+      - name: Validate composer.json
+        run: composer validate --no-check-all
+
+      - name: Install Composer dependencies
+        run: |
+          composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
+          composer dump-autoload -o --classmap-authoritative
+
+      - name: Get plugin version
+        id: version
+        run: |
+          VERSION=$(grep -oP '^\s*\*\s*Version:\s*\K[^\s]+' fp-digital-marketing-suite.php | head -n1)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Plugin version: ${VERSION}"
+
+      - name: Build plugin ZIP
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -e
+          
+          BUILD_DIR="build/fp-digital-marketing-suite"
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          ZIP_NAME="fp-digital-marketing-suite-v${VERSION}-main-${TIMESTAMP}.zip"
+          
+          # Clean and create build directory
+          rm -rf build
+          mkdir -p "$BUILD_DIR"
+          
+          # Copy files excluding development files
+          rsync -a \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'tests' \
+            --exclude 'docs' \
+            --exclude 'node_modules' \
+            --exclude '*.md' \
+            --exclude '.idea' \
+            --exclude '.vscode' \
+            --exclude 'build' \
+            --exclude '.gitattributes' \
+            --exclude '.gitignore' \
+            --exclude '.phpunit.result.cache' \
+            --exclude 'phpunit.xml' \
+            --exclude 'composer.lock' \
+            --exclude 'tools' \
+            --exclude 'build.sh' \
+            --exclude 'setup-hooks.sh' \
+            --exclude '.githooks' \
+            --exclude 'package-lock.json' \
+            ./ "$BUILD_DIR/"
+          
+          # Verify assets are in the build
+          echo "Verifying assets in build directory..."
+          test -f "$BUILD_DIR/assets/js/connection-validator.js" || { echo "❌ Assets missing in build"; exit 1; }
+          echo "✅ Assets present in build"
+          
+          # Create ZIP
+          cd build
+          zip -rq "$ZIP_NAME" fp-digital-marketing-suite
+          
+          echo "ZIP_PATH=build/${ZIP_NAME}" >> $GITHUB_ENV
+          echo "ZIP_NAME=${ZIP_NAME}" >> $GITHUB_ENV
+          
+          # Show ZIP info
+          echo "✅ Created: ${ZIP_NAME}"
+          ls -lh "$ZIP_NAME"
+          
+          # Show contents summary
+          echo ""
+          echo "ZIP Contents Summary:"
+          unzip -l "$ZIP_NAME" | grep -E "(\.js|\.css|\.php)$" | wc -l
+          echo "files included"
+
+      - name: Verify ZIP contains built assets
+        run: |
+          echo "Checking ZIP contents for built assets..."
+          unzip -l build/*.zip | grep "assets/js/connection-validator.js" || { echo "❌ JS assets missing in ZIP"; exit 1; }
+          unzip -l build/*.zip | grep "assets/css/connection-validator.css" || { echo "❌ CSS assets missing in ZIP"; exit 1; }
+          echo "✅ Built assets are included in ZIP"
+
+      - name: Generate checksum
+        run: |
+          cd build
+          sha256sum *.zip > checksums.txt
+          cat checksums.txt
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fp-digital-marketing-suite-main-latest
+          path: |
+            build/*.zip
+            build/checksums.txt
+          retention-days: 30
+
+      - name: Create build summary
+        run: |
+          echo "## 🎉 Main Branch Build Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`main\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${GITHUB_SHA:0:7}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** \`$(date -u +"%Y-%m-%d %H:%M:%S UTC")\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Assets Built with NPM" >> $GITHUB_STEP_SUMMARY
+          echo "JavaScript and CSS files have been compiled and included in the ZIP." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Download" >> $GITHUB_STEP_SUMMARY
+          echo "Artifact: \`fp-digital-marketing-suite-main-latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Files:**" >> $GITHUB_STEP_SUMMARY
+          cd build
+          for file in *.zip; do
+            size=$(ls -lh "$file" | awk '{print $5}')
+            echo "- \`$file\` ($size)" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Comment on commit (optional)
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = context.sha;
+            const message = `🤖 **Auto-Build Complete**
+            
+            ✅ Plugin ZIP built and uploaded as artifact
+            
+            📦 **Artifact:** \`fp-digital-marketing-suite-main-latest\`
+            🔖 **Version:** \`${{ steps.version.outputs.version }}\`
+            
+            All JavaScript and CSS assets were built with npm before packaging.
+            
+            [Download from Actions](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`;
+            
+            // You can uncomment this to post a commit comment
+            // github.rest.repos.createCommitComment({
+            //   owner: context.repo.owner,
+            //   repo: context.repo.repo,
+            //   commit_sha: sha,
+            //   body: message
+            // });
