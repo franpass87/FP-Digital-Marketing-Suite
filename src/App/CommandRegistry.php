@@ -24,6 +24,10 @@ class CommandRegistry
         // Database commands
         $this->console->add(new DatabaseMigrateCommand());
 
+        // Scheduler commands
+        $this->console->add(new ScheduleRunCommand());
+        $this->console->add(new ScheduleListCommand());
+
         // Report commands
         $this->console->add(new RunReportCommand());
         $this->console->add(new QueueListCommand());

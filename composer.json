@@ -31,7 +31,8 @@
     "ramsey/uuid": "^4.7",
     "nesbot/carbon": "^2.72",
     "guzzlehttp/guzzle": "^7.8",
-    "firebase/php-jwt": "^6.9"
+    "firebase/php-jwt": "^6.9",
+    "dragonmantank/cron-expression": "^3.3"
   },
   "autoload": {
     "psr-4": {
