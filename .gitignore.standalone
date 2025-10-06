@@ -1,0 +1,41 @@
+# FP Digital Marketing Suite - Standalone Application
+# Add this to .gitignore or merge with existing
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+/vendor/
+composer.lock
+
+# Storage
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/pdfs/*
+!/storage/pdfs/.gitkeep
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+/storage/cache/*
+!/storage/cache/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+/public/build/
+/public/hot
+
+# Temporary files
+*.tmp
+*.log
+*.cache

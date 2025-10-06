@@ -1,8 +1,8 @@
 {
   "name": "fp/digital-marketing-suite",
-  "description": "Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.",
+  "description": "Automates marketing performance reporting, anomaly detection, and multi-channel alerts - standalone application.",
   "homepage": "https://francescopasseri.com",
-  "type": "wordpress-plugin",
+  "type": "project",
   "authors": [
     {
       "name": "Francesco Passeri",
@@ -17,11 +17,25 @@
   },
   "require": {
     "php": ">=8.1",
-    "mpdf/mpdf": "^8.2"
+    "ext-pdo": "*",
+    "ext-json": "*",
+    "ext-mbstring": "*",
+    "mpdf/mpdf": "^8.2",
+    "slim/slim": "^4.12",
+    "slim/psr7": "^1.6",
+    "php-di/php-di": "^7.0",
+    "vlucas/phpdotenv": "^5.5",
+    "symfony/console": "^6.3",
+    "monolog/monolog": "^3.5",
+    "phpmailer/phpmailer": "^6.9",
+    "ramsey/uuid": "^4.7",
+    "nesbot/carbon": "^2.72",
+    "guzzlehttp/guzzle": "^7.8",
+    "firebase/php-jwt": "^6.9"
   },
   "autoload": {
     "psr-4": {
-      "FP\\\\DMS\\\\": "src/"
+      "FP\\DMS\\": "src/"
     }
   },
   "require-dev": {
@@ -43,6 +57,11 @@
       "@composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader",
       "composer dump-autoload -o --classmap-authoritative"
     ],
+    "post-install-cmd": [
+      "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+    ],
+    "serve": "php -S localhost:8080 -t public",
+    "db:migrate": "php cli.php db:migrate",
     "sync:author": "node tools/sync-author-metadata.js --apply=true",
     "sync:docs": "node tools/sync-author-metadata.js --docs --apply=true",
     "changelog:from-git": "npx conventional-changelog -p angular -i CHANGELOG.md -s || true"
