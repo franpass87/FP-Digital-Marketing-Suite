@@ -12,9 +12,12 @@
   "scripts": {
     "sync:author": "node tools/sync-author-metadata.js --apply=true",
     "sync:docs": "node tools/sync-author-metadata.js --docs --apply=true",
-    "changelog:from-git": "conventional-changelog -p angular -i CHANGELOG.md -s || true"
+    "changelog:from-git": "conventional-changelog -p angular -i CHANGELOG.md -s || true",
+    "build:css": "sass assets/scss/main.scss assets/css/main.css --no-source-map",
+    "watch:css": "sass --watch assets/scss/main.scss:assets/css/main.css --no-source-map"
   },
   "devDependencies": {
-    "conventional-changelog-cli": "^4.1.0"
+    "conventional-changelog-cli": "^4.1.0",
+    "sass": "^1.80.0"
   }
 }

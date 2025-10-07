@@ -2,11 +2,7 @@
  * Overview Main Entry Point
  * Inizializza l'applicazione overview con architettura modulare
  */
-import { OverviewState } from './modules/overview/state.js';
-import { DatePresets } from './modules/overview/presets.js';
-import { OverviewAPI } from './modules/overview/api.js';
-import { ChartsRenderer } from './modules/overview/charts.js';
-import { OverviewUI } from './modules/overview/ui.js';
+import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } from './modules/overview/index.js';
 
 (function() {
     // Verify DOM elements

@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: php -S 0.0.0.0:8080 -t public
+    ports:
+      - "8080:8080"
+  tools:
+    build: .
+    working_dir: /app
+    volumes:
+      - ./:/app
+    entrypoint: ["/bin/sh", "-lc"]
+    command: "bash"
+
+

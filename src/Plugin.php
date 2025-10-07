@@ -68,9 +68,16 @@ class ConnectionWizardIntegration
 
         // Enqueue styles
         wp_enqueue_style(
+            'fpdms-main',
+            plugins_url('assets/css/main.css', $pluginDir . '/fp-digital-marketing-suite.php'),
+            [],
+            $version
+        );
+        
+        wp_enqueue_style(
             'fpdms-connection-validator',
             plugins_url('assets/css/connection-validator.css', $pluginDir . '/fp-digital-marketing-suite.php'),
-            [],
+            ['fpdms-main'],
             $version
         );
 

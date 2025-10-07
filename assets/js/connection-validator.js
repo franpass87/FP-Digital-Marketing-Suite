@@ -2,23 +2,21 @@
  * Connection Validator Entry Point
  * Orchestrates all validators with modular architecture
  */
-import { GA4Validator } from './modules/validators/ga4-validator.js';
-import { GoogleAdsValidator } from './modules/validators/google-ads-validator.js';
-import { MetaAdsValidator } from './modules/validators/meta-ads-validator.js';
-import { GSCValidator } from './modules/validators/gsc-validator.js';
-import { ServiceAccountValidator } from './modules/validators/service-account-validator.js';
+import { GA4Validator, GoogleAdsValidator, MetaAdsValidator, GSCValidator, ServiceAccountValidator } from './modules/validators/index.js';
+import { getI18n } from './modules/common/i18n.js';
+import { DEFAULT_DEBOUNCE_MS } from './modules/common/constants.js';
 import { ValidationUI } from './modules/validators/validation-ui.js';
 
 class ConnectionValidator {
     constructor(providerType, options = {}) {
         this.providerType = providerType;
         this.debounceTimer = null;
-        this.debounceDelay = options.debounceDelay || 500;
+        this.debounceDelay = options.debounceDelay || DEFAULT_DEBOUNCE_MS;
         this.ajaxUrl = options.ajaxUrl || window.ajaxurl;
         this.nonce = options.nonce || '';
         
         // Initialize i18n
-        this.i18n = window.fpdmsI18n || {};
+        this.i18n = getI18n({});
         
         // Initialize validators
         this.validators = {

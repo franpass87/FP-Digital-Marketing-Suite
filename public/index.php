@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 
-use DI\Container;
+use DI\ContainerBuilder;
 use Slim\Factory\AppFactory;
 use FP\DMS\App\Bootstrap;
 
@@ -16,8 +16,15 @@ require __DIR__ . '/../vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
 
-// Create DI container
-$container = new Container();
+// Create DI container with autowiring and definitions
+$builder = new ContainerBuilder();
+$definitions = __DIR__ . '/../src/App/di.php';
+if (file_exists($definitions)) {
+    $builder->addDefinitions($definitions);
+}
+$builder->useAutowiring(true);
+$builder->useAnnotations(false);
+$container = $builder->build();
 
 // Set container to create App with DI
 AppFactory::setContainer($container);

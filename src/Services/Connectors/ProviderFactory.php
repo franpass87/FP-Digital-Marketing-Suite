@@ -8,8 +8,45 @@ use function __;
 
 class ProviderFactory
 {
+    /**
+     * @var array<string, callable(array, array): DataSourceProviderInterface>
+     */
+    private static array $registry = [];
+
+    /**
+     * Register or override a provider factory.
+     *
+     * @param string $type
+     * @param callable(array $auth, array $config): DataSourceProviderInterface $factory
+     */
+    public static function register(string $type, callable $factory): void
+    {
+        self::$registry[$type] = $factory;
+    }
+
+    /**
+     * Remove a provider registration.
+     */
+    public static function unregister(string $type): void
+    {
+        unset(self::$registry[$type]);
+    }
+
+    /**
+     * Check if a provider type is registered.
+     */
+    public static function has(string $type): bool
+    {
+        return isset(self::$registry[$type]);
+    }
+
     public static function create(string $type, array $auth, array $config): ?DataSourceProviderInterface
     {
+        if (isset(self::$registry[$type])) {
+            return (self::$registry[$type])($auth, $config);
+        }
+
+        // Fallback to built-in providers to maintain backward compatibility
         return match ($type) {
             'ga4' => new GA4Provider($auth, $config),
             'gsc' => new GSCProvider($auth, $config),

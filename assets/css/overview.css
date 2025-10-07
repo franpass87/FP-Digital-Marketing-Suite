@@ -35,11 +35,7 @@
 .fpdms-trend-card svg{width:100%;height:80px;}
 .fpdms-anomalies-table{width:100%;border-collapse:collapse;}
 .fpdms-anomalies-table th,.fpdms-anomalies-table td{border-bottom:1px solid #e5e7eb;padding:8px;text-align:left;}
-.fpdms-anomaly-badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:999px;font-size:12px;font-weight:600;}
-.fpdms-anomaly-badge[data-variant="critical"]{background:#fde8e8;color:#9b1c1c;}
-.fpdms-anomaly-badge[data-variant="warning"]{background:#fff4ce;color:#924400;}
-.fpdms-anomaly-badge[data-variant="info"]{background:#e0f2ff;color:#0b69a3;}
-.fpdms-anomaly-badge[data-variant="neutral"]{background:#e4e7eb;color:#273444;}
+/* anomaly-badge consolidated into SCSS components */
 .fpdms-status-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
 .fpdms-status-item{border:1px solid #d5d8dc;border-radius:6px;padding:12px;background:#fdfdfd;display:flex;flex-direction:column;gap:6px;}
 .fpdms-status-state{font-weight:700;}

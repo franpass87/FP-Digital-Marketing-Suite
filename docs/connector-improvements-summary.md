@@ -3,8 +3,8 @@
 ## 🔴 Priorità ALTA - Da fare subito
 
 ### 1. Eliminare Duplicazione Codice (GA4 / GSC)
-- **Problema**: ~200 linee di codice duplicato tra GA4Provider e GSCProvider
-- **Soluzione**: Creare classe base `BaseGoogleProvider`
+- **Stato**: COMPLETATO — introdotta `BaseGoogleProvider`, GA4/GSC rifattorizzati
+- **Beneficio**: -200+ linee duplicate, codice più manutenibile
 - **Tempo**: 4-6 ore
 - **Impatto**: ⭐⭐⭐⭐⭐
 
@@ -29,8 +29,8 @@
 - **Impatto**: ⭐⭐⭐⭐⭐
 
 ### 5. ProviderFactory Estensibile
-- **Problema**: Impossibile aggiungere provider custom
-- **Soluzione**: Sistema di registrazione con hook WordPress
+- **Stato**: COMPLETATO — aggiunto `register()/unregister()/has()` e fallback built-in
+- **Nota**: Mantiene retrocompatibilità con factory esistente
 - **Tempo**: 4-6 ore
 - **Impatto**: ⭐⭐⭐⭐
 
@@ -70,7 +70,7 @@
 
 ## Quick Wins (2-4 ore ciascuno)
 
-1. **BaseGoogleProvider per GA4/GSC** → Elimina 200+ linee duplicate
+1. **BaseGoogleProvider per GA4/GSC** → FATTO
 2. **ConnectorException** → Migliora debugging immediatamente  
 3. **Test per GA4Provider** → Previene regressioni
 4. **PHPDoc per fetchMetrics()** → Facilita sviluppo
@@ -93,10 +93,9 @@
 
 ## Checklist Implementazione
 
-### Sprint 1
-- [ ] Creare `BaseGoogleProvider`
-- [ ] Refactoring GA4Provider per estendere base
-- [ ] Refactoring GSCProvider per estendere base
+- [x] Creare `BaseGoogleProvider`
+- [x] Refactoring GA4Provider per estendere base
+- [x] Refactoring GSCProvider per estendere base
 - [ ] Implementare `ConnectorException`
 - [ ] Aggiungere logging strutturato
 
@@ -107,9 +106,8 @@
 - [ ] Test per GA4Provider
 - [ ] Test per GSCProvider
 
-### Sprint 3
-- [ ] Refactoring `ProviderFactory`
-- [ ] Sistema registrazione provider
+- [x] Refactoring `ProviderFactory`
+- [x] Sistema registrazione provider
 - [ ] Hook WordPress per estensioni
 - [ ] Test per GoogleAdsProvider
 - [ ] Sistema validazione unificato

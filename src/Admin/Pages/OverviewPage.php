@@ -71,10 +71,12 @@ class OverviewPage
 
     private static function enqueueAssets(): void
     {
+        $mainUrl = plugins_url('assets/css/main.css', FP_DMS_PLUGIN_FILE);
         $styleUrl = plugins_url('assets/css/overview.css', FP_DMS_PLUGIN_FILE);
         $scriptUrl = plugins_url('assets/js/overview.js', FP_DMS_PLUGIN_FILE);
 
-        wp_enqueue_style('fpdms-overview', $styleUrl, [], FP_DMS_VERSION);
+        wp_enqueue_style('fpdms-main', $mainUrl, [], FP_DMS_VERSION);
+        wp_enqueue_style('fpdms-overview', $styleUrl, ['fpdms-main'], FP_DMS_VERSION);
         wp_enqueue_script('fpdms-overview', $scriptUrl, [], FP_DMS_VERSION, true);
     }
 
@@ -197,7 +199,7 @@ class OverviewPage
 
     private static function renderSummarySection(): void
     {
-        echo '<section class="fpdms-overview-section" aria-labelledby="fpdms-overview-kpis-heading">';
+        echo '<section class="fpdms-section fpdms-overview-section" aria-labelledby="fpdms-overview-kpis-heading">';
         echo '<header>';
         echo '<h2 id="fpdms-overview-kpis-heading">' . esc_html__('Key metrics', 'fp-dms') . '</h2>';
         echo '<div class="fpdms-overview-period" id="fpdms-overview-period"><span id="fpdms-overview-period-label">' . esc_html__('Loading…', 'fp-dms') . '</span><span class="fpdms-overview-spinner">&#x27F3;</span></div>';
@@ -212,7 +214,7 @@ class OverviewPage
 
     private static function renderTrendSection(): void
     {
-        echo '<section class="fpdms-overview-section" aria-labelledby="fpdms-overview-trends-heading">';
+        echo '<section class="fpdms-section fpdms-overview-section" aria-labelledby="fpdms-overview-trends-heading">';
         echo '<header>';
         echo '<h2 id="fpdms-overview-trends-heading">' . esc_html__('Trend snapshots', 'fp-dms') . '</h2>';
         echo '<span class="fpdms-overview-period" id="fpdms-overview-trend-period">' . esc_html__('Daily values over the selected window.', 'fp-dms') . '</span>';
@@ -232,7 +234,7 @@ class OverviewPage
 
     private static function renderAnomaliesSection(): void
     {
-        echo '<section class="fpdms-overview-section" aria-labelledby="fpdms-overview-anomalies-heading">';
+        echo '<section class="fpdms-section fpdms-overview-section" aria-labelledby="fpdms-overview-anomalies-heading">';
         echo '<header>';
         echo '<h2 id="fpdms-overview-anomalies-heading">' . esc_html__('Recent anomalies', 'fp-dms') . '</h2>';
         echo '<span class="fpdms-overview-period" id="fpdms-overview-anomalies-meta">' . esc_html__('Last 10 flagged signals.', 'fp-dms') . '</span>';
@@ -257,7 +259,7 @@ class OverviewPage
 
     private static function renderStatusSection(): void
     {
-        echo '<section class="fpdms-overview-section" aria-labelledby="fpdms-overview-status-heading">';
+        echo '<section class="fpdms-section fpdms-overview-section" aria-labelledby="fpdms-overview-status-heading">';
         echo '<header>';
         echo '<h2 id="fpdms-overview-status-heading">' . esc_html__('Data source status', 'fp-dms') . '</h2>';
         echo '<span class="fpdms-overview-period" id="fpdms-overview-status-meta">' . esc_html__('Connector health at a glance.', 'fp-dms') . '</span>';
@@ -273,7 +275,7 @@ class OverviewPage
 
     private static function renderJobsSection(): void
     {
-        echo '<section class="fpdms-overview-section" aria-labelledby="fpdms-overview-jobs-heading">';
+        echo '<section class="fpdms-section fpdms-overview-section" aria-labelledby="fpdms-overview-jobs-heading">';
         echo '<header>';
         echo '<h2 id="fpdms-overview-jobs-heading">' . esc_html__('Jobs & schedules', 'fp-dms') . '</h2>';
         echo '<span class="fpdms-overview-period">' . esc_html__('Upcoming runs and recently generated reports.', 'fp-dms') . '</span>';

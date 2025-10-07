@@ -17,3 +17,10 @@ spl_autoload_register(static function (string $class): void {
         require_once $path;
     }
 });
+
+if (! function_exists('apply_filters')) {
+    function apply_filters(string $hook_name, $value)
+    {
+        return $value;
+    }
+}

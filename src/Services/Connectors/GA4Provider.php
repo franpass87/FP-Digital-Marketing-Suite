@@ -6,19 +6,18 @@ namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
-use FP\DMS\Support\Wp;
 use function __;
-use function apply_filters;
 
-class GA4Provider implements DataSourceProviderInterface
+class GA4Provider extends BaseGoogleProvider implements DataSourceProviderInterface
 {
     public function __construct(private array $auth, private array $config)
     {
+        parent::__construct($auth, $config);
     }
 
     public function testConnection(): ConnectionResult
     {
-        $json = $this->resolveServiceAccount();
+        $json = $this->resolveServiceAccount('fpdms/connector/ga4/service_account');
         $propertyId = $this->config['property_id'] ?? '';
 
         if (! $json || ! $propertyId) {
@@ -174,37 +173,5 @@ class GA4Provider implements DataSourceProviderInterface
         ];
     }
 
-    private static function normalizeDate(string $value): ?string
-    {
-        $timestamp = strtotime(trim($value));
-        if (! $timestamp) {
-            return null;
-        }
-
-        return Wp::date('Y-m-d', $timestamp);
-    }
-
-    private function resolveServiceAccount(): string
-    {
-        $source = $this->auth['credential_source'] ?? 'manual';
-        if ($source === 'constant') {
-            $constant = $this->auth['service_account_constant'] ?? '';
-            if (! is_string($constant) || $constant === '' || ! defined($constant)) {
-                return '';
-            }
-            $value = constant($constant);
-            return is_string($value) ? $value : '';
-        }
-
-        $serviceAccount = (string) ($this->auth['service_account'] ?? '');
-
-        /**
-         * Allow developers to load the GA4 service account JSON from custom locations.
-         *
-         * @param string $serviceAccount JSON payload used to authenticate with GA4.
-         * @param array<string, mixed> $auth Raw authentication data saved with the data source.
-         * @param array<string, mixed> $config Connector configuration for the data source.
-         */
-        return (string) apply_filters('fpdms/connector/ga4/service_account', $serviceAccount, $this->auth, $this->config);
-    }
+    
 }

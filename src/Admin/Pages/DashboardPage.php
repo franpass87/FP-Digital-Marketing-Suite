@@ -121,7 +121,7 @@ class DashboardPage
             ],
         ];
 
-        echo '<section class="fpdms-dashboard-section">';
+        echo '<section class="fpdms-dashboard-section fpdms-section">';
         echo '<h2>' . esc_html__('Suite summary', 'fp-dms') . '</h2>';
         echo '<div class="fpdms-dashboard-grid">';
 
@@ -148,7 +148,7 @@ class DashboardPage
      */
     private static function renderScheduleCard(?Schedule $schedule, array $clientNames): void
     {
-        echo '<section class="fpdms-dashboard-section">';
+        echo '<section class="fpdms-dashboard-section fpdms-section">';
         echo '<h2>' . esc_html__('Automation status', 'fp-dms') . '</h2>';
         echo '<div class="fpdms-dashboard-schedule-card">';
 
@@ -180,7 +180,7 @@ class DashboardPage
      */
     private static function renderActivity(array $reports, array $anomalies): void
     {
-        echo '<section class="fpdms-dashboard-section">';
+        echo '<section class="fpdms-dashboard-section fpdms-section">';
         echo '<h2>' . esc_html__('Recent activity', 'fp-dms') . '</h2>';
         echo '<div class="fpdms-dashboard-columns">';
 
@@ -263,7 +263,7 @@ class DashboardPage
             ],
         ];
 
-        echo '<section class="fpdms-dashboard-section">';
+        echo '<section class="fpdms-dashboard-section fpdms-section">';
         echo '<h2>' . esc_html__('Quick links', 'fp-dms') . '</h2>';
         echo '<div class="fpdms-dashboard-links">';
         foreach ($links as $link) {

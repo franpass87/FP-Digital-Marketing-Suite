@@ -1,0 +1,46 @@
+@use 'sass:map';
+$colors: (
+  primary: #2271b1,
+  primary-dark: #1b5a8d,
+  success: #116149,
+  warning: #924400,
+  danger: #9b1c1c,
+  info: #2563eb,
+  neutral-900: #1f2933,
+  neutral-700: #4b5563,
+  neutral-600: #6b7280,
+  neutral-500: #9aa5b1,
+  neutral-200: #d5d8dc,
+  neutral-100: #f6f7f7,
+  white: #ffffff
+);
+
+$spacing: (
+  xs: 4px,
+  sm: 8px,
+  md: 12px,
+  lg: 16px,
+  xl: 24px,
+  xxl: 32px
+);
+
+$radius: (
+  sm: 3px,
+  md: 4px,
+  lg: 6px,
+  xl: 8px
+);
+
+@function color($name) {
+  @return map.get($colors, $name);
+}
+
+@function space($name) {
+  @return map.get($spacing, $name);
+}
+
+@function radius($name) {
+  @return map.get($radius, $name);
+}
+
+

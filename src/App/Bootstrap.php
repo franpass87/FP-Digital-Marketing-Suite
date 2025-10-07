@@ -29,33 +29,7 @@ class Bootstrap
             return;
         }
 
-        // Config
-        $this->container->set(Config::class, function () {
-            return new Config();
-        });
-
-        // Logger
-        $this->container->set(LoggerInterface::class, function () {
-            $logger = new MonologLogger('fpdms');
-            $logPath = $_ENV['LOG_PATH'] ?? __DIR__ . '/../../storage/logs';
-            $logger->pushHandler(new StreamHandler($logPath . '/app.log', MonologLogger::INFO));
-            return $logger;
-        });
-
-        // Database
-        $this->container->set(Database::class, function () {
-            return new Database([
-                'driver' => $_ENV['DB_CONNECTION'] ?? 'mysql',
-                'host' => $_ENV['DB_HOST'] ?? 'localhost',
-                'port' => (int) ($_ENV['DB_PORT'] ?? 3306),
-                'database' => $_ENV['DB_DATABASE'] ?? 'fpdms',
-                'username' => $_ENV['DB_USERNAME'] ?? 'root',
-                'password' => $_ENV['DB_PASSWORD'] ?? '',
-                'charset' => $_ENV['DB_CHARSET'] ?? 'utf8mb4',
-                'collation' => $_ENV['DB_COLLATION'] ?? 'utf8mb4_unicode_ci',
-                'prefix' => $_ENV['DB_PREFIX'] ?? 'fpdms_',
-            ]);
-        });
+        // No-op: services are now defined via PHP-DI definitions in src/App/di.php
     }
 
     public function registerMiddleware(App $app): void
