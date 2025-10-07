@@ -8,6 +8,9 @@ import { TemplateSelector } from './template-selector.js';
 import { ValidationHandler } from './validation.js';
 import { StepsManager } from './steps.js';
 
+// Import global classes (defined in connection-validator.js)
+// Note: ConnectionValidator and ValidationUI are loaded globally
+
 export class ConnectionWizard {
     constructor($container) {
         this.$container = $container;

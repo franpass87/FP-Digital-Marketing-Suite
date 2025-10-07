@@ -4,6 +4,8 @@
  */
 import { SELECTORS } from './constants.js';
 
+// Note: ValidationUI is loaded globally from connection-validator.js
+
 export class ValidationHandler {
     constructor($container, validator, provider) {
         this.$container = $container;
