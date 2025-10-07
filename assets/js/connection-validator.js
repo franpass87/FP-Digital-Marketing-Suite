@@ -1,6 +1,5 @@
 /**
  * Real-time connection validator for FPDMS connectors.
- *
  * Provides instant validation feedback as users configure data sources.
  */
 class ConnectionValidator {
@@ -10,6 +9,7 @@ class ConnectionValidator {
         this.debounceDelay = options.debounceDelay || 500;
         this.ajaxUrl = options.ajaxUrl || window.ajaxurl;
         this.nonce = options.nonce || '';
+        this.cache = new Map(); // Cache validation results
     }
 
     /**
@@ -17,31 +17,30 @@ class ConnectionValidator {
      */
     validateGA4PropertyId(value) {
         const input = value.trim();
+        const i18n = window.fpdmsI18n || {};
 
-        if (input === '') {
+        if (!input) {
             return {
                 valid: false,
-                error: window.fpdmsI18n?.propertyIdRequired || 'Property ID is required',
+                error: i18n.propertyIdRequired || 'Property ID is required',
                 severity: 'error'
             };
         }
 
-        // Check format - should be numeric only
         if (!/^\d+$/.test(input)) {
             return {
                 valid: false,
-                error: window.fpdmsI18n?.propertyIdNumeric || 'Property ID must contain only numbers',
-                suggestion: window.fpdmsI18n?.propertyIdExample || 'Example: 123456789',
+                error: i18n.propertyIdNumeric || 'Property ID must contain only numbers',
+                suggestion: i18n.propertyIdExample || 'Example: 123456789',
                 severity: 'error'
             };
         }
 
-        // Check reasonable length
         if (input.length < 6 || input.length > 15) {
             return {
                 valid: false,
-                error: window.fpdmsI18n?.propertyIdLength || 'Property ID seems too short or too long',
-                suggestion: window.fpdmsI18n?.propertyIdCheck || 'Please verify you copied the correct ID',
+                error: i18n.propertyIdLength || 'Property ID seems too short or too long',
+                suggestion: i18n.propertyIdCheck || 'Please verify you copied the correct ID',
                 severity: 'warning'
             };
         }
@@ -54,27 +53,25 @@ class ConnectionValidator {
      */
     validateGoogleAdsCustomerId(value) {
         const input = value.trim();
+        const i18n = window.fpdmsI18n || {};
 
-        if (input === '') {
+        if (!input) {
             return {
                 valid: false,
-                error: window.fpdmsI18n?.customerIdRequired || 'Customer ID is required',
+                error: i18n.customerIdRequired || 'Customer ID is required',
                 severity: 'error'
             };
         }
 
         // Auto-format: add hyphens if missing
-        let formatted = input.replace(/[^0-9]/g, '');
-        if (formatted.length === 10) {
-            formatted = `${formatted.slice(0, 3)}-${formatted.slice(3, 6)}-${formatted.slice(6)}`;
-        }
-
+        const formatted = this._formatCustomerId(input);
         const pattern = /^\d{3}-\d{3}-\d{4}$/;
+
         if (!pattern.test(formatted)) {
             return {
                 valid: false,
-                error: window.fpdmsI18n?.customerIdFormat || 'Invalid Customer ID format',
-                suggestion: window.fpdmsI18n?.customerIdExample || 'Use format: 123-456-7890',
+                error: i18n.customerIdFormat || 'Invalid Customer ID format',
+                suggestion: i18n.customerIdExample || 'Use format: 123-456-7890',
                 autoFormat: formatted !== input ? formatted : null,
                 severity: 'error'
             };
@@ -83,8 +80,16 @@ class ConnectionValidator {
         return {
             valid: true,
             formatted: formatted,
-            message: formatted !== input ? window.fpdmsI18n?.autoFormatted || 'Auto-formatted' : null
+            message: formatted !== input ? i18n.autoFormatted || 'Auto-formatted' : null
         };
+    }
+
+    _formatCustomerId(input) {
+        let formatted = input.replace(/[^0-9]/g, '');
+        if (formatted.length === 10) {
+            formatted = `${formatted.slice(0, 3)}-${formatted.slice(3, 6)}-${formatted.slice(6)}`;
+        }
+        return formatted;
     }
 
     /**
@@ -92,24 +97,24 @@ class ConnectionValidator {
      */
     validateMetaAdsAccountId(value) {
         const input = value.trim();
+        const i18n = window.fpdmsI18n || {};
 
-        if (input === '') {
+        if (!input) {
             return {
                 valid: false,
-                error: window.fpdmsI18n?.accountIdRequired || 'Account ID is required',
+                error: i18n.accountIdRequired || 'Account ID is required',
                 severity: 'error'
             };
         }
 
         const pattern = /^act_[0-9]+$/;
         if (!pattern.test(input)) {
-            // Try to auto-fix: add act_ prefix if missing
             const numericPart = input.replace(/[^0-9]/g, '');
             if (numericPart.length > 0) {
                 return {
                     valid: false,
-                    error: window.fpdmsI18n?.accountIdFormat || 'Account ID must start with "act_"',
-                    suggestion: window.fpdmsI18n?.accountIdExample || 'Example: act_1234567890',
+                    error: i18n.accountIdFormat || 'Account ID must start with "act_"',
+                    suggestion: i18n.accountIdExample || 'Example: act_1234567890',
                     autoFormat: `act_${numericPart}`,
                     severity: 'error'
                 };
@@ -117,8 +122,8 @@ class ConnectionValidator {
 
             return {
                 valid: false,
-                error: window.fpdmsI18n?.accountIdInvalid || 'Invalid Account ID',
-                suggestion: window.fpdmsI18n?.accountIdExample || 'Example: act_1234567890',
+                error: i18n.accountIdInvalid || 'Invalid Account ID',
+                suggestion: i18n.accountIdExample || 'Example: act_1234567890',
                 severity: 'error'
             };
         }
@@ -131,11 +136,12 @@ class ConnectionValidator {
      */
     validateGSCSiteUrl(value) {
         const input = value.trim();
+        const i18n = window.fpdmsI18n || {};
 
-        if (input === '') {
+        if (!input) {
             return {
                 valid: false,
-                error: window.fpdmsI18n?.siteUrlRequired || 'Site URL is required',
+                error: i18n.siteUrlRequired || 'Site URL is required',
                 severity: 'error'
             };
         }
@@ -143,14 +149,13 @@ class ConnectionValidator {
         // Check if it's a valid URL format
         let url;
         try {
-            // Add protocol if missing
             const urlToTest = input.startsWith('http') ? input : `https://${input}`;
             url = new URL(urlToTest);
         } catch (e) {
             return {
                 valid: false,
-                error: window.fpdmsI18n?.siteUrlInvalid || 'Invalid URL format',
-                suggestion: window.fpdmsI18n?.siteUrlExample || 'Example: https://www.example.com',
+                error: i18n.siteUrlInvalid || 'Invalid URL format',
+                suggestion: i18n.siteUrlExample || 'Example: https://www.example.com',
                 severity: 'error'
             };
         }
@@ -161,7 +166,7 @@ class ConnectionValidator {
             return {
                 valid: true,
                 autoFormat: canonical,
-                message: window.fpdmsI18n?.canonicalUrl || 'Suggested canonical format'
+                message: i18n.canonicalUrl || 'Suggested canonical format'
             };
         }
 
@@ -169,17 +174,26 @@ class ConnectionValidator {
     }
 
     /**
-     * Validate Service Account JSON.
+     * Validate Service Account JSON with caching.
      */
     validateServiceAccountJson(json) {
+        const i18n = window.fpdmsI18n || {};
+
         if (!json || json.trim() === '') {
             return {
                 valid: false,
-                error: window.fpdmsI18n?.serviceAccountRequired || 'Service account JSON is required',
+                error: i18n.serviceAccountRequired || 'Service account JSON is required',
                 severity: 'error'
             };
         }
 
+        // Check cache
+        const cacheKey = `sa_${json.substring(0, 50)}`;
+        if (this.cache.has(cacheKey)) {
+            return this.cache.get(cacheKey);
+        }
+
+        let result;
         try {
             const parsed = JSON.parse(json);
 
@@ -188,49 +202,57 @@ class ConnectionValidator {
             const missing = required.filter(k => !parsed[k]);
 
             if (missing.length > 0) {
-                return {
+                result = {
                     valid: false,
-                    error: window.fpdmsI18n?.serviceAccountMissing || 'Missing fields in JSON',
-                    suggestion: `${window.fpdmsI18n?.missingFields || 'Missing'}: ${missing.join(', ')}`,
+                    error: i18n.serviceAccountMissing || 'Missing fields in JSON',
+                    suggestion: `${i18n.missingFields || 'Missing'}: ${missing.join(', ')}`,
                     severity: 'error'
                 };
-            }
-
-            // Check type
-            if (parsed.type !== 'service_account') {
-                return {
+            } else if (parsed.type !== 'service_account') {
+                result = {
                     valid: false,
-                    error: window.fpdmsI18n?.serviceAccountWrongType || 'This is not a service account JSON',
-                    suggestion: window.fpdmsI18n?.downloadCorrectFile || 'Download the correct file from Google Cloud Console',
+                    error: i18n.serviceAccountWrongType || 'This is not a service account JSON',
+                    suggestion: i18n.downloadCorrectFile || 'Download the correct file from Google Cloud Console',
                     severity: 'error'
                 };
+            } else {
+                result = {
+                    valid: true,
+                    info: {
+                        email: parsed.client_email,
+                        project: parsed.project_id,
+                        type: parsed.type
+                    },
+                    message: i18n.validServiceAccount || 'Valid service account'
+                };
             }
-
-            // Extract useful info
-            return {
-                valid: true,
-                info: {
-                    email: parsed.client_email,
-                    project: parsed.project_id,
-                    type: parsed.type
-                },
-                message: window.fpdmsI18n?.validServiceAccount || 'Valid service account'
-            };
-
         } catch (e) {
-            return {
+            result = {
                 valid: false,
-                error: window.fpdmsI18n?.invalidJson || 'Invalid JSON format',
-                suggestion: window.fpdmsI18n?.copyEntireFile || 'Copy the entire file content without modifications',
+                error: i18n.invalidJson || 'Invalid JSON format',
+                suggestion: i18n.copyEntireFile || 'Copy the entire file content without modifications',
                 severity: 'error'
             };
         }
+
+        // Cache result
+        this.cache.set(cacheKey, result);
+        
+        // Limit cache size
+        if (this.cache.size > 10) {
+            const firstKey = this.cache.keys().next().value;
+            this.cache.delete(firstKey);
+        }
+
+        return result;
     }
 
     /**
-     * Test connection live via AJAX.
+     * Test connection live via AJAX with error handling.
      */
     async testConnectionLive(data) {
+        const i18n = window.fpdmsI18n || {};
+        
         try {
             const formData = new FormData();
             formData.append('action', 'fpdms_test_connection_live');
@@ -249,13 +271,12 @@ class ConnectionValidator {
             }
 
             return await response.json();
-
         } catch (error) {
             return {
                 success: false,
                 data: {
-                    title: window.fpdmsI18n?.connectionError || 'Connection Error',
-                    message: error.message || window.fpdmsI18n?.unknownError || 'Unknown error occurred'
+                    title: i18n.connectionError || 'Connection Error',
+                    message: error.message || i18n.unknownError || 'Unknown error occurred'
                 }
             };
         }
@@ -276,6 +297,11 @@ class ConnectionValidator {
      * Get validator function for a specific field.
      */
     getValidatorForField(provider, field) {
+        // Service account validator is common to all Google providers
+        if (field === 'service_account') {
+            return (val) => this.validateServiceAccountJson(val);
+        }
+
         const validators = {
             'ga4': {
                 'property_id': (val) => this.validateGA4PropertyId(val)
@@ -291,12 +317,14 @@ class ConnectionValidator {
             }
         };
 
-        // Service account validator is common to all Google providers
-        if (field === 'service_account') {
-            return (val) => this.validateServiceAccountJson(val);
-        }
-
         return validators[provider]?.[field] || null;
+    }
+
+    /**
+     * Clear cache.
+     */
+    clearCache() {
+        this.cache.clear();
     }
 }
 
@@ -313,8 +341,10 @@ class ValidationUI {
 
         // Remove previous validation classes and messages
         container.classList.remove('fpdms-field--valid', 'fpdms-field--error', 'fpdms-field--warning');
-        const oldMessage = container.querySelector('.fpdms-field-message');
-        if (oldMessage) oldMessage.remove();
+        
+        // Remove old messages efficiently
+        const oldMessages = container.querySelectorAll('.fpdms-field-message, .fpdms-field-info, .fpdms-field-autoformat');
+        oldMessages.forEach(el => el.remove());
 
         // Add new validation state
         if (result.valid) {
@@ -329,7 +359,7 @@ class ValidationUI {
             const severity = result.severity || 'error';
             container.classList.add(`fpdms-field--${severity}`);
             
-            const message = result.error + (result.suggestion ? '<br><small>' + result.suggestion + '</small>' : '');
+            const message = result.error + (result.suggestion ? `<br><small>${result.suggestion}</small>` : '');
             this.showMessage(container, message, severity);
         }
 
@@ -353,13 +383,14 @@ class ValidationUI {
      * Show service account info.
      */
     static showInfo(container, info) {
+        const i18n = window.fpdmsI18n || {};
         const infoEl = document.createElement('div');
         infoEl.className = 'fpdms-field-info';
         infoEl.innerHTML = `
             <div class="fpdms-sa-info">
-                <strong>✅ ${window.fpdmsI18n?.validatedInfo || 'Validated'}:</strong><br>
-                📧 ${info.email}<br>
-                📦 ${info.project}
+                <strong>✅ ${i18n.validatedInfo || 'Validated'}:</strong><br>
+                📧 ${this._escapeHtml(info.email)}<br>
+                📦 ${this._escapeHtml(info.project)}
             </div>
         `;
         container.appendChild(infoEl);
@@ -369,12 +400,13 @@ class ValidationUI {
      * Show auto-format suggestion.
      */
     static showAutoFormat(container, fieldElement, formattedValue) {
+        const i18n = window.fpdmsI18n || {};
         const suggestion = document.createElement('div');
         suggestion.className = 'fpdms-field-autoformat';
         suggestion.innerHTML = `
-            <span>${window.fpdmsI18n?.suggestedFormat || 'Suggested format'}: <code>${formattedValue}</code></span>
+            <span>${i18n.suggestedFormat || 'Suggested format'}: <code>${this._escapeHtml(formattedValue)}</code></span>
             <button type="button" class="fpdms-btn-apply-format button button-small">
-                ${window.fpdmsI18n?.apply || 'Apply'}
+                ${i18n.apply || 'Apply'}
             </button>
         `;
         
@@ -382,7 +414,7 @@ class ValidationUI {
             fieldElement.value = formattedValue;
             fieldElement.dispatchEvent(new Event('input', { bubbles: true }));
             suggestion.remove();
-        });
+        }, { once: true });
 
         container.appendChild(suggestion);
     }
@@ -391,11 +423,12 @@ class ValidationUI {
      * Show loading state during live test.
      */
     static showLoading(container, message = null) {
+        const i18n = window.fpdmsI18n || {};
         const loader = document.createElement('div');
         loader.className = 'fpdms-loading';
         loader.innerHTML = `
             <span class="spinner is-active"></span>
-            <span>${message || window.fpdmsI18n?.testing || 'Testing connection...'}</span>
+            <span>${message || i18n.testing || 'Testing connection...'}</span>
         `;
         container.appendChild(loader);
         return loader;
@@ -407,6 +440,15 @@ class ValidationUI {
     static removeLoading(container) {
         const loader = container.querySelector('.fpdms-loading');
         if (loader) loader.remove();
+    }
+
+    /**
+     * Escape HTML to prevent XSS.
+     */
+    static _escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 }
 
