@@ -1,1 +1,320 @@
-(function(){const root=document.getElementById('fpdms-overview-root');const configEl=document.getElementById('fpdms-overview-config');if(!root||!configEl)return;let config={};try{config=JSON.parse(configEl.textContent||'{}')}catch(error){console.error('FPDMS overview: invalid config',error);return}const DOM={client:document.getElementById('fpdms-overview-client'),presetButtons:Array.from(document.querySelectorAll('[data-fpdms-preset]')),custom:document.getElementById('fpdms-overview-custom'),dateFrom:document.getElementById('fpdms-overview-date-from'),dateTo:document.getElementById('fpdms-overview-date-to'),periodLabel:document.getElementById('fpdms-overview-period-label'),errorBox:document.getElementById('fpdms-overview-error'),errorMessage:document.getElementById('fpdms-overview-error-message'),summary:document.getElementById('fpdms-overview-kpis'),trends:document.getElementById('fpdms-overview-trends-grid'),anomaliesTable:document.querySelector('#fpdms-overview-anomalies tbody'),statusList:document.getElementById('fpdms-overview-status-list'),runButton:document.getElementById('fpdms-overview-action-run'),anomaliesButton:document.getElementById('fpdms-overview-action-anomalies'),actionStatus:document.getElementById('fpdms-overview-action-status'),refreshToggle:document.getElementById('fpdms-overview-refresh-toggle'),refreshSelect:document.getElementById('fpdms-overview-refresh-interval'),lastRefresh:document.getElementById('fpdms-overview-last-refresh')};const presetOptions=DOM.presetButtons.map(btn=>btn.getAttribute('data-fpdms-preset')||'');const refreshIntervals=(Array.isArray(config.refreshIntervals)?config.refreshIntervals.map(i=>parseInt(i,10)).filter(i=>!Number.isNaN(i)&&i>0):[60,120]).length?config.refreshIntervals:[parseInt(config.defaultRefreshInterval,10)||60];const clampInterval=value=>{const fallback=parseInt(config.defaultRefreshInterval,10)||refreshIntervals[0]||60;const seconds=parseInt(value,10);if(Number.isNaN(seconds)||seconds<=0)return fallback;if(refreshIntervals.includes(seconds))return seconds;return refreshIntervals.slice().sort((a,b)=>Math.abs(a-seconds)-Math.abs(b-seconds))[0]||fallback};const state={clientId:DOM.client?.value||'',preset:'last7',customFrom:'',customTo:'',autoRefresh:false,refreshInterval:clampInterval(config.defaultRefreshInterval),lastRefresh:''};let refreshTimer=null;const normalizePreset=value=>presetOptions.includes(value)?value:'last7';const formatTimestamp=value=>{if(!value)return'';const date=new Date(value);return Number.isNaN(date.getTime())?'':date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})};const updateLastRefreshLabel=()=>{if(!DOM.lastRefresh)return;const formatted=formatTimestamp(state.lastRefresh);DOM.lastRefresh.textContent=formatted?(config.i18n?.lastRefresh||'Last refresh at %s').replace('%s',formatted):config.i18n?.lastRefreshNever||'Last refresh: never'};const showRefreshingLabel=()=>{if(DOM.lastRefresh)DOM.lastRefresh.textContent=config.i18n?.refreshing||'Refreshing…'};const setLastRefresh=timestamp=>{state.lastRefresh=timestamp||'';updateLastRefreshLabel()};const clearAutoRefreshTimer=()=>{if(refreshTimer){clearTimeout(refreshTimer);refreshTimer=null}};const scheduleAutoRefresh=()=>{clearAutoRefreshTimer();if(state.autoRefresh){refreshTimer=setTimeout(()=>loadAll(true),clampInterval(state.refreshInterval)*1000)}};const formatDate=date=>{const pad=n=>String(n).padStart(2,'0');return`${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`};const computePresetRange=preset=>{const today=new Date();let from,to;switch(preset){case'last14':to=new Date(today);from=new Date(today);from.setDate(from.getDate()-13);break;case'last28':to=new Date(today);from=new Date(today);from.setDate(from.getDate()-27);break;case'last30':to=new Date(today);from=new Date(today);from.setDate(from.getDate()-29);break;case'this_month':to=new Date(today);from=new Date(today.getFullYear(),today.getMonth(),1);break;case'last_month':const firstDayCurrent=new Date(today.getFullYear(),today.getMonth(),1);to=new Date(firstDayCurrent);to.setDate(0);from=new Date(firstDayCurrent);from.setMonth(from.getMonth()-1);break;default:to=new Date(today);from=new Date(today);from.setDate(from.getDate()-6)}return{from:formatDate(from),to:formatDate(to)}};const computeRange=()=>{if(state.preset==='custom'){const from=state.customFrom?new Date(state.customFrom+'T00:00:00'):null;const to=state.customTo?new Date(state.customTo+'T00:00:00'):null;return{from:from?formatDate(from):'',to:to?formatDate(to):''}}return computePresetRange(state.preset)};const setPreset=(preset,options={})=>{const shouldLoad=options.load!==false;const normalized=normalizePreset(preset);state.preset=normalized;DOM.presetButtons.forEach(btn=>{const isActive=btn.getAttribute('data-fpdms-preset')===normalized;btn.classList.toggle('is-active',isActive);btn.setAttribute('aria-pressed',isActive?'true':'false')});if(DOM.custom)DOM.custom.hidden=normalized!=='custom';if(normalized!=='custom'){if(!options.preserveCustom){state.customFrom='';state.customTo='';if(DOM.dateFrom)DOM.dateFrom.value='';if(DOM.dateTo)DOM.dateTo.value=''}if(shouldLoad)loadAll();return}if(DOM.dateFrom)DOM.dateFrom.value=state.customFrom||'';if(DOM.dateTo)DOM.dateTo.value=state.customTo||'';if(state.customFrom&&state.customTo&&shouldLoad)loadAll()};const showError=message=>{if(!DOM.errorBox||!DOM.errorMessage)return;DOM.errorMessage.textContent=message||config.i18n?.errorGeneric||'Error';DOM.errorBox.classList.add('is-visible')};const clearError=()=>DOM.errorBox?.classList.remove('is-visible');const setActionBusy=(button,busy)=>{if(button){button.classList.toggle('is-busy',!!busy);button.disabled=!!busy}};const showActionStatus=(type,message)=>{if(!DOM.actionStatus)return;DOM.actionStatus.textContent=message||'';if(!message){DOM.actionStatus.classList.remove('is-visible');DOM.actionStatus.removeAttribute('data-status')}else{DOM.actionStatus.classList.add('is-visible');DOM.actionStatus.setAttribute('data-status',type||'info')}};const renderSparkline=(svg,values)=>{if(!svg)return;svg.innerHTML='';if(!Array.isArray(values)||!values.length){const text=document.createElementNS('http://www.w3.org/2000/svg','text');text.setAttribute('x','4');text.setAttribute('y','22');text.setAttribute('fill','#9ca3af');text.textContent=config.i18n?.sparklineFallback||'No data';svg.appendChild(text);return}const max=Math.max(...values);const min=Math.min(...values);const range=max-min||1;const points=values.map((value,index)=>({x:values.length===1?100:(100/(values.length-1))*index,y:40-((value-min)/range*32+4)}));const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',points.map((p,i)=>`${i===0?'M':'L'}${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' '));path.setAttribute('fill','none');path.setAttribute('stroke','#2563eb');path.setAttribute('stroke-width','2');svg.appendChild(path)};const updateSummary=data=>{const summary=data?.summary||data;if(!summary)return;const refreshedAt=summary.refreshed_at||data?.refreshed_at;if(refreshedAt)setLastRefresh(refreshedAt);else if(!state.lastRefresh)setLastRefresh(new Date().toISOString());if(summary.period&&DOM.periodLabel){const{from='',to=''}=summary.period;DOM.periodLabel.textContent=from&&to?`${from} → ${to}`:config.i18n?.loading||''}if(!DOM.summary||!Array.isArray(summary.kpis))return;DOM.summary.querySelectorAll('.fpdms-kpi-card').forEach(card=>{const metric=card.getAttribute('data-metric');const kpi=summary.kpis.find(item=>item.metric===metric);const valueEl=card.querySelector('[data-role="value"]');const deltaEl=card.querySelector('[data-role="delta"]');const previousEl=card.querySelector('[data-role="previous"]');const sparklineSvg=card.querySelector('svg');if(!kpi){if(valueEl)valueEl.textContent='--';if(deltaEl){deltaEl.textContent='0%';deltaEl.setAttribute('data-direction','flat')}if(previousEl)previousEl.textContent=`${config.i18n?.previous||'Previous'}: --`;renderSparkline(sparklineSvg,[]);return}if(valueEl)valueEl.textContent=kpi.formatted_value??kpi.value??'--';if(deltaEl){const delta=kpi.delta||{};deltaEl.textContent=delta.formatted||'0%';deltaEl.setAttribute('data-direction',delta.direction||'flat')}if(previousEl)previousEl.textContent=`${config.i18n?.previous||'Previous'}: ${kpi.formatted_previous||kpi.previous_value||'--'}`;renderSparkline(sparklineSvg,kpi.sparkline||[])});updateTrends(summary)};const updateTrends=summary=>{if(!DOM.trends||!summary?.kpis)return;const kpiIndex=Object.fromEntries(summary.kpis.filter(k=>k?.metric).map(k=>[k.metric,k]));DOM.trends.querySelectorAll('.fpdms-trend-card').forEach(card=>{const metric=card.getAttribute('data-metric');const kpi=kpiIndex[metric];const svg=card.querySelector('svg');const meta=card.querySelector('[data-role="trend-meta"]');if(!kpi){if(meta)meta.textContent=config.i18n?.sparklineFallback||'No data';renderSparkline(svg,[]);return}if(meta)meta.textContent=`${config.i18n?.previous||'Previous'}: ${kpi.formatted_previous||'--'}`;renderSparkline(svg,kpi.sparkline||[])})};const updateStatus=data=>{if(!DOM.statusList)return;DOM.statusList.innerHTML='';const statusUpdated=document.getElementById('fpdms-overview-status-updated');if(statusUpdated){const formatted=data?.checked_at?formatTimestamp(data.checked_at):'';statusUpdated.textContent=formatted?(config.i18n?.statusChecked||'Status checked at %s').replace('%s',formatted):'';statusUpdated.hidden=!formatted}const entries=data?.sources||(Array.isArray(data)?data:[]);if(!entries.length){const placeholder=document.createElement('div');placeholder.className='fpdms-status-item';placeholder.textContent=config.i18n?.noData||'No data available.';DOM.statusList.appendChild(placeholder);return}entries.forEach(entry=>{const item=document.createElement('div');item.className='fpdms-status-item';const label=document.createElement('span');label.className='fpdms-status-label';label.textContent=entry.label||entry.type||'';const state=document.createElement('span');state.className='fpdms-status-state';const stateValue=entry.state||'ok';state.setAttribute('data-state',stateValue);state.textContent=entry.state_label||stateValue.toUpperCase();item.append(label,state);if(entry.message){const message=document.createElement('span');message.className='fpdms-status-message';message.textContent=entry.message;item.appendChild(message)}if(entry.last_updated){const updated=document.createElement('span');updated.className='fpdms-status-updated';updated.textContent=(config.i18n?.statusUpdated||'Last data update: %s').replace('%s',entry.last_updated);item.appendChild(updated)}DOM.statusList.appendChild(item)})};const updateAnomalies=data=>{if(!DOM.anomaliesTable)return;DOM.anomaliesTable.innerHTML='';const items=data?.anomalies||(Array.isArray(data)?data:[]);if(!items.length){const row=document.createElement('tr');const cell=document.createElement('td');cell.colSpan=6;cell.textContent=config.i18n?.noData||'No data available.';row.appendChild(cell);DOM.anomaliesTable.appendChild(row);return}items.slice(0,10).forEach(item=>{const row=document.createElement('tr');const cells=[{className:'fpdms-anomaly-badge',tag:'span',attrs:{'data-variant':item.severity_variant||item.variant||'neutral'},text:item.severity_label||item.severity||'neutral'},{text:item.metric_label||item.metric||''},{text:item.delta_formatted??item.delta??''},{text:item.score??''},{text:item.occurred_at||item.time||''},{html:item.url?`<a href="${item.url}" target="_blank" rel="noopener noreferrer">${config.i18n?.anomalyAction||'Resolve / Note'}</a>`:config.i18n?.anomalyAction||'Resolve / Note'}];cells.forEach(cellData=>{const td=document.createElement('td');if(cellData.tag){const el=document.createElement(cellData.tag);el.className=cellData.className||'';Object.entries(cellData.attrs||{}).forEach(([k,v])=>el.setAttribute(k,v));el.textContent=cellData.text||'';td.appendChild(el)}else if(cellData.html){td.innerHTML=cellData.html}else{td.textContent=cellData.text||''}row.appendChild(td)});DOM.anomaliesTable.appendChild(row)})};const request=(url,params)=>{if(!url)return Promise.resolve({});const endpoint=new URL(url,window.location.origin);if(params)Object.entries(params).forEach(([k,v])=>{if(v)endpoint.searchParams.set(k,v)});return fetch(endpoint.toString(),{credentials:'same-origin',headers:{'X-WP-Nonce':config.nonce||''}}).then(async response=>{if(!response.ok){const payload=await response.json().catch(()=>({}));throw new Error(payload?.message||`HTTP ${response.status}`)}return response.json()})};const postRequest=(url,payload)=>{if(!url)return Promise.reject(new Error('Missing endpoint'));return fetch(url,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-WP-Nonce':config.nonce||''},body:JSON.stringify(payload||{})}).then(async response=>{if(!response.ok){const body=await response.json().catch(()=>({}));throw new Error(body?.message||`HTTP ${response.status}`)}return response.json()})};const loadAll=fromAuto=>{if(!state.clientId)return;clearError();clearAutoRefreshTimer();if(!fromAuto)root.classList.add('is-loading');showRefreshingLabel();const range=computeRange();const summaryParams={client_id:state.clientId,preset:state.preset,auto_refresh:state.autoRefresh?'1':'0',refresh_interval:clampInterval(state.refreshInterval),...(range.from&&{from:range.from}),...(range.to&&{to:range.to})};const anomaliesParams={client_id:state.clientId,...(range.from&&{from:range.from}),...(range.to&&{to:range.to})};const tasks=[request(config.endpoints?.summary,summaryParams).then(updateSummary).catch(error=>{console.error('FPDMS overview summary error',error);showError(error.message)}),request(config.endpoints?.status,{client_id:state.clientId}).then(updateStatus).catch(error=>{console.error('FPDMS overview status error',error);showError(error.message)}),request(config.endpoints?.anomalies,anomaliesParams).then(updateAnomalies).catch(error=>console.warn('FPDMS overview anomalies unavailable',error))];Promise.allSettled(tasks).then(()=>{if(!fromAuto)root.classList.remove('is-loading');updateLastRefreshLabel();scheduleAutoRefresh()})};const prefs=config.preferences||{};if(DOM.client){const preferredClient=prefs.client_id?String(prefs.client_id):'';if(preferredClient){const match=[...DOM.client.options].find(opt=>opt.value===preferredClient);if(match)DOM.client.value=preferredClient}state.clientId=DOM.client.value}state.preset=normalizePreset(prefs.preset||state.preset);state.customFrom=prefs.from||'';state.customTo=prefs.to||'';state.autoRefresh=!!prefs.auto_refresh;state.refreshInterval=clampInterval(prefs.refresh_interval||state.refreshInterval);if(DOM.refreshToggle){DOM.refreshToggle.checked=state.autoRefresh;DOM.refreshToggle.setAttribute('aria-label',config.i18n?.autoRefresh||'Auto-refresh')}if(DOM.refreshSelect){DOM.refreshSelect.value=String(clampInterval(state.refreshInterval));DOM.refreshSelect.disabled=!state.autoRefresh;DOM.refreshSelect.setAttribute('aria-label',config.i18n?.autoRefreshInterval||'Auto-refresh interval')}updateLastRefreshLabel();setPreset(state.preset,{load:false,preserveCustom:true});DOM.client?.addEventListener('change',()=>{state.clientId=DOM.client.value;loadAll()});DOM.presetButtons.forEach(btn=>btn.addEventListener('click',()=>setPreset(btn.getAttribute('data-fpdms-preset')||'last7')));DOM.dateFrom?.addEventListener('change',()=>{state.customFrom=DOM.dateFrom.value;if(state.preset==='custom'&&state.customTo)loadAll()});DOM.dateTo?.addEventListener('change',()=>{state.customTo=DOM.dateTo.value;if(state.preset==='custom'&&state.customFrom)loadAll()});DOM.refreshToggle?.addEventListener('change',()=>{state.autoRefresh=DOM.refreshToggle.checked;if(DOM.refreshSelect)DOM.refreshSelect.disabled=!state.autoRefresh;if(!state.autoRefresh)clearAutoRefreshTimer();loadAll()});DOM.refreshSelect?.addEventListener('change',()=>{const interval=clampInterval(parseInt(DOM.refreshSelect.value,10));state.refreshInterval=interval;DOM.refreshSelect.value=String(interval);loadAll(state.autoRefresh)});DOM.runButton?.addEventListener('click',()=>{if(!state.clientId)return;setActionBusy(DOM.runButton,true);showActionStatus('info',config.i18n?.runPending||'Queuing report…');const range=computeRange();const payload={client_id:state.clientId,process:'now',...(range.from&&{from:range.from}),...(range.to&&{to:range.to})};postRequest(config.actions?.run||config.endpoints?.run,payload).then(()=>{showActionStatus('success',config.i18n?.runQueued||'Report run queued.');loadAll()}).catch(error=>{console.error('FPDMS overview run error',error);showActionStatus('error',error.message||config.i18n?.actionError||'Action failed. Try again.')}).finally(()=>setActionBusy(DOM.runButton,false))});DOM.anomaliesButton?.addEventListener('click',()=>{if(!state.clientId)return;setActionBusy(DOM.anomaliesButton,true);showActionStatus('info',config.i18n?.anomalyRunning||'Evaluating anomalies…');const range=computePresetRange('last30');const payload={client_id:state.clientId,...(range.from&&{from:range.from}),...(range.to&&{to:range.to})};postRequest(config.actions?.anomalies||config.endpoints?.anomalies,payload).then(data=>{const count=data?.count||0;if(data?.anomalies)updateAnomalies(data);const message=count>0?(config.i18n?.anomalyComplete||'Anomaly evaluation found %d signals.').replace('%d',String(count)):config.i18n?.anomalyNone||'No anomalies detected in the last 30 days.';showActionStatus('success',message)}).catch(error=>{console.error('FPDMS overview anomaly evaluation error',error);showActionStatus('error',error.message||config.i18n?.actionError||'Action failed. Try again.')}).finally(()=>setActionBusy(DOM.anomaliesButton,false))});if(state.clientId)loadAll()})();
+/**
+ * Overview Main Entry Point
+ * Inizializza l'applicazione overview con architettura modulare
+ */
+import { OverviewState } from './modules/overview/state.js';
+import { DatePresets } from './modules/overview/presets.js';
+import { OverviewAPI } from './modules/overview/api.js';
+import { ChartsRenderer } from './modules/overview/charts.js';
+import { OverviewUI } from './modules/overview/ui.js';
+
+(function() {
+    // Verify DOM elements
+    const root = document.getElementById('fpdms-overview-root');
+    const configEl = document.getElementById('fpdms-overview-config');
+    
+    if (!root || !configEl) {
+        return;
+    }
+
+    // Parse configuration
+    let config = {};
+    try {
+        config = JSON.parse(configEl.textContent || '{}');
+    } catch (error) {
+        console.error('FPDMS overview: invalid config', error);
+        return;
+    }
+
+    // Cache DOM elements
+    const DOM = {
+        client: document.getElementById('fpdms-overview-client'),
+        presetButtons: Array.from(document.querySelectorAll('[data-fpdms-preset]')),
+        custom: document.getElementById('fpdms-overview-custom'),
+        dateFrom: document.getElementById('fpdms-overview-date-from'),
+        dateTo: document.getElementById('fpdms-overview-date-to'),
+        periodLabel: document.getElementById('fpdms-overview-period-label'),
+        errorBox: document.getElementById('fpdms-overview-error'),
+        errorMessage: document.getElementById('fpdms-overview-error-message'),
+        summary: document.getElementById('fpdms-overview-kpis'),
+        trends: document.getElementById('fpdms-overview-trends-grid'),
+        anomaliesTable: document.querySelector('#fpdms-overview-anomalies tbody'),
+        statusList: document.getElementById('fpdms-overview-status-list'),
+        runButton: document.getElementById('fpdms-overview-action-run'),
+        anomaliesButton: document.getElementById('fpdms-overview-action-anomalies'),
+        actionStatus: document.getElementById('fpdms-overview-action-status'),
+        refreshToggle: document.getElementById('fpdms-overview-refresh-toggle'),
+        refreshSelect: document.getElementById('fpdms-overview-refresh-interval'),
+        lastRefresh: document.getElementById('fpdms-overview-last-refresh')
+    };
+
+    // Initialize modules
+    const presetOptions = DOM.presetButtons.map(btn => btn.getAttribute('data-fpdms-preset') || '');
+    
+    const state = new OverviewState(config);
+    const presets = new DatePresets(presetOptions);
+    const api = new OverviewAPI(config);
+    const charts = new ChartsRenderer(config.i18n);
+    const ui = new OverviewUI(DOM, config, charts);
+
+    // Main data loading function
+    async function loadAll(fromAuto = false) {
+        if (!state.state.clientId) {
+            return;
+        }
+
+        ui.clearError();
+        state.clearAutoRefreshTimer();
+
+        if (!fromAuto) {
+            ui.setLoading(true);
+        }
+        
+        ui.showRefreshingLabel();
+
+        const range = presets.computeRange(
+            state.state.preset,
+            state.state.customFrom,
+            state.state.customTo
+        );
+
+        const summaryParams = {
+            client_id: state.state.clientId,
+            preset: state.state.preset,
+            auto_refresh: state.state.autoRefresh ? '1' : '0',
+            refresh_interval: state.clampInterval(state.state.refreshInterval),
+            ...(range.from && { from: range.from }),
+            ...(range.to && { to: range.to })
+        };
+
+        const anomaliesParams = {
+            client_id: state.state.clientId,
+            ...(range.from && { from: range.from }),
+            ...(range.to && { to: range.to })
+        };
+
+        const tasks = [
+            api.fetchSummary(summaryParams)
+                .then(data => {
+                    ui.updateSummary(data);
+                    
+                    // Update last refresh timestamp
+                    const refreshedAt = data?.refreshed_at || data?.summary?.refreshed_at;
+                    if (refreshedAt) {
+                        state.setLastRefresh(refreshedAt);
+                    } else if (!state.state.lastRefresh) {
+                        state.setLastRefresh(new Date().toISOString());
+                    }
+                })
+                .catch(error => {
+                    console.error('FPDMS overview summary error', error);
+                    ui.showError(error.message);
+                }),
+
+            api.fetchStatus(state.state.clientId)
+                .then(data => ui.updateStatus(data))
+                .catch(error => {
+                    console.error('FPDMS overview status error', error);
+                    ui.showError(error.message);
+                }),
+
+            api.fetchAnomalies(anomaliesParams)
+                .then(data => ui.updateAnomalies(data))
+                .catch(error => {
+                    console.warn('FPDMS overview anomalies unavailable', error);
+                })
+        ];
+
+        await Promise.allSettled(tasks);
+
+        if (!fromAuto) {
+            ui.setLoading(false);
+        }
+        
+        ui.updateLastRefreshLabel(state.state.lastRefresh);
+        state.scheduleAutoRefresh(() => loadAll(true), state.state.refreshInterval);
+    }
+
+    // Preset management
+    function setPreset(preset, options = {}) {
+        const shouldLoad = options.load !== false;
+        const preserveCustom = !!options.preserveCustom;
+        const normalized = presets.normalizePreset(preset);
+        
+        state.updateState({ preset: normalized });
+
+        DOM.presetButtons.forEach(btn => {
+            const isActive = btn.getAttribute('data-fpdms-preset') === normalized;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+
+        if (DOM.custom) {
+            DOM.custom.hidden = normalized !== 'custom';
+        }
+
+        if (normalized !== 'custom') {
+            if (!preserveCustom) {
+                state.updateState({ customFrom: '', customTo: '' });
+                if (DOM.dateFrom) DOM.dateFrom.value = '';
+                if (DOM.dateTo) DOM.dateTo.value = '';
+            }
+            if (shouldLoad) loadAll();
+            return;
+        }
+
+        // Custom preset
+        if (DOM.dateFrom) DOM.dateFrom.value = state.state.customFrom || '';
+        if (DOM.dateTo) DOM.dateTo.value = state.state.customTo || '';
+
+        if (state.state.customFrom && state.state.customTo && shouldLoad) {
+            loadAll();
+        }
+    }
+
+    // Initialize state from preferences
+    const prefs = config.preferences || {};
+    
+    if (DOM.client) {
+        const preferredClient = prefs.client_id ? String(prefs.client_id) : '';
+        if (preferredClient) {
+            const match = [...DOM.client.options].find(opt => opt.value === preferredClient);
+            if (match) DOM.client.value = preferredClient;
+        }
+        state.updateState({ clientId: DOM.client.value });
+    }
+
+    state.loadPreferences(prefs);
+
+    // Initialize UI controls
+    if (DOM.refreshToggle) {
+        DOM.refreshToggle.checked = state.state.autoRefresh;
+        DOM.refreshToggle.setAttribute('aria-label', config.i18n?.autoRefresh || 'Auto-refresh');
+    }
+
+    if (DOM.refreshSelect) {
+        DOM.refreshSelect.value = String(state.clampInterval(state.state.refreshInterval));
+        DOM.refreshSelect.disabled = !state.state.autoRefresh;
+        DOM.refreshSelect.setAttribute('aria-label', config.i18n?.autoRefreshInterval || 'Auto-refresh interval');
+    }
+
+    ui.updateLastRefreshLabel(state.state.lastRefresh);
+    setPreset(state.state.preset, { load: false, preserveCustom: true });
+
+    // Event Listeners
+    DOM.client?.addEventListener('change', () => {
+        state.updateState({ clientId: DOM.client.value });
+        loadAll();
+    });
+
+    DOM.presetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setPreset(btn.getAttribute('data-fpdms-preset') || 'last7');
+        });
+    });
+
+    DOM.dateFrom?.addEventListener('change', () => {
+        state.updateState({ customFrom: DOM.dateFrom.value });
+        if (state.state.preset === 'custom' && state.state.customTo) {
+            loadAll();
+        }
+    });
+
+    DOM.dateTo?.addEventListener('change', () => {
+        state.updateState({ customTo: DOM.dateTo.value });
+        if (state.state.preset === 'custom' && state.state.customFrom) {
+            loadAll();
+        }
+    });
+
+    DOM.refreshToggle?.addEventListener('change', () => {
+        state.updateState({ autoRefresh: DOM.refreshToggle.checked });
+        
+        if (DOM.refreshSelect) {
+            DOM.refreshSelect.disabled = !state.state.autoRefresh;
+        }
+        
+        if (!state.state.autoRefresh) {
+            state.clearAutoRefreshTimer();
+        }
+        
+        loadAll();
+    });
+
+    DOM.refreshSelect?.addEventListener('change', () => {
+        const interval = state.clampInterval(parseInt(DOM.refreshSelect.value, 10));
+        state.updateState({ refreshInterval: interval });
+        DOM.refreshSelect.value = String(interval);
+        loadAll(state.state.autoRefresh);
+    });
+
+    DOM.runButton?.addEventListener('click', async () => {
+        if (!state.state.clientId) return;
+
+        ui.setActionBusy(DOM.runButton, true);
+        ui.showActionStatus('info', config.i18n?.runPending || 'Queuing report…');
+
+        const range = presets.computeRange(
+            state.state.preset,
+            state.state.customFrom,
+            state.state.customTo
+        );
+
+        const payload = {
+            client_id: state.state.clientId,
+            process: 'now',
+            ...(range.from && { from: range.from }),
+            ...(range.to && { to: range.to })
+        };
+
+        try {
+            await api.runReport(payload);
+            ui.showActionStatus('success', config.i18n?.runQueued || 'Report run queued.');
+            loadAll();
+        } catch (error) {
+            console.error('FPDMS overview run error', error);
+            ui.showActionStatus('error', error.message || config.i18n?.actionError || 'Action failed. Try again.');
+        } finally {
+            ui.setActionBusy(DOM.runButton, false);
+        }
+    });
+
+    DOM.anomaliesButton?.addEventListener('click', async () => {
+        if (!state.state.clientId) return;
+
+        ui.setActionBusy(DOM.anomaliesButton, true);
+        ui.showActionStatus('info', config.i18n?.anomalyRunning || 'Evaluating anomalies…');
+
+        const range = presets.computePresetRange('last30');
+        const payload = {
+            client_id: state.state.clientId,
+            ...(range.from && { from: range.from }),
+            ...(range.to && { to: range.to })
+        };
+
+        try {
+            const data = await api.evaluateAnomalies(payload);
+            const count = data?.count || 0;
+            
+            if (data?.anomalies) {
+                ui.updateAnomalies(data);
+            }
+
+            const message = count > 0
+                ? (config.i18n?.anomalyComplete || 'Anomaly evaluation found %d signals.').replace('%d', String(count))
+                : config.i18n?.anomalyNone || 'No anomalies detected in the last 30 days.';
+            
+            ui.showActionStatus('success', message);
+        } catch (error) {
+            console.error('FPDMS overview anomaly evaluation error', error);
+            ui.showActionStatus('error', error.message || config.i18n?.actionError || 'Action failed. Try again.');
+        } finally {
+            ui.setActionBusy(DOM.anomaliesButton, false);
+        }
+    });
+
+    // Initial load
+    if (state.state.clientId) {
+        loadAll();
+    }
+})();
