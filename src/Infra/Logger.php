@@ -46,7 +46,13 @@ class Logger
     public static function logChannel(string $channel, string $message): void
     {
         $upload = Wp::uploadDir();
-        $dir = Wp::trailingSlashIt($upload['basedir']) . 'fpdms-logs';
+        if (! empty($upload['error']) || empty($upload['basedir'])) {
+            // Cannot write logs if upload directory unavailable
+            return;
+        }
+        
+        $baseDir = Wp::normalizePath($upload['basedir']);
+        $dir = Wp::trailingSlashIt($baseDir) . 'fpdms-logs';
 
         try {
             Wp::mkdirP($dir);
@@ -55,7 +61,21 @@ class Logger
         }
 
         $file = Wp::trailingSlashIt($dir) . 'fpdms.log';
+        
+        // Validate path to prevent traversal
+        $realFile = realpath(dirname($file));
+        if ($realFile === false || !str_starts_with($realFile, realpath($baseDir))) {
+            error_log('[FPDMS] Suspicious log path detected, skipping write');
+            return;
+        }
+        
         $line = sprintf('[%s] [%s] %s%s', Wp::date('Y-m-d H:i:s'), strtoupper($channel), $message, PHP_EOL);
-        file_put_contents($file, $line, FILE_APPEND);
+        
+        // Check if file_put_contents succeeds
+        $result = @file_put_contents($file, $line, FILE_APPEND | LOCK_EX);
+        if ($result === false) {
+            // Fallback to error_log if file write fails
+            error_log('[FPDMS] ' . $line);
+        }
     }
 }

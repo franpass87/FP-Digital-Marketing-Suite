@@ -25,6 +25,11 @@ class AnomaliesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} ORDER BY detected_at DESC LIMIT %d", $limit);
+        
+        if ($sql === false) {
+            return [];
+        }
+        
         $rows = $wpdb->get_results($sql, ARRAY_A);
         if (! is_array($rows)) {
             return [];
@@ -40,6 +45,11 @@ class AnomaliesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE client_id = %d ORDER BY detected_at DESC LIMIT %d", $clientId, $limit);
+        
+        if ($sql === false) {
+            return [];
+        }
+        
         $rows = $wpdb->get_results($sql, ARRAY_A);
         if (! is_array($rows)) {
             return [];
@@ -54,24 +64,58 @@ class AnomaliesRepo
         $payloadData = is_array($data['payload'] ?? null) ? $data['payload'] : [];
         $payloadData += ['resolved' => false, 'note' => ''];
 
+        $payloadJson = Wp::jsonEncode($payloadData);
+        if ($payloadJson === false) {
+            error_log('[FPDMS] JSON encode failed for anomaly payload');
+            $payloadJson = '[]';
+        }
+
+        // Build payload with proper NULL handling
         $payload = [
             'client_id' => (int) ($data['client_id'] ?? 0),
             'type' => (string) ($data['type'] ?? ''),
             'severity' => (string) ($data['severity'] ?? 'info'),
-            'payload' => Wp::jsonEncode($payloadData) ?: '[]',
+            'payload' => $payloadJson,
             'detected_at' => (string) ($data['detected_at'] ?? Wp::currentTime('mysql')),
             'notified' => empty($data['notified']) ? 0 : 1,
-            'algo' => isset($data['algo']) ? (string) $data['algo'] : null,
-            'score' => isset($data['score']) ? (float) $data['score'] : null,
-            'expected' => isset($data['expected']) ? (float) $data['expected'] : null,
-            'actual' => isset($data['actual']) ? (float) $data['actual'] : null,
-            'baseline' => isset($data['baseline']) ? (float) $data['baseline'] : null,
-            'z' => isset($data['z']) ? (float) $data['z'] : null,
-            'p_value' => isset($data['p_value']) ? (float) $data['p_value'] : null,
-            'window' => isset($data['window']) ? (int) $data['window'] : null,
         ];
+        
+        $formats = ['%d', '%s', '%s', '%s', '%s', '%d'];
+        
+        // Add nullable fields only if they have values
+        if (isset($data['algo'])) {
+            $payload['algo'] = (string) $data['algo'];
+            $formats[] = '%s';
+        }
+        if (isset($data['score'])) {
+            $payload['score'] = (float) $data['score'];
+            $formats[] = '%f';
+        }
+        if (isset($data['expected'])) {
+            $payload['expected'] = (float) $data['expected'];
+            $formats[] = '%f';
+        }
+        if (isset($data['actual'])) {
+            $payload['actual'] = (float) $data['actual'];
+            $formats[] = '%f';
+        }
+        if (isset($data['baseline'])) {
+            $payload['baseline'] = (float) $data['baseline'];
+            $formats[] = '%f';
+        }
+        if (isset($data['z'])) {
+            $payload['z'] = (float) $data['z'];
+            $formats[] = '%f';
+        }
+        if (isset($data['p_value'])) {
+            $payload['p_value'] = (float) $data['p_value'];
+            $formats[] = '%f';
+        }
+        if (isset($data['window'])) {
+            $payload['window'] = (int) $data['window'];
+            $formats[] = '%d';
+        }
 
-        $formats = ['%d', '%s', '%s', '%s', '%s', '%d', '%s', '%f', '%f', '%f', '%f', '%f', '%f', '%d'];
         $result = $wpdb->insert($this->table, $payload, $formats);
         if ($result === false) {
             return null;
@@ -84,6 +128,11 @@ class AnomaliesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
+        
+        if ($sql === false) {
+            return null;
+        }
+        
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? Anomaly::fromRow($row) : null;
@@ -105,9 +154,15 @@ class AnomaliesRepo
         global $wpdb;
         $payload += ['resolved' => false, 'note' => ''];
 
+        $payloadJson = Wp::jsonEncode($payload);
+        if ($payloadJson === false) {
+            error_log('[FPDMS] JSON encode failed for anomaly payload in update');
+            return false;
+        }
+
         $result = $wpdb->update(
             $this->table,
-            ['payload' => Wp::jsonEncode($payload) ?: '[]'],
+            ['payload' => $payloadJson],
             ['id' => $id],
             ['%s'],
             ['%d']
@@ -120,6 +175,11 @@ class AnomaliesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT COUNT(*) FROM {$this->table} WHERE client_id = %d", $clientId);
+        
+        if ($sql === false) {
+            return 0;
+        }
+        
         $count = $wpdb->get_var($sql);
 
         return $count ? (int) $count : 0;

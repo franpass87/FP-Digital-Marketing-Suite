@@ -55,10 +55,14 @@ class Queue
         $existing = $reports->findByClientAndPeriod($clientId, $periodStart, $periodEnd, ['queued', 'running']);
         if ($existing) {
             if (! empty($meta)) {
-                $reports->update($existing->id ?? 0, [
-                    'meta' => array_merge($existing->meta, $meta),
-                ]);
-                $existing = $reports->find($existing->id ?? 0);
+                // Refetch to get latest version before merging to reduce race condition
+                $fresh = $reports->find($existing->id ?? 0);
+                if ($fresh) {
+                    $reports->update($fresh->id ?? 0, [
+                        'meta' => array_merge($fresh->meta, $meta),
+                    ]);
+                    $existing = $reports->find($fresh->id ?? 0);
+                }
             }
 
             return $existing;
@@ -159,7 +163,16 @@ class Queue
             );
         }
 
-        $providers = self::buildProviders($dataSources->forClient($client->id ?? 0));
+        // Ensure client ID is valid before fetching data sources
+        if (!$client->id || $client->id <= 0) {
+            $reports->update($job->id ?? 0, [
+                'status' => 'failed',
+                'meta' => array_merge($job->meta, ['error' => __('Invalid client ID.', 'fp-dms')]),
+            ]);
+            return;
+        }
+        
+        $providers = self::buildProviders($dataSources->forClient($client->id));
         $period = Period::fromStrings($job->periodStart, $job->periodEnd, $client->timezone);
 
         $builder = new ReportBuilder(
@@ -339,7 +352,8 @@ class Queue
         }
 
         if (! $next) {
-            $next = $base + Wp::dayInSeconds();
+            // Use DAY_IN_SECONDS constant instead of non-existent method
+            $next = $base + DAY_IN_SECONDS;
         }
 
         return Wp::date('Y-m-d H:i:s', $next);

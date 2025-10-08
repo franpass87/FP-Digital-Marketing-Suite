@@ -39,6 +39,7 @@ class Scheduler
 
     /**
      * Esegui tutti i task che sono dovuti
+     * Uses locking to prevent concurrent executions
      */
     public function run(): int
     {
@@ -47,8 +48,10 @@ class Scheduler
         
         foreach ($this->tasks as $task) {
             if ($task->isDue($now)) {
-                $executed++;
-                $task->run();
+                // Use locking to prevent concurrent execution of same task
+                if ($task->tryRun($now)) {
+                    $executed++;
+                }
             }
         }
         
@@ -93,6 +96,7 @@ class Task
     private ?string $cronExpression = null;
     private ?CronExpression $cron = null;
     private LoggerInterface $logger;
+    private static array $runningTasks = [];
 
     public function __construct(string $name, callable $callback, ?LoggerInterface $logger = null)
     {
@@ -265,6 +269,32 @@ class Task
         }
 
         return $this->cron->isDue($now);
+    }
+
+    /**
+     * Try to run the task with locking to prevent concurrent executions.
+     * Returns true if task was executed, false if already running.
+     */
+    public function tryRun(DateTime $now): bool
+    {
+        // Check if task is already running
+        $lockKey = 'task_' . md5($this->name);
+        
+        if (isset(self::$runningTasks[$lockKey])) {
+            $this->logger->warning("Task already running: {$this->name}");
+            return false;
+        }
+        
+        // Mark as running
+        self::$runningTasks[$lockKey] = time();
+        
+        try {
+            $this->run();
+            return true;
+        } finally {
+            // Always release lock
+            unset(self::$runningTasks[$lockKey]);
+        }
     }
 
     /**

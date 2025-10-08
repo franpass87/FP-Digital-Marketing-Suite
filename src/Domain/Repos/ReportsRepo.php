@@ -22,6 +22,11 @@ class ReportsRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
+        
+        if ($sql === false) {
+            return null;
+        }
+        
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? ReportJob::fromRow($row) : null;
@@ -98,9 +103,14 @@ class ReportsRepo
 
         if (! empty($criteria['status_in']) && is_array($criteria['status_in'])) {
             $statuses = array_map(static fn($status): string => (string) $status, $criteria['status_in']);
-            $placeholders = implode(',', array_fill(0, count($statuses), '%s'));
-            $where[] = 'status IN (' . $placeholders . ')';
-            array_push($params, ...$statuses);
+            // Filter out empty values
+            $statuses = array_filter($statuses, static fn($s): bool => $s !== '');
+            
+            if (!empty($statuses)) {
+                $placeholders = implode(',', array_fill(0, count($statuses), '%s'));
+                $where[] = 'status IN (' . $placeholders . ')';
+                array_push($params, ...$statuses);
+            }
         }
 
         if (isset($criteria['created_before'])) {
@@ -110,6 +120,12 @@ class ReportsRepo
 
         $sql = 'SELECT * FROM ' . $this->table . ' WHERE ' . implode(' AND ', $where) . ' ORDER BY created_at DESC';
         $prepared = $params ? $wpdb->prepare($sql, $params) : $sql;
+        
+        // Check if prepare failed
+        if ($prepared === false) {
+            return [];
+        }
+        
         $rows = $wpdb->get_results($prepared, ARRAY_A);
 
         if (! is_array($rows)) {
@@ -136,6 +152,12 @@ class ReportsRepo
 
         $sql .= ' ORDER BY created_at DESC LIMIT 1';
         $prepared = $wpdb->prepare($sql, $params);
+        
+        // Check if prepare failed
+        if ($prepared === false) {
+            return null;
+        }
+        
         $row = $wpdb->get_row($prepared, ARRAY_A);
 
         return is_array($row) ? ReportJob::fromRow($row) : null;
@@ -148,13 +170,21 @@ class ReportsRepo
     {
         global $wpdb;
         $now = Wp::currentTime('mysql');
+        
+        // Safely encode meta, with fallback
+        $metaJson = Wp::jsonEncode($data['meta'] ?? []);
+        if ($metaJson === false) {
+            error_log('[FPDMS] JSON encode failed for report meta');
+            $metaJson = '[]';
+        }
+        
         $payload = [
             'client_id' => (int) ($data['client_id'] ?? 0),
             'period_start' => (string) ($data['period_start'] ?? ''),
             'period_end' => (string) ($data['period_end'] ?? ''),
             'status' => (string) ($data['status'] ?? 'queued'),
             'storage_path' => $data['storage_path'] ?? null,
-            'meta' => Wp::jsonEncode($data['meta'] ?? []) ?: '[]',
+            'meta' => $metaJson,
             'created_at' => $now,
             'updated_at' => $now,
         ];
@@ -184,7 +214,12 @@ class ReportsRepo
         }
 
         if (array_key_exists('meta', $data)) {
-            $payload['meta'] = Wp::jsonEncode($data['meta']) ?: '[]';
+            $metaJson = Wp::jsonEncode($data['meta']);
+            if ($metaJson === false) {
+                error_log('[FPDMS] JSON encode failed for report meta in update');
+                $metaJson = '[]';
+            }
+            $payload['meta'] = $metaJson;
             $formats[] = '%s';
         }
 

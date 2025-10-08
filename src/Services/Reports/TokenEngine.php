@@ -13,7 +13,7 @@ class TokenEngine
      */
     public function render(string $template, array $context): string
     {
-        return preg_replace_callback('/{{\s*([^}]+)\s*}}/', function (array $matches) use ($context): string {
+        $result = preg_replace_callback('/{{\s*([^}]+)\s*}}/', function (array $matches) use ($context): string {
             $expression = trim($matches[1]);
             [$path, $filter] = array_pad(explode('|', $expression, 2), 2, null);
             $value = $this->resolvePath($context, $path ?? '');
@@ -29,7 +29,15 @@ class TokenEngine
             }
 
             return $raw ? (string) $value : esc_html((string) $value);
-        }, $template) ?? $template;
+        }, $template);
+        
+        // Check for PCRE errors
+        if ($result === null || preg_last_error() !== PREG_NO_ERROR) {
+            error_log('[FPDMS] Template rendering failed: ' . preg_last_error_msg());
+            return $template;
+        }
+        
+        return $result;
     }
 
     /**

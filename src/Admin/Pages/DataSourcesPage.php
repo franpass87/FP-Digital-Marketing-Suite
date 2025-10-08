@@ -52,7 +52,10 @@ class DataSourcesPage
 
         $dataSources = $selectedClientId ? $dataSourcesRepo->forClient($selectedClientId) : [];
         $editing = null;
-        if (isset($_GET['action'], $_GET['source']) && $_GET['action'] === 'edit') {
+        
+        // Sanitize action parameter
+        $action = isset($_GET['action']) ? sanitize_key($_GET['action']) : '';
+        if ($action === 'edit' && isset($_GET['source'])) {
             $candidate = $dataSourcesRepo->find((int) $_GET['source']);
             if ($candidate && $candidate->clientId === $selectedClientId) {
                 $editing = $candidate;
@@ -146,7 +149,9 @@ class DataSourcesPage
             }
         }
 
-        if (isset($_GET['action'], $_GET['source']) && $_GET['action'] === 'delete') {
+        // Sanitize action parameter for delete
+        $deleteAction = isset($_GET['action']) ? sanitize_key($_GET['action']) : '';
+        if ($deleteAction === 'delete' && isset($_GET['source'])) {
             $id = (int) $_GET['source'];
             $nonce = Wp::sanitizeTextField($_GET['_wpnonce'] ?? '');
             $dataSource = $repo->find($id);
@@ -646,7 +651,12 @@ class DataSourcesPage
         $header = fgetcsv($handle);
         if (! $header) {
             fclose($handle);
-            @unlink($file['tmp_name']);
+            if (file_exists($file['tmp_name'])) {
+                $unlinkResult = unlink($file['tmp_name']);
+                if (!$unlinkResult) {
+                    error_log('[FPDMS] Failed to delete temporary CSV file: ' . $file['tmp_name']);
+                }
+            }
             return new WP_Error('fpdms_datasource_csv', __('The CSV file appears to be empty.', 'fp-dms'));
         }
 
@@ -708,7 +718,13 @@ class DataSourcesPage
         }
 
         fclose($handle);
-        @unlink($file['tmp_name']);
+        
+        if (file_exists($file['tmp_name'])) {
+            $unlinkResult = unlink($file['tmp_name']);
+            if (!$unlinkResult) {
+                error_log('[FPDMS] Failed to delete temporary CSV file after processing: ' . $file['tmp_name']);
+            }
+        }
 
         if ($rows === 0) {
             return new WP_Error('fpdms_datasource_csv', __('The CSV file did not contain any data rows.', 'fp-dms'));

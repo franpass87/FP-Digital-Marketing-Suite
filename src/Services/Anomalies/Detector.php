@@ -29,10 +29,15 @@ class Detector
      */
     public function evaluate(int $clientId, array $current, array $previous = [], array $history = [], bool $qaTag = false): array
     {
+        // Get client timezone instead of hardcoding UTC
+        $clientsRepo = new \FP\DMS\Domain\Repos\ClientsRepo();
+        $client = $clientsRepo->find($clientId);
+        $timezone = $client?->timezone ?? 'UTC';
+        
         $period = Period::fromStrings(
             gmdate('Y-m-d', strtotime('-6 days')),
             gmdate('Y-m-d'),
-            'UTC'
+            $timezone
         );
 
         $meta = [

@@ -48,13 +48,31 @@ class ConnectionAjaxHandler
             return;
         }
 
-        $provider = sanitize_text_field($_POST['provider'] ?? '');
+        $provider = sanitize_key($_POST['provider'] ?? '');
         $dataJson = wp_unslash($_POST['data'] ?? '{}');
         $data = json_decode($dataJson, true);
+
+        // Check for JSON decode errors
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            wp_send_json_error([
+                'message' => __('Invalid JSON data', 'fp-dms'),
+                'json_error' => json_last_error_msg(),
+            ], 400);
+            return;
+        }
 
         if (!$provider || !is_array($data)) {
             wp_send_json_error([
                 'message' => __('Invalid request data', 'fp-dms'),
+            ], 400);
+            return;
+        }
+        
+        // Validate provider whitelist
+        $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
+        if (!in_array($provider, $validProviders, true)) {
+            wp_send_json_error([
+                'message' => __('Invalid provider type', 'fp-dms'),
             ], 400);
             return;
         }
@@ -119,13 +137,31 @@ class ConnectionAjaxHandler
             return;
         }
 
-        $provider = sanitize_text_field($_POST['provider'] ?? '');
+        $provider = sanitize_key($_POST['provider'] ?? '');
         $authJson = wp_unslash($_POST['auth'] ?? '{}');
         $auth = json_decode($authJson, true);
+
+        // Check for JSON decode errors
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            wp_send_json_error([
+                'message' => __('Invalid JSON data', 'fp-dms'),
+                'json_error' => json_last_error_msg(),
+            ], 400);
+            return;
+        }
 
         if (!$provider || !is_array($auth)) {
             wp_send_json_error([
                 'message' => __('Invalid request data', 'fp-dms'),
+            ], 400);
+            return;
+        }
+        
+        // Validate provider whitelist
+        $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
+        if (!in_array($provider, $validProviders, true)) {
+            wp_send_json_error([
+                'message' => __('Invalid provider type', 'fp-dms'),
             ], 400);
             return;
         }
@@ -164,13 +200,22 @@ class ConnectionAjaxHandler
             return;
         }
 
-        $provider = sanitize_text_field($_POST['provider'] ?? '');
-        $field = sanitize_text_field($_POST['field'] ?? '');
+        $provider = sanitize_key($_POST['provider'] ?? '');
+        $field = sanitize_key($_POST['field'] ?? '');
         $value = wp_unslash($_POST['value'] ?? '');
 
         if (!$provider || !$field) {
             wp_send_json_error([
                 'message' => __('Invalid request data', 'fp-dms'),
+            ], 400);
+            return;
+        }
+        
+        // Validate provider is in whitelist
+        $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
+        if (!in_array($provider, $validProviders, true)) {
+            wp_send_json_error([
+                'message' => __('Invalid provider type', 'fp-dms'),
             ], 400);
             return;
         }
@@ -390,14 +435,32 @@ class ConnectionAjaxHandler
             return;
         }
 
-        $provider = sanitize_text_field($_POST['provider'] ?? '');
+        $provider = sanitize_key($_POST['provider'] ?? '');
         $step = isset($_POST['step']) ? intval($_POST['step']) : 0;
         $dataJson = wp_unslash($_POST['data'] ?? '{}');
         $data = json_decode($dataJson, true);
 
+        // Check for JSON decode errors
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            wp_send_json_error([
+                'message' => __('Invalid JSON data', 'fp-dms'),
+                'json_error' => json_last_error_msg(),
+            ], 400);
+            return;
+        }
+
         if (!$provider || !is_array($data)) {
             wp_send_json_error([
                 'message' => __('Invalid request data', 'fp-dms'),
+            ], 400);
+            return;
+        }
+        
+        // Validate provider whitelist
+        $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
+        if (!in_array($provider, $validProviders, true)) {
+            wp_send_json_error([
+                'message' => __('Invalid provider type', 'fp-dms'),
             ], 400);
             return;
         }
@@ -442,13 +505,31 @@ class ConnectionAjaxHandler
             return;
         }
 
-        $provider = sanitize_text_field($_POST['provider'] ?? '');
+        $provider = sanitize_key($_POST['provider'] ?? '');
         $dataJson = wp_unslash($_POST['data'] ?? '{}');
         $data = json_decode($dataJson, true);
+
+        // Check for JSON decode errors
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            wp_send_json_error([
+                'message' => __('Invalid JSON data', 'fp-dms'),
+                'json_error' => json_last_error_msg(),
+            ], 400);
+            return;
+        }
 
         if (!$provider || !is_array($data)) {
             wp_send_json_error([
                 'message' => __('Invalid request data', 'fp-dms'),
+            ], 400);
+            return;
+        }
+        
+        // Validate provider whitelist
+        $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
+        if (!in_array($provider, $validProviders, true)) {
+            wp_send_json_error([
+                'message' => __('Invalid provider type', 'fp-dms'),
             ], 400);
             return;
         }

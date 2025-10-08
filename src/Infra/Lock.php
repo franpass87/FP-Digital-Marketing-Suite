@@ -133,14 +133,6 @@ class Lock
         );
     }
 
-    private static function beginTransaction(): bool
-    {
-        global $wpdb;
-        $result = $wpdb->query('START TRANSACTION');
-
-        return $result !== false;
-    }
-
     private static function releasePersistent(string $name, string $owner): void
     {
         global $wpdb;

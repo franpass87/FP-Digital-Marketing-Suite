@@ -36,7 +36,42 @@ class PdfRenderer
             'format' => 'A4',
         ]);
 
-        $mpdf->WriteHTML($html);
-        $mpdf->Output($targetPath, Destination::FILE);
+        try {
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($targetPath, Destination::FILE);
+        } finally {
+            // CRITICAL: Clean up temporary files created by mPDF
+            $this->cleanupTempFiles($tempDir);
+        }
+    }
+
+    /**
+     * Clean up old temporary files created by mPDF.
+     * Removes files older than 1 hour.
+     */
+    private function cleanupTempFiles(string $tempDir): void
+    {
+        if (!is_dir($tempDir)) {
+            return;
+        }
+
+        try {
+            $cutoff = time() - 3600; // 1 hour ago
+            $iterator = new \DirectoryIterator($tempDir);
+            
+            foreach ($iterator as $file) {
+                if ($file->isDot() || !$file->isFile()) {
+                    continue;
+                }
+                
+                // Delete files older than cutoff
+                if ($file->getMTime() < $cutoff) {
+                    @unlink($file->getPathname());
+                }
+            }
+        } catch (\Exception $e) {
+            // Log error but don't throw - cleanup is best effort
+            error_log('[FPDMS] Failed to cleanup mPDF temp files: ' . $e->getMessage());
+        }
     }
 }

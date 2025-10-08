@@ -107,11 +107,25 @@ class Retention
                 continue;
             }
 
+            // Use realpath to resolve any symlinks and prevent path traversal
+            $realPath = realpath($absolute);
+            if ($realPath === false || !str_starts_with($realPath, realpath($baseDir))) {
+                error_log(sprintf('[FPDMS] Suspicious path detected in cleanup: %s', $absolute));
+                continue;
+            }
+
             $deleted = true;
-            if (file_exists($absolute)) {
-                $deleted = self::deletePath($absolute);
-                if (! $deleted) {
-                    error_log(sprintf('[FPDMS] Failed to delete report artifact %s', $absolute));
+            if (file_exists($realPath)) {
+                // Get file modification time before deleting to verify it's the right file
+                $mtime = filemtime($realPath);
+                if ($mtime !== false && $mtime < $cutoff) {
+                    $deleted = self::deletePath($realPath);
+                    if (! $deleted) {
+                        error_log(sprintf('[FPDMS] Failed to delete report artifact %s', $realPath));
+                    }
+                } else {
+                    // File is too new, skip deletion
+                    $deleted = false;
                 }
             }
 
