@@ -125,12 +125,14 @@ class Lock
         
         $cutoff = Wp::date('Y-m-d H:i:s', time() - $ttl);
         
-        $wpdb->query(
-            $wpdb->prepare(
-                "DELETE FROM {$table} WHERE acquired_at < %s",
-                $cutoff
-            )
+        $sql = $wpdb->prepare(
+            "DELETE FROM {$table} WHERE acquired_at < %s",
+            $cutoff
         );
+        
+        if ($sql !== false) {
+            $wpdb->query($sql);
+        }
     }
 
     private static function releasePersistent(string $name, string $owner): void

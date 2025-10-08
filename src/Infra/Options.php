@@ -24,7 +24,8 @@ class Options
             $value = [];
         }
 
-        $settings = array_replace_recursive(self::defaultGlobalSettings(), $value);
+        // Safe merge: only merge if value is a proper array to prevent type confusion
+        $settings = self::safeMergeRecursive(self::defaultGlobalSettings(), $value);
 
         if (isset($settings['mail']['smtp']['pass']) && is_string($settings['mail']['smtp']['pass'])) {
             $cipher = $settings['mail']['smtp']['pass'];
@@ -73,7 +74,7 @@ class Options
 
     public static function updateGlobalSettings(array $settings): void
     {
-        $merged = array_replace_recursive(self::defaultGlobalSettings(), $settings);
+        $merged = self::safeMergeRecursive(self::defaultGlobalSettings(), $settings);
 
         if (isset($merged['mail']['smtp'])) {
             $merged['mail']['smtp']['secure'] = self::normaliseSmtpSecure($merged['mail']['smtp']['secure'] ?? 'none');
@@ -252,7 +253,7 @@ class Options
         }
 
         $stored['routing'] = self::decryptRouting($stored['routing'] ?? []);
-        $policy = array_replace_recursive($global, $stored);
+        $policy = self::safeMergeRecursive($global, $stored);
         $result = self::sanitizeAnomalyPolicyInput($policy, $global);
 
         return $result['policy'];
@@ -279,7 +280,7 @@ class Options
     {
         $base = self::defaultAnomalyPolicy();
 
-        return array_replace_recursive($base, $policy);
+        return self::safeMergeRecursive($base, $policy);
     }
 
     /**
@@ -474,5 +475,30 @@ class Options
             'webhook' => ['url', 'hmac_secret'],
             'sms_twilio' => ['sid', 'token', 'from', 'to', 'messaging_service_sid'],
         ];
+    }
+
+    /**
+     * Safe recursive merge that prevents type confusion.
+     * Only merges arrays with arrays, scalars override previous values.
+     * 
+     * @param array<string,mixed> $base
+     * @param array<string,mixed> $override
+     * @return array<string,mixed>
+     */
+    private static function safeMergeRecursive(array $base, array $override): array
+    {
+        $result = $base;
+        
+        foreach ($override as $key => $value) {
+            // If both are arrays, merge recursively
+            if (isset($result[$key]) && is_array($result[$key]) && is_array($value)) {
+                $result[$key] = self::safeMergeRecursive($result[$key], $value);
+            } else {
+                // Otherwise, override (prevents type confusion)
+                $result[$key] = $value;
+            }
+        }
+        
+        return $result;
     }
 }

@@ -11,7 +11,7 @@ use function __;
 
 class GA4Provider extends BaseGoogleProvider implements DataSourceProviderInterface
 {
-    public function __construct(private array $auth, private array $config)
+    public function __construct(array $auth, array $config)
     {
         parent::__construct($auth, $config);
     }
