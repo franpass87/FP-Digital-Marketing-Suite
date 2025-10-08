@@ -39,6 +39,7 @@ class Scheduler
 
     /**
      * Esegui tutti i task che sono dovuti
+     * Uses locking to prevent concurrent executions
      */
     public function run(): int
     {
@@ -47,8 +48,10 @@ class Scheduler
         
         foreach ($this->tasks as $task) {
             if ($task->isDue($now)) {
-                $executed++;
-                $task->run();
+                // Use locking to prevent concurrent execution of same task
+                if ($task->tryRun($now)) {
+                    $executed++;
+                }
             }
         }
         
@@ -93,6 +96,7 @@ class Task
     private ?string $cronExpression = null;
     private ?CronExpression $cron = null;
     private LoggerInterface $logger;
+    private static array $runningTasks = [];
 
     public function __construct(string $name, callable $callback, ?LoggerInterface $logger = null)
     {
@@ -170,9 +174,17 @@ class Task
      */
     public function dailyAt(string $time): self
     {
-        [$hour, $minute] = array_pad(explode(':', $time), 2, '0');
+        // Validate time format HH:MM
+        if (!preg_match('/^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])$/', $time, $matches)) {
+            $this->logger->error("Invalid time format for dailyAt: {$time}");
+            // Default to midnight if invalid
+            return $this->cron("0 0 * * *");
+        }
         
-        return $this->cron("$minute $hour * * *");
+        $hour = (int) $matches[1];
+        $minute = (int) $matches[2];
+        
+        return $this->cron("{$minute} {$hour} * * *");
     }
 
     /**
@@ -188,9 +200,18 @@ class Task
      */
     public function weeklyOn(int $day, string $time = '00:00'): self
     {
-        [$hour, $minute] = array_pad(explode(':', $time), 2, '0');
+        // Validate day (0-6)
+        $day = max(0, min(6, $day));
         
-        return $this->cron("$minute $hour * * $day");
+        // Validate time format
+        if (!preg_match('/^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])$/', $time, $matches)) {
+            $matches = [null, 0, 0];
+        }
+        
+        $hour = (int) $matches[1];
+        $minute = (int) $matches[2];
+        
+        return $this->cron("{$minute} {$hour} * * {$day}");
     }
 
     /**
@@ -206,9 +227,18 @@ class Task
      */
     public function monthlyOn(int $day, string $time = '00:00'): self
     {
-        [$hour, $minute] = array_pad(explode(':', $time), 2, '0');
+        // Validate day (1-31)
+        $day = max(1, min(31, $day));
         
-        return $this->cron("$minute $hour $day * *");
+        // Validate time format
+        if (!preg_match('/^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])$/', $time, $matches)) {
+            $matches = [null, 0, 0];
+        }
+        
+        $hour = (int) $matches[1];
+        $minute = (int) $matches[2];
+        
+        return $this->cron("{$minute} {$hour} {$day} * *");
     }
 
     /**
@@ -239,6 +269,32 @@ class Task
         }
 
         return $this->cron->isDue($now);
+    }
+
+    /**
+     * Try to run the task with locking to prevent concurrent executions.
+     * Returns true if task was executed, false if already running.
+     */
+    public function tryRun(DateTime $now): bool
+    {
+        // Check if task is already running
+        $lockKey = 'task_' . md5($this->name);
+        
+        if (isset(self::$runningTasks[$lockKey])) {
+            $this->logger->warning("Task already running: {$this->name}");
+            return false;
+        }
+        
+        // Mark as running
+        self::$runningTasks[$lockKey] = time();
+        
+        try {
+            $this->run();
+            return true;
+        } finally {
+            // Always release lock
+            unset(self::$runningTasks[$lockKey]);
+        }
     }
 
     /**

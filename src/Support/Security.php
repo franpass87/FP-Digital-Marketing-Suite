@@ -199,4 +199,38 @@ class Security
 
         return $plain;
     }
+
+    /**
+     * Verify a WordPress nonce.
+     *
+     * @param string $nonce Nonce value to verify
+     * @param string $action Action name for the nonce
+     * @return bool True if valid, false otherwise
+     */
+    public static function verifyNonce(string $nonce, string $action): bool
+    {
+        if (function_exists('wp_verify_nonce')) {
+            $result = wp_verify_nonce($nonce, $action);
+            return $result !== false && $result !== 0;
+        }
+
+        // Fallback: basic validation when wp_verify_nonce is not available
+        return $nonce !== '' && strlen($nonce) >= 10;
+    }
+
+    /**
+     * Create a WordPress nonce.
+     *
+     * @param string $action Action name for the nonce
+     * @return string The nonce value
+     */
+    public static function createNonce(string $action): string
+    {
+        if (function_exists('wp_create_nonce')) {
+            return wp_create_nonce($action);
+        }
+
+        // Fallback: create a simple nonce when wp_create_nonce is not available
+        return substr(hash_hmac('sha256', $action . microtime(true), self::getKey()), 0, 10);
+    }
 }

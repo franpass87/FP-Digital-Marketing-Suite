@@ -425,7 +425,14 @@ class Options
                 if ($value === '') {
                     continue;
                 }
-                $routing[$channel][$field] = Security::encrypt($value);
+                
+                try {
+                    $routing[$channel][$field] = Security::encrypt($value);
+                } catch (\RuntimeException $e) {
+                    // Log encryption failure and keep original value
+                    error_log('[FPDMS] Encryption failed for routing field: ' . $e->getMessage());
+                    $routing[$channel][$field] = '';
+                }
             }
         }
 
@@ -446,7 +453,9 @@ class Options
                 if (! isset($routing[$channel][$field]) || ! is_string($routing[$channel][$field])) {
                     continue;
                 }
-                $routing[$channel][$field] = Security::decrypt((string) $routing[$channel][$field]);
+                $failed = false;
+                $decrypted = Security::decrypt((string) $routing[$channel][$field], $failed);
+                $routing[$channel][$field] = $failed ? '' : $decrypted;
             }
         }
 

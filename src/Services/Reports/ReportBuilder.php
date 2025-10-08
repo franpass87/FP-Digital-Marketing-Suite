@@ -86,7 +86,8 @@ class ReportBuilder
 
         foreach ($providers as $provider) {
             $definition = $provider->describe();
-            $defaultSource = is_string($definition['name'] ?? null) ? (string) $definition['name'] : strtolower((new \ReflectionClass($provider))->getShortName());
+            // Use describe() method instead of Reflection for better performance
+            $defaultSource = is_string($definition['name'] ?? null) ? (string) $definition['name'] : 'unknown';
             if (! empty($definition['label']) && is_string($definition['label'])) {
                 $sources[$defaultSource] = (string) $definition['label'];
             }

@@ -46,6 +46,11 @@ class ClientsRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
+        
+        if ($sql === false) {
+            return null;
+        }
+        
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? Client::fromRow($row) : null;
@@ -55,6 +60,11 @@ class ClientsRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE name = %s LIMIT 1", $name);
+        
+        if ($sql === false) {
+            return null;
+        }
+        
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? Client::fromRow($row) : null;
@@ -74,10 +84,13 @@ class ClientsRepo
         $ga4MeasurementId = ClientConnectorValidator::sanitizeGa4MeasurementId($data['ga4_measurement_id'] ?? '');
         $gscSiteProperty = ClientConnectorValidator::sanitizeGscSiteProperty($data['gsc_site_property'] ?? '');
 
+        $emailToJson = Wp::jsonEncode($this->sanitizeEmailList($data['email_to'] ?? []));
+        $emailCcJson = Wp::jsonEncode($this->sanitizeEmailList($data['email_cc'] ?? []));
+        
         $payload = [
             'name' => (string) ($data['name'] ?? ''),
-            'email_to' => Wp::jsonEncode($this->sanitizeEmailList($data['email_to'] ?? [])) ?: '[]',
-            'email_cc' => Wp::jsonEncode($this->sanitizeEmailList($data['email_cc'] ?? [])) ?: '[]',
+            'email_to' => ($emailToJson !== false) ? $emailToJson : '[]',
+            'email_cc' => ($emailCcJson !== false) ? $emailCcJson : '[]',
             'timezone' => $this->normalizeTimezone((string) ($data['timezone'] ?? ''), 'UTC'),
             'notes' => (string) ($data['notes'] ?? ''),
             'ga4_property_id' => $ga4PropertyId,
@@ -128,10 +141,13 @@ class ClientsRepo
         $ga4MeasurementId = ClientConnectorValidator::sanitizeGa4MeasurementId($data['ga4_measurement_id'] ?? ($current->ga4MeasurementId ?? ''));
         $gscSiteProperty = ClientConnectorValidator::sanitizeGscSiteProperty($data['gsc_site_property'] ?? ($current->gscSiteProperty ?? ''));
 
+        $emailToJson = Wp::jsonEncode($this->sanitizeEmailList($emailToInput));
+        $emailCcJson = Wp::jsonEncode($this->sanitizeEmailList($emailCcInput));
+        
         $payload = [
             'name' => $name,
-            'email_to' => Wp::jsonEncode($this->sanitizeEmailList($emailToInput)) ?: '[]',
-            'email_cc' => Wp::jsonEncode($this->sanitizeEmailList($emailCcInput)) ?: '[]',
+            'email_to' => ($emailToJson !== false) ? $emailToJson : '[]',
+            'email_cc' => ($emailCcJson !== false) ? $emailCcJson : '[]',
             'timezone' => $timezone,
             'notes' => $notes,
             'logo_id' => $logoId,

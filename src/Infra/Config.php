@@ -188,7 +188,8 @@ function maybe_unserialize(mixed $data): mixed
         return $data;
     }
 
-    $unserialized = @unserialize($data);
+    // Use unserialize with allowed_classes => false to prevent object injection attacks
+    $unserialized = @unserialize($data, ['allowed_classes' => false]);
 
     if ($unserialized !== false || $data === 'b:0;') {
         return $unserialized;

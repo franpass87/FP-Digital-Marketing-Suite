@@ -26,6 +26,11 @@ class DataSourcesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE client_id = %d ORDER BY id DESC", $clientId);
+        
+        if ($sql === false) {
+            return [];
+        }
+        
         $rows = $wpdb->get_results($sql, ARRAY_A);
 
         if (! is_array($rows)) {
@@ -39,6 +44,11 @@ class DataSourcesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
+        
+        if ($sql === false) {
+            return null;
+        }
+        
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? DataSource::fromRow($row) : null;
@@ -52,8 +62,12 @@ class DataSourcesRepo
         global $wpdb;
 
         $now = Wp::currentTime('mysql');
-        $auth = Wp::jsonEncode($data['auth'] ?? []) ?: '[]';
-        $config = Wp::jsonEncode($data['config'] ?? []) ?: '[]';
+        
+        $authJson = Wp::jsonEncode($data['auth'] ?? []);
+        $auth = ($authJson !== false) ? $authJson : '[]';
+        
+        $configJson = Wp::jsonEncode($data['config'] ?? []);
+        $config = ($configJson !== false) ? $configJson : '[]';
 
         $payload = [
             'client_id' => (int) ($data['client_id'] ?? 0),
@@ -91,14 +105,17 @@ class DataSourcesRepo
         $configData = array_key_exists('config', $data) && is_array($data['config']) ? $data['config'] : $current->config;
         $active = array_key_exists('active', $data) ? ! empty($data['active']) : $current->active;
 
-        $auth = Wp::jsonEncode($authData) ?: '[]';
+        $authJson = Wp::jsonEncode($authData);
+        $auth = ($authJson !== false) ? $authJson : '[]';
+        
         $authCipher = $hasNewAuth
             ? Security::encrypt($auth)
             : ($current->authCipher !== null && $current->authCipher !== ''
                 ? $current->authCipher
                 : Security::encrypt($auth));
 
-        $config = Wp::jsonEncode($configData) ?: '[]';
+        $configJson = Wp::jsonEncode($configData);
+        $config = ($configJson !== false) ? $configJson : '[]';
 
         $payload = [
             'type' => $type,

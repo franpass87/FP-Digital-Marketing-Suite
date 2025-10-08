@@ -13,18 +13,14 @@ class Lock
 
     public static function acquire(string $name, string $owner, int $ttl = 120): bool
     {
+        // Try to acquire persistent lock first (atomic operation)
+        if (! self::acquirePersistent($name, $owner, $ttl)) {
+            return false;
+        }
+
+        // Set transient as a secondary check (for performance)
         $transientKey = self::transientKey($name);
-        if (get_transient($transientKey)) {
-            return false;
-        }
-
         set_transient($transientKey, $owner, $ttl);
-
-        if (! self::acquirePersistent($name, $owner)) {
-            delete_transient($transientKey);
-
-            return false;
-        }
 
         return true;
     }
@@ -55,12 +51,16 @@ class Lock
         return self::TRANSIENT_PREFIX . md5($name);
     }
 
-    private static function acquirePersistent(string $name, string $owner): bool
+    private static function acquirePersistent(string $name, string $owner, int $ttl): bool
     {
         global $wpdb;
         $table = DB::table('locks');
         $now = Wp::currentTime('mysql');
 
+        // First, clean up expired locks
+        self::cleanupExpiredLocks($table, $ttl);
+
+        // Try to insert new lock (atomic operation)
         $sql = $wpdb->prepare(
             "INSERT INTO {$table} (lock_key, owner, acquired_at) VALUES (%s, %s, %s)",
             $name,
@@ -72,50 +72,65 @@ class Lock
             return false;
         }
 
-        $inTransaction = self::beginTransaction();
-        $rolledBack = false;
+        // Suppress errors for duplicate key constraint
+        $wpdb->suppress_errors(true);
         $result = $wpdb->query($sql);
+        $wpdb->suppress_errors(false);
 
-        if ($inTransaction) {
-            if ($result === false || $result === 0) {
-                $wpdb->query('ROLLBACK');
-                $rolledBack = true;
-            } else {
-                $wpdb->query('COMMIT');
-
-                return true;
-            }
-        }
-
+        // Check if insert was successful
         if ($result !== false && $result > 0) {
             return true;
         }
 
-        if ($inTransaction && ! $rolledBack) {
-            $wpdb->query('ROLLBACK');
-        }
-
-        $fallback = $wpdb->query(
+        // Lock already exists, check if it's expired
+        $existing = $wpdb->get_row(
             $wpdb->prepare(
-                "INSERT INTO {$table} (lock_key, owner, acquired_at)
-                 SELECT %s, %s, %s FROM DUAL
-                 WHERE NOT EXISTS (SELECT 1 FROM {$table} WHERE lock_key = %s)",
-                $name,
-                $owner,
-                $now,
+                "SELECT owner, acquired_at FROM {$table} WHERE lock_key = %s",
                 $name
-            )
+            ),
+            ARRAY_A
         );
 
-        return $fallback !== false && $fallback > 0;
+        if (! is_array($existing)) {
+            return false;
+        }
+
+        // Calculate if lock is expired
+        $acquiredAt = strtotime($existing['acquired_at'] ?? '');
+        $expiresAt = $acquiredAt + $ttl;
+        $currentTime = time();
+
+        if ($currentTime > $expiresAt) {
+            // Lock is expired, try to replace it
+            $replaced = $wpdb->update(
+                $table,
+                ['owner' => $owner, 'acquired_at' => $now],
+                ['lock_key' => $name],
+                ['%s', '%s'],
+                ['%s']
+            );
+
+            return $replaced !== false && $replaced > 0;
+        }
+
+        return false;
     }
 
-    private static function beginTransaction(): bool
+    /**
+     * Clean up expired locks
+     */
+    private static function cleanupExpiredLocks(string $table, int $ttl): void
     {
         global $wpdb;
-        $result = $wpdb->query('START TRANSACTION');
-
-        return $result !== false;
+        
+        $cutoff = Wp::date('Y-m-d H:i:s', time() - $ttl);
+        
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$table} WHERE acquired_at < %s",
+                $cutoff
+            )
+        );
     }
 
     private static function releasePersistent(string $name, string $owner): void

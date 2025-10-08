@@ -132,13 +132,19 @@ class Database
     {
         $pdo = $this->connect();
         
+        // Validate table name to prevent SQL injection
+        $table = $this->validateIdentifier($table, 'table');
+        
         $fields = array_keys($data);
+        
+        // Validate field names to prevent SQL injection
+        $validatedFields = array_map(fn($field) => $this->validateIdentifier($field, 'field'), $fields);
         $placeholders = array_map(fn($field) => ':' . $field, $fields);
         
         $query = sprintf(
             'INSERT INTO %s (%s) VALUES (%s)',
             $table,
-            implode(', ', $fields),
+            implode(', ', $validatedFields),
             implode(', ', $placeholders)
         );
         
@@ -165,14 +171,19 @@ class Database
     {
         $pdo = $this->connect();
         
+        // Validate table name
+        $table = $this->validateIdentifier($table, 'table');
+        
         $setClause = [];
         foreach (array_keys($data) as $field) {
-            $setClause[] = sprintf('%s = :data_%s', $field, $field);
+            $validField = $this->validateIdentifier($field, 'field');
+            $setClause[] = sprintf('%s = :data_%s', $validField, $field);
         }
         
         $whereClause = [];
         foreach (array_keys($where) as $field) {
-            $whereClause[] = sprintf('%s = :where_%s', $field, $field);
+            $validField = $this->validateIdentifier($field, 'field');
+            $whereClause[] = sprintf('%s = :where_%s', $validField, $field);
         }
         
         $query = sprintf(
@@ -208,9 +219,13 @@ class Database
     {
         $pdo = $this->connect();
         
+        // Validate table name
+        $table = $this->validateIdentifier($table, 'table');
+        
         $whereClause = [];
         foreach (array_keys($where) as $field) {
-            $whereClause[] = sprintf('%s = :%s', $field, $field);
+            $validField = $this->validateIdentifier($field, 'field');
+            $whereClause[] = sprintf('%s = :%s', $validField, $field);
         }
         
         $query = sprintf(
@@ -248,21 +263,18 @@ class Database
     /**
      * Prepare a query
      *
+     * @deprecated This method is unsafe and should not be used. Use PDO prepared statements instead.
      * @param string $query
      * @param array $args
      * @return string
+     * @throws RuntimeException Always throws exception to prevent usage
      */
     public function prepare(string $query, ...$args): string
     {
-        if (empty($args)) {
-            return $query;
-        }
-
-        $query = str_replace("'%s'", '%s', $query);
-        $query = str_replace('"%s"', '%s', $query);
-        $query = str_replace('%s', "'%s'", $query);
-
-        return vsprintf($query, $args);
+        throw new RuntimeException(
+            'Database::prepare() is deprecated and unsafe. ' .
+            'Use PDO prepared statements with get_results(), get_row(), get_var(), insert(), update(), or delete() instead.'
+        );
     }
 
     /**
@@ -300,5 +312,28 @@ class Database
     public function rollback(): bool
     {
         return $this->connect()->rollBack();
+    }
+
+    /**
+     * Validate SQL identifier (table or field name) to prevent SQL injection.
+     *
+     * @param string $identifier The identifier to validate
+     * @param string $type Type of identifier (table or field)
+     * @return string The validated identifier
+     * @throws RuntimeException If identifier is invalid
+     */
+    private function validateIdentifier(string $identifier, string $type = 'field'): string
+    {
+        // Allow alphanumeric characters, underscores, and dots (for table.field)
+        if (!preg_match('/^[a-zA-Z0-9_\.]+$/', $identifier)) {
+            throw new RuntimeException("Invalid {$type} name: {$identifier}");
+        }
+
+        // Additional length check
+        if (strlen($identifier) > 64) {
+            throw new RuntimeException("{$type} name too long: {$identifier}");
+        }
+
+        return $identifier;
     }
 }
