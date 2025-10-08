@@ -83,13 +83,14 @@ class Queue
         $job = Lock::withLock('queue-global', $owner, function () use ($reports) {
             self::dispatchDueSchedules();
 
+            // nextQueued now handles locking and marking as running
             $job = $reports->nextQueued();
             if (! $job) {
                 return null;
             }
 
+            // Update metadata with start time
             $reports->update($job->id ?? 0, [
-                'status' => 'running',
                 'meta' => array_merge($job->meta, ['started_at' => Wp::currentTime('mysql')]),
             ]);
 
@@ -117,7 +118,8 @@ class Queue
 
     private static function lockOwner(): string
     {
-        return uniqid('fpdms-', true);
+        // Use cryptographically secure random bytes instead of uniqid()
+        return 'fpdms-' . bin2hex(random_bytes(16));
     }
 
     private static function process(ReportJob $job): void

@@ -170,9 +170,17 @@ class Task
      */
     public function dailyAt(string $time): self
     {
-        [$hour, $minute] = array_pad(explode(':', $time), 2, '0');
+        // Validate time format HH:MM
+        if (!preg_match('/^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])$/', $time, $matches)) {
+            $this->logger->error("Invalid time format for dailyAt: {$time}");
+            // Default to midnight if invalid
+            return $this->cron("0 0 * * *");
+        }
         
-        return $this->cron("$minute $hour * * *");
+        $hour = (int) $matches[1];
+        $minute = (int) $matches[2];
+        
+        return $this->cron("{$minute} {$hour} * * *");
     }
 
     /**
@@ -188,9 +196,18 @@ class Task
      */
     public function weeklyOn(int $day, string $time = '00:00'): self
     {
-        [$hour, $minute] = array_pad(explode(':', $time), 2, '0');
+        // Validate day (0-6)
+        $day = max(0, min(6, $day));
         
-        return $this->cron("$minute $hour * * $day");
+        // Validate time format
+        if (!preg_match('/^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])$/', $time, $matches)) {
+            $matches = [null, 0, 0];
+        }
+        
+        $hour = (int) $matches[1];
+        $minute = (int) $matches[2];
+        
+        return $this->cron("{$minute} {$hour} * * {$day}");
     }
 
     /**
@@ -206,9 +223,18 @@ class Task
      */
     public function monthlyOn(int $day, string $time = '00:00'): self
     {
-        [$hour, $minute] = array_pad(explode(':', $time), 2, '0');
+        // Validate day (1-31)
+        $day = max(1, min(31, $day));
         
-        return $this->cron("$minute $hour $day * *");
+        // Validate time format
+        if (!preg_match('/^([0-1]?[0-9]|2[0-3]):([0-5]?[0-9])$/', $time, $matches)) {
+            $matches = [null, 0, 0];
+        }
+        
+        $hour = (int) $matches[1];
+        $minute = (int) $matches[2];
+        
+        return $this->cron("{$minute} {$hour} {$day} * *");
     }
 
     /**

@@ -152,7 +152,8 @@ class ConnectionWizardIntegration
             wp_die(__('You do not have sufficient permissions to access this page.', 'fp-dms'));
         }
 
-        $provider = $_GET['provider'] ?? '';
+        // Sanitize inputs to prevent XSS and injection attacks
+        $provider = sanitize_key($_GET['provider'] ?? '');
         $clientId = isset($_GET['client']) ? intval($_GET['client']) : 0;
 
         if (empty($provider)) {
@@ -165,15 +166,18 @@ class ConnectionWizardIntegration
 
         $wizard = new \FP\DMS\Admin\ConnectionWizard\ConnectionWizard($provider);
         
-        // Get current step from query string
+        // Get current step from query string (sanitized)
         $step = isset($_GET['step']) ? intval($_GET['step']) : 0;
         $wizard->setCurrentStep($step);
 
-        // Get saved data from session or query string
+        // Get saved data from session or query string (sanitized)
         $data = ['client_id' => $clientId];
         if (isset($_GET['data'])) {
-            $savedData = json_decode(stripslashes($_GET['data']), true) ?: [];
-            $data = array_merge($data, $savedData);
+            // Use wp_unslash instead of stripslashes for proper sanitization
+            $savedData = json_decode(wp_unslash($_GET['data']), true);
+            if (is_array($savedData)) {
+                $data = array_merge($data, $savedData);
+            }
         }
         $wizard->setData($data);
 

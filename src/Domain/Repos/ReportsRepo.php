@@ -27,13 +27,45 @@ class ReportsRepo
         return is_array($row) ? ReportJob::fromRow($row) : null;
     }
 
+    /**
+     * Get the next queued report job.
+     * Uses row-level locking to prevent race conditions.
+     *
+     * @return ReportJob|null
+     */
     public function nextQueued(): ?ReportJob
     {
         global $wpdb;
-        $sql = "SELECT * FROM {$this->table} WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1";
+        
+        // Use InnoDB row-level locking with FOR UPDATE
+        // This prevents other processes from selecting the same job
+        $sql = "SELECT * FROM {$this->table} WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1 FOR UPDATE";
+        
+        // Start transaction for the lock to be effective
+        $wpdb->query('START TRANSACTION');
+        
         $row = $wpdb->get_row($sql, ARRAY_A);
+        
+        if (!is_array($row)) {
+            $wpdb->query('COMMIT');
+            return null;
+        }
+        
+        // Mark as running immediately to prevent other workers from picking it up
+        $id = (int) ($row['id'] ?? 0);
+        if ($id > 0) {
+            $wpdb->update(
+                $this->table,
+                ['status' => 'running'],
+                ['id' => $id],
+                ['%s'],
+                ['%d']
+            );
+        }
+        
+        $wpdb->query('COMMIT');
 
-        return is_array($row) ? ReportJob::fromRow($row) : null;
+        return ReportJob::fromRow($row);
     }
 
     /**

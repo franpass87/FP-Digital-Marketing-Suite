@@ -93,6 +93,14 @@ final class Http
 
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        
+        // CRITICAL: Enable SSL verification to prevent MITM attacks
+        \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        
+        // Set timeouts to prevent hanging
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
         if (isset($args['body'])) {
             \curl_setopt($ch, CURLOPT_POSTFIELDS, $args['body']);
@@ -100,6 +108,11 @@ final class Http
 
         if (isset($args['headers']) && \is_array($args['headers'])) {
             \curl_setopt($ch, CURLOPT_HTTPHEADER, $args['headers']);
+        }
+        
+        // Handle timeout from args if provided
+        if (isset($args['timeout']) && \is_numeric($args['timeout'])) {
+            \curl_setopt($ch, CURLOPT_TIMEOUT, (int) $args['timeout']);
         }
 
         $body = \curl_exec($ch);

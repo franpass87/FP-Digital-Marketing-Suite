@@ -446,7 +446,9 @@ class Options
                 if (! isset($routing[$channel][$field]) || ! is_string($routing[$channel][$field])) {
                     continue;
                 }
-                $routing[$channel][$field] = Security::decrypt((string) $routing[$channel][$field]);
+                $failed = false;
+                $decrypted = Security::decrypt((string) $routing[$channel][$field], $failed);
+                $routing[$channel][$field] = $failed ? '' : $decrypted;
             }
         }
 

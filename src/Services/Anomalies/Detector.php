@@ -65,6 +65,7 @@ class Detector
             foreach ($anomalies as &$anomaly) {
                 $anomaly['qa'] = true;
             }
+            unset($anomaly); // CRITICAL: Unset reference to prevent memory corruption
         }
 
         return $anomalies;
