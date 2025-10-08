@@ -1,0 +1,196 @@
+@use 'mixins' as *;
+@use 'tokens' as *;
+
+// Dashboard Layout
+.fpdms-dashboard-wrap {
+  max-width: 1100px;
+}
+
+.fpdms-dashboard-intro {
+  color: color(neutral-700);
+  font-size: 15px;
+  margin-bottom: space(xl);
+}
+
+// Dashboard Sections
+.fpdms-dashboard-section {
+  margin-bottom: space(xxl) + space(sm);
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 18px;
+  }
+}
+
+// Dashboard Grid
+.fpdms-dashboard-grid {
+  display: grid;
+  gap: space(lg);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+// Dashboard Cards
+.fpdms-dashboard-card {
+  @include card(20px);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: space(md);
+
+  h3 {
+    font-size: 16px;
+    margin: 0;
+    color: #1d2327;
+  }
+
+  &-value {
+    font-size: 32px;
+    font-weight: 600;
+    color: #1d2327;
+  }
+
+  p {
+    margin: 0;
+    color: color(neutral-700);
+  }
+
+  &-link {
+    align-self: flex-start;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Schedule Card
+.fpdms-dashboard-schedule-card {
+  align-items: flex-start;
+  background: color(neutral-100);
+  border: 1px solid color(neutral-200);
+  border-radius: radius(lg);
+  display: flex;
+  flex-direction: column;
+  gap: space(sm);
+  padding: 20px;
+}
+
+.fpdms-dashboard-schedule-primary {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: #1d2327;
+}
+
+.fpdms-dashboard-meta {
+  color: color(neutral-700);
+  font-size: 13px;
+  margin: 0;
+}
+
+.fpdms-dashboard-timestamp {
+  color: color(neutral-600);
+  font-size: 12px;
+  margin: 0;
+}
+
+// Dashboard Columns
+.fpdms-dashboard-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(xl);
+}
+
+.fpdms-dashboard-column {
+  flex: 1 1 320px;
+  min-width: 280px;
+
+  h3 {
+    font-size: 16px;
+    margin-top: 0;
+    margin-bottom: space(md);
+  }
+}
+
+.fpdms-dashboard-empty {
+  color: color(neutral-600);
+  font-style: italic;
+}
+
+// Dashboard List
+.fpdms-dashboard-list {
+  list-style: none;
+  margin: 0 0 space(md);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: space(md);
+
+  li {
+    @include card(space(lg));
+  }
+}
+
+.fpdms-dashboard-list-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: space(md);
+  margin-bottom: space(sm);
+}
+
+.fpdms-dashboard-inline-link {
+  font-weight: 600;
+}
+
+// Dashboard Links (Quick Links)
+.fpdms-dashboard-links {
+  display: grid;
+  gap: space(lg);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.fpdms-dashboard-link-card {
+  @include card(18px);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: space(sm);
+  text-decoration: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  h3 {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  p {
+    color: color(neutral-700);
+    margin: 0;
+  }
+
+  &:hover,
+  &:focus {
+    border-color: color(primary);
+    box-shadow: 0 3px 12px rgba(34, 113, 177, 0.18);
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .fpdms-dashboard-card {
+    padding: space(lg);
+
+    &-value {
+      font-size: 28px;
+    }
+  }
+
+  .fpdms-dashboard-schedule-card {
+    padding: space(lg);
+  }
+}
