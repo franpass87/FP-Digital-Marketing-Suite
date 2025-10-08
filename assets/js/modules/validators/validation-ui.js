@@ -44,12 +44,48 @@ export class ValidationUI {
 
     /**
      * Show validation message.
+     * Uses textContent for security, but allows <br> and <small> tags via safe parsing.
      */
     static showMessage(container, message, type = 'error') {
         const messageEl = document.createElement('div');
         messageEl.className = `fpdms-field-message fpdms-field-message--${type}`;
-        messageEl.innerHTML = message;
+        
+        // Security: Parse and sanitize message instead of using innerHTML directly
+        this._setMessageContent(messageEl, message);
+        
         container.appendChild(messageEl);
+    }
+    
+    /**
+     * Safely set message content, allowing only <br> and <small> tags.
+     */
+    static _setMessageContent(element, message) {
+        if (!message) return;
+        
+        // Split by <br> tag
+        const parts = message.split(/<br\s*\/?>/i);
+        
+        parts.forEach((part, index) => {
+            if (index > 0) {
+                element.appendChild(document.createElement('br'));
+            }
+            
+            // Check if part contains <small> tag
+            const smallMatch = part.match(/^(.*?)<small>(.*?)<\/small>(.*)$/i);
+            if (smallMatch) {
+                if (smallMatch[1]) {
+                    element.appendChild(document.createTextNode(smallMatch[1]));
+                }
+                const small = document.createElement('small');
+                small.textContent = smallMatch[2];
+                element.appendChild(small);
+                if (smallMatch[3]) {
+                    element.appendChild(document.createTextNode(smallMatch[3]));
+                }
+            } else {
+                element.appendChild(document.createTextNode(part));
+            }
+        });
     }
 
     /**
@@ -99,10 +135,17 @@ export class ValidationUI {
         const i18n = window.fpdmsI18n || {};
         const loader = document.createElement('div');
         loader.className = 'fpdms-loading';
-        loader.innerHTML = `
-            <span class="spinner is-active"></span>
-            <span>${message || i18n.testing || 'Testing connection...'}</span>
-        `;
+        
+        // Create spinner element
+        const spinner = document.createElement('span');
+        spinner.className = 'spinner is-active';
+        
+        // Create message element
+        const messageEl = document.createElement('span');
+        messageEl.textContent = message || i18n.testing || 'Testing connection...';
+        
+        loader.appendChild(spinner);
+        loader.appendChild(messageEl);
         container.appendChild(loader);
         return loader;
     }

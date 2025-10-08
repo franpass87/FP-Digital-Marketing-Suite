@@ -15,6 +15,12 @@ use FP\DMS\Support\Security;
  */
 class ConnectionAjaxHandler
 {
+    /** @var int Maximum requests per time window */
+    private const RATE_LIMIT_MAX = 30;
+    
+    /** @var int Time window in seconds */
+    private const RATE_LIMIT_WINDOW = 60;
+    
     /**
      * Register AJAX hooks.
      */
@@ -26,12 +32,50 @@ class ConnectionAjaxHandler
         add_action('wp_ajax_fpdms_wizard_load_step', [self::class, 'handleLoadWizardStep']);
         add_action('wp_ajax_fpdms_save_connection', [self::class, 'handleSaveConnection']);
     }
+    
+    /**
+     * Check if rate limit is exceeded for the current user and action.
+     * 
+     * @param string $action The action being rate limited
+     * @param int $maxRequests Maximum requests allowed
+     * @param int $window Time window in seconds
+     * @return bool True if rate limit is exceeded
+     */
+    private static function isRateLimitExceeded(string $action, int $maxRequests = self::RATE_LIMIT_MAX, int $window = self::RATE_LIMIT_WINDOW): bool
+    {
+        $userId = get_current_user_id();
+        if ($userId === 0) {
+            // No user ID - apply stricter limit
+            return true;
+        }
+        
+        $key = "fpdms_rate_limit_{$action}_{$userId}";
+        $count = (int) get_transient($key);
+        
+        if ($count >= $maxRequests) {
+            error_log(sprintf('[FPDMS] Rate limit exceeded for user %d on action %s', $userId, $action));
+            return true;
+        }
+        
+        // Increment counter
+        set_transient($key, $count + 1, $window);
+        
+        return false;
+    }
 
     /**
      * Handle live connection test.
      */
     public static function handleTestConnection(): void
     {
+        // Check rate limit (10 requests per minute for connection tests)
+        if (self::isRateLimitExceeded('test_connection', 10, 60)) {
+            wp_send_json_error([
+                'message' => __('Too many requests. Please wait a moment and try again.', 'fp-dms'),
+            ], 429);
+            return;
+        }
+        
         // Verify nonce
         if (!Security::verifyNonce($_POST['nonce'] ?? '', 'fpdms_connection_wizard')) {
             wp_send_json_error([
@@ -121,6 +165,14 @@ class ConnectionAjaxHandler
      */
     public static function handleDiscoverResources(): void
     {
+        // Check rate limit (5 requests per minute for discovery)
+        if (self::isRateLimitExceeded('discover_resources', 5, 60)) {
+            wp_send_json_error([
+                'message' => __('Too many requests. Please wait a moment and try again.', 'fp-dms'),
+            ], 429);
+            return;
+        }
+        
         // Verify nonce
         if (!Security::verifyNonce($_POST['nonce'] ?? '', 'fpdms_connection_wizard')) {
             wp_send_json_error([
