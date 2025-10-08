@@ -17,58 +17,74 @@ class GSCProvider extends BaseGoogleProvider implements DataSourceProviderInterf
 
     public function testConnection(): ConnectionResult
     {
-        $json = $this->resolveServiceAccount('fpdms/connector/gsc/service_account');
-        $siteUrl = $this->config['site_url'] ?? '';
+        try {
+            $json = $this->resolveServiceAccount('fpdms/connector/gsc/service_account');
+            $siteUrl = $this->config['site_url'] ?? '';
 
-        if (! $json || ! $siteUrl) {
-            return ConnectionResult::failure(__('Missing service account or site URL.', 'fp-dms'));
+            if (! $json || ! $siteUrl) {
+                return ConnectionResult::failure(__('Missing service account or site URL.', 'fp-dms'));
+            }
+
+            $decoded = json_decode((string) $json, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new ConnectorException(__('Invalid JSON in service account: ', 'fp-dms') . json_last_error_msg());
+            }
+            
+            if (! is_array($decoded) || empty($decoded['client_email']) || empty($decoded['private_key'])) {
+                return ConnectionResult::failure(__('Invalid service account JSON.', 'fp-dms'));
+            }
+
+            return ConnectionResult::success(__('Credentials look valid. Run a report to confirm data.', 'fp-dms'), [
+                'site_url' => $siteUrl,
+                'client_email' => $decoded['client_email'],
+            ]);
+        } catch (ConnectorException $e) {
+            return ConnectionResult::failure($e->getMessage());
+        } catch (\Throwable $e) {
+            error_log(sprintf('[GSCProvider] Connection test failed: %s', $e->getMessage()));
+            return ConnectionResult::failure(__('Connection test failed. Check logs for details.', 'fp-dms'));
         }
-
-        $decoded = json_decode((string) $json, true);
-        if (! is_array($decoded) || empty($decoded['client_email']) || empty($decoded['private_key'])) {
-            return ConnectionResult::failure(__('Invalid service account JSON.', 'fp-dms'));
-        }
-
-        return ConnectionResult::success(__('Credentials look valid. Run a report to confirm data.', 'fp-dms'), [
-            'site_url' => $siteUrl,
-            'client_email' => $decoded['client_email'],
-        ]);
     }
 
     public function fetchMetrics(Period $period): array
     {
-        $rows = [];
-        $summary = $this->config['summary'] ?? [];
-        if (is_array($summary) && isset($summary['daily']) && is_array($summary['daily'])) {
-            foreach ($summary['daily'] as $date => $metrics) {
-                if (! is_array($metrics)) {
-                    continue;
-                }
-                $dateString = (string) $date;
-                if ($dateString === 'total') {
-                    $dateString = $period->end->format('Y-m-d');
-                }
-                if (! Normalizer::isWithinPeriod($period, $dateString)) {
-                    continue;
-                }
+        try {
+            $rows = [];
+            $summary = $this->config['summary'] ?? [];
+            if (is_array($summary) && isset($summary['daily']) && is_array($summary['daily'])) {
+                foreach ($summary['daily'] as $date => $metrics) {
+                    if (! is_array($metrics)) {
+                        continue;
+                    }
+                    $dateString = (string) $date;
+                    if ($dateString === 'total') {
+                        $dateString = $period->end->format('Y-m-d');
+                    }
+                    if (! Normalizer::isWithinPeriod($period, $dateString)) {
+                        continue;
+                    }
 
+                    $rows[] = Normalizer::ensureKeys(array_merge(
+                        ['source' => 'gsc', 'date' => $dateString],
+                        self::mapMetrics($metrics)
+                    ));
+                }
+            } elseif (is_array($summary) && isset($summary['metrics']) && is_array($summary['metrics'])) {
                 $rows[] = Normalizer::ensureKeys(array_merge(
-                    ['source' => 'gsc', 'date' => $dateString],
-                    self::mapMetrics($metrics)
+                    ['source' => 'gsc', 'date' => $period->end->format('Y-m-d')],
+                    self::mapMetrics($summary['metrics'])
                 ));
+            } elseif (! empty($this->config['emit_empty'])) {
+                foreach (Dates::rangeDays($period->start, $period->end) as $date) {
+                    $rows[] = Normalizer::ensureKeys(['source' => 'gsc', 'date' => $date]);
+                }
             }
-        } elseif (is_array($summary) && isset($summary['metrics']) && is_array($summary['metrics'])) {
-            $rows[] = Normalizer::ensureKeys(array_merge(
-                ['source' => 'gsc', 'date' => $period->end->format('Y-m-d')],
-                self::mapMetrics($summary['metrics'])
-            ));
-        } elseif (! empty($this->config['emit_empty'])) {
-            foreach (Dates::rangeDays($period->start, $period->end) as $date) {
-                $rows[] = Normalizer::ensureKeys(['source' => 'gsc', 'date' => $date]);
-            }
-        }
 
-        return $rows;
+            return $rows;
+        } catch (\Throwable $e) {
+            error_log(sprintf('[GSCProvider] Failed to fetch metrics: %s', $e->getMessage()));
+            return [];
+        }
     }
 
     public function fetchDimensions(Period $period): array
