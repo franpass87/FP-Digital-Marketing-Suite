@@ -97,13 +97,19 @@ class ReportsRepo
         }
 
         if (isset($criteria['status'])) {
-            $where[] = 'status = %s';
-            $params[] = (string) $criteria['status'];
+            $status = (string) $criteria['status'];
+            // Sanitize status to prevent SQL injection
+            $status = preg_replace('/[^a-z_]/', '', strtolower($status));
+            if ($status !== '') {
+                $where[] = 'status = %s';
+                $params[] = $status;
+            }
         }
 
         if (! empty($criteria['status_in']) && is_array($criteria['status_in'])) {
             $statuses = array_map(static fn($status): string => (string) $status, $criteria['status_in']);
-            // Filter out empty values
+            // Sanitize and filter out empty/invalid values
+            $statuses = array_map(static fn($s): string => preg_replace('/[^a-z_]/', '', strtolower($s)), $statuses);
             $statuses = array_filter($statuses, static fn($s): bool => $s !== '');
             
             if (!empty($statuses)) {
