@@ -34,16 +34,17 @@ class Period
             if ($timezone !== null) {
                 $tz = new DateTimeZone($timezone);
             }
-            
+
             $startDate = new DateTimeImmutable($start, $tz);
             $endDate = new DateTimeImmutable($end, $tz);
 
             return new self($startDate, $endDate);
         } catch (Exception $e) {
             throw new RuntimeException(
-                sprintf('Invalid period dates or timezone: start=%s, end=%s, tz=%s. Error: %s', 
-                    $start, 
-                    $end, 
+                sprintf(
+                    'Invalid period dates or timezone: start=%s, end=%s, tz=%s. Error: %s',
+                    $start,
+                    $end,
                     $timezone ?? 'null',
                     $e->getMessage()
                 ),

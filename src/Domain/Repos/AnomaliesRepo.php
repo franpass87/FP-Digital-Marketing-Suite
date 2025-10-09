@@ -25,11 +25,11 @@ class AnomaliesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} ORDER BY detected_at DESC LIMIT %d", $limit);
-        
+
         if ($sql === false) {
             return [];
         }
-        
+
         $rows = $wpdb->get_results($sql, ARRAY_A);
         if (! is_array($rows)) {
             return [];
@@ -45,11 +45,11 @@ class AnomaliesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE client_id = %d ORDER BY detected_at DESC LIMIT %d", $clientId, $limit);
-        
+
         if ($sql === false) {
             return [];
         }
-        
+
         $rows = $wpdb->get_results($sql, ARRAY_A);
         if (! is_array($rows)) {
             return [];
@@ -79,9 +79,9 @@ class AnomaliesRepo
             'detected_at' => (string) ($data['detected_at'] ?? Wp::currentTime('mysql')),
             'notified' => empty($data['notified']) ? 0 : 1,
         ];
-        
+
         $formats = ['%d', '%s', '%s', '%s', '%s', '%d'];
-        
+
         // Add nullable fields only if they have values
         if (isset($data['algo'])) {
             $payload['algo'] = (string) $data['algo'];
@@ -128,11 +128,11 @@ class AnomaliesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
-        
+
         if ($sql === false) {
             return null;
         }
-        
+
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? Anomaly::fromRow($row) : null;
@@ -175,11 +175,11 @@ class AnomaliesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT COUNT(*) FROM {$this->table} WHERE client_id = %d", $clientId);
-        
+
         if ($sql === false) {
             return 0;
         }
-        
+
         $count = $wpdb->get_var($sql);
 
         return $count ? (int) $count : 0;

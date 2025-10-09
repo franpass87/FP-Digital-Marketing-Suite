@@ -16,15 +16,16 @@ use FP\DMS\Domain\Repos\ReportsRepo;
 use FP\DMS\Domain\Repos\SchedulesRepo;
 use FP\DMS\Domain\Repos\TemplatesRepo;
 use FP\DMS\Domain\Templates\TemplateBlueprints;
+use FP\DMS\Services\Anomalies\Detector;
 use FP\DMS\Services\Connectors\DataSourceProviderInterface;
 use FP\DMS\Services\Connectors\ProviderFactory;
-use FP\DMS\Services\Anomalies\Detector;
-use function __;
 use FP\DMS\Services\Reports\HtmlRenderer;
 use FP\DMS\Services\Reports\ReportBuilder;
 use FP\DMS\Services\Reports\TokenEngine;
 use FP\DMS\Support\Period;
 use FP\DMS\Support\Wp;
+
+use function __;
 
 class Queue
 {
@@ -35,8 +36,7 @@ class Queue
         ?int $templateId = null,
         ?int $scheduleId = null,
         array $extraMeta = []
-    ): ?ReportJob
-    {
+    ): ?ReportJob {
         $reports = new ReportsRepo();
         $meta = [];
 
@@ -171,7 +171,7 @@ class Queue
             ]);
             return;
         }
-        
+
         $providers = self::buildProviders($dataSources->forClient($client->id));
         $period = Period::fromStrings($job->periodStart, $job->periodEnd, $client->timezone);
 

@@ -10,16 +10,17 @@ use FP\DMS\Admin\Pages\Anomalies\AnomaliesRenderer;
 use FP\DMS\Domain\Repos\AnomaliesRepo;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Support\Wp;
+
 use function current_user_can;
 
 /**
  * Anomalies Page - Refactored with modular architecture
- * 
+ *
  * Delegates to:
  * - AnomaliesDataService: Data retrieval and formatting
  * - AnomaliesRenderer: UI rendering
  * - AnomaliesActionHandler: Action handling
- * 
+ *
  * Shared components:
  * - TabsRenderer: Tab navigation
  * - TableRenderer: Table display
@@ -45,7 +46,7 @@ class AnomaliesPageRefactored
         $clientsRepo = new ClientsRepo();
         $clients = $clientsRepo->all();
         $clientsMap = AnomaliesDataService::getClientsMap();
-        
+
         $clientId = isset($_GET['client_id']) ? (int) $_GET['client_id'] : 0;
         $tab = isset($_GET['tab']) ? Wp::sanitizeKey($_GET['tab']) : 'anomalies';
 
@@ -59,7 +60,7 @@ class AnomaliesPageRefactored
         } else {
             \settings_errors('fpdms_anomalies');
             AnomaliesRenderer::renderClientFilter($clients, $clientId, $tab);
-            
+
             $anomalies = AnomaliesDataService::getRecentAnomalies($clientId, 50);
             AnomaliesRenderer::renderAnomaliesTable($anomalies, $clientsMap);
         }

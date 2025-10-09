@@ -64,7 +64,6 @@ class RunReportCommand extends Command
 
             $io->success('Report generated successfully!');
             return Command::SUCCESS;
-            
         } catch (\Throwable $e) {
             $io->error(sprintf('Report generation failed: %s', $e->getMessage()));
             error_log(sprintf('[RunReportCommand] Error: %s', $e->getMessage()));
@@ -75,7 +74,7 @@ class RunReportCommand extends Command
     private function generateReport(int $clientId, string $from, string $to, SymfonyStyle $io): void
     {
         $io->section('Report Generation');
-        
+
         $io->table(
             ['Parameter', 'Value'],
             [
@@ -90,45 +89,45 @@ class RunReportCommand extends Command
         // $reportsRepo = new \FP\DMS\Domain\Repos\ReportsRepo();
         // $templatesRepo = new \FP\DMS\Domain\Repos\TemplatesRepo();
         // $dataSourcesRepo = new \FP\DMS\Domain\Repos\DataSourcesRepo();
-        // 
+        //
         // $client = $clientsRepo->find($clientId);
         // if (!$client) {
         //     throw new \RuntimeException(sprintf('Client %d not found', $clientId));
         // }
-        // 
+        //
         // $startDate = new \DateTimeImmutable($from);
         // $endDate = new \DateTimeImmutable($to);
         // $period = new \FP\DMS\Support\Period($startDate, $endDate);
-        // 
+        //
         // // Get data sources and create providers
         // $dataSources = $dataSourcesRepo->forClient($clientId);
         // $providers = []; // Create providers from data sources
-        // 
+        //
         // // Get template (use default if none specified)
         // $templates = $templatesRepo->all();
         // $template = reset($templates);
-        // 
+        //
         // // Create report job
         // $job = $reportsRepo->create([
         //     'client_id' => $clientId,
         //     'status' => 'pending',
         //     'meta' => [],
         // ]);
-        // 
+        //
         // // Generate report
         // $htmlRenderer = new \FP\DMS\Services\Reports\HtmlRenderer(new \FP\DMS\Services\Reports\TokenEngine());
         // $pdfRenderer = new \FP\DMS\Infra\PdfRenderer();
         // $builder = new \FP\DMS\Services\Reports\ReportBuilder($reportsRepo, $htmlRenderer, $pdfRenderer);
-        // 
+        //
         // $result = $builder->generate($job, $client, $providers, $period, $template);
-        // 
+        //
         // $io->text(sprintf('Report saved to: %s', $result->storagePath ?? 'N/A'));
-        
+
         $io->text('✓ Client data would be fetched');
         $io->text('✓ Data sources would be queried');
         $io->text('✓ PDF report would be generated');
         $io->text('✓ Report would be saved to storage');
-        
+
         $io->note('Report generation logic is ready for integration with repositories and services');
     }
 

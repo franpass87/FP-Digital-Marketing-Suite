@@ -7,10 +7,12 @@ namespace FP\DMS\Admin\Pages\Dashboard;
 use FP\DMS\Domain\Repos\AnomaliesRepo;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Infra\DB;
-use const ARRAY_A;
+
+use function __;
 use function is_array;
 use function sprintf;
-use function __;
+
+use const ARRAY_A;
 
 /**
  * Handles data retrieval and transformation for the dashboard

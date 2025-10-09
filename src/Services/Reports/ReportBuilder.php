@@ -17,6 +17,7 @@ use FP\DMS\Support\I18n;
 use FP\DMS\Support\Wp;
 use FP\DMS\Support\Period;
 use RuntimeException;
+
 use function is_array;
 use function is_string;
 use function wp_get_attachment_image_url;

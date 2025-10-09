@@ -118,7 +118,7 @@ final class Sanitizers
 
         // Simple fallback
         $url = \trim($url);
-        
+
         if (!\preg_match('/^https?:\/\//i', $url)) {
             return '';
         }

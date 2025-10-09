@@ -69,5 +69,3 @@ class CredentialManager
         return $plaintext;
     }
 }
-
-

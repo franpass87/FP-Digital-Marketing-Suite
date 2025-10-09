@@ -29,7 +29,7 @@ class AnomalyScanCommand extends Command
 
         try {
             $clientIdOption = $input->getOption('client');
-            
+
             // Se specificato un client, scansiona solo quello
             if ($clientIdOption) {
                 $clientId = (int) $clientIdOption;
@@ -43,7 +43,6 @@ class AnomalyScanCommand extends Command
 
             $io->success('Anomaly scan completed successfully!');
             return Command::SUCCESS;
-            
         } catch (\Throwable $e) {
             $io->error(sprintf('Anomaly scan failed: %s', $e->getMessage()));
             error_log(sprintf('[AnomalyScanCommand] Error: %s', $e->getMessage()));
@@ -55,7 +54,7 @@ class AnomalyScanCommand extends Command
     {
         // Implementazione base - in un sistema reale si recupererebbero i dati e si chiamerebbe Engine
         $io->note(sprintf('Client %d would be scanned here. Integrate with Engine::evaluateClientPeriod()', $clientId));
-        
+
         // TODO: Integrate with actual repositories and services
         // $clientsRepo = new \FP\DMS\Domain\Repos\ClientsRepo();
         // $anomaliesRepo = new \FP\DMS\Domain\Repos\AnomaliesRepo();
@@ -63,7 +62,7 @@ class AnomalyScanCommand extends Command
         // $period = Period::lastNDays(7);
         // $policy = ['metrics' => [...], 'baseline' => [...]];
         // $results = $engine->evaluateClientPeriod($clientId, $period, $policy);
-        
+
         $io->text('✓ Anomaly detection would run for this client');
     }
 
@@ -71,14 +70,14 @@ class AnomalyScanCommand extends Command
     {
         // Implementazione base - in un sistema reale si recupererebbero tutti i client
         $io->note('All clients would be scanned here');
-        
+
         // TODO: Integrate with actual repositories
         // $clientsRepo = new \FP\DMS\Domain\Repos\ClientsRepo();
         // $clients = $clientsRepo->all();
         // foreach ($clients as $client) {
         //     $this->scanClient($client->id, $io);
         // }
-        
+
         $io->text('✓ All clients would be processed');
     }
 }

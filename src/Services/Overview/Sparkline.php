@@ -50,7 +50,7 @@ class Sparkline
         // Prevent division by zero
         $limit = max(1, $limit);
         $ratio = $total / $limit;
-        
+
         $sampled = [];
         for ($i = 0; $i < $total; $i++) {
             $bucket = (int) floor($i / $ratio);

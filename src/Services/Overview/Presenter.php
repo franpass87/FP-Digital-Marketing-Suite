@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Services\Overview;
 
 use FP\DMS\Support\Wp;
+
 use function __;
 use function abs;
 use function sprintf;

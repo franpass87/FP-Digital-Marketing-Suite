@@ -426,7 +426,7 @@ class Options
                 if ($value === '') {
                     continue;
                 }
-                
+
                 try {
                     $routing[$channel][$field] = Security::encrypt($value);
                 } catch (\RuntimeException $e) {
@@ -480,7 +480,7 @@ class Options
     /**
      * Safe recursive merge that prevents type confusion.
      * Only merges arrays with arrays, scalars override previous values.
-     * 
+     *
      * @param array<string,mixed> $base
      * @param array<string,mixed> $override
      * @return array<string,mixed>
@@ -488,7 +488,7 @@ class Options
     private static function safeMergeRecursive(array $base, array $override): array
     {
         $result = $base;
-        
+
         foreach ($override as $key => $value) {
             // If both are arrays, merge recursively
             if (isset($result[$key]) && is_array($result[$key]) && is_array($value)) {
@@ -498,7 +498,7 @@ class Options
                 $result[$key] = $value;
             }
         }
-        
+
         return $result;
     }
 }

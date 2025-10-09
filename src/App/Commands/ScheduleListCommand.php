@@ -39,12 +39,12 @@ class ScheduleListCommand extends Command
         foreach ($tasks as $task) {
             $nextRun = $task['next_run'] ?? 'N/A';
             $timeUntil = 'N/A';
-            
+
             if ($nextRun !== 'N/A') {
                 $next = new \DateTime($nextRun);
                 $now = new \DateTime();
                 $diff = $now->diff($next);
-                
+
                 $timeUntil = $this->formatDiff($diff);
             }
 
@@ -68,7 +68,7 @@ class ScheduleListCommand extends Command
         } elseif (class_exists('\FP\DMS\Infra\Config')) {
             $lastRun = \FP\DMS\Infra\Config::get('scheduler_last_run', 'Never');
         }
-        
+
         $output->writeln(sprintf('<comment>Last run: %s</comment>', $lastRun));
 
         return Command::SUCCESS;

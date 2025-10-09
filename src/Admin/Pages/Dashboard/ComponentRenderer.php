@@ -6,6 +6,7 @@ namespace FP\DMS\Admin\Pages\Dashboard;
 
 use FP\DMS\Domain\Entities\Schedule;
 use FP\DMS\Support\Wp;
+
 use function __;
 use function add_query_arg;
 use function admin_url;
@@ -86,18 +87,18 @@ class ComponentRenderer
     private static function renderStatCard(array $card): void
     {
         $value = Wp::numberFormatI18n((float) ($card['value'] ?? 0));
-        
+
         echo '<article class="fpdms-dashboard-card">';
         echo '<h3>' . esc_html((string) ($card['label'] ?? '')) . '</h3>';
         echo '<span class="fpdms-dashboard-card-value">' . esc_html($value) . '</span>';
         echo '<p>' . esc_html((string) ($card['description'] ?? '')) . '</p>';
-        
+
         if (!empty($card['link'])) {
             echo '<a class="fpdms-dashboard-card-link" href="' . esc_url((string) $card['link']) . '">';
             echo esc_html((string) ($card['link_label'] ?? ''));
             echo '</a>';
         }
-        
+
         echo '</article>';
     }
 
@@ -162,7 +163,7 @@ class ComponentRenderer
     {
         echo '<div class="fpdms-dashboard-column">';
         echo '<h3>' . esc_html__('Latest reports', 'fp-dms') . '</h3>';
-        
+
         if ($reports === []) {
             echo '<p class="fpdms-dashboard-empty">' . esc_html__('No reports have been generated yet.', 'fp-dms') . '</p>';
         } else {
@@ -181,7 +182,7 @@ class ComponentRenderer
             }
             echo '</ul>';
         }
-        
+
         $reportsUrl = add_query_arg(['page' => 'fp-dms-overview'], admin_url('admin.php'));
         echo '<a class="fpdms-dashboard-inline-link" href="' . esc_url($reportsUrl) . '">' . esc_html__('Go to overview', 'fp-dms') . '</a>';
         echo '</div>';
@@ -196,7 +197,7 @@ class ComponentRenderer
     {
         echo '<div class="fpdms-dashboard-column">';
         echo '<h3>' . esc_html__('Latest anomalies', 'fp-dms') . '</h3>';
-        
+
         if ($anomalies === []) {
             echo '<p class="fpdms-dashboard-empty">' . esc_html__('No anomalies detected in the last checks.', 'fp-dms') . '</p>';
         } else {
@@ -213,7 +214,7 @@ class ComponentRenderer
             }
             echo '</ul>';
         }
-        
+
         $anomaliesUrl = add_query_arg(['page' => 'fp-dms-anomalies'], admin_url('admin.php'));
         echo '<a class="fpdms-dashboard-inline-link" href="' . esc_url($anomaliesUrl) . '">' . esc_html__('View all anomalies', 'fp-dms') . '</a>';
         echo '</div>';
@@ -250,14 +251,14 @@ class ComponentRenderer
         echo '<section class="fpdms-dashboard-section fpdms-section">';
         echo '<h2>' . esc_html__('Quick links', 'fp-dms') . '</h2>';
         echo '<div class="fpdms-dashboard-links">';
-        
+
         foreach ($links as $link) {
             echo '<a class="fpdms-dashboard-link-card" href="' . esc_url((string) ($link['url'] ?? '')) . '">';
             echo '<h3>' . esc_html((string) ($link['title'] ?? '')) . '</h3>';
             echo '<p>' . esc_html((string) ($link['description'] ?? '')) . '</p>';
             echo '</a>';
         }
-        
+
         echo '</div>';
         echo '</section>';
     }

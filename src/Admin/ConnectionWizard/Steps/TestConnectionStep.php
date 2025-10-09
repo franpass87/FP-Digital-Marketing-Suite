@@ -17,7 +17,7 @@ class TestConnectionStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('Test Connection', 'fp-dms'),
@@ -99,7 +99,6 @@ class TestConnectionStep extends AbstractWizardStep
             }
 
             return ['valid' => true];
-
         } catch (\Exception $e) {
             return [
                 'valid' => false,
@@ -121,7 +120,7 @@ class TestConnectionStep extends AbstractWizardStep
 
     private function getProviderLabel(): string
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4' => 'Google Analytics 4',
             'gsc' => 'Google Search Console',
             'google_ads' => 'Google Ads',

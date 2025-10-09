@@ -25,11 +25,11 @@ class SchedulesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE active = 1 AND next_run_at IS NOT NULL AND next_run_at <= %s ORDER BY next_run_at ASC", $now);
-        
+
         if ($sql === false) {
             return [];
         }
-        
+
         $rows = $wpdb->get_results($sql, ARRAY_A);
         if (! is_array($rows)) {
             return [];
@@ -59,11 +59,11 @@ class SchedulesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE client_id = %d ORDER BY created_at DESC", $clientId);
-        
+
         if ($sql === false) {
             return [];
         }
-        
+
         $rows = $wpdb->get_results($sql, ARRAY_A);
         if (! is_array($rows)) {
             return [];
@@ -76,11 +76,11 @@ class SchedulesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
-        
+
         if ($sql === false) {
             return null;
         }
-        
+
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? Schedule::fromRow($row) : null;
@@ -106,7 +106,7 @@ class SchedulesRepo
         $cronKey = isset($data['cron_key']) && is_string($data['cron_key']) && $data['cron_key'] !== ''
             ? (string) $data['cron_key']
             : 'cron_' . bin2hex(random_bytes(16));
-        
+
         $payload = [
             'client_id' => (int) ($data['client_id'] ?? 0),
             'cron_key' => $cronKey,
@@ -172,12 +172,12 @@ class SchedulesRepo
     public function deleteByClient(int $clientId): int
     {
         $deleted = 0;
-        
+
         // Note: Reports are handled separately by client cleanup
         // Schedule IDs are stored in report meta, not as direct foreign keys
         foreach ($this->forClient($clientId) as $schedule) {
             $scheduleId = $schedule->id ?? 0;
-            
+
             if ($scheduleId > 0 && $this->delete($scheduleId)) {
                 $deleted++;
             }

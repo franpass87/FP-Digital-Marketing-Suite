@@ -52,6 +52,7 @@ class DatabaseAdapter
  * This makes the Database instance available globally as $wpdb
  */
 if (!isset($GLOBALS['wpdb'])) {
+    // phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps -- WordPress $wpdb compatibility
     $GLOBALS['wpdb'] = new class {
         public string $prefix = '';
 

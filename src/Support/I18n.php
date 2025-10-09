@@ -17,6 +17,7 @@ class I18n
         return $text;
     }
 
+    // phpcs:disable PSR2.Methods.MethodDeclaration.Underscore -- WordPress function compatibility
     public static function _x(string $text, string $context, string $domain = self::TEXTDOMAIN): string
     {
         if (\function_exists('_x')) {

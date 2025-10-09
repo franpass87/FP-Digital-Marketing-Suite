@@ -16,7 +16,7 @@ class GSCSiteStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('Select Search Console Site', 'fp-dms'),
@@ -28,11 +28,11 @@ class GSCSiteStep extends AbstractWizardStep
     {
         $serviceAccount = $data['auth']['service_account'] ?? '';
         $selectedSiteUrl = $data['config']['site_url'] ?? '';
-        
+
         ob_start();
         ?>
         <div class="fpdms-gsc-site-step">
-            <?php if (!empty($serviceAccount)): ?>
+            <?php if (!empty($serviceAccount)) : ?>
                 <div class="fpdms-autodiscovery-section">
                     <button type="button" class="button button-secondary fpdms-btn-discover" data-provider="gsc">
                         🔍 <?php _e('Auto-discover my sites', 'fp-dms'); ?>
@@ -92,7 +92,7 @@ class GSCSiteStep extends AbstractWizardStep
     public function validate(array $data): array
     {
         $siteUrl = $data['config']['site_url'] ?? '';
-        
+
         if (empty($siteUrl)) {
             return [
                 'valid' => false,
@@ -140,8 +140,8 @@ class GSCSiteStep extends AbstractWizardStep
                 <li>' . __('Look at the property selector in the top left', 'fp-dms') . '</li>
                 <li>' . __('Copy the exact URL shown (including https:// or sc-domain: prefix)', 'fp-dms') . '</li>
             </ol>
-            <p><strong>' . __('Important:', 'fp-dms') . '</strong> ' . 
-            __('Add the service account email as a user in Search Console with "Full" or "Restricted" permissions.', 'fp-dms') . 
+            <p><strong>' . __('Important:', 'fp-dms') . '</strong> ' .
+            __('Add the service account email as a user in Search Console with "Full" or "Restricted" permissions.', 'fp-dms') .
             '</p>
         ';
     }

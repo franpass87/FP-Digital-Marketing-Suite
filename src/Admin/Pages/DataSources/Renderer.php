@@ -13,7 +13,7 @@ class Renderer
 {
     /**
      * Render data sources list table.
-     * 
+     *
      * @param array<int,DataSource> $dataSources
      * @param array<string,array<string,mixed>> $definitions
      */
@@ -46,13 +46,13 @@ class Renderer
 
     /**
      * Render single row in list table.
-     * 
+     *
      * @param array<string,array<string,mixed>> $definitions
      */
     private function renderListRow(DataSource $source, array $definitions, ?int $selectedClientId): void
     {
         $typeName = $definitions[$source->type]['name'] ?? ucfirst($source->type);
-        
+
         echo '<tr>';
         echo '<td><strong>' . esc_html($source->label) . '</strong></td>';
         echo '<td>' . esc_html($typeName) . '</td>';
@@ -64,23 +64,23 @@ class Renderer
     private function renderStatusBadge(DataSource $source): string
     {
         $lastTested = $source->lastTestedAt ?? null;
-        
+
         if (!$lastTested) {
-            return '<span class="dashicons dashicons-warning" style="color:#f0b849;" title="' . 
-                esc_attr__('Not tested yet', 'fp-dms') . '"></span> ' . 
+            return '<span class="dashicons dashicons-warning" style="color:#f0b849;" title="' .
+                esc_attr__('Not tested yet', 'fp-dms') . '"></span> ' .
                 esc_html__('Untested', 'fp-dms');
         }
 
         $lastStatus = $source->lastTestStatus ?? 'unknown';
-        
+
         if ($lastStatus === 'success') {
-            return '<span class="dashicons dashicons-yes-alt" style="color:#46b450;" title="' . 
-                esc_attr__('Last test successful', 'fp-dms') . '"></span> ' . 
+            return '<span class="dashicons dashicons-yes-alt" style="color:#46b450;" title="' .
+                esc_attr__('Last test successful', 'fp-dms') . '"></span> ' .
                 esc_html__('Connected', 'fp-dms');
         }
 
-        return '<span class="dashicons dashicons-no-alt" style="color:#dc3232;" title="' . 
-            esc_attr__('Last test failed', 'fp-dms') . '"></span> ' . 
+        return '<span class="dashicons dashicons-no-alt" style="color:#dc3232;" title="' .
+            esc_attr__('Last test failed', 'fp-dms') . '"></span> ' .
             esc_html__('Error', 'fp-dms');
     }
 
@@ -95,8 +95,8 @@ class Renderer
             'source' => $source->id,
             'client' => $selectedClientId,
         ], admin_url('admin.php'));
-        
-        $actions[] = '<a href="' . esc_url($editUrl) . '">' . 
+
+        $actions[] = '<a href="' . esc_url($editUrl) . '">' .
             esc_html__('Edit', 'fp-dms') . '</a>';
 
         // Delete
@@ -109,9 +109,9 @@ class Renderer
             ], admin_url('admin.php')),
             'fpdms_delete_datasource_' . $source->id
         );
-        
+
         $actions[] = '<a href="' . esc_url($deleteUrl) . '" ' .
-            'onclick="return confirm(\'' . esc_js(__('Are you sure you want to delete this data source?', 'fp-dms')) . '\');">' . 
+            'onclick="return confirm(\'' . esc_js(__('Are you sure you want to delete this data source?', 'fp-dms')) . '\');">' .
             esc_html__('Delete', 'fp-dms') . '</a>';
 
         return implode(' | ', $actions);

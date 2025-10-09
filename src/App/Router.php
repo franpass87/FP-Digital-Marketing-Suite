@@ -36,7 +36,7 @@ class Router
         $this->app->group('', function (RouteCollectorProxy $group) {
             // Dashboard
             $group->get('/dashboard', [DashboardController::class, 'index']);
-            
+
             // Clients
             $group->get('/clients', [ClientsController::class, 'index']);
             $group->get('/clients/create', [ClientsController::class, 'create']);
@@ -86,11 +86,11 @@ class Router
         $this->app->group('/api/v1', function (RouteCollectorProxy $group) {
             // Queue tick endpoint
             $group->post('/tick', [ApiController::class, 'tick']);
-            
+
             // Anomalies
             $group->post('/anomalies/evaluate', [ApiController::class, 'evaluateAnomalies']);
             $group->post('/anomalies/notify', [ApiController::class, 'notifyAnomalies']);
-            
+
             // QA endpoints
             $group->group('/qa', function (RouteCollectorProxy $qa) {
                 $qa->post('/seed', [ApiController::class, 'qaSeed']);

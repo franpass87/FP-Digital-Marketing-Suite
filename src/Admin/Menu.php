@@ -65,7 +65,7 @@ class Menu
         }
     }
 
-    public static function enqueue_assets(): void
+    public static function enqueueAssets(): void
     {
         // Placeholder for future admin assets.
     }

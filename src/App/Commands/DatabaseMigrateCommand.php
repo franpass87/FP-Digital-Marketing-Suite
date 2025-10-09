@@ -112,7 +112,7 @@ class DatabaseMigrateCommand extends Command
                 updated_at DATETIME NOT NULL,
                 PRIMARY KEY  (id)
             ) $charset",
-            
+
             "CREATE TABLE IF NOT EXISTS {$prefix}datasources (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 client_id BIGINT UNSIGNED NOT NULL,
@@ -125,7 +125,7 @@ class DatabaseMigrateCommand extends Command
                 PRIMARY KEY  (id),
                 KEY client_id (client_id)
             ) $charset",
-            
+
             "CREATE TABLE IF NOT EXISTS {$prefix}schedules (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 client_id BIGINT UNSIGNED NOT NULL,
@@ -140,7 +140,7 @@ class DatabaseMigrateCommand extends Command
                 PRIMARY KEY  (id),
                 UNIQUE KEY cron_key (cron_key)
             ) $charset",
-            
+
             "CREATE TABLE IF NOT EXISTS {$prefix}reports (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 client_id BIGINT UNSIGNED NOT NULL,
@@ -154,7 +154,7 @@ class DatabaseMigrateCommand extends Command
                 PRIMARY KEY  (id),
                 KEY client_id (client_id)
             ) $charset",
-            
+
             "CREATE TABLE IF NOT EXISTS {$prefix}anomalies (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 client_id BIGINT UNSIGNED NOT NULL,
@@ -174,7 +174,7 @@ class DatabaseMigrateCommand extends Command
                 PRIMARY KEY  (id),
                 KEY client_id (client_id)
             ) $charset",
-            
+
             "CREATE TABLE IF NOT EXISTS {$prefix}templates (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 name VARCHAR(190) NOT NULL,
@@ -185,14 +185,14 @@ class DatabaseMigrateCommand extends Command
                 updated_at DATETIME NOT NULL,
                 PRIMARY KEY  (id)
             ) $charset",
-            
+
             "CREATE TABLE IF NOT EXISTS {$prefix}locks (
                 lock_key VARCHAR(100) NOT NULL,
                 owner VARCHAR(64) NOT NULL,
                 acquired_at DATETIME NOT NULL,
                 PRIMARY KEY (lock_key)
             ) $charset",
-            
+
             "CREATE TABLE IF NOT EXISTS {$prefix}users (
                 id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
                 username VARCHAR(60) NOT NULL,

@@ -40,8 +40,11 @@ class ActionHandler
     {
         $nonce = Wp::sanitizeTextField($_POST['fpdms_datasource_nonce'] ?? '');
         if (!wp_verify_nonce($nonce, 'fpdms_manage_datasource')) {
-            add_settings_error('fpdms_datasources', 'fpdms_datasources_nonce', 
-                __('Security check failed. Please try again.', 'fp-dms'));
+            add_settings_error(
+                'fpdms_datasources',
+                'fpdms_datasources_nonce',
+                __('Security check failed. Please try again.', 'fp-dms')
+            );
             $this->storeAndRedirect((int) ($_POST['client_id'] ?? 0));
         }
 
@@ -62,8 +65,11 @@ class ActionHandler
     private function validateClient(int $clientId): bool
     {
         if ($clientId <= 0 || !$this->clientsRepo->find($clientId)) {
-            add_settings_error('fpdms_datasources', 'fpdms_datasources_client', 
-                __('Select a valid client before managing data sources.', 'fp-dms'));
+            add_settings_error(
+                'fpdms_datasources',
+                'fpdms_datasources_client',
+                __('Select a valid client before managing data sources.', 'fp-dms')
+            );
             return false;
         }
         return true;
@@ -75,25 +81,34 @@ class ActionHandler
         $type = Wp::sanitizeKey($_POST['type'] ?? '');
 
         if ($type === '') {
-            add_settings_error('fpdms_datasources', 'fpdms_datasources_type', 
-                __('Select a connector type.', 'fp-dms'));
+            add_settings_error(
+                'fpdms_datasources',
+                'fpdms_datasources_type',
+                __('Select a connector type.', 'fp-dms')
+            );
             $this->storeAndRedirect($clientId);
         }
 
         $existing = $id > 0 ? $this->dataSourcesRepo->find($id) : null;
-        
+
         if ($existing && $existing->clientId !== $clientId) {
-            add_settings_error('fpdms_datasources', 'fpdms_datasources_owner', 
-                __('This data source belongs to another client.', 'fp-dms'));
+            add_settings_error(
+                'fpdms_datasources',
+                'fpdms_datasources_owner',
+                __('This data source belongs to another client.', 'fp-dms')
+            );
             $this->storeAndRedirect($clientId);
         }
 
         $validator = new PayloadValidator();
         $payload = $validator->buildPayload($type, $existing);
-        
+
         if ($payload instanceof WP_Error) {
-            add_settings_error('fpdms_datasources', $payload->get_error_code(), 
-                $payload->get_error_message());
+            add_settings_error(
+                'fpdms_datasources',
+                $payload->get_error_code(),
+                $payload->get_error_message()
+            );
             $this->storeAndRedirect($clientId);
         }
 
@@ -101,16 +116,27 @@ class ActionHandler
 
         if ($existing) {
             $this->dataSourcesRepo->update($existing->id ?? 0, $payload);
-            add_settings_error('fpdms_datasources', 'fpdms_datasources_saved', 
-                __('Data source updated.', 'fp-dms'), 'updated');
+            add_settings_error(
+                'fpdms_datasources',
+                'fpdms_datasources_saved',
+                __('Data source updated.', 'fp-dms'),
+                'updated'
+            );
         } else {
             $created = $this->dataSourcesRepo->create($payload);
             if ($created === null) {
-                add_settings_error('fpdms_datasources', 'fpdms_datasources_error', 
-                    __('Unable to create data source.', 'fp-dms'));
+                add_settings_error(
+                    'fpdms_datasources',
+                    'fpdms_datasources_error',
+                    __('Unable to create data source.', 'fp-dms')
+                );
             } else {
-                add_settings_error('fpdms_datasources', 'fpdms_datasources_saved', 
-                    __('Data source created.', 'fp-dms'), 'updated');
+                add_settings_error(
+                    'fpdms_datasources',
+                    'fpdms_datasources_saved',
+                    __('Data source created.', 'fp-dms'),
+                    'updated'
+                );
             }
         }
 
@@ -123,23 +149,29 @@ class ActionHandler
         $dataSource = $this->dataSourcesRepo->find($id);
 
         if (!$dataSource || $dataSource->clientId !== $clientId) {
-            add_settings_error('fpdms_datasources', 'fpdms_datasources_missing', 
-                __('Data source not found.', 'fp-dms'));
+            add_settings_error(
+                'fpdms_datasources',
+                'fpdms_datasources_missing',
+                __('Data source not found.', 'fp-dms')
+            );
             $this->storeAndRedirect($clientId);
         }
 
         $provider = ProviderFactory::create($dataSource->type, $dataSource->auth, $dataSource->config);
-        
+
         if (!$provider) {
-            add_settings_error('fpdms_datasources', 'fpdms_datasources_provider', 
-                __('This connector cannot be tested automatically.', 'fp-dms'));
+            add_settings_error(
+                'fpdms_datasources',
+                'fpdms_datasources_provider',
+                __('This connector cannot be tested automatically.', 'fp-dms')
+            );
             $this->storeAndRedirect($clientId);
         }
 
         $result = $provider->testConnection();
         $code = $result->isSuccess() ? 'fpdms_datasources_test_success' : 'fpdms_datasources_test_error';
         $type = $result->isSuccess() ? 'updated' : 'error';
-        
+
         add_settings_error('fpdms_datasources', $code, $result->message(), $type);
         $this->storeAndRedirect($clientId);
     }
@@ -153,11 +185,18 @@ class ActionHandler
 
         if ($dataSource && wp_verify_nonce($nonce, 'fpdms_delete_datasource_' . $id)) {
             $this->dataSourcesRepo->delete($id);
-            add_settings_error('fpdms_datasources', 'fpdms_datasources_deleted', 
-                __('Data source deleted.', 'fp-dms'), 'updated');
+            add_settings_error(
+                'fpdms_datasources',
+                'fpdms_datasources_deleted',
+                __('Data source deleted.', 'fp-dms'),
+                'updated'
+            );
         } else {
-            add_settings_error('fpdms_datasources', 'fpdms_datasources_delete_error', 
-                __('Unable to delete data source.', 'fp-dms'));
+            add_settings_error(
+                'fpdms_datasources',
+                'fpdms_datasources_delete_error',
+                __('Unable to delete data source.', 'fp-dms')
+            );
         }
 
         $this->storeAndRedirect($clientId);

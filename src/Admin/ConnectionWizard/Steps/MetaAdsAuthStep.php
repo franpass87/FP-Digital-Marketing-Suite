@@ -16,7 +16,7 @@ class MetaAdsAuthStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('Meta Ads Configuration', 'fp-dms'),
@@ -28,7 +28,7 @@ class MetaAdsAuthStep extends AbstractWizardStep
     {
         $accessToken = $data['auth']['access_token'] ?? '';
         $accountId = $data['config']['account_id'] ?? '';
-        
+
         ob_start();
         ?>
         <div class="fpdms-meta-ads-auth-step">
@@ -74,7 +74,7 @@ class MetaAdsAuthStep extends AbstractWizardStep
             <div class="fpdms-field-group">
                 <h3><?php _e('Step 2: Ad Account ID', 'fp-dms'); ?></h3>
 
-                <?php if (!empty($accessToken)): ?>
+                <?php if (!empty($accessToken)) : ?>
                     <div class="fpdms-autodiscovery-section">
                         <button type="button" class="button button-secondary fpdms-btn-discover" data-provider="meta_ads">
                             🔍 <?php _e('Auto-discover my ad accounts', 'fp-dms'); ?>
@@ -172,7 +172,7 @@ class MetaAdsAuthStep extends AbstractWizardStep
                 $data['config']['account_id'] = 'act_' . $cleaned;
             }
         }
-        
+
         return $data;
     }
 

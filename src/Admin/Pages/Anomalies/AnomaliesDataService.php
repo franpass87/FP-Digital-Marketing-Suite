@@ -7,6 +7,7 @@ namespace FP\DMS\Admin\Pages\Anomalies;
 use FP\DMS\Domain\Repos\AnomaliesRepo;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Support\I18n;
+
 use function is_array;
 use function is_numeric;
 
@@ -25,11 +26,11 @@ class AnomaliesDataService
         $clientsRepo = new ClientsRepo();
         $clients = $clientsRepo->all();
         $map = [];
-        
+
         foreach ($clients as $client) {
             $map[$client->id ?? 0] = $client->name;
         }
-        
+
         return $map;
     }
 
@@ -41,11 +42,11 @@ class AnomaliesDataService
     public static function getRecentAnomalies(int $clientId = 0, int $limit = 50): array
     {
         $repo = new AnomaliesRepo();
-        
+
         if ($clientId > 0) {
             return $repo->recentForClient($clientId, $limit);
         }
-        
+
         return $repo->recent($limit);
     }
 
@@ -69,17 +70,17 @@ class AnomaliesDataService
     {
         $payload = $anomaly->payload;
         $metric = isset($payload['metric']) ? (string) $payload['metric'] : $anomaly->type;
-        
+
         $delta = isset($payload['delta_percent']) && is_numeric($payload['delta_percent'])
             ? round((float) $payload['delta_percent'], 2)
             : '—';
-        
+
         $zscore = isset($payload['zscore']) && is_numeric($payload['zscore'])
             ? round((float) $payload['zscore'], 2)
             : '—';
-        
+
         $clientName = $clientsMap[$anomaly->clientId] ?? I18n::__('Unknown');
-        
+
         return [
             'detected_at' => $anomaly->detectedAt ?? '—',
             'client' => $clientName,
@@ -136,11 +137,11 @@ class AnomaliesDataService
     {
         $options = \FP\DMS\Infra\Options::getGlobalSettings();
         $policies = $options['anomaly_detection']['policies'] ?? [];
-        
+
         if ($clientId > 0 && isset($policies[$clientId])) {
             return $policies[$clientId];
         }
-        
+
         return $policies['default'] ?? [
             'enabled' => true,
             'sensitivity' => 'medium',

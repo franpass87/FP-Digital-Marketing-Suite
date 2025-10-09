@@ -15,16 +15,18 @@ class PayloadValidator
 {
     /**
      * Build and validate payload from POST data.
-     * 
+     *
      * @return array<string,mixed>|WP_Error
      */
     public function buildPayload(string $type, ?DataSource $existing = null): array|WP_Error
     {
         $label = Wp::sanitizeTextField($_POST['label'] ?? '');
-        
+
         if ($label === '') {
-            return new WP_Error('fpdms_datasources_label', 
-                __('Provide a name for this data source.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_label',
+                __('Provide a name for this data source.', 'fp-dms')
+            );
         }
 
         $auth = $this->extractAuthData($type);
@@ -130,13 +132,17 @@ class PayloadValidator
     private function validateGA4(array $auth, array $config): ?WP_Error
     {
         if (empty($auth['service_account'])) {
-            return new WP_Error('fpdms_datasources_sa', 
-                __('Service account JSON is required for GA4.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_sa',
+                __('Service account JSON is required for GA4.', 'fp-dms')
+            );
         }
 
         if (empty($config['property_id'])) {
-            return new WP_Error('fpdms_datasources_property', 
-                __('GA4 Property ID is required.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_property',
+                __('GA4 Property ID is required.', 'fp-dms')
+            );
         }
 
         return null;
@@ -149,13 +155,17 @@ class PayloadValidator
     private function validateGSC(array $auth, array $config): ?WP_Error
     {
         if (empty($auth['service_account'])) {
-            return new WP_Error('fpdms_datasources_sa', 
-                __('Service account JSON is required for GSC.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_sa',
+                __('Service account JSON is required for GSC.', 'fp-dms')
+            );
         }
 
         if (empty($config['site_url'])) {
-            return new WP_Error('fpdms_datasources_site', 
-                __('Site URL is required for GSC.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_site',
+                __('Site URL is required for GSC.', 'fp-dms')
+            );
         }
 
         return null;
@@ -168,13 +178,17 @@ class PayloadValidator
     private function validateGoogleAds(array $auth, array $config): ?WP_Error
     {
         if (empty($auth['service_account'])) {
-            return new WP_Error('fpdms_datasources_sa', 
-                __('Service account JSON is required for Google Ads.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_sa',
+                __('Service account JSON is required for Google Ads.', 'fp-dms')
+            );
         }
 
         if (empty($config['customer_id'])) {
-            return new WP_Error('fpdms_datasources_customer', 
-                __('Customer ID is required for Google Ads.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_customer',
+                __('Customer ID is required for Google Ads.', 'fp-dms')
+            );
         }
 
         return null;
@@ -187,13 +201,17 @@ class PayloadValidator
     private function validateMetaAds(array $auth, array $config): ?WP_Error
     {
         if (empty($auth['access_token'])) {
-            return new WP_Error('fpdms_datasources_token', 
-                __('Access token is required for Meta Ads.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_token',
+                __('Access token is required for Meta Ads.', 'fp-dms')
+            );
         }
 
         if (empty($config['account_id'])) {
-            return new WP_Error('fpdms_datasources_account', 
-                __('Account ID is required for Meta Ads.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_account',
+                __('Account ID is required for Meta Ads.', 'fp-dms')
+            );
         }
 
         return null;
@@ -206,13 +224,17 @@ class PayloadValidator
     private function validateClarity(array $auth, array $config): ?WP_Error
     {
         if (empty($auth['api_key'])) {
-            return new WP_Error('fpdms_datasources_apikey', 
-                __('API key is required for Clarity.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_apikey',
+                __('API key is required for Clarity.', 'fp-dms')
+            );
         }
 
         if (empty($config['project_id'])) {
-            return new WP_Error('fpdms_datasources_project', 
-                __('Project ID is required for Clarity.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_project',
+                __('Project ID is required for Clarity.', 'fp-dms')
+            );
         }
 
         return null;
@@ -224,8 +246,10 @@ class PayloadValidator
     private function validateCSV(array $config): ?WP_Error
     {
         if (empty($config['file_path'])) {
-            return new WP_Error('fpdms_datasources_file', 
-                __('File path is required for CSV import.', 'fp-dms'));
+            return new WP_Error(
+                'fpdms_datasources_file',
+                __('File path is required for CSV import.', 'fp-dms')
+            );
         }
 
         return null;

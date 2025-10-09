@@ -17,13 +17,13 @@ class TemplateSelectionStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('Choose a Template', 'fp-dms'),
             __('Start with a pre-configured template or customize from scratch', 'fp-dms')
         );
-        
+
         $this->skippable = true;
     }
 
@@ -31,15 +31,15 @@ class TemplateSelectionStep extends AbstractWizardStep
     {
         $templates = ConnectionTemplate::getTemplatesByProvider($this->provider);
         $selectedTemplate = $data['template_id'] ?? '';
-        
+
         ob_start();
         ?>
         <div class="fpdms-template-selection">
-            <?php if (!empty($templates)): ?>
+            <?php if (!empty($templates)) : ?>
                 <p><?php _e('Choose a template that matches your use case to get started faster:', 'fp-dms'); ?></p>
                 
                 <div class="fpdms-templates-grid">
-                    <?php foreach ($templates as $templateId => $template): ?>
+                    <?php foreach ($templates as $templateId => $template) : ?>
                         <div class="fpdms-template-card <?php echo $selectedTemplate === $templateId ? 'selected' : ''; ?>" 
                              data-template-id="<?php echo esc_attr($templateId); ?>">
                             
@@ -55,9 +55,9 @@ class TemplateSelectionStep extends AbstractWizardStep
                                 <?php echo esc_html($template['description']); ?>
                             </div>
                             
-                            <?php if (!empty($template['recommended_for'])): ?>
+                            <?php if (!empty($template['recommended_for'])) : ?>
                                 <div class="fpdms-template-tags">
-                                    <?php foreach ($template['recommended_for'] as $tag): ?>
+                                    <?php foreach ($template['recommended_for'] as $tag) : ?>
                                         <span class="fpdms-template-tag">
                                             <?php echo esc_html($tag); ?>
                                         </span>
@@ -67,7 +67,7 @@ class TemplateSelectionStep extends AbstractWizardStep
                             
                             <div class="fpdms-template-metrics">
                                 <small>
-                                    <?php 
+                                    <?php
                                     printf(
                                         _n(
                                             '%d metric configured',
@@ -98,7 +98,7 @@ class TemplateSelectionStep extends AbstractWizardStep
 
                 <input type="hidden" name="template_id" id="fpdms_template_id" value="<?php echo esc_attr($selectedTemplate); ?>" />
                 
-            <?php else: ?>
+            <?php else : ?>
                 <div class="fpdms-empty-state">
                     <div class="fpdms-empty-state-icon">📋</div>
                     <div class="fpdms-empty-state-message">
@@ -123,7 +123,7 @@ class TemplateSelectionStep extends AbstractWizardStep
     public function process(array $data): array
     {
         $templateId = $data['template_id'] ?? '';
-        
+
         if (!empty($templateId)) {
             try {
                 // Apply template to configuration
@@ -139,7 +139,7 @@ class TemplateSelectionStep extends AbstractWizardStep
                 // If template application fails, continue without it
             }
         }
-        
+
         return $data;
     }
 

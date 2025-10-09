@@ -8,7 +8,7 @@ use FP\DMS\Admin\Support\Ajax\ConnectionAjaxHandler;
 
 /**
  * Main plugin integration for connection improvements.
- * 
+ *
  * This class integrates the connection wizard and validation features
  * into the existing plugin.
  */
@@ -40,7 +40,7 @@ class ConnectionWizardIntegration
             'fp-suite_page_fp-dms-datasources',
             'admin_page_fpdms-connection-wizard'
         ];
-        
+
         if (!in_array($hook, $allowed_hooks, true)) {
             return;
         }
@@ -73,7 +73,7 @@ class ConnectionWizardIntegration
             [],
             $version
         );
-        
+
         wp_enqueue_style(
             'fpdms-connection-validator',
             plugins_url('assets/css/connection-validator.css', $pluginDir . '/fp-digital-marketing-suite.php'),
@@ -165,7 +165,7 @@ class ConnectionWizardIntegration
         }
 
         $wizard = new \FP\DMS\Admin\ConnectionWizard\ConnectionWizard($provider);
-        
+
         // Get current step from query string (sanitized)
         $step = isset($_GET['step']) ? intval($_GET['step']) : 0;
         $wizard->setCurrentStep($step);
@@ -183,12 +183,12 @@ class ConnectionWizardIntegration
 
         ?>
         <div class="wrap">
-            <h1><?php 
+            <h1><?php
                 printf(
                     esc_html__('%s Connection Wizard', 'fp-dms'),
                     esc_html(ucfirst($provider))
                 );
-            ?></h1>
+                ?></h1>
             <?php echo $wizard->render(); ?>
         </div>
         <?php

@@ -25,17 +25,17 @@ class TabsRenderer
     public static function render(array $tabs, string $currentTab, array $baseParams = []): void
     {
         echo '<h2 class="nav-tab-wrapper">';
-        
+
         foreach ($tabs as $key => $label) {
             $params = array_merge($baseParams, ['tab' => $key]);
             $url = add_query_arg($params, admin_url('admin.php'));
             $class = $currentTab === $key ? 'nav-tab nav-tab-active' : 'nav-tab';
-            
+
             echo '<a href="' . esc_url($url) . '" class="' . esc_attr($class) . '">';
             echo esc_html($label);
             echo '</a>';
         }
-        
+
         echo '</h2>';
     }
 

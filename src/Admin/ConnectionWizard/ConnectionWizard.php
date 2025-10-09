@@ -6,18 +6,18 @@ namespace FP\DMS\Admin\ConnectionWizard;
 
 /**
  * Main connection wizard orchestrator.
- * 
+ *
  * Manages the multi-step process for configuring data source connections.
  */
 class ConnectionWizard
 {
     private string $provider;
-    
+
     /** @var WizardStep[] */
     private array $steps = [];
-    
+
     private int $currentStep = 0;
-    
+
     private array $data = [];
 
     public function __construct(string $provider)
@@ -31,7 +31,7 @@ class ConnectionWizard
      */
     private function loadSteps(): void
     {
-        $this->steps = match($this->provider) {
+        $this->steps = match ($this->provider) {
             'ga4' => $this->getGA4Steps(),
             'gsc' => $this->getGSCSteps(),
             'google_ads' => $this->getGoogleAdsSteps(),
@@ -149,8 +149,8 @@ class ConnectionWizard
     public function render(): string
     {
         if (empty($this->steps)) {
-            return '<div class="notice notice-error"><p>' . 
-                   __('Invalid provider type', 'fp-dms') . 
+            return '<div class="notice notice-error"><p>' .
+                   __('Invalid provider type', 'fp-dms') .
                    '</p></div>';
         }
 
@@ -163,7 +163,7 @@ class ConnectionWizard
                 <h2 class="fpdms-wizard-title">
                     <?php echo esc_html($currentStepObj->getTitle()); ?>
                 </h2>
-                <?php if ($currentStepObj->getDescription()): ?>
+                <?php if ($currentStepObj->getDescription()) : ?>
                     <p class="fpdms-wizard-description">
                         <?php echo esc_html($currentStepObj->getDescription()); ?>
                     </p>
@@ -198,7 +198,7 @@ class ConnectionWizard
         ?>
         <div class="fpdms-wizard-progress">
             <div class="fpdms-wizard-progress-text">
-                <?php 
+                <?php
                 printf(
                     __('Step %d of %d', 'fp-dms'),
                     $this->currentStep + 1,
@@ -207,8 +207,8 @@ class ConnectionWizard
                 ?>
             </div>
             <div class="fpdms-wizard-progress-bar">
-                <?php for ($i = 0; $i < $total; $i++): ?>
-                    <div class="fpdms-wizard-step-indicator <?php 
+                <?php for ($i = 0; $i < $total; $i++) : ?>
+                    <div class="fpdms-wizard-step-indicator <?php
                         echo $i < $this->currentStep ? 'completed' : '';
                         echo $i === $this->currentStep ? 'active' : '';
                     ?>"></div>
@@ -228,23 +228,23 @@ class ConnectionWizard
         $currentStepObj = $this->steps[$this->currentStep];
 
         ?>
-        <?php if (!$isFirst): ?>
+        <?php if (!$isFirst) : ?>
             <button type="button" class="button fpdms-wizard-btn-prev">
                 ❮ <?php esc_html_e('Back', 'fp-dms'); ?>
             </button>
         <?php endif; ?>
 
-        <?php if ($currentStepObj->isSkippable()): ?>
+        <?php if ($currentStepObj->isSkippable()) : ?>
             <button type="button" class="button fpdms-wizard-btn-skip">
                 <?php esc_html_e('Skip', 'fp-dms'); ?>
             </button>
         <?php endif; ?>
 
-        <?php if (!$isLast): ?>
+        <?php if (!$isLast) : ?>
             <button type="button" class="button button-primary fpdms-wizard-btn-next">
                 <?php esc_html_e('Continue', 'fp-dms'); ?> ❯
             </button>
-        <?php else: ?>
+        <?php else : ?>
             <button type="button" class="button button-primary fpdms-wizard-btn-finish">
                 <?php esc_html_e('Finish Setup', 'fp-dms'); ?> ✓
             </button>
@@ -258,13 +258,13 @@ class ConnectionWizard
     private function renderStepHelp(WizardStep $step): void
     {
         $help = $step->getHelp();
-        
+
         if (empty($help)) {
             return;
         }
 
         if (isset($help['content'])) {
-            echo '<button type="button" class="button fpdms-btn-help" data-step="' . 
+            echo '<button type="button" class="button fpdms-btn-help" data-step="' .
                  esc_attr($step->getId()) . '">';
             echo '❓ ' . esc_html__('Need help?', 'fp-dms');
             echo '</button>';

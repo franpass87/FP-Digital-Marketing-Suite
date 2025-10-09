@@ -8,6 +8,7 @@ use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\UserPrefs;
 use FP\DMS\Support\Wp;
+
 use function __;
 use function array_filter;
 use function array_map;
