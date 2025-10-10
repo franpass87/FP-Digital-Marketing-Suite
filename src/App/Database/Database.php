@@ -77,6 +77,8 @@ class Database
      * @param string $query
      * @param array $params
      * @return array
+     *
+     * phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps -- WordPress compatibility
      */
     public function get_results(string $query, array $params = []): array
     {
@@ -93,6 +95,8 @@ class Database
      * @param string $query
      * @param array $params
      * @return object|null
+     *
+     * phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps -- WordPress compatibility
      */
     public function get_row(string $query, array $params = []): ?object
     {
@@ -111,6 +115,8 @@ class Database
      * @param string $query
      * @param array $params
      * @return mixed
+     *
+     * phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps -- WordPress compatibility
      */
     public function get_var(string $query, array $params = []): mixed
     {
@@ -131,29 +137,29 @@ class Database
     public function insert(string $table, array $data): int
     {
         $pdo = $this->connect();
-        
+
         // Validate table name to prevent SQL injection
         $table = $this->validateIdentifier($table, 'table');
-        
+
         $fields = array_keys($data);
-        
+
         // Validate field names to prevent SQL injection
         $validatedFields = array_map(fn($field) => $this->validateIdentifier($field, 'field'), $fields);
         $placeholders = array_map(fn($field) => ':' . $field, $fields);
-        
+
         $query = sprintf(
             'INSERT INTO %s (%s) VALUES (%s)',
             $table,
             implode(', ', $validatedFields),
             implode(', ', $placeholders)
         );
-        
+
         $stmt = $pdo->prepare($query);
-        
+
         foreach ($data as $field => $value) {
             $stmt->bindValue(':' . $field, $value);
         }
-        
+
         $stmt->execute();
 
         return (int) $pdo->lastInsertId();
@@ -170,39 +176,39 @@ class Database
     public function update(string $table, array $data, array $where): int
     {
         $pdo = $this->connect();
-        
+
         // Validate table name
         $table = $this->validateIdentifier($table, 'table');
-        
+
         $setClause = [];
         foreach (array_keys($data) as $field) {
             $validField = $this->validateIdentifier($field, 'field');
             $setClause[] = sprintf('%s = :data_%s', $validField, $field);
         }
-        
+
         $whereClause = [];
         foreach (array_keys($where) as $field) {
             $validField = $this->validateIdentifier($field, 'field');
             $whereClause[] = sprintf('%s = :where_%s', $validField, $field);
         }
-        
+
         $query = sprintf(
             'UPDATE %s SET %s WHERE %s',
             $table,
             implode(', ', $setClause),
             implode(' AND ', $whereClause)
         );
-        
+
         $stmt = $pdo->prepare($query);
-        
+
         foreach ($data as $field => $value) {
             $stmt->bindValue(':data_' . $field, $value);
         }
-        
+
         foreach ($where as $field => $value) {
             $stmt->bindValue(':where_' . $field, $value);
         }
-        
+
         $stmt->execute();
 
         return $stmt->rowCount();
@@ -218,28 +224,28 @@ class Database
     public function delete(string $table, array $where): int
     {
         $pdo = $this->connect();
-        
+
         // Validate table name
         $table = $this->validateIdentifier($table, 'table');
-        
+
         $whereClause = [];
         foreach (array_keys($where) as $field) {
             $validField = $this->validateIdentifier($field, 'field');
             $whereClause[] = sprintf('%s = :%s', $validField, $field);
         }
-        
+
         $query = sprintf(
             'DELETE FROM %s WHERE %s',
             $table,
             implode(' AND ', $whereClause)
         );
-        
+
         $stmt = $pdo->prepare($query);
-        
+
         foreach ($where as $field => $value) {
             $stmt->bindValue(':' . $field, $value);
         }
-        
+
         $stmt->execute();
 
         return $stmt->rowCount();
@@ -281,6 +287,8 @@ class Database
      * Get charset collate string
      *
      * @return string
+     *
+     * phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps -- WordPress compatibility
      */
     public function get_charset_collate(): string
     {

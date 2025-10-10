@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Wp;
+
 use function __;
 use function base64_encode;
 use function function_exists;

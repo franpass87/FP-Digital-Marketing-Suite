@@ -18,7 +18,7 @@ class GA4PropertyStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('Select GA4 Property', 'fp-dms'),
@@ -30,11 +30,11 @@ class GA4PropertyStep extends AbstractWizardStep
     {
         $serviceAccount = $data['auth']['service_account'] ?? '';
         $selectedPropertyId = $data['config']['property_id'] ?? '';
-        
+
         ob_start();
         ?>
         <div class="fpdms-ga4-property-step">
-            <?php if (!empty($serviceAccount)): ?>
+            <?php if (!empty($serviceAccount)) : ?>
                 <div class="fpdms-autodiscovery-section">
                     <button type="button" class="button button-secondary fpdms-btn-discover" data-provider="ga4">
                         🔍 <?php _e('Auto-discover my properties', 'fp-dms'); ?>
@@ -85,7 +85,7 @@ class GA4PropertyStep extends AbstractWizardStep
     public function validate(array $data): array
     {
         $propertyId = $data['config']['property_id'] ?? '';
-        
+
         if (empty($propertyId)) {
             return [
                 'valid' => false,
@@ -134,8 +134,8 @@ class GA4PropertyStep extends AbstractWizardStep
                 <li>' . __('Click <strong>Property Settings</strong>', 'fp-dms') . '</li>
                 <li>' . __('Find the <strong>Property ID</strong> at the top (it\'s a number like 123456789)', 'fp-dms') . '</li>
             </ol>
-            <p><strong>' . __('Important:', 'fp-dms') . '</strong> ' . 
-            __('Make sure to add the service account email as a user in GA4 with "Viewer" permissions.', 'fp-dms') . 
+            <p><strong>' . __('Important:', 'fp-dms') . '</strong> ' .
+            __('Make sure to add the service account email as a user in GA4 with "Viewer" permissions.', 'fp-dms') .
             '</p>
         ';
     }

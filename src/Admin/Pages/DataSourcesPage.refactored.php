@@ -14,7 +14,7 @@ use FP\DMS\Services\Connectors\ProviderFactory;
 
 /**
  * Refactored Data Sources Page with modular architecture.
- * 
+ *
  * Responsibilities are now split into:
  * - ActionHandler: Handles save, test, delete operations
  * - PayloadValidator: Validates form data
@@ -55,10 +55,10 @@ class DataSourcesPageRefactored
     {
         // Handle POST/GET actions
         $this->actionHandler->handleActions();
-        
+
         // Boot notices from transient
         $this->noticeManager->bootNotices();
-        
+
         // Output inline CSS
         $this->renderer->outputInlineAssets();
 
@@ -98,7 +98,7 @@ class DataSourcesPageRefactored
 
         // Get data sources for selected client
         $dataSources = $selectedClientId ? $this->dataSourcesRepo->forClient($selectedClientId) : [];
-        
+
         // Check if we're editing
         $editing = $this->getEditingDataSource($selectedClientId);
 
@@ -121,7 +121,7 @@ class DataSourcesPageRefactored
         }
 
         $candidate = $this->dataSourcesRepo->find((int) $_GET['source']);
-        
+
         if ($candidate && $candidate->clientId === $selectedClientId) {
             return $candidate;
         }

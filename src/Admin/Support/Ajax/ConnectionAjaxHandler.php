@@ -17,10 +17,10 @@ class ConnectionAjaxHandler
 {
     /** @var int Maximum requests per time window */
     private const RATE_LIMIT_MAX = 30;
-    
+
     /** @var int Time window in seconds */
     private const RATE_LIMIT_WINDOW = 60;
-    
+
     /**
      * Register AJAX hooks.
      */
@@ -32,10 +32,10 @@ class ConnectionAjaxHandler
         add_action('wp_ajax_fpdms_wizard_load_step', [self::class, 'handleLoadWizardStep']);
         add_action('wp_ajax_fpdms_save_connection', [self::class, 'handleSaveConnection']);
     }
-    
+
     /**
      * Check if rate limit is exceeded for the current user and action.
-     * 
+     *
      * @param string $action The action being rate limited
      * @param int $maxRequests Maximum requests allowed
      * @param int $window Time window in seconds
@@ -48,18 +48,18 @@ class ConnectionAjaxHandler
             // No user ID - apply stricter limit
             return true;
         }
-        
+
         $key = "fpdms_rate_limit_{$action}_{$userId}";
         $count = (int) get_transient($key);
-        
+
         if ($count >= $maxRequests) {
             error_log(sprintf('[FPDMS] Rate limit exceeded for user %d on action %s', $userId, $action));
             return true;
         }
-        
+
         // Increment counter
         set_transient($key, $count + 1, $window);
-        
+
         return false;
     }
 
@@ -75,7 +75,7 @@ class ConnectionAjaxHandler
             ], 429);
             return;
         }
-        
+
         // Verify nonce
         if (!Security::verifyNonce($_POST['nonce'] ?? '', 'fpdms_connection_wizard')) {
             wp_send_json_error([
@@ -111,7 +111,7 @@ class ConnectionAjaxHandler
             ], 400);
             return;
         }
-        
+
         // Validate provider whitelist
         $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
         if (!in_array($provider, $validProviders, true)) {
@@ -172,7 +172,7 @@ class ConnectionAjaxHandler
             ], 429);
             return;
         }
-        
+
         // Verify nonce
         if (!Security::verifyNonce($_POST['nonce'] ?? '', 'fpdms_connection_wizard')) {
             wp_send_json_error([
@@ -208,7 +208,7 @@ class ConnectionAjaxHandler
             ], 400);
             return;
         }
-        
+
         // Validate provider whitelist
         $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
         if (!in_array($provider, $validProviders, true)) {
@@ -262,7 +262,7 @@ class ConnectionAjaxHandler
             ], 400);
             return;
         }
-        
+
         // Validate provider is in whitelist
         $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
         if (!in_array($provider, $validProviders, true)) {
@@ -507,7 +507,7 @@ class ConnectionAjaxHandler
             ], 400);
             return;
         }
-        
+
         // Validate provider whitelist
         $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
         if (!in_array($provider, $validProviders, true)) {
@@ -576,7 +576,7 @@ class ConnectionAjaxHandler
             ], 400);
             return;
         }
-        
+
         // Validate provider whitelist
         $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
         if (!in_array($provider, $validProviders, true)) {
@@ -589,14 +589,14 @@ class ConnectionAjaxHandler
         try {
             // Extract client ID from data
             $clientId = isset($data['client_id']) ? intval($data['client_id']) : 0;
-            
+
             if ($clientId <= 0) {
                 throw new \RuntimeException(__('Client ID is required', 'fp-dms'));
             }
 
             // Prepare the payload for saving
             $repo = new \FP\DMS\Domain\Repos\DataSourcesRepo();
-            
+
             $payload = [
                 'type' => $provider,
                 'client_id' => $clientId,

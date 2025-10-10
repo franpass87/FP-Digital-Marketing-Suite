@@ -74,31 +74,31 @@ abstract class AbstractWizardStep implements WizardStep
             $html .= ' <span class="required">*</span>';
         }
         $html .= '</label>';
-        
+
         $html .= '<input type="text" ';
         $html .= 'id="' . esc_attr($id) . '" ';
         $html .= 'name="' . esc_attr($name) . '" ';
         $html .= 'class="regular-text fpdms-validated-field" ';
         $html .= 'value="' . esc_attr($value) . '" ';
-        
+
         if ($placeholder) {
             $html .= 'placeholder="' . esc_attr($placeholder) . '" ';
         }
-        
+
         if ($required) {
             $html .= 'required ';
         }
-        
+
         if ($validationAttrs) {
             $html .= $validationAttrs . ' ';
         }
-        
+
         $html .= '/>';
-        
+
         if ($description) {
             $html .= '<p class="description">' . wp_kses_post($description) . '</p>';
         }
-        
+
         $html .= '<span class="fpdms-validation-icon"></span>';
         $html .= '</div>';
 
@@ -127,27 +127,27 @@ abstract class AbstractWizardStep implements WizardStep
             $html .= ' <span class="required">*</span>';
         }
         $html .= '</label>';
-        
+
         $html .= '<textarea ';
         $html .= 'id="' . esc_attr($id) . '" ';
         $html .= 'name="' . esc_attr($name) . '" ';
         $html .= 'class="large-text fpdms-validated-field" ';
         $html .= 'rows="' . intval($rows) . '" ';
-        
+
         if ($placeholder) {
             $html .= 'placeholder="' . esc_attr($placeholder) . '" ';
         }
-        
+
         if ($required) {
             $html .= 'required ';
         }
-        
+
         $html .= '>' . esc_textarea($value) . '</textarea>';
-        
+
         if ($description) {
             $html .= '<p class="description">' . wp_kses_post($description) . '</p>';
         }
-        
+
         $html .= '</div>';
 
         return $html;
@@ -161,7 +161,7 @@ abstract class AbstractWizardStep implements WizardStep
         $html = '<div class="fpdms-help-panel">';
         $html .= '<div class="fpdms-help-title">' . esc_html($title) . '</div>';
         $html .= '<div class="fpdms-help-content">' . wp_kses_post($content) . '</div>';
-        
+
         if (!empty($links)) {
             $html .= '<div class="fpdms-help-links">';
             foreach ($links as $link) {
@@ -173,7 +173,7 @@ abstract class AbstractWizardStep implements WizardStep
             }
             $html .= '</div>';
         }
-        
+
         $html .= '</div>';
 
         return $html;

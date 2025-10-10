@@ -16,7 +16,7 @@ class GoogleAdsCustomerStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('Google Ads Customer ID', 'fp-dms'),
@@ -28,11 +28,11 @@ class GoogleAdsCustomerStep extends AbstractWizardStep
     {
         $serviceAccount = $data['auth']['service_account'] ?? '';
         $selectedCustomerId = $data['config']['customer_id'] ?? '';
-        
+
         ob_start();
         ?>
         <div class="fpdms-google-ads-customer-step">
-            <?php if (!empty($serviceAccount)): ?>
+            <?php if (!empty($serviceAccount)) : ?>
                 <div class="fpdms-autodiscovery-section">
                     <button type="button" class="button button-secondary fpdms-btn-discover" data-provider="google_ads">
                         🔍 <?php _e('Auto-discover my accounts', 'fp-dms'); ?>
@@ -112,7 +112,7 @@ class GoogleAdsCustomerStep extends AbstractWizardStep
     public function validate(array $data): array
     {
         $customerId = $data['config']['customer_id'] ?? '';
-        
+
         if (empty($customerId)) {
             return [
                 'valid' => false,
@@ -124,7 +124,7 @@ class GoogleAdsCustomerStep extends AbstractWizardStep
 
         // Remove any non-numeric characters for validation
         $cleaned = preg_replace('/[^0-9]/', '', $customerId);
-        
+
         if (strlen($cleaned) !== 10) {
             return [
                 'valid' => false,
@@ -138,7 +138,7 @@ class GoogleAdsCustomerStep extends AbstractWizardStep
         if (!preg_match('/^\d{3}-\d{3}-\d{4}$/', $customerId)) {
             // Auto-format
             $formatted = substr($cleaned, 0, 3) . '-' . substr($cleaned, 3, 3) . '-' . substr($cleaned, 6);
-            
+
             return [
                 'valid' => true,
                 'formatted' => $formatted,
@@ -154,13 +154,13 @@ class GoogleAdsCustomerStep extends AbstractWizardStep
         // Auto-format customer ID if needed
         $customerId = $data['config']['customer_id'] ?? '';
         $cleaned = preg_replace('/[^0-9]/', '', $customerId);
-        
+
         if (strlen($cleaned) === 10) {
-            $data['config']['customer_id'] = substr($cleaned, 0, 3) . '-' . 
-                                              substr($cleaned, 3, 3) . '-' . 
+            $data['config']['customer_id'] = substr($cleaned, 0, 3) . '-' .
+                                              substr($cleaned, 3, 3) . '-' .
                                               substr($cleaned, 6);
         }
-        
+
         return $data;
     }
 
@@ -190,8 +190,8 @@ class GoogleAdsCustomerStep extends AbstractWizardStep
                 <li>' . __('You\'ll see a number like "123-456-7890" next to your account name', 'fp-dms') . '</li>
                 <li>' . __('Copy that number (without "CID-" prefix if present)', 'fp-dms') . '</li>
             </ol>
-            <p><strong>' . __('Tip:', 'fp-dms') . '</strong> ' . 
-            __('If you manage multiple accounts, make sure you select the correct one from the account selector.', 'fp-dms') . 
+            <p><strong>' . __('Tip:', 'fp-dms') . '</strong> ' .
+            __('If you manage multiple accounts, make sure you select the correct one from the account selector.', 'fp-dms') .
             '</p>
         ';
     }

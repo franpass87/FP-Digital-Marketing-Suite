@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace FP\DMS\Domain\Entities;
 
 use FP\DMS\Support\Wp;
-
 use FP\DMS\Support\Security;
 
 class DataSource

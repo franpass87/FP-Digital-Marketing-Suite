@@ -16,20 +16,20 @@ class IntroStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             $this->getProviderTitle(),
             __('Let\'s connect your data source in a few simple steps', 'fp-dms')
         );
-        
+
         $this->skippable = true;
     }
 
     public function render(array $data): string
     {
         $providerLabel = $this->getProviderLabel();
-        
+
         ob_start();
         ?>
         <div class="fpdms-intro-step">
@@ -45,7 +45,7 @@ class IntroStep extends AbstractWizardStep
                 <div class="fpdms-intro-steps">
                     <h4><?php _e('What you\'ll need:', 'fp-dms'); ?></h4>
                     <ol>
-                        <?php foreach ($this->getRequirements() as $requirement): ?>
+                        <?php foreach ($this->getRequirements() as $requirement) : ?>
                             <li><?php echo esc_html($requirement); ?></li>
                         <?php endforeach; ?>
                     </ol>
@@ -78,7 +78,7 @@ class IntroStep extends AbstractWizardStep
 
     private function getProviderTitle(): string
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4' => __('Setup Google Analytics 4', 'fp-dms'),
             'gsc' => __('Setup Google Search Console', 'fp-dms'),
             'google_ads' => __('Setup Google Ads', 'fp-dms'),
@@ -91,7 +91,7 @@ class IntroStep extends AbstractWizardStep
 
     private function getProviderLabel(): string
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4' => 'Google Analytics 4',
             'gsc' => 'Google Search Console',
             'google_ads' => 'Google Ads',
@@ -104,7 +104,7 @@ class IntroStep extends AbstractWizardStep
 
     private function getProviderIcon(): string
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4' => '📊',
             'gsc' => '🔍',
             'google_ads' => '🎯',
@@ -117,7 +117,7 @@ class IntroStep extends AbstractWizardStep
 
     private function getIntroText(): string
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4' => __('Connect your Google Analytics 4 property to track user behavior, conversions, and engagement metrics.', 'fp-dms'),
             'gsc' => __('Connect Google Search Console to monitor your search performance, keywords, and organic traffic.', 'fp-dms'),
             'google_ads' => __('Connect Google Ads to track campaign performance, costs, and conversions.', 'fp-dms'),
@@ -130,7 +130,7 @@ class IntroStep extends AbstractWizardStep
 
     private function getRequirements(): array
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4', 'gsc', 'google_ads' => [
                 __('A Google Cloud service account with API access', 'fp-dms'),
                 __('Your property/customer ID', 'fp-dms'),
@@ -156,7 +156,7 @@ class IntroStep extends AbstractWizardStep
 
     private function getEstimatedTime(): string
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4', 'gsc', 'google_ads' => __('3-5 minutes', 'fp-dms'),
             'meta_ads' => __('2-3 minutes', 'fp-dms'),
             'clarity' => __('2 minutes', 'fp-dms'),
@@ -167,7 +167,7 @@ class IntroStep extends AbstractWizardStep
 
     private function getHelpContent(): string
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4' => __('This wizard will guide you through connecting your GA4 property. You\'ll need to create a service account in Google Cloud Console if you don\'t have one yet.', 'fp-dms'),
             'gsc' => __('To connect Search Console, you\'ll need a service account with access to your verified site. The wizard will help you set this up step by step.', 'fp-dms'),
             default => __('Follow the wizard steps to complete the setup.', 'fp-dms'),
@@ -176,7 +176,7 @@ class IntroStep extends AbstractWizardStep
 
     private function getHelpLinks(): array
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4' => [
                 [
                     'label' => __('GA4 Setup Guide', 'fp-dms'),

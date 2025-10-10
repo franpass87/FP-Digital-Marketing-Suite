@@ -16,7 +16,7 @@ class ClarityProjectStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('Microsoft Clarity Configuration', 'fp-dms'),
@@ -28,7 +28,7 @@ class ClarityProjectStep extends AbstractWizardStep
     {
         $apiKey = $data['auth']['api_key'] ?? '';
         $projectId = $data['config']['project_id'] ?? '';
-        
+
         ob_start();
         ?>
         <div class="fpdms-clarity-project-step">
@@ -184,8 +184,8 @@ class ClarityProjectStep extends AbstractWizardStep
                 <li>' . __('Example: <code>clarity.microsoft.com/projects/view/<strong>abc123def456</strong>/...</code>', 'fp-dms') . '</li>
             </ol>
             
-            <p><strong>' . __('Note:', 'fp-dms') . '</strong> ' . 
-            __('If you don\'t have a Clarity project yet, you can create one for free at clarity.microsoft.com', 'fp-dms') . 
+            <p><strong>' . __('Note:', 'fp-dms') . '</strong> ' .
+            __('If you don\'t have a Clarity project yet, you can create one for free at clarity.microsoft.com', 'fp-dms') .
             '</p>
         ';
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Admin\Pages;
 
 use FP\DMS\Support\Wp;
+
 use function __;
 
 class LogsPage

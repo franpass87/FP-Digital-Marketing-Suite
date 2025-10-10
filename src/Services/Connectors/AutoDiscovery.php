@@ -8,7 +8,7 @@ use FP\DMS\Support\Wp;
 
 /**
  * Auto-discovers available resources (properties, accounts, sites) from provider APIs.
- * 
+ *
  * This eliminates manual ID entry by querying provider APIs for accessible resources.
  */
 class AutoDiscovery
@@ -315,7 +315,6 @@ class AutoDiscovery
                 'email' => $decoded['client_email'],
                 'project_id' => $decoded['project_id'],
             ];
-
         } catch (\Exception $e) {
             return [
                 'valid' => false,

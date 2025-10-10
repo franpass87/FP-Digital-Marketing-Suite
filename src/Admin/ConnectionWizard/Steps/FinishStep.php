@@ -16,7 +16,7 @@ class FinishStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('Setup Complete!', 'fp-dms'),
@@ -27,7 +27,7 @@ class FinishStep extends AbstractWizardStep
     public function render(array $data): string
     {
         $providerLabel = $this->getProviderLabel();
-        
+
         ob_start();
         ?>
         <div class="fpdms-finish-step">
@@ -64,7 +64,7 @@ class FinishStep extends AbstractWizardStep
                 </div>
             </div>
 
-            <?php if ($this->hasTemplate($data)): ?>
+            <?php if ($this->hasTemplate($data)) : ?>
                 <div class="fpdms-template-applied">
                     <h4><?php _e('Template Applied', 'fp-dms'); ?></h4>
                     <p>
@@ -114,7 +114,7 @@ class FinishStep extends AbstractWizardStep
 
     private function getProviderLabel(): string
     {
-        return match($this->provider) {
+        return match ($this->provider) {
             'ga4' => 'Google Analytics 4',
             'gsc' => 'Google Search Console',
             'google_ads' => 'Google Ads',
@@ -133,10 +133,10 @@ class FinishStep extends AbstractWizardStep
     private function getTemplateName(array $data): string
     {
         $templateId = $data['config']['template_used'] ?? '';
-        
+
         // Get template name from ConnectionTemplate class
         $template = \FP\DMS\Services\Connectors\ConnectionTemplate::getTemplate($templateId);
-        
+
         return $template['name'] ?? $templateId;
     }
 }

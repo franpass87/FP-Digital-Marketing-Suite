@@ -22,11 +22,11 @@ class ReportsRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
-        
+
         if ($sql === false) {
             return null;
         }
-        
+
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? ReportJob::fromRow($row) : null;
@@ -41,21 +41,21 @@ class ReportsRepo
     public function nextQueued(): ?ReportJob
     {
         global $wpdb;
-        
+
         // Use InnoDB row-level locking with FOR UPDATE
         // This prevents other processes from selecting the same job
         $sql = "SELECT * FROM {$this->table} WHERE status = 'queued' ORDER BY created_at ASC LIMIT 1 FOR UPDATE";
-        
+
         // Start transaction for the lock to be effective
         $wpdb->query('START TRANSACTION');
-        
+
         $row = $wpdb->get_row($sql, ARRAY_A);
-        
+
         if (!is_array($row)) {
             $wpdb->query('COMMIT');
             return null;
         }
-        
+
         // Mark as running immediately to prevent other workers from picking it up
         $id = (int) ($row['id'] ?? 0);
         if ($id > 0) {
@@ -67,7 +67,7 @@ class ReportsRepo
                 ['%d']
             );
         }
-        
+
         $wpdb->query('COMMIT');
 
         return ReportJob::fromRow($row);
@@ -111,7 +111,7 @@ class ReportsRepo
             // Sanitize and filter out empty/invalid values
             $statuses = array_map(static fn($s): string => preg_replace('/[^a-z_]/', '', strtolower($s)), $statuses);
             $statuses = array_filter($statuses, static fn($s): bool => $s !== '');
-            
+
             if (!empty($statuses)) {
                 $placeholders = implode(',', array_fill(0, count($statuses), '%s'));
                 $where[] = 'status IN (' . $placeholders . ')';
@@ -126,12 +126,12 @@ class ReportsRepo
 
         $sql = 'SELECT * FROM ' . $this->table . ' WHERE ' . implode(' AND ', $where) . ' ORDER BY created_at DESC';
         $prepared = $params ? $wpdb->prepare($sql, $params) : $sql;
-        
+
         // Check if prepare failed
         if ($prepared === false) {
             return [];
         }
-        
+
         $rows = $wpdb->get_results($prepared, ARRAY_A);
 
         if (! is_array($rows)) {
@@ -158,12 +158,12 @@ class ReportsRepo
 
         $sql .= ' ORDER BY created_at DESC LIMIT 1';
         $prepared = $wpdb->prepare($sql, $params);
-        
+
         // Check if prepare failed
         if ($prepared === false) {
             return null;
         }
-        
+
         $row = $wpdb->get_row($prepared, ARRAY_A);
 
         return is_array($row) ? ReportJob::fromRow($row) : null;
@@ -176,14 +176,14 @@ class ReportsRepo
     {
         global $wpdb;
         $now = Wp::currentTime('mysql');
-        
+
         // Safely encode meta, with fallback
         $metaJson = Wp::jsonEncode($data['meta'] ?? []);
         if ($metaJson === false) {
             error_log('[FPDMS] JSON encode failed for report meta');
             $metaJson = '[]';
         }
-        
+
         $payload = [
             'client_id' => (int) ($data['client_id'] ?? 0),
             'period_start' => (string) ($data['period_start'] ?? ''),

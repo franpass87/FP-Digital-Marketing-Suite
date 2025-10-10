@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Admin\Support;
 
 use FP\DMS\Support\Wp;
+
 use function add_settings_error;
 use function delete_transient;
 use function get_transient;

@@ -122,14 +122,14 @@ class Lock
     private static function cleanupExpiredLocks(string $table, int $ttl): void
     {
         global $wpdb;
-        
+
         $cutoff = Wp::date('Y-m-d H:i:s', time() - $ttl);
-        
+
         $sql = $wpdb->prepare(
             "DELETE FROM {$table} WHERE acquired_at < %s",
             $cutoff
         );
-        
+
         if ($sql !== false) {
             $wpdb->query($sql);
         }

@@ -30,13 +30,13 @@ class TokenEngine
 
             return $raw ? (string) $value : esc_html((string) $value);
         }, $template);
-        
+
         // Check for PCRE errors
         if ($result === null || preg_last_error() !== PREG_NO_ERROR) {
             error_log('[FPDMS] Template rendering failed: ' . preg_last_error_msg());
             return $template;
         }
-        
+
         return $result;
     }
 

@@ -6,8 +6,9 @@ namespace FP\DMS\Admin\Pages;
 
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\Validation;
-use function __;
 use FP\DMS\Support\Wp;
+
+use function __;
 use function in_array;
 use function strtolower;
 

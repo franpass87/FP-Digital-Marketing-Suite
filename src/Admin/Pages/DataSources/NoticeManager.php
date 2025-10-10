@@ -15,7 +15,7 @@ class NoticeManager
     public function bootNotices(): void
     {
         $stored = get_transient(self::TRANSIENT_KEY);
-        
+
         if (!is_array($stored)) {
             return;
         }
@@ -41,7 +41,7 @@ class NoticeManager
     {
         echo '<div class="notice notice-info">';
         echo '<p>' . esc_html__('Add at least one client before configuring data sources.', 'fp-dms') . '</p>';
-        
+
         $url = add_query_arg(['page' => 'fp-dms-clients'], admin_url('admin.php'));
         echo '<p><a class="button button-primary" href="' . esc_url($url) . '">';
         echo esc_html__('Add client', 'fp-dms');

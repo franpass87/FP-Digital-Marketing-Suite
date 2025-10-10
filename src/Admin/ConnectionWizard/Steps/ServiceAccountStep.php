@@ -16,7 +16,7 @@ class ServiceAccountStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('Service Account Credentials', 'fp-dms'),
@@ -27,7 +27,7 @@ class ServiceAccountStep extends AbstractWizardStep
     public function render(array $data): string
     {
         $currentValue = $data['auth']['service_account'] ?? '';
-        
+
         ob_start();
         ?>
         <div class="fpdms-service-account-step">
@@ -96,7 +96,7 @@ class ServiceAccountStep extends AbstractWizardStep
     public function validate(array $data): array
     {
         $json = $data['auth']['service_account'] ?? '';
-        
+
         if (empty($json)) {
             return [
                 'valid' => false,
@@ -120,7 +120,7 @@ class ServiceAccountStep extends AbstractWizardStep
         // Check required fields
         $required = ['type', 'project_id', 'private_key', 'client_email'];
         $missing = array_diff($required, array_keys($decoded));
-        
+
         if (!empty($missing)) {
             return [
                 'valid' => false,
@@ -176,8 +176,8 @@ class ServiceAccountStep extends AbstractWizardStep
                 <li>' . __('Select <strong>JSON</strong> format and click Create', 'fp-dms') . '</li>
                 <li>' . __('The JSON file will download automatically', 'fp-dms') . '</li>
             </ol>
-            <p><strong>' . __('Important:', 'fp-dms') . '</strong> ' . 
-            __('After creating the service account, you\'ll need to grant it access to your GA4 property or GSC site.', 'fp-dms') . 
+            <p><strong>' . __('Important:', 'fp-dms') . '</strong> ' .
+            __('After creating the service account, you\'ll need to grant it access to your GA4 property or GSC site.', 'fp-dms') .
             '</p>
         ';
     }

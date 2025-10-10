@@ -39,10 +39,10 @@ class Config
 
         $table = self::$db->table('options');
         $query = "SELECT option_value FROM {$table} WHERE option_name = :key LIMIT 1";
-        
+
         try {
             $result = self::$db->get_var($query, ['key' => $key]);
-            
+
             if ($result === null || $result === false) {
                 return $default;
             }
@@ -71,13 +71,13 @@ class Config
 
         $table = self::$db->table('options');
         $serialized = maybe_serialize($value);
-        
+
         try {
             // Try to update first
             $updateQuery = "UPDATE {$table} SET option_value = :value WHERE option_name = :key";
             $stmt = self::$db->connect()->prepare($updateQuery);
             $stmt->execute(['value' => $serialized, 'key' => $key]);
-            
+
             if ($stmt->rowCount() === 0) {
                 // If no rows affected, insert
                 $insertQuery = "INSERT INTO {$table} (option_name, option_value) VALUES (:key, :value)";
@@ -106,7 +106,7 @@ class Config
         }
 
         $table = self::$db->table('options');
-        
+
         try {
             $query = "DELETE FROM {$table} WHERE option_name = :key";
             $stmt = self::$db->connect()->prepare($query);
@@ -138,7 +138,7 @@ class Config
 
         $table = self::$db->table('options');
         $query = "SELECT COUNT(*) FROM {$table} WHERE option_name = :key";
-        
+
         try {
             $count = self::$db->get_var($query, ['key' => $key]);
 

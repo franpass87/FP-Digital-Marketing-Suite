@@ -6,6 +6,7 @@ namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Dates;
 use FP\DMS\Support\Period;
+
 use function __;
 
 class GSCProvider extends BaseGoogleProvider implements DataSourceProviderInterface
@@ -29,7 +30,7 @@ class GSCProvider extends BaseGoogleProvider implements DataSourceProviderInterf
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new ConnectorException(__('Invalid JSON in service account: ', 'fp-dms') . json_last_error_msg());
             }
-            
+
             if (! is_array($decoded) || empty($decoded['client_email']) || empty($decoded['private_key'])) {
                 return ConnectionResult::failure(__('Invalid service account JSON.', 'fp-dms'));
             }
@@ -184,6 +185,4 @@ class GSCProvider extends BaseGoogleProvider implements DataSourceProviderInterf
             'last_ingested_at' => Wp::currentTime('mysql'),
         ];
     }
-
-    
 }

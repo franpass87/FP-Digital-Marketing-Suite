@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Wp;
+
 use function apply_filters;
 
 abstract class BaseGoogleProvider implements DataSourceProviderInterface
@@ -54,5 +55,3 @@ abstract class BaseGoogleProvider implements DataSourceProviderInterface
         return Wp::date('Y-m-d', $timestamp);
     }
 }
-
-

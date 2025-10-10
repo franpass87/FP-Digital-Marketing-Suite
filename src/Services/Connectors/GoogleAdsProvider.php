@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Services\Connectors;
 
 use FP\DMS\Support\Period;
+
 use function __;
 
 class GoogleAdsProvider implements DataSourceProviderInterface

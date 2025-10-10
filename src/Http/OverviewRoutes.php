@@ -19,21 +19,22 @@ use FP\DMS\Services\Overview\Presenter;
 use FP\DMS\Support\Wp;
 use FP\DMS\Support\Period;
 use FP\DMS\Support\UserPrefs;
+use Throwable;
 use WP_Error;
 use WP_REST_Request;
 use WP_REST_Response;
+
 use function array_map;
 use function get_current_user_id;
 use function get_transient;
 use function in_array;
-use function microtime;
 use function is_array;
 use function is_numeric;
+use function microtime;
 use function set_transient;
 use function str_replace;
 use function ucwords;
 use function wp_verify_nonce;
-use Throwable;
 
 class OverviewRoutes
 {

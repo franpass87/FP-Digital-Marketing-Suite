@@ -10,17 +10,18 @@ use FP\DMS\Support\Wp;
 use UnexpectedValueException;
 use WP_Filesystem_Base;
 
-use const ABSPATH;
 use function error_log;
 use function file_exists;
-use function is_dir;
 use function function_exists;
+use function is_dir;
+use function ltrim;
 use function sprintf;
+use function str_starts_with;
 use function strtotime;
 use function unlink;
 use function WP_Filesystem;
-use function ltrim;
-use function str_starts_with;
+
+use const ABSPATH;
 
 class Retention
 {

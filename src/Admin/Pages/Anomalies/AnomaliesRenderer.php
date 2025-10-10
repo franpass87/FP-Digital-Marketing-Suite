@@ -8,6 +8,7 @@ use FP\DMS\Admin\Pages\Shared\FormRenderer;
 use FP\DMS\Admin\Pages\Shared\TabsRenderer;
 use FP\DMS\Admin\Pages\Shared\TableRenderer;
 use FP\DMS\Support\I18n;
+
 use function add_query_arg;
 use function admin_url;
 use function esc_attr;
@@ -26,12 +27,12 @@ class AnomaliesRenderer
     {
         echo '<div class="wrap">';
         echo '<h1>' . esc_html(I18n::__('Anomalies')) . '</h1>';
-        
+
         $tabs = [
             'anomalies' => I18n::__('Recent Anomalies'),
             'policy' => I18n::__('Policy'),
         ];
-        
+
         TabsRenderer::render($tabs, $currentTab, [
             'page' => 'fp-dms-anomalies',
             'client_id' => $clientId,
@@ -46,15 +47,15 @@ class AnomaliesRenderer
     public static function renderClientFilter(array $clients, int $selectedClientId, string $tab): void
     {
         echo '<form method="get" style="margin-top:20px;margin-bottom:20px;display:flex;gap:12px;align-items:center;">';
-        
+
         FormRenderer::hidden('page', 'fp-dms-anomalies');
         FormRenderer::hidden('tab', $tab);
-        
+
         $options = ['0' => I18n::__('All clients')];
         foreach ($clients as $client) {
             $options[(string) $client->id] = $client->name;
         }
-        
+
         FormRenderer::select([
             'id' => 'fpdms-anomaly-client',
             'name' => 'client_id',
@@ -62,9 +63,9 @@ class AnomaliesRenderer
             'options' => $options,
             'selected' => (string) $selectedClientId,
         ]);
-        
+
         \submit_button(I18n::__('Apply'), '', '', false);
-        
+
         echo '</form>';
     }
 
@@ -86,14 +87,14 @@ class AnomaliesRenderer
             I18n::__('Note'),
             I18n::__('Actions'),
         ];
-        
+
         echo '<table class="widefat striped">';
         echo '<thead><tr>';
         foreach ($headers as $header) {
             echo '<th>' . esc_html($header) . '</th>';
         }
         echo '</tr></thead><tbody>';
-        
+
         if (empty($anomalies)) {
             echo '<tr><td colspan="8">' . esc_html(I18n::__('No anomalies recorded.')) . '</td></tr>';
         } else {
@@ -101,7 +102,7 @@ class AnomaliesRenderer
                 self::renderAnomalyRow($anomaly, $clientsMap);
             }
         }
-        
+
         echo '</tbody></table>';
     }
 
@@ -114,24 +115,24 @@ class AnomaliesRenderer
     private static function renderAnomalyRow($anomaly, array $clientsMap): void
     {
         $data = AnomaliesDataService::formatAnomalyForDisplay($anomaly, $clientsMap);
-        
+
         TableRenderer::startRow();
         TableRenderer::cell($data['detected_at']);
         TableRenderer::cell($data['client']);
         TableRenderer::cell($data['metric']);
-        
+
         // Severity with badge
         $badgeClass = AnomaliesDataService::getSeverityBadgeClass($anomaly->severity);
         $severityHtml = '<span class="fpdms-badge ' . esc_attr($badgeClass) . '">' . esc_html($data['severity']) . '</span>';
         TableRenderer::rawCell($severityHtml);
-        
+
         TableRenderer::cell($data['delta_percent']);
         TableRenderer::cell($data['zscore']);
         TableRenderer::cell($data['note']);
-        
+
         // Actions
         self::renderAnomalyActions($anomaly);
-        
+
         TableRenderer::endRow();
     }
 
@@ -143,22 +144,22 @@ class AnomaliesRenderer
     private static function renderAnomalyActions($anomaly): void
     {
         echo '<td>';
-        
+
         $resolveUrl = add_query_arg([
             'page' => 'fp-dms-anomalies',
             'action' => 'resolve',
             'id' => $anomaly->id,
         ], admin_url('admin.php'));
-        
+
         $deleteUrl = add_query_arg([
             'page' => 'fp-dms-anomalies',
             'action' => 'delete',
             'id' => $anomaly->id,
         ], admin_url('admin.php'));
-        
+
         echo '<a href="' . esc_url($resolveUrl) . '" class="button button-small">' . esc_html(I18n::__('Resolve')) . '</a> ';
         echo '<a href="' . esc_url($deleteUrl) . '" class="button button-small" onclick="return confirm(\'' . esc_attr(I18n::__('Delete this anomaly?')) . '\');">' . esc_html(I18n::__('Delete')) . '</a>';
-        
+
         echo '</td>';
     }
 
@@ -173,18 +174,18 @@ class AnomaliesRenderer
         echo '<div class="fpdms-section" style="max-width:800px;margin-top:20px;">';
         echo '<h2>' . esc_html(I18n::__('Anomaly Detection Policy')) . '</h2>';
         echo '<p>' . esc_html(I18n::__('Configure when and how anomalies are detected for your data.')) . '</p>';
-        
+
         FormRenderer::open();
         FormRenderer::nonce('fpdms_anomaly_policy');
         FormRenderer::hidden('action', 'save_policy');
-        
+
         // Client selector
         if (!empty($clients)) {
             $clientOptions = ['0' => I18n::__('Default policy')];
             foreach ($clients as $client) {
                 $clientOptions[(string) $client->id] = $client->name;
             }
-            
+
             echo '<p>';
             FormRenderer::select([
                 'id' => 'fpdms-policy-client',
@@ -195,7 +196,7 @@ class AnomaliesRenderer
             ]);
             echo '</p>';
         }
-        
+
         // Enabled
         echo '<p>';
         FormRenderer::checkbox([
@@ -205,7 +206,7 @@ class AnomaliesRenderer
             'checked' => $policy['enabled'] ?? true,
         ]);
         echo '</p>';
-        
+
         // Sensitivity
         echo '<p>';
         $sensitivities = AnomaliesDataService::getSensitivityLevels();
@@ -217,12 +218,12 @@ class AnomaliesRenderer
             'selected' => $policy['sensitivity'] ?? 'medium',
         ]);
         echo '</p>';
-        
+
         // Metrics
         echo '<p><strong>' . esc_html(I18n::__('Monitor these metrics:')) . '</strong></p>';
         $metrics = AnomaliesDataService::getAvailableMetrics();
         $selectedMetrics = $policy['metrics'] ?? [];
-        
+
         foreach ($metrics as $key => $label) {
             echo '<p>';
             FormRenderer::checkbox([
@@ -234,11 +235,11 @@ class AnomaliesRenderer
             ]);
             echo '</p>';
         }
-        
+
         echo '<p>';
         \submit_button(I18n::__('Save Policy'), 'primary', 'submit', false);
         echo '</p>';
-        
+
         FormRenderer::close();
         echo '</div>';
     }

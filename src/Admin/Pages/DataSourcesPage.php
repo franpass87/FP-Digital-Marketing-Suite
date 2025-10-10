@@ -11,6 +11,7 @@ use FP\DMS\Domain\Repos\DataSourcesRepo;
 use FP\DMS\Services\Connectors\ProviderFactory;
 use FP\DMS\Support\Wp;
 use WP_Error;
+
 use function selected;
 
 class DataSourcesPage
@@ -52,7 +53,7 @@ class DataSourcesPage
 
         $dataSources = $selectedClientId ? $dataSourcesRepo->forClient($selectedClientId) : [];
         $editing = null;
-        
+
         // Sanitize action parameter
         $action = isset($_GET['action']) ? sanitize_key($_GET['action']) : '';
         if ($action === 'edit' && isset($_GET['source'])) {
@@ -271,7 +272,7 @@ class DataSourcesPage
 
         echo '<div class="card" style="margin-top:20px;padding:20px;max-width:960px;">';
         echo '<h2>' . esc_html($editing ? __('Edit data source', 'fp-dms') : __('Add data source', 'fp-dms')) . '</h2>';
-        
+
         if (!$isEditing) {
             echo '<div style="background: #e7f5ff; border-left: 4px solid #2271b1; padding: 12px 16px; margin: 16px 0;">';
             echo '<p style="margin: 0 0 8px 0;"><strong>💡 ' . esc_html__('New: Use the Guided Setup Wizard', 'fp-dms') . '</strong></p>';
@@ -718,7 +719,7 @@ class DataSourcesPage
         }
 
         fclose($handle);
-        
+
         if (file_exists($file['tmp_name'])) {
             $unlinkResult = unlink($file['tmp_name']);
             if (!$unlinkResult) {

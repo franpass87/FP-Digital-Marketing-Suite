@@ -8,6 +8,7 @@ use FP\DMS\Support\Wp;
 use Mpdf\Mpdf;
 use Mpdf\Output\Destination;
 use RuntimeException;
+
 use function __;
 
 class PdfRenderer
@@ -58,12 +59,12 @@ class PdfRenderer
         try {
             $cutoff = time() - 3600; // 1 hour ago
             $iterator = new \DirectoryIterator($tempDir);
-            
+
             foreach ($iterator as $file) {
                 if ($file->isDot() || !$file->isFile()) {
                     continue;
                 }
-                
+
                 // Delete files older than cutoff
                 if ($file->getMTime() < $cutoff) {
                     @unlink($file->getPathname());

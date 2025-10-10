@@ -30,14 +30,14 @@ class TableRenderer
         $rowRenderer = $options['row_renderer'] ?? null;
 
         echo '<table class="' . esc_attr($class) . '">';
-        
+
         // Headers
         echo '<thead><tr>';
         foreach ($headers as $header) {
             echo '<th>' . esc_html($header) . '</th>';
         }
         echo '</tr></thead>';
-        
+
         // Body
         echo '<tbody>';
         if (empty($rows)) {
@@ -55,7 +55,7 @@ class TableRenderer
             }
         }
         echo '</tbody>';
-        
+
         echo '</table>';
     }
 

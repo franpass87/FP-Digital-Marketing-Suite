@@ -6,6 +6,7 @@ namespace FP\DMS\Admin\Pages;
 
 use FP\DMS\Admin\Pages\Overview\OverviewConfigService;
 use FP\DMS\Admin\Pages\Overview\OverviewRenderer;
+
 use function add_action;
 use function add_query_arg;
 use function admin_url;
@@ -15,12 +16,13 @@ use function esc_url;
 use function plugins_url;
 use function wp_enqueue_script;
 use function wp_enqueue_style;
+
 use const FP_DMS_PLUGIN_FILE;
 use const FP_DMS_VERSION;
 
 /**
  * Overview Page - Entry point and orchestration
- * 
+ *
  * Delegates configuration and rendering to modular components:
  * - OverviewConfigService: Configuration and data preparation
  * - OverviewRenderer: UI rendering
@@ -78,7 +80,7 @@ class OverviewPage
 
         // Render sections using modular components
         $refreshIntervals = OverviewConfigService::getRefreshIntervals();
-        
+
         OverviewRenderer::renderErrorBanner();
         OverviewRenderer::renderFilters($clients, $refreshIntervals);
         OverviewRenderer::renderSummarySection();

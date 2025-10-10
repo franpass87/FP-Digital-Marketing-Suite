@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Services\Connectors;
 
+use function __;
+
 /**
  * Translates technical connector errors into user-friendly messages with actionable steps.
  */

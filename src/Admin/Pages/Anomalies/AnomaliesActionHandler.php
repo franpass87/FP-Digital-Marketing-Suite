@@ -8,6 +8,7 @@ use FP\DMS\Domain\Repos\AnomaliesRepo;
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\I18n;
 use FP\DMS\Support\Wp;
+
 use function add_settings_error;
 use function add_query_arg;
 use function admin_url;
@@ -41,13 +42,13 @@ class AnomaliesActionHandler
     private function handleAnomalyActions(): void
     {
         $action = isset($_GET['action']) ? Wp::sanitizeKey($_GET['action']) : '';
-        
+
         if ($action === '' || !in_array($action, ['resolve', 'delete'], true)) {
             return;
         }
 
         $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-        
+
         if ($id <= 0) {
             return;
         }
@@ -71,7 +72,7 @@ class AnomaliesActionHandler
     private function resolveAnomaly(int $id): void
     {
         $anomaly = $this->repo->find($id);
-        
+
         if (!$anomaly) {
             add_settings_error(
                 'fpdms_anomalies',
@@ -131,7 +132,7 @@ class AnomaliesActionHandler
         }
 
         $nonce = Wp::sanitizeTextField($_POST['_wpnonce'] ?? '');
-        
+
         if (!wp_verify_nonce($nonce, 'fpdms_anomaly_policy')) {
             add_settings_error(
                 'fpdms_anomaly_policy',
@@ -175,11 +176,11 @@ class AnomaliesActionHandler
     private function savePolicy(int $clientId, array $policy): void
     {
         $options = Options::getGlobalSettings();
-        
+
         if (!isset($options['anomaly_detection'])) {
             $options['anomaly_detection'] = [];
         }
-        
+
         if (!isset($options['anomaly_detection']['policies'])) {
             $options['anomaly_detection']['policies'] = [];
         }

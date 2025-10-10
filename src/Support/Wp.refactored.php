@@ -12,20 +12,20 @@ use FP\DMS\Support\Wp\Formatters;
 
 /**
  * Refactored Wp facade with modular architecture.
- * 
+ *
  * Delegates to specialized modules:
  * - Sanitizers: Data sanitization
  * - Escapers: HTML/JS/URL escaping
  * - Validators: Input validation
  * - Http: Remote requests
  * - Formatters: Data formatting
- * 
+ *
  * This maintains backward compatibility while providing a clean, modular structure.
  */
 final class WpRefactored
 {
     // ==================== SANITIZERS ====================
-    
+
     public static function absInt(mixed $value): int
     {
         return Sanitizers::absInt($value);
@@ -62,7 +62,7 @@ final class WpRefactored
     }
 
     // ==================== ESCAPERS ====================
-    
+
     public static function escHtml(mixed $value): string
     {
         return Escapers::html($value);
@@ -94,7 +94,7 @@ final class WpRefactored
     }
 
     // ==================== VALIDATORS ====================
-    
+
     public static function isEmail(mixed $value): bool
     {
         return Validators::isEmail($value);
@@ -106,7 +106,7 @@ final class WpRefactored
     }
 
     // ==================== HTTP ====================
-    
+
     /**
      * @param array<string,mixed> $args
      */
@@ -139,7 +139,7 @@ final class WpRefactored
     }
 
     // ==================== FORMATTERS ====================
-    
+
     public static function numberFormatI18n(float $number, int $decimals = 0): string
     {
         return Formatters::numberI18n($number, $decimals);
@@ -161,7 +161,7 @@ final class WpRefactored
     }
 
     // ==================== ERROR HANDLING ====================
-    
+
     public static function wpErrorMessage(mixed $value): string
     {
         if (\function_exists('is_wp_error') && \is_wp_error($value)) {

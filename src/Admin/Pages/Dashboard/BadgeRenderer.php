@@ -18,7 +18,7 @@ class BadgeRenderer
     {
         $label = self::reportStatusLabel($status);
         $class = self::statusBadgeClass($status);
-        
+
         return sprintf(
             '<span class="fpdms-badge %s">%s</span>',
             \esc_attr($class),
@@ -33,7 +33,7 @@ class BadgeRenderer
     {
         $label = self::anomalySeverityLabel($severity);
         $class = self::severityBadgeClass($severity);
-        
+
         return sprintf(
             '<span class="fpdms-badge %s">%s</span>',
             \esc_attr($class),

@@ -11,6 +11,7 @@ use FP\DMS\Services\Anomalies\Detector;
 use FP\DMS\Support\I18n;
 use FP\DMS\Support\Period;
 use FP\DMS\Support\Wp;
+
 use function is_array;
 use function is_numeric;
 use function str_contains;

@@ -7,17 +7,19 @@ namespace FP\DMS\Admin\Pages;
 use FP\DMS\Admin\Pages\Dashboard\ComponentRenderer;
 use FP\DMS\Admin\Pages\Dashboard\DashboardDataService;
 use FP\DMS\Domain\Repos\SchedulesRepo;
+
 use function add_action;
 use function current_user_can;
 use function esc_html__;
 use function plugins_url;
 use function wp_enqueue_style;
+
 use const FP_DMS_PLUGIN_FILE;
 use const FP_DMS_VERSION;
 
 /**
  * Dashboard Page - Entry point and orchestration
- * 
+ *
  * Delegates rendering and data retrieval to modular components:
  * - DashboardDataService: Data retrieval and transformation
  * - ComponentRenderer: UI rendering
@@ -63,7 +65,7 @@ class DashboardPage
         $stats = DashboardDataService::getStats();
         $recentReports = DashboardDataService::getRecentReports($clientNames, 5);
         $recentAnomalies = DashboardDataService::getRecentAnomalies($clientNames, 5);
-        
+
         $scheduleRepo = new SchedulesRepo();
         $nextSchedule = $scheduleRepo->nextScheduledRun();
 

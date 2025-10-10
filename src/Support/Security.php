@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FP\DMS\Support;
 
 use RuntimeException;
+
 use function base64_decode;
 use function base64_encode;
 use function function_exists;

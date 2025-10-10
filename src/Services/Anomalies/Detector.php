@@ -33,7 +33,7 @@ class Detector
         $clientsRepo = new \FP\DMS\Domain\Repos\ClientsRepo();
         $client = $clientsRepo->find($clientId);
         $timezone = $client?->timezone ?? 'UTC';
-        
+
         $period = Period::fromStrings(
             gmdate('Y-m-d', strtotime('-6 days')),
             gmdate('Y-m-d'),

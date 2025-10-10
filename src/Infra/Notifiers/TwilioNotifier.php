@@ -147,7 +147,7 @@ final class TwilioNotifier implements BaseNotifier
         }
 
         $decoded = json_decode($body, true);
-        
+
         // Check for JSON errors
         if (json_last_error() !== JSON_ERROR_NONE || ! is_array($decoded)) {
             return true;
@@ -220,7 +220,7 @@ final class TwilioNotifier implements BaseNotifier
         }
 
         $decoded = json_decode($body, true);
-        
+
         // Check for valid JSON
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
             $code = $decoded['error_code'] ?? $decoded['code'] ?? null;

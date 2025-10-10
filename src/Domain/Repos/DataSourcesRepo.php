@@ -26,11 +26,11 @@ class DataSourcesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE client_id = %d ORDER BY id DESC", $clientId);
-        
+
         if ($sql === false) {
             return [];
         }
-        
+
         $rows = $wpdb->get_results($sql, ARRAY_A);
 
         if (! is_array($rows)) {
@@ -44,11 +44,11 @@ class DataSourcesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
-        
+
         if ($sql === false) {
             return null;
         }
-        
+
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? DataSource::fromRow($row) : null;
@@ -62,10 +62,10 @@ class DataSourcesRepo
         global $wpdb;
 
         $now = Wp::currentTime('mysql');
-        
+
         $authJson = Wp::jsonEncode($data['auth'] ?? []);
         $auth = ($authJson !== false) ? $authJson : '[]';
-        
+
         $configJson = Wp::jsonEncode($data['config'] ?? []);
         $config = ($configJson !== false) ? $configJson : '[]';
 
@@ -107,7 +107,7 @@ class DataSourcesRepo
 
         $authJson = Wp::jsonEncode($authData);
         $auth = ($authJson !== false) ? $authJson : '[]';
-        
+
         $authCipher = $hasNewAuth
             ? Security::encrypt($auth)
             : ($current->authCipher !== null && $current->authCipher !== ''

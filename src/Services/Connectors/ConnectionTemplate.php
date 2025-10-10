@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Services\Connectors;
 
+use function __;
+
 /**
  * Provides pre-configured templates for common connector setups.
  */

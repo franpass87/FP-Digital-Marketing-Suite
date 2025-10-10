@@ -46,11 +46,11 @@ class ClientsRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
-        
+
         if ($sql === false) {
             return null;
         }
-        
+
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? Client::fromRow($row) : null;
@@ -60,11 +60,11 @@ class ClientsRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE name = %s LIMIT 1", $name);
-        
+
         if ($sql === false) {
             return null;
         }
-        
+
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? Client::fromRow($row) : null;
@@ -86,7 +86,7 @@ class ClientsRepo
 
         $emailToJson = Wp::jsonEncode($this->sanitizeEmailList($data['email_to'] ?? []));
         $emailCcJson = Wp::jsonEncode($this->sanitizeEmailList($data['email_cc'] ?? []));
-        
+
         $payload = [
             'name' => (string) ($data['name'] ?? ''),
             'email_to' => ($emailToJson !== false) ? $emailToJson : '[]',
@@ -143,7 +143,7 @@ class ClientsRepo
 
         $emailToJson = Wp::jsonEncode($this->sanitizeEmailList($emailToInput));
         $emailCcJson = Wp::jsonEncode($this->sanitizeEmailList($emailCcInput));
-        
+
         $payload = [
             'name' => $name,
             'email_to' => ($emailToJson !== false) ? $emailToJson : '[]',

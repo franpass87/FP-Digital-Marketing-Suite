@@ -39,7 +39,7 @@ class ScheduleRunCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $verbose = $input->getOption('verbose');
-        
+
         if ($verbose) {
             $output->writeln('<info>Starting scheduler...</info>');
         }

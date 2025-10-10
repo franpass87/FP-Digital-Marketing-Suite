@@ -16,7 +16,7 @@ class CSVConfigStep extends AbstractWizardStep
     public function __construct(string $id, string $provider)
     {
         $this->provider = $provider;
-        
+
         parent::__construct(
             $id,
             __('CSV Configuration', 'fp-dms'),
@@ -30,7 +30,7 @@ class CSVConfigStep extends AbstractWizardStep
         $delimiter = $data['config']['delimiter'] ?? ',';
         $hasHeaders = $data['config']['has_headers'] ?? true;
         $dateColumn = $data['config']['date_column'] ?? 'date';
-        
+
         ob_start();
         ?>
         <div class="fpdms-csv-config-step">
@@ -132,7 +132,7 @@ class CSVConfigStep extends AbstractWizardStep
                             </td>
                             <td><span class="required">*</span></td>
                         </tr>
-                        <?php foreach ($this->getStandardFields() as $field => $label): ?>
+                        <?php foreach ($this->getStandardFields() as $field => $label) : ?>
                         <tr>
                             <td><?php echo esc_html($label); ?></td>
                             <td>
