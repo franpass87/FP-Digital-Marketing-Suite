@@ -40,7 +40,9 @@ export class OverviewAPI {
 
             return await response.json();
         } catch (error) {
-            console.error('API request failed:', error);
+            if (window.fpdmsDebug) {
+                console.error('API request failed:', error);
+            }
             throw error;
         }
     }
@@ -69,7 +71,9 @@ export class OverviewAPI {
 
             return await response.json();
         } catch (error) {
-            console.error('API POST request failed:', error);
+            if (window.fpdmsDebug) {
+                console.error('API POST request failed:', error);
+            }
             throw error;
         }
     }
