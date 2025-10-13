@@ -58,8 +58,19 @@ class Commands
             return;
         }
 
-        $from = $assocArgs['from'] ?? date('Y-m-01', strtotime('first day of last month'));
-        $to = $assocArgs['to'] ?? date('Y-m-t', strtotime('last day of last month'));
+        $fromTimestamp = strtotime('first day of last month');
+        $toTimestamp = strtotime('last day of last month');
+        
+        // Fallback if strtotime fails
+        if ($fromTimestamp === false) {
+            $fromTimestamp = strtotime('-1 month');
+        }
+        if ($toTimestamp === false) {
+            $toTimestamp = time();
+        }
+        
+        $from = $assocArgs['from'] ?? date('Y-m-01', $fromTimestamp);
+        $to = $assocArgs['to'] ?? date('Y-m-t', $toTimestamp);
 
         Queue::enqueue($clientId, $from, $to, null, null, ['origin' => 'cli']);
         WP_CLI::success(sprintf('Queued report for client %d from %s to %s.', $clientId, $from, $to));
@@ -489,8 +500,13 @@ class Commands
      */
     private static function defaultPeriod(): array
     {
-        $start = date('Y-m-01', strtotime('-1 month'));
-        $end = date('Y-m-t', strtotime('-1 month'));
+        $timestamp = strtotime('-1 month');
+        if ($timestamp === false) {
+            $timestamp = time() - (30 * 24 * 60 * 60); // Fallback: 30 days ago
+        }
+        
+        $start = date('Y-m-01', $timestamp);
+        $end = date('Y-m-t', $timestamp);
 
         return ['start' => $start, 'end' => $end];
     }
