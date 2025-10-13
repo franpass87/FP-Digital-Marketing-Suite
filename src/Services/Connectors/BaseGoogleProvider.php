@@ -48,7 +48,7 @@ abstract class BaseGoogleProvider implements DataSourceProviderInterface
     protected static function normalizeDate(string $value): ?string
     {
         $timestamp = strtotime(trim($value));
-        if (! $timestamp) {
+        if ($timestamp === false) {
             return null;
         }
 

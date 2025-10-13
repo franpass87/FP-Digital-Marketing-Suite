@@ -202,7 +202,7 @@ class CsvGenericProvider implements DataSourceProviderInterface
     private static function normalizeDate(string $date): ?string
     {
         $timestamp = strtotime(trim($date));
-        if (! $timestamp) {
+        if ($timestamp === false) {
             return null;
         }
 
