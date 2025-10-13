@@ -72,7 +72,17 @@ class LogsPage
         $truncated = false;
         $offset = 0;
 
-        if (is_int($size) && $size > self::MAX_BYTES) {
+        // Check if filesize succeeded and file is large enough to truncate
+        if ($size === false) {
+            fclose($handle);
+            return [
+                'content' => '',
+                'truncated' => false,
+                'error' => __('Unable to determine log file size.', 'fp-dms'),
+            ];
+        }
+
+        if ($size > self::MAX_BYTES) {
             $truncated = true;
             $offset = $size - self::MAX_BYTES;
         }

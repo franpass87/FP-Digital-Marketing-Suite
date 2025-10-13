@@ -30,6 +30,11 @@ class Retention
         $settings = Options::getGlobalSettings();
         $days = max(1, (int) ($settings['retention_days'] ?? 90));
         $cutoff = strtotime('-' . $days . ' days');
+        
+        // Fallback if strtotime fails
+        if ($cutoff === false) {
+            $cutoff = time() - ($days * 24 * 60 * 60);
+        }
 
         self::cleanupLogs($cutoff);
         self::cleanupReports($cutoff);
