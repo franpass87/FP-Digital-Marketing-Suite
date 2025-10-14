@@ -18,7 +18,10 @@ import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } f
     try {
         config = JSON.parse(configEl.textContent || '{}');
     } catch (error) {
-        console.error('FPDMS overview: invalid config', error);
+        // Log error in development mode only
+        if (window.fpdmsDebug) {
+            console.error('FPDMS overview: invalid config', error);
+        }
         return;
     }
 
@@ -103,21 +106,27 @@ import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } f
                     }
                 })
                 .catch(error => {
-                    console.error('FPDMS overview summary error', error);
+                    if (window.fpdmsDebug) {
+                        console.error('FPDMS overview summary error', error);
+                    }
                     ui.showError(error.message);
                 }),
 
             api.fetchStatus(state.state.clientId)
                 .then(data => ui.updateStatus(data))
                 .catch(error => {
-                    console.error('FPDMS overview status error', error);
+                    if (window.fpdmsDebug) {
+                        console.error('FPDMS overview status error', error);
+                    }
                     ui.showError(error.message);
                 }),
 
             api.fetchAnomalies(anomaliesParams)
                 .then(data => ui.updateAnomalies(data))
                 .catch(error => {
-                    console.warn('FPDMS overview anomalies unavailable', error);
+                    if (window.fpdmsDebug) {
+                        console.warn('FPDMS overview anomalies unavailable', error);
+                    }
                 })
         ];
 
@@ -268,7 +277,9 @@ import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } f
             ui.showActionStatus('success', config.i18n?.runQueued || 'Report run queued.');
             loadAll();
         } catch (error) {
-            console.error('FPDMS overview run error', error);
+            if (window.fpdmsDebug) {
+                console.error('FPDMS overview run error', error);
+            }
             ui.showActionStatus('error', error.message || config.i18n?.actionError || 'Action failed. Try again.');
         } finally {
             ui.setActionBusy(DOM.runButton, false);
@@ -302,7 +313,9 @@ import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } f
             
             ui.showActionStatus('success', message);
         } catch (error) {
-            console.error('FPDMS overview anomaly evaluation error', error);
+            if (window.fpdmsDebug) {
+                console.error('FPDMS overview anomaly evaluation error', error);
+            }
             ui.showActionStatus('error', error.message || config.i18n?.actionError || 'Action failed. Try again.');
         } finally {
             ui.setActionBusy(DOM.anomaliesButton, false);

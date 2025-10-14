@@ -877,7 +877,7 @@ class DataSourcesPage
     private static function formatDateTime(string $datetime): string
     {
         $timestamp = strtotime($datetime);
-        if (! $timestamp) {
+        if ($timestamp === false) {
             return $datetime;
         }
 

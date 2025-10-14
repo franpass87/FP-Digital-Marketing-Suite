@@ -34,9 +34,17 @@ class Detector
         $client = $clientsRepo->find($clientId);
         $timezone = $client?->timezone ?? 'UTC';
 
+        $startTimestamp = strtotime('-6 days');
+        $endTimestamp = time();
+        
+        // Fallback to current time if strtotime fails
+        if ($startTimestamp === false) {
+            $startTimestamp = $endTimestamp - (6 * 24 * 60 * 60);
+        }
+        
         $period = Period::fromStrings(
-            gmdate('Y-m-d', strtotime('-6 days')),
-            gmdate('Y-m-d'),
+            gmdate('Y-m-d', $startTimestamp),
+            gmdate('Y-m-d', $endTimestamp),
             $timezone
         );
 

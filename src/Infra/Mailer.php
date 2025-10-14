@@ -120,7 +120,8 @@ class Mailer
                 break;
             }
 
-            $delay = (int) ($delays[$attempt] ?? end($delays));
+            // Safe fallback with explicit check for empty array
+            $delay = isset($delays[$attempt]) ? (int) $delays[$attempt] : ($delays !== [] ? (int) end($delays) : 0);
             if ($delay <= 0) {
                 continue;
             }

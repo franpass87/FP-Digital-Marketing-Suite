@@ -177,14 +177,29 @@ export class ConnectionWizard {
     }
 
     showHelp(stepId) {
-        console.info('Help for step:', stepId);
+        if (window.fpdmsDebug) {
+            console.info('Help for step:', stepId);
+        }
+        // TODO: Implement help modal or tooltip system
     }
 
     showError(message) {
         if (window.wp?.data?.dispatch) {
             window.wp.data.dispatch('core/notices').createErrorNotice(message);
         } else {
-            alert(message);
+            // Fallback: show error message in a styled div instead of alert
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'notice notice-error is-dismissible';
+            errorDiv.innerHTML = `<p>${message}</p>`;
+            const container = this.$container[0] || document.querySelector('.wrap');
+            if (container) {
+                container.insertBefore(errorDiv, container.firstChild);
+                // Auto-dismiss after 5 seconds
+                setTimeout(() => errorDiv.remove(), 5000);
+            } else {
+                // Last resort fallback
+                alert(message);
+            }
         }
     }
 

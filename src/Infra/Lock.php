@@ -97,6 +97,19 @@ class Lock
 
         // Calculate if lock is expired
         $acquiredAt = strtotime($existing['acquired_at'] ?? '');
+        if ($acquiredAt === false) {
+            // Invalid timestamp, consider lock as expired and try to replace it
+            $replaced = $wpdb->update(
+                $table,
+                ['owner' => $owner, 'acquired_at' => $now],
+                ['lock_key' => $name],
+                ['%s', '%s'],
+                ['%s']
+            );
+
+            return $replaced !== false && $replaced > 0;
+        }
+
         $expiresAt = $acquiredAt + $ttl;
         $currentTime = time();
 
