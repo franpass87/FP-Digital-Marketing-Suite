@@ -45,9 +45,12 @@ class HtmlRenderer
 
         $logoHtml = $logo !== '' ? '<img src="' . $logo . '" alt="logo" style="max-width:200px;">' : '';
 
+        // Ensure color is always a valid hex color to prevent "color:;" invalid CSS syntax
+        $safeColor = $color !== '' ? Wp::escAttr($color) : '#1d4ed8';
+
         return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' .
             'body{font-family:sans-serif;color:#111;margin:0;padding:40px;background:#f3f4f6;}' .
-            'h1,h2,h3{color:' . Wp::escAttr($color) . ';margin:0;}' .
+            'h1,h2,h3{color:' . $safeColor . ';margin:0;}' .
             '.section{background:#fff;padding:24px;border-radius:12px;margin-bottom:24px;box-shadow:0 1px 2px rgba(15,23,42,0.08);}' .
             '.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-top:16px;}' .
             '.kpi{padding:16px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;}' .
