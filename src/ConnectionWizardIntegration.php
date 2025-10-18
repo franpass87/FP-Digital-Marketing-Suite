@@ -132,6 +132,24 @@ class ConnectionWizardIntegration
     }
 
     /**
+     * Add type="module" to scripts that use ES6 imports.
+     */
+    public static function addModuleType(string $tag, string $handle, string $src): string
+    {
+        // Scripts that need module type
+        $moduleScripts = [
+            'fpdms-connection-validator',
+            'fpdms-connection-wizard',
+        ];
+
+        if (in_array($handle, $moduleScripts, true)) {
+            $tag = str_replace(' src=', ' type="module" src=', $tag);
+        }
+
+        return $tag;
+    }
+
+    /**
      * Add wizard page to admin menu.
      */
     public static function addWizardPage(): void
