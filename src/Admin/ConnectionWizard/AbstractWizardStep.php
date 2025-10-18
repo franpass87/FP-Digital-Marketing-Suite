@@ -119,6 +119,7 @@ abstract class AbstractWizardStep implements WizardStep
         $placeholder = $attrs['placeholder'] ?? '';
         $description = $attrs['description'] ?? '';
         $rows = $attrs['rows'] ?? 5;
+        $validationAttrs = $attrs['data-validate'] ?? '';
 
         $html = '<div class="fpdms-field" data-field="' . esc_attr($name) . '">';
         $html .= '<label for="' . esc_attr($id) . '" class="fpdms-field-label">';
@@ -142,12 +143,17 @@ abstract class AbstractWizardStep implements WizardStep
             $html .= 'required ';
         }
 
+        if ($validationAttrs) {
+            $html .= $validationAttrs . ' ';
+        }
+
         $html .= '>' . esc_textarea($value) . '</textarea>';
 
         if ($description) {
             $html .= '<p class="description">' . wp_kses_post($description) . '</p>';
         }
 
+        $html .= '<span class="fpdms-validation-icon"></span>';
         $html .= '</div>';
 
         return $html;
