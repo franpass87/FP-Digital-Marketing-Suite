@@ -136,10 +136,11 @@ class ConnectionWizardIntegration
      */
     public static function addModuleType(string $tag, string $handle, string $src): string
     {
-        // Scripts that need module type
+        // Scripts that need module type (all scripts using ES6 import/export)
         $moduleScripts = [
             'fpdms-connection-validator',
             'fpdms-connection-wizard',
+            'fpdms-overview',
         ];
 
         if (in_array($handle, $moduleScripts, true)) {
