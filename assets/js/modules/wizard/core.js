@@ -11,6 +11,9 @@ import { StepsManager } from './steps.js';
 // Import global classes (defined in connection-validator.js)
 // Note: ConnectionValidator and ValidationUI are loaded globally
 
+// jQuery reference for ES6 modules
+const $ = window.jQuery;
+
 export class ConnectionWizard {
     constructor($container) {
         this.$container = $container;
