@@ -57,6 +57,11 @@ export class StepsManager {
                 }
             });
 
+            // Rimuovi il loader PRIMA di ritornare il risultato
+            if (loader && loader.parentNode) {
+                loader.remove();
+            }
+
             if (response.success) {
                 return {
                     success: true,
@@ -66,14 +71,14 @@ export class StepsManager {
                 throw new Error(response.data?.message || 'Failed to load step');
             }
         } catch (error) {
+            // Rimuovi il loader anche in caso di errore
+            if (loader && loader.parentNode) {
+                loader.remove();
+            }
             return {
                 success: false,
                 error: error.message
             };
-        } finally {
-            if (loader && loader.parentNode) {
-                loader.remove();
-            }
         }
     }
 
