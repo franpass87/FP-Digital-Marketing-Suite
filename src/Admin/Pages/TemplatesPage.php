@@ -95,7 +95,35 @@ class TemplatesPage
         }
         echo '<tr><th scope="row"><label for="fpdms-template-name">' . esc_html__('Name', 'fp-dms') . '</label></th><td><input class="regular-text" id="fpdms-template-name" type="text" name="name" value="' . esc_attr($template->name ?? '') . '" required></td></tr>';
         echo '<tr><th scope="row"><label for="fpdms-template-description">' . esc_html__('Description', 'fp-dms') . '</label></th><td><input class="regular-text" id="fpdms-template-description" type="text" name="description" value="' . esc_attr($template->description ?? '') . '"></td></tr>';
-        echo '<tr><th scope="row"><label for="fpdms-template-content">' . esc_html__('Content', 'fp-dms') . '</label></th><td><textarea name="content" id="fpdms-template-content" class="large-text code" rows="12">' . esc_textarea($template->content ?? '') . '</textarea><p class="description">' . esc_html__('Use placeholders like {{client.name}}, {{period.start}}, {{kpi.ga4.users|number}}.', 'fp-dms') . '</p></td></tr>';
+        
+        // Editor di testo avanzato con supporto HTML
+        echo '<tr><th scope="row"><label for="fpdms-template-content">' . esc_html__('Content', 'fp-dms') . '</label></th><td>';
+        
+        $editorSettings = [
+            'textarea_name' => 'content',
+            'textarea_rows' => 20,
+            'teeny' => false,
+            'media_buttons' => true,
+            'tinymce' => [
+                'toolbar1' => 'formatselect,bold,italic,underline,strikethrough,forecolor,backcolor,|,bullist,numlist,blockquote,|,alignleft,aligncenter,alignright,alignjustify,|,link,unlink,image,|,undo,redo,|,code,fullscreen',
+                'toolbar2' => 'fontsizeselect,pastetext,removeformat,charmap,|,outdent,indent,|,table,|,wp_help',
+                'content_css' => admin_url('css/colors.min.css'),
+            ],
+            'quicktags' => [
+                'buttons' => 'strong,em,link,block,del,ins,img,ul,ol,li,code,close',
+            ],
+            'drag_drop_upload' => true,
+        ];
+        
+        wp_editor(
+            $template->content ?? '',
+            'fpdms-template-content',
+            $editorSettings
+        );
+        
+        echo '<p class="description" style="margin-top:10px;">' . esc_html__('Use placeholders like {{client.name}}, {{period.start}}, {{kpi.ga4.users|number}}. You can use HTML formatting and styles.', 'fp-dms') . '</p>';
+        echo '</td></tr>';
+        
         echo '<tr><th scope="row">' . esc_html__('Default', 'fp-dms') . '</th><td><label><input type="checkbox" name="is_default" value="1"' . checked($template?->isDefault ?? false, true, false) . '> ' . esc_html__('Make this the default template', 'fp-dms') . '</label></td></tr>';
         echo '</tbody></table>';
         submit_button($template ? __('Update template', 'fp-dms') : __('Create template', 'fp-dms'));
