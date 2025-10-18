@@ -25,6 +25,9 @@ class ConnectionWizardIntegration
         // Enqueue scripts and styles
         add_action('admin_enqueue_scripts', [self::class, 'enqueueAssets']);
 
+        // Add module type to scripts
+        add_filter('script_loader_tag', [self::class, 'addModuleType'], 10, 3);
+
         // Add wizard page
         add_action('admin_menu', [self::class, 'addWizardPage'], 20);
     }
