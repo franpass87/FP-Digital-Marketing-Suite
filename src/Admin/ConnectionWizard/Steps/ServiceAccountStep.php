@@ -48,7 +48,7 @@ class ServiceAccountStep extends AbstractWizardStep
 
             <div class="fpdms-field-group">
                 <?php echo $this->renderTextareaField(
-                    'service_account',
+                    'auth[service_account]',
                     __('Service Account JSON', 'fp-dms'),
                     $currentValue,
                     [

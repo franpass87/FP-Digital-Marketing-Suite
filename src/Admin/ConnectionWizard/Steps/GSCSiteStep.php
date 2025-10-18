@@ -53,7 +53,7 @@ class GSCSiteStep extends AbstractWizardStep
 
             <div class="fpdms-manual-entry">
                 <?php echo $this->renderTextField(
-                    'site_url',
+                    'config[site_url]',
                     __('Site URL', 'fp-dms'),
                     $selectedSiteUrl,
                     [

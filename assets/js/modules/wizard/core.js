@@ -94,8 +94,16 @@ export class ConnectionWizard {
         // Collect current step data
         const stepData = this.stepsManager.collectStepData();
 
+        if (window.fpdmsDebug) {
+            console.log('Next step - collected data:', stepData);
+        }
+
         // Validate
         const validation = await this.validationHandler.validateRequiredFields();
+
+        if (window.fpdmsDebug) {
+            console.log('Validation result:', validation);
+        }
 
         if (!validation.valid) {
             this.validationHandler.showValidationErrors(validation.errors);
@@ -105,6 +113,10 @@ export class ConnectionWizard {
 
         // Merge with wizard data
         Object.assign(this.data, stepData);
+
+        if (window.fpdmsDebug) {
+            console.log('Updated wizard data:', this.data);
+        }
 
         // Move to next step
         this.stepsManager.incrementStep();
@@ -122,8 +134,16 @@ export class ConnectionWizard {
     }
 
     async loadCurrentStep() {
+        if (window.fpdmsDebug) {
+            console.log('Loading step:', this.stepsManager.getCurrentStep());
+        }
+
         const result = await this.stepsManager.loadStep(this.stepsManager.getCurrentStep());
         
+        if (window.fpdmsDebug) {
+            console.log('Step load result:', result);
+        }
+
         if (result.success) {
             // Cleanup old event handlers before replacing
             this.cleanup();

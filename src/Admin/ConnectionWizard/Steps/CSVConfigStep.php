@@ -44,7 +44,7 @@ class CSVConfigStep extends AbstractWizardStep
                 <h3><?php _e('Step 1: CSV File Location', 'fp-dms'); ?></h3>
                 
                 <?php echo $this->renderTextField(
-                    'csv_path',
+                    'config[csv_path]',
                     __('CSV File Path or URL', 'fp-dms'),
                     $csvPath,
                     [
@@ -75,7 +75,7 @@ class CSVConfigStep extends AbstractWizardStep
                             <label for="fpdms_delimiter"><?php _e('Delimiter', 'fp-dms'); ?></label>
                         </th>
                         <td>
-                            <select name="delimiter" id="fpdms_delimiter" class="regular-text">
+                            <select name="config[delimiter]" id="fpdms_delimiter" class="regular-text">
                                 <option value="," <?php selected($delimiter, ','); ?>><?php _e('Comma (,)', 'fp-dms'); ?></option>
                                 <option value=";" <?php selected($delimiter, ';'); ?>><?php _e('Semicolon (;)', 'fp-dms'); ?></option>
                                 <option value="\t" <?php selected($delimiter, "\t"); ?>><?php _e('Tab', 'fp-dms'); ?></option>
@@ -93,7 +93,7 @@ class CSVConfigStep extends AbstractWizardStep
                         <td>
                             <label>
                                 <input type="checkbox" 
-                                       name="has_headers" 
+                                       name="config[has_headers]" 
                                        id="fpdms_has_headers" 
                                        value="1" 
                                        <?php checked($hasHeaders); ?> />
@@ -125,7 +125,7 @@ class CSVConfigStep extends AbstractWizardStep
                             <td><strong><?php _e('Date', 'fp-dms'); ?></strong></td>
                             <td>
                                 <input type="text" 
-                                       name="date_column" 
+                                       name="config[date_column]" 
                                        value="<?php echo esc_attr($dateColumn); ?>" 
                                        placeholder="date"
                                        class="regular-text" />
@@ -137,7 +137,7 @@ class CSVConfigStep extends AbstractWizardStep
                             <td><?php echo esc_html($label); ?></td>
                             <td>
                                 <input type="text" 
-                                       name="column_<?php echo esc_attr($field); ?>" 
+                                       name="config[column_<?php echo esc_attr($field); ?>]" 
                                        value="<?php echo esc_attr($data['config']['column_' . $field] ?? ''); ?>" 
                                        placeholder="<?php echo esc_attr($field); ?>"
                                        class="regular-text" />

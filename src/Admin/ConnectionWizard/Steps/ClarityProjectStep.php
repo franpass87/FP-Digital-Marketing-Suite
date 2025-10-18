@@ -51,7 +51,7 @@ class ClarityProjectStep extends AbstractWizardStep
                 <h3><?php _e('Step 1: API Key', 'fp-dms'); ?></h3>
                 
                 <?php echo $this->renderTextField(
-                    'api_key',
+                    'auth[api_key]',
                     __('API Key', 'fp-dms'),
                     $apiKey,
                     [
@@ -66,7 +66,7 @@ class ClarityProjectStep extends AbstractWizardStep
                 <h3><?php _e('Step 2: Project ID', 'fp-dms'); ?></h3>
 
                 <?php echo $this->renderTextField(
-                    'project_id',
+                    'config[project_id]',
                     __('Project ID', 'fp-dms'),
                     $projectId,
                     [
