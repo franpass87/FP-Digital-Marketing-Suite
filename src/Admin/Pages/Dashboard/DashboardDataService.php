@@ -26,17 +26,22 @@ class DashboardDataService
      */
     public static function getClientDirectory(): array
     {
-        $repo = new ClientsRepo();
-        $clients = $repo->all();
-        $map = [];
+        try {
+            $repo = new ClientsRepo();
+            $clients = $repo->all();
+            $map = [];
 
-        foreach ($clients as $client) {
-            if ($client->id !== null) {
-                $map[(int) $client->id] = $client->name;
+            foreach ($clients as $client) {
+                if ($client->id !== null) {
+                    $map[(int) $client->id] = $client->name;
+                }
             }
-        }
 
-        return $map;
+            return $map;
+        } catch (\Throwable $e) {
+            \error_log('[FPDMS Dashboard] Failed to fetch client directory: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -46,12 +51,22 @@ class DashboardDataService
      */
     public static function getStats(): array
     {
-        return [
-            'clients' => self::countRows('clients'),
-            'datasources' => self::countRows('datasources'),
-            'active_schedules' => self::countRows('schedules', 'active = %d', [1]),
-            'templates' => self::countRows('templates'),
-        ];
+        try {
+            return [
+                'clients' => self::countRows('clients'),
+                'datasources' => self::countRows('datasources'),
+                'active_schedules' => self::countRows('schedules', 'active = %d', [1]),
+                'templates' => self::countRows('templates'),
+            ];
+        } catch (\Throwable $e) {
+            \error_log('[FPDMS Dashboard] Failed to fetch stats: ' . $e->getMessage());
+            return [
+                'clients' => 0,
+                'datasources' => 0,
+                'active_schedules' => 0,
+                'templates' => 0,
+            ];
+        }
     }
 
     /**
@@ -64,14 +79,19 @@ class DashboardDataService
     {
         global $wpdb;
 
-        $table = DB::table('reports');
-        $sql = $wpdb->prepare(
-            "SELECT client_id, status, period_start, period_end, created_at FROM {$table} ORDER BY created_at DESC LIMIT %d",
-            $limit
-        );
-        $rows = $wpdb->get_results($sql, ARRAY_A);
+        try {
+            $table = DB::table('reports');
+            $sql = $wpdb->prepare(
+                "SELECT client_id, status, period_start, period_end, created_at FROM {$table} ORDER BY created_at DESC LIMIT %d",
+                $limit
+            );
+            $rows = $wpdb->get_results($sql, ARRAY_A);
 
-        if (!is_array($rows)) {
+            if (!is_array($rows)) {
+                return [];
+            }
+        } catch (\Throwable $e) {
+            \error_log('[FPDMS Dashboard] Failed to fetch recent reports: ' . $e->getMessage());
             return [];
         }
 
@@ -102,25 +122,30 @@ class DashboardDataService
      */
     public static function getRecentAnomalies(array $clientNames, int $limit = 5): array
     {
-        $repo = new AnomaliesRepo();
-        $records = $repo->recent($limit);
-        $items = [];
+        try {
+            $repo = new AnomaliesRepo();
+            $records = $repo->recent($limit);
+            $items = [];
 
-        foreach ($records as $anomaly) {
-            $clientId = $anomaly->clientId;
-            $clientName = $clientNames[$clientId] ?? sprintf(__('Client #%d', 'fp-dms'), $clientId);
-            $type = DateFormatter::humanizeType($anomaly->type);
-            $detected = DateFormatter::dateTime($anomaly->detectedAt);
+            foreach ($records as $anomaly) {
+                $clientId = $anomaly->clientId;
+                $clientName = $clientNames[$clientId] ?? sprintf(__('Client #%d', 'fp-dms'), $clientId);
+                $type = DateFormatter::humanizeType($anomaly->type);
+                $detected = DateFormatter::dateTime($anomaly->detectedAt);
 
-            $items[] = [
-                'client' => $clientName,
-                'type' => $type,
-                'severity' => $anomaly->severity,
-                'detected' => $detected,
-            ];
+                $items[] = [
+                    'client' => $clientName,
+                    'type' => $type,
+                    'severity' => $anomaly->severity,
+                    'detected' => $detected,
+                ];
+            }
+
+            return $items;
+        } catch (\Throwable $e) {
+            \error_log('[FPDMS Dashboard] Failed to fetch recent anomalies: ' . $e->getMessage());
+            return [];
         }
-
-        return $items;
     }
 
     /**
@@ -130,14 +155,19 @@ class DashboardDataService
     {
         global $wpdb;
 
-        $sql = 'SELECT COUNT(*) FROM ' . DB::table($table);
-        if ($where !== '') {
-            $sql .= ' WHERE ' . $where;
+        try {
+            $sql = 'SELECT COUNT(*) FROM ' . DB::table($table);
+            if ($where !== '') {
+                $sql .= ' WHERE ' . $where;
+            }
+
+            $prepared = $params !== [] ? $wpdb->prepare($sql, $params) : $sql;
+            $result = $wpdb->get_var($prepared);
+
+            return $result !== null ? (int) $result : 0;
+        } catch (\Throwable $e) {
+            \error_log('[FPDMS Dashboard] Failed to count rows in table ' . $table . ': ' . $e->getMessage());
+            return 0;
         }
-
-        $prepared = $params !== [] ? $wpdb->prepare($sql, $params) : $sql;
-        $result = $wpdb->get_var($prepared);
-
-        return $result !== null ? (int) $result : 0;
     }
 }

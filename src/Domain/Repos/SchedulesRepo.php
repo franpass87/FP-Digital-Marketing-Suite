@@ -89,10 +89,16 @@ class SchedulesRepo
     public function nextScheduledRun(): ?Schedule
     {
         global $wpdb;
-        $sql = "SELECT * FROM {$this->table} WHERE active = 1 AND next_run_at IS NOT NULL ORDER BY next_run_at ASC LIMIT 1";
-        $row = $wpdb->get_row($sql, ARRAY_A);
+        
+        try {
+            $sql = "SELECT * FROM {$this->table} WHERE active = 1 AND next_run_at IS NOT NULL ORDER BY next_run_at ASC LIMIT 1";
+            $row = $wpdb->get_row($sql, ARRAY_A);
 
-        return is_array($row) ? Schedule::fromRow($row) : null;
+            return is_array($row) ? Schedule::fromRow($row) : null;
+        } catch (\Throwable $e) {
+            \error_log('[FPDMS SchedulesRepo] Failed to fetch next scheduled run: ' . $e->getMessage());
+            return null;
+        }
     }
 
     /**

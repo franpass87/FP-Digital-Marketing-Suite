@@ -60,26 +60,53 @@ class DashboardPage
             return;
         }
 
-        // Fetch data
-        $clientNames = DashboardDataService::getClientDirectory();
-        $stats = DashboardDataService::getStats();
-        $recentReports = DashboardDataService::getRecentReports($clientNames, 5);
-        $recentAnomalies = DashboardDataService::getRecentAnomalies($clientNames, 5);
-
-        $scheduleRepo = new SchedulesRepo();
-        $nextSchedule = $scheduleRepo->nextScheduledRun();
-
-        // Render page
         echo '<div class="wrap fpdms-dashboard-wrap">';
         echo '<h1>' . esc_html__('Dashboard', 'fp-dms') . '</h1>';
-        echo '<p class="fpdms-dashboard-intro">' . esc_html__('Monitor the health of your reporting operations and jump into the areas that need attention.', 'fp-dms') . '</p>';
 
-        // Render sections using modular components
-        ComponentRenderer::renderSummary($stats);
-        ComponentRenderer::renderScheduleCard($nextSchedule, $clientNames);
-        ComponentRenderer::renderActivity($recentReports, $recentAnomalies);
-        ComponentRenderer::renderQuickLinks();
+        try {
+            // Fetch data
+            $clientNames = DashboardDataService::getClientDirectory();
+            $stats = DashboardDataService::getStats();
+            $recentReports = DashboardDataService::getRecentReports($clientNames, 5);
+            $recentAnomalies = DashboardDataService::getRecentAnomalies($clientNames, 5);
 
+            $scheduleRepo = new SchedulesRepo();
+            $nextSchedule = $scheduleRepo->nextScheduledRun();
+
+            // Render page intro
+            echo '<p class="fpdms-dashboard-intro">' . esc_html__('Monitor the health of your reporting operations and jump into the areas that need attention.', 'fp-dms') . '</p>';
+
+            // Render sections using modular components
+            ComponentRenderer::renderSummary($stats);
+            ComponentRenderer::renderScheduleCard($nextSchedule, $clientNames);
+            ComponentRenderer::renderActivity($recentReports, $recentAnomalies);
+            ComponentRenderer::renderQuickLinks();
+        } catch (\Throwable $e) {
+            self::renderError($e);
+        }
+
+        echo '</div>';
+    }
+
+    /**
+     * Render error message
+     */
+    private static function renderError(\Throwable $e): void
+    {
+        echo '<div class="notice notice-error">';
+        echo '<p><strong>' . esc_html__('Dashboard Error', 'fp-dms') . '</strong></p>';
+        echo '<p>' . esc_html__('Unable to load dashboard data. This usually happens if the plugin tables are not created.', 'fp-dms') . '</p>';
+        echo '<p>' . esc_html__('Try deactivating and reactivating the plugin to recreate the database tables.', 'fp-dms') . '</p>';
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            echo '<details style="margin-top: 10px;">';
+            echo '<summary style="cursor: pointer;">' . esc_html__('Technical details (WP_DEBUG is enabled)', 'fp-dms') . '</summary>';
+            echo '<pre style="background: #f0f0f0; padding: 10px; overflow: auto; max-height: 300px;">';
+            echo esc_html($e->getMessage()) . "\n\n";
+            echo esc_html($e->getTraceAsString());
+            echo '</pre>';
+            echo '</details>';
+        }
         echo '</div>';
     }
 }
