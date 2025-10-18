@@ -25,6 +25,9 @@ class ConnectionWizardIntegration
         // Enqueue scripts and styles
         add_action('admin_enqueue_scripts', [self::class, 'enqueueAssets']);
 
+        // Add module type to scripts
+        add_filter('script_loader_tag', [self::class, 'addModuleType'], 10, 3);
+
         // Add wizard page
         add_action('admin_menu', [self::class, 'addWizardPage'], 20);
     }
@@ -126,6 +129,25 @@ class ConnectionWizardIntegration
             'nonce' => wp_create_nonce('fpdms_connection_wizard'),
             'redirectUrl' => admin_url('admin.php?page=fpdms-data-sources'),
         ]);
+    }
+
+    /**
+     * Add type="module" to scripts that use ES6 imports.
+     */
+    public static function addModuleType(string $tag, string $handle, string $src): string
+    {
+        // Scripts that need module type (all scripts using ES6 import/export)
+        $moduleScripts = [
+            'fpdms-connection-validator',
+            'fpdms-connection-wizard',
+            'fpdms-overview',
+        ];
+
+        if (in_array($handle, $moduleScripts, true)) {
+            $tag = str_replace(' src=', ' type="module" src=', $tag);
+        }
+
+        return $tag;
     }
 
     /**
