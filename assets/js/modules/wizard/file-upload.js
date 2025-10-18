@@ -4,6 +4,9 @@
  */
 import { SELECTORS } from './constants.js';
 
+// jQuery reference for ES6 modules
+const $ = window.jQuery;
+
 export class FileUploadHandler {
     constructor($container, onError) {
         this.$container = $container;
