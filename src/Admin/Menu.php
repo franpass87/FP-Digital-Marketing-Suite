@@ -8,6 +8,7 @@ use FP\DMS\Admin\Pages\AnomaliesPage;
 use FP\DMS\Admin\Pages\ClientsPage;
 use FP\DMS\Admin\Pages\DashboardPage;
 use FP\DMS\Admin\Pages\DataSourcesPage;
+use FP\DMS\Admin\Pages\DebugPage;
 use FP\DMS\Admin\Pages\HealthPage;
 use FP\DMS\Admin\Pages\LogsPage;
 use FP\DMS\Admin\Pages\OverviewPage;
@@ -50,6 +51,7 @@ class Menu
         add_submenu_page('fp-dms-dashboard', __('Anomalies', 'fp-dms'), __('Anomalies', 'fp-dms'), 'manage_options', 'fp-dms-anomalies', [AnomaliesPage::class, 'render']);
         add_submenu_page('fp-dms-dashboard', __('Health', 'fp-dms'), __('Health', 'fp-dms'), 'manage_options', 'fp-dms-health', [HealthPage::class, 'render']);
         add_submenu_page('fp-dms-dashboard', __('QA Automation', 'fp-dms'), __('QA Automation', 'fp-dms'), 'manage_options', 'fp-dms-qa', [QaPage::class, 'render']);
+        add_submenu_page('fp-dms-dashboard', __('Debug', 'fp-dms'), __('Debug', 'fp-dms'), 'manage_options', 'fp-dms-debug', [DebugPage::class, 'render']);
 
         if ($hook) {
             add_action('load-' . $hook, [self::class, 'enqueueAssets']);
