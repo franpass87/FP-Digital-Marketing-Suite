@@ -88,6 +88,7 @@ class OverviewPage
         OverviewRenderer::renderAnomaliesSection();
         OverviewRenderer::renderStatusSection();
         OverviewRenderer::renderJobsSection();
+        OverviewRenderer::renderReportsSection();
 
         // Render configuration for JavaScript
         $config = OverviewConfigService::buildConfig($clients);

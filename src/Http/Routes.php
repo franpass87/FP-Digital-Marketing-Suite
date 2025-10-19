@@ -9,10 +9,13 @@ use Exception;
 use FP\DMS\Domain\Repos\AnomaliesRepo;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Domain\Repos\ReportsRepo;
+use FP\DMS\Domain\Repos\TemplatesRepo;
 use FP\DMS\Infra\Options;
 use FP\DMS\Infra\Queue;
 use FP\DMS\Infra\NotificationRouter;
 use FP\DMS\Services\Anomalies\Detector;
+use FP\DMS\Services\Reports\HtmlRenderer;
+use FP\DMS\Services\Reports\TokenEngine;
 use FP\DMS\Support\Period;
 use FP\DMS\Support\Wp;
 use FP\DMS\Services\Qa\Automation;
@@ -60,6 +63,17 @@ class Routes
         register_rest_route('fpdms/v1', '/report/(?P<report_id>\\d+)/download', [
             'methods' => 'GET',
             'callback' => [self::class, 'handleDownload'],
+            'permission_callback' => [self::class, 'checkManageOptions'],
+            'args' => [
+                'report_id' => [
+                    'validate_callback' => static fn($value): bool => is_numeric($value) && (int) $value > 0,
+                ],
+            ],
+        ]);
+
+        register_rest_route('fpdms/v1', '/report/(?P<report_id>\\d+)/html', [
+            'methods' => 'GET',
+            'callback' => [self::class, 'handleReportHtml'],
             'permission_callback' => [self::class, 'checkManageOptions'],
             'args' => [
                 'report_id' => [
@@ -510,5 +524,80 @@ class Routes
     private static function qaService(): Automation
     {
         return new Automation();
+    }
+
+    public static function handleReportHtml(WP_REST_Request $request): WP_REST_Response|WP_Error
+    {
+        $reportId = (int) $request->get_param('report_id');
+        $reports = new ReportsRepo();
+        $report = $reports->find($reportId);
+        
+        if (! $report || $report->status !== 'success') {
+            return new WP_Error('rest_not_found', __('Report not available or not completed.', 'fp-dms'), ['status' => 404]);
+        }
+
+        $clients = new ClientsRepo();
+        $client = $clients->find($report->clientId);
+        if (! $client) {
+            return new WP_Error('rest_not_found', __('Client not found.', 'fp-dms'), ['status' => 404]);
+        }
+
+        try {
+            // Ricostruisci il contesto del report
+            $meta = $report->meta;
+            $period = Period::fromStrings($report->periodStart, $report->periodEnd, $client->timezone);
+            
+            // Ottieni il template
+            $templateId = $meta['template_id'] ?? null;
+            if (! $templateId) {
+                return new WP_Error('rest_missing_template', __('Template not found for this report.', 'fp-dms'), ['status' => 404]);
+            }
+            
+            $templates = new TemplatesRepo();
+            $template = $templates->find($templateId);
+            if (! $template) {
+                return new WP_Error('rest_missing_template', __('Template not found.', 'fp-dms'), ['status' => 404]);
+            }
+
+            // Ricostruisci il contesto completo
+            $context = [
+                'client' => [
+                    'id' => $client->id,
+                    'name' => $client->name,
+                    'logo_url' => $client->logoUrl,
+                ],
+                'period' => $period->toArray(),
+                'kpi' => $meta['kpi'] ?? [],
+                'trends' => $meta['trends'] ?? [],
+                'gsc' => $meta['gsc'] ?? [],
+                'anomalies' => $meta['anomalies'] ?? [],
+                'branding' => [
+                    'primary_color' => $client->primaryColor,
+                    'logo_url' => $client->logoUrl,
+                    'footer_text' => $client->footerText,
+                ],
+                'report' => [
+                    'empty' => empty($meta['kpi']),
+                    'empty_message' => __('No data available for this period.', 'fp-dms'),
+                ],
+            ];
+
+            // Genera l'HTML usando l'HtmlRenderer
+            $htmlRenderer = new HtmlRenderer(new TokenEngine());
+            $html = $htmlRenderer->render($template, $context);
+
+            return new WP_REST_Response([
+                'ok' => true,
+                'html' => $html,
+                'report_id' => $report->id,
+                'client_name' => $client->name,
+                'period' => $period->toArray(),
+                'generated_at' => $report->meta['generated_at'] ?? null,
+            ]);
+
+        } catch (Exception $e) {
+            error_log(sprintf('[FPDMS] Error generating report HTML: %s', $e->getMessage()));
+            return new WP_Error('rest_generation_failed', __('Unable to generate report HTML.', 'fp-dms'), ['status' => 500]);
+        }
     }
 }

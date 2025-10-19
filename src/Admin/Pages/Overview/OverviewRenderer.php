@@ -216,6 +216,32 @@ class OverviewRenderer
     }
 
     /**
+     * Render reports section
+     */
+    public static function renderReportsSection(): void
+    {
+        echo '<section class="fpdms-section fpdms-overview-section" aria-labelledby="fpdms-overview-reports-heading">';
+        echo '<header>';
+        echo '<h2 id="fpdms-overview-reports-heading">' . esc_html__('Recent reports', 'fp-dms') . '</h2>';
+        echo '<span class="fpdms-overview-period">' . esc_html__('View and download your latest reports.', 'fp-dms') . '</span>';
+        echo '</header>';
+        echo '<div id="fpdms-overview-reports-list" class="fpdms-reports-list">';
+        echo '<p class="fpdms-reports-placeholder">' . esc_html__('No reports available yet.', 'fp-dms') . '</p>';
+        echo '</div>';
+        echo '<div id="fpdms-overview-report-viewer" class="fpdms-report-viewer" style="display: none;">';
+        echo '<div class="fpdms-report-viewer-header">';
+        echo '<h3 id="fpdms-report-viewer-title"></h3>';
+        echo '<div class="fpdms-report-viewer-actions">';
+        echo '<button type="button" class="button" id="fpdms-report-viewer-close">' . esc_html__('Close', 'fp-dms') . '</button>';
+        echo '<button type="button" class="button button-primary" id="fpdms-report-viewer-download">' . esc_html__('Download PDF', 'fp-dms') . '</button>';
+        echo '</div>';
+        echo '</div>';
+        echo '<div id="fpdms-report-viewer-content" class="fpdms-report-viewer-content"></div>';
+        echo '</div>';
+        echo '</section>';
+    }
+
+    /**
      * Render configuration as JSON for JavaScript
      *
      * @param array<string, mixed> $config

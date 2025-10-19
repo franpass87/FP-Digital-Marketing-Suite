@@ -131,10 +131,16 @@ class IntroStep extends AbstractWizardStep
     private function getRequirements(): array
     {
         return match ($this->provider) {
-            'ga4', 'gsc', 'google_ads' => [
+            'ga4', 'gsc' => [
                 __('A Google Cloud service account with API access', 'fp-dms'),
                 __('Your property/customer ID', 'fp-dms'),
                 __('Viewer permissions on the resource', 'fp-dms'),
+            ],
+            'google_ads' => [
+                __('Google Ads API access (Developer Token)', 'fp-dms'),
+                __('OAuth 2.0 client credentials', 'fp-dms'),
+                __('Your Google Ads Customer ID', 'fp-dms'),
+                __('Refresh token from OAuth flow', 'fp-dms'),
             ],
             'meta_ads' => [
                 __('A Meta Business account', 'fp-dms'),
@@ -170,6 +176,7 @@ class IntroStep extends AbstractWizardStep
         return match ($this->provider) {
             'ga4' => __('This wizard will guide you through connecting your GA4 property. You\'ll need to create a service account in Google Cloud Console if you don\'t have one yet.', 'fp-dms'),
             'gsc' => __('To connect Search Console, you\'ll need a service account with access to your verified site. The wizard will help you set this up step by step.', 'fp-dms'),
+            'google_ads' => __('To connect Google Ads, you\'ll need to set up OAuth 2.0 credentials in Google Cloud Console and obtain a developer token from Google Ads API Center.', 'fp-dms'),
             default => __('Follow the wizard steps to complete the setup.', 'fp-dms'),
         };
     }
@@ -187,6 +194,16 @@ class IntroStep extends AbstractWizardStep
                 [
                     'label' => __('GSC Setup Guide', 'fp-dms'),
                     'url' => 'https://support.google.com/webmasters/answer/7687615',
+                ],
+            ],
+            'google_ads' => [
+                [
+                    'label' => __('Google Ads API Setup', 'fp-dms'),
+                    'url' => 'https://developers.google.com/google-ads/api/docs/start',
+                ],
+                [
+                    'label' => __('OAuth 2.0 Setup Guide', 'fp-dms'),
+                    'url' => 'https://developers.google.com/google-ads/api/docs/oauth/overview',
                 ],
             ],
             default => [],
