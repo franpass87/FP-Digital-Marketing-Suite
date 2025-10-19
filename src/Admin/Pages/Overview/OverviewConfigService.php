@@ -122,6 +122,9 @@ class OverviewConfigService
                 'trend' => esc_url_raw(rest_url('fpdms/v1/overview/trend')),
                 'status' => esc_url_raw(rest_url('fpdms/v1/overview/status')),
                 'anomalies' => esc_url_raw(rest_url('fpdms/v1/overview/anomalies')),
+                'reports' => esc_url_raw(rest_url('fpdms/v1/reports')),
+                'reportHtml' => esc_url_raw(rest_url('fpdms/v1/report/')),
+                'reportDownload' => esc_url_raw(rest_url('fpdms/v1/report/')),
             ],
             'actions' => [
                 'run' => esc_url_raw(rest_url('fpdms/v1/overview/run')),

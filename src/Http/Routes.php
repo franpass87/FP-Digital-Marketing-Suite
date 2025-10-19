@@ -82,6 +82,21 @@ class Routes
             ],
         ]);
 
+        register_rest_route('fpdms/v1', '/reports', [
+            'methods' => 'GET',
+            'callback' => [self::class, 'handleReportsList'],
+            'permission_callback' => [self::class, 'checkManageOptions'],
+            'args' => [
+                'client_id' => [
+                    'validate_callback' => static fn($value): bool => is_numeric($value) && (int) $value > 0,
+                ],
+                'limit' => [
+                    'default' => 10,
+                    'validate_callback' => static fn($value): bool => is_numeric($value) && (int) $value > 0 && (int) $value <= 50,
+                ],
+            ],
+        ]);
+
         register_rest_route('fpdms/v1', '/anomalies/evaluate', [
             'methods' => 'POST',
             'callback' => [self::class, 'handleAnomaliesEvaluate'],
@@ -599,5 +614,47 @@ class Routes
             error_log(sprintf('[FPDMS] Error generating report HTML: %s', $e->getMessage()));
             return new WP_Error('rest_generation_failed', __('Unable to generate report HTML.', 'fp-dms'), ['status' => 500]);
         }
+    }
+
+    public static function handleReportsList(WP_REST_Request $request): WP_REST_Response|WP_Error
+    {
+        $clientId = (int) $request->get_param('client_id');
+        $limit = (int) $request->get_param('limit');
+
+        if ($clientId <= 0) {
+            return new WP_Error('rest_invalid_param', __('Missing or invalid client_id parameter.', 'fp-dms'), ['status' => 400]);
+        }
+
+        $reports = new ReportsRepo();
+        $reportsList = $reports->search([
+            'client_id' => $clientId,
+            'limit' => $limit,
+            'order_by' => 'created_at',
+            'order' => 'DESC'
+        ]);
+
+        $clients = new ClientsRepo();
+        $client = $clients->find($clientId);
+        $clientName = $client ? $client->name : 'Unknown Client';
+
+        $formattedReports = array_map(function($report) use ($clientName) {
+            return [
+                'id' => $report->id,
+                'client_name' => $clientName,
+                'status' => $report->status,
+                'period_start' => $report->periodStart,
+                'period_end' => $report->periodEnd,
+                'created_at' => $report->createdAt,
+                'storage_path' => $report->storagePath,
+                'meta' => $report->meta,
+            ];
+        }, $reportsList);
+
+        return new WP_REST_Response([
+            'ok' => true,
+            'reports' => $formattedReports,
+            'total' => count($formattedReports),
+            'client_id' => $clientId,
+        ]);
     }
 }

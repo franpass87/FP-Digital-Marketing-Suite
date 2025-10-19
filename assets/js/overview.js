@@ -328,6 +328,166 @@ import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } f
         }
     });
 
+    // Reports functionality
+    let currentReportId = null;
+
+    // Load reports for current client
+    async function loadReports() {
+        if (!state.state.clientId || !DOM.reportsList) {
+            return;
+        }
+
+        try {
+            const response = await api.fetchReports(state.state.clientId);
+            if (response.ok && response.reports) {
+                renderReports(response.reports);
+            } else {
+                DOM.reportsList.innerHTML = '<p class="fpdms-reports-placeholder">No reports available yet.</p>';
+            }
+        } catch (error) {
+            if (window.fpdmsDebug) {
+                console.error('FPDMS overview reports loading error', error);
+            }
+            DOM.reportsList.innerHTML = '<p class="fpdms-reports-placeholder">Error loading reports.</p>';
+        }
+    }
+
+    // Render reports list
+    function renderReports(reports) {
+        if (!reports || reports.length === 0) {
+            DOM.reportsList.innerHTML = '<p class="fpdms-reports-placeholder">No reports available yet.</p>';
+            return;
+        }
+
+        const html = reports.map(report => {
+            const statusClass = report.status === 'success' ? 'success' : 
+                               report.status === 'failed' ? 'failed' : 'queued';
+            const period = report.period_start && report.period_end ? 
+                          `${report.period_start} - ${report.period_end}` : '';
+            const created = report.created_at ? new Date(report.created_at).toLocaleDateString() : '';
+
+            return `
+                <div class="fpdms-report-card" data-report-id="${report.id}">
+                    <div class="fpdms-report-card-header">
+                        <h3 class="fpdms-report-card-title">${report.client_name || 'Report'}</h3>
+                        <span class="fpdms-report-card-status ${statusClass}">${report.status}</span>
+                    </div>
+                    <div class="fpdms-report-card-meta">${period}</div>
+                    <div class="fpdms-report-card-meta">Created: ${created}</div>
+                    <div class="fpdms-report-card-actions">
+                        ${report.status === 'success' ? 
+                            `<button class="button" onclick="viewReport(${report.id})">View</button>
+                             <button class="button button-primary" onclick="downloadReport(${report.id})">Download PDF</button>` :
+                            `<span class="button" disabled>Not available</span>`
+                        }
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        DOM.reportsList.innerHTML = html;
+    }
+
+    // View report in modal
+    async function viewReport(reportId) {
+        if (!DOM.reportViewer) return;
+
+        try {
+            const response = await api.fetchReportHtml(reportId);
+            if (response.ok && response.html) {
+                currentReportId = reportId;
+                DOM.reportViewerTitle.textContent = response.client_name || 'Report';
+                DOM.reportViewerContent.innerHTML = response.html;
+                DOM.reportViewer.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                alert('Unable to load report content.');
+            }
+        } catch (error) {
+            if (window.fpdmsDebug) {
+                console.error('FPDMS report viewing error', error);
+            }
+            alert('Error loading report: ' + (error.message || 'Unknown error'));
+        }
+    }
+
+    // Download report PDF
+    async function downloadReport(reportId) {
+        try {
+            const response = await api.downloadReport(reportId);
+            if (response.ok && response.data) {
+                // Create download link
+                const blob = new Blob([Uint8Array.from(atob(response.data), c => c.charCodeAt(0))], {
+                    type: 'application/pdf'
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = response.filename || `report-${reportId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } else {
+                alert('Unable to download report.');
+            }
+        } catch (error) {
+            if (window.fpdmsDebug) {
+                console.error('FPDMS report download error', error);
+            }
+            alert('Error downloading report: ' + (error.message || 'Unknown error'));
+        }
+    }
+
+    // Close report viewer
+    function closeReportViewer() {
+        if (DOM.reportViewer) {
+            DOM.reportViewer.style.display = 'none';
+            document.body.style.overflow = '';
+            currentReportId = null;
+        }
+    }
+
+    // Event listeners
+    if (DOM.reportViewerClose) {
+        DOM.reportViewerClose.addEventListener('click', closeReportViewer);
+    }
+
+    if (DOM.reportViewerDownload) {
+        DOM.reportViewerDownload.addEventListener('click', () => {
+            if (currentReportId) {
+                downloadReport(currentReportId);
+            }
+        });
+    }
+
+    // Close viewer on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && DOM.reportViewer && DOM.reportViewer.style.display === 'flex') {
+            closeReportViewer();
+        }
+    });
+
+    // Close viewer on background click
+    if (DOM.reportViewer) {
+        DOM.reportViewer.addEventListener('click', (e) => {
+            if (e.target === DOM.reportViewer) {
+                closeReportViewer();
+            }
+        });
+    }
+
+    // Make functions globally available
+    window.viewReport = viewReport;
+    window.downloadReport = downloadReport;
+
+    // Load reports when client changes
+    const originalLoadAll = loadAll;
+    loadAll = async function(fromAuto = false) {
+        await originalLoadAll(fromAuto);
+        await loadReports();
+    };
+
     // Initial load
     if (state.state.clientId) {
         loadAll();

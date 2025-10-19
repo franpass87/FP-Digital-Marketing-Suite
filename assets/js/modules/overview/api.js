@@ -99,4 +99,19 @@ export class OverviewAPI {
         const url = this.config.actions?.anomalies || this.endpoints.anomalies;
         return this.postRequest(url, payload);
     }
+
+    async fetchReports(clientId) {
+        const url = this.endpoints.reports || '/wp-json/fpdms/v1/reports';
+        return this.request(url, { client_id: clientId });
+    }
+
+    async fetchReportHtml(reportId) {
+        const url = this.endpoints.reportHtml || `/wp-json/fpdms/v1/report/${reportId}/html`;
+        return this.request(url);
+    }
+
+    async downloadReport(reportId) {
+        const url = this.endpoints.reportDownload || `/wp-json/fpdms/v1/report/${reportId}/download`;
+        return this.request(url);
+    }
 }
