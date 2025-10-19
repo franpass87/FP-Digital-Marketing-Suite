@@ -94,7 +94,7 @@ class TestConnectionStep extends AbstractWizardStep
             if (!$result->isSuccess()) {
                 return [
                     'valid' => false,
-                    'errors' => ['_general' => $result->message],
+                    'errors' => ['_general' => $result->message()],
                 ];
             }
 

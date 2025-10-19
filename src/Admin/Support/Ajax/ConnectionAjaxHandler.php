@@ -138,13 +138,13 @@ class ConnectionAjaxHandler
             if ($result->isSuccess()) {
                 wp_send_json_success([
                     'title' => '✅ ' . __('Connection Successful', 'fp-dms'),
-                    'message' => $result->message,
-                    'details' => $result->details,
+                    'message' => $result->message(),
+                    'details' => $result->details(),
                 ]);
             } else {
                 wp_send_json_error([
                     'title' => '❌ ' . __('Connection Failed', 'fp-dms'),
-                    'message' => $result->message,
+                    'message' => $result->message(),
                 ]);
             }
         } catch (ConnectorException $e) {
