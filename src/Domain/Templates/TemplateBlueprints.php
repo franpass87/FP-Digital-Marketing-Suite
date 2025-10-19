@@ -331,10 +331,138 @@ final class TemplateBlueprints
         $blueprint = self::defaultBlueprint();
 
         return TemplateDraft::fromValues(
-            esc_html__('Balanced performance report', 'fp-dms'),
-            esc_html__('Automatically generated default layout.', 'fp-dms'),
+            esc_html__('Report Bilanciato', 'fp-dms'),
+            esc_html__('Layout predefinito generato automaticamente.', 'fp-dms'),
             $blueprint->content,
             true
         );
+    }
+
+    /**
+     * Get blueprints filtered by category.
+     *
+     * @param string $category Category type (analytics, ecommerce, seo, etc.)
+     * @return array<string,TemplateBlueprint>
+     */
+    public static function getByCategory(string $category): array
+    {
+        $all = self::all();
+        $categoryMap = [
+            'analytics' => ['balanced', 'kpi'],
+            'ecommerce' => ['ecommerce'],
+            'saas' => ['saas'],
+            'healthcare' => ['healthcare'],
+            'education' => ['education'],
+            'b2b' => ['b2b'],
+            'local' => ['local'],
+            'content' => ['content'],
+            'seo' => ['search'],
+        ];
+
+        $templateIds = $categoryMap[$category] ?? [];
+        return array_intersect_key($all, array_flip($templateIds));
+    }
+
+    /**
+     * Get all available categories for blueprints.
+     *
+     * @return array<string> Array of category names
+     */
+    public static function getCategories(): array
+    {
+        return [
+            'analytics' => esc_html__('Analytics', 'fp-dms'),
+            'ecommerce' => esc_html__('E-commerce', 'fp-dms'),
+            'saas' => esc_html__('SaaS & Software', 'fp-dms'),
+            'healthcare' => esc_html__('Sanità', 'fp-dms'),
+            'education' => esc_html__('Educazione', 'fp-dms'),
+            'b2b' => esc_html__('B2B & Lead Gen', 'fp-dms'),
+            'local' => esc_html__('Business Locali', 'fp-dms'),
+            'content' => esc_html__('Content Marketing', 'fp-dms'),
+            'seo' => esc_html__('SEO', 'fp-dms'),
+        ];
+    }
+
+    /**
+     * Suggest blueprints based on business context.
+     *
+     * @param array $context Context information
+     * @return array<string> Array of suggested blueprint keys
+     */
+    public static function suggestBlueprints(array $context): array
+    {
+        $suggestions = [];
+        $businessType = $context['business_type'] ?? '';
+        $keywords = $context['keywords'] ?? [];
+
+        // E-commerce detection
+        if (
+            in_array('shop', $keywords, true) ||
+            in_array('ecommerce', $keywords, true) ||
+            $businessType === 'ecommerce'
+        ) {
+            $suggestions[] = 'ecommerce';
+        }
+
+        // SaaS/Software detection
+        if (
+            in_array('saas', $keywords, true) ||
+            in_array('software', $keywords, true) ||
+            $businessType === 'saas'
+        ) {
+            $suggestions[] = 'saas';
+        }
+
+        // Healthcare detection
+        if (
+            in_array('health', $keywords, true) ||
+            in_array('medical', $keywords, true) ||
+            $businessType === 'healthcare'
+        ) {
+            $suggestions[] = 'healthcare';
+        }
+
+        // Education detection
+        if (
+            in_array('education', $keywords, true) ||
+            in_array('school', $keywords, true) ||
+            $businessType === 'education'
+        ) {
+            $suggestions[] = 'education';
+        }
+
+        // B2B detection
+        if (
+            in_array('b2b', $keywords, true) ||
+            in_array('professional', $keywords, true) ||
+            $businessType === 'b2b'
+        ) {
+            $suggestions[] = 'b2b';
+        }
+
+        // Local business detection
+        if (
+            in_array('local', $keywords, true) ||
+            in_array('restaurant', $keywords, true) ||
+            $businessType === 'local'
+        ) {
+            $suggestions[] = 'local';
+        }
+
+        // Content/Blog detection
+        if (
+            in_array('blog', $keywords, true) ||
+            in_array('content', $keywords, true) ||
+            $businessType === 'content'
+        ) {
+            $suggestions[] = 'content';
+        }
+
+        // Default suggestions
+        if (empty($suggestions)) {
+            $suggestions = ['balanced', 'kpi'];
+        }
+
+        return $suggestions;
     }
 }
