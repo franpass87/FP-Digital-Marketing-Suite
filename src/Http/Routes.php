@@ -19,6 +19,7 @@ use FP\DMS\Services\Reports\TokenEngine;
 use FP\DMS\Support\Period;
 use FP\DMS\Support\Wp;
 use FP\DMS\Services\Qa\Automation;
+use FP\DMS\Services\Sync\DataSourceSyncService;
 use Throwable;
 use WP_Error;
 use WP_REST_Request;
@@ -143,6 +144,18 @@ class Routes
             'methods' => 'POST',
             'callback' => [self::class, 'handleQaCleanup'],
             'permission_callback' => [self::class, 'checkManageOptions'],
+        ]);
+
+        register_rest_route('fpdms/v1', '/sync/datasources', [
+            'methods' => 'POST',
+            'callback' => [self::class, 'handleSyncDataSources'],
+            'permission_callback' => [self::class, 'checkManageOptions'],
+            'args' => [
+                'client_id' => [
+                    'required' => false,
+                    'validate_callback' => static fn($value): bool => is_numeric($value) && (int) $value > 0,
+                ],
+            ],
         ]);
     }
 
@@ -435,6 +448,38 @@ class Routes
         }
 
         return new WP_REST_Response($result);
+    }
+
+    public static function handleSyncDataSources(WP_REST_Request $request): WP_REST_Response|WP_Error
+    {
+        if (!self::verifyNonce($request)) {
+            return new WP_Error('rest_forbidden', __('Invalid or missing nonce.', 'fp-dms'), ['status' => 403]);
+        }
+
+        $clientId = $request->get_param('client_id');
+        $syncService = new DataSourceSyncService();
+
+        try {
+            if ($clientId) {
+                // Sincronizza solo per un cliente specifico
+                $results = $syncService->syncClientDataSources((int) $clientId);
+                $message = sprintf(__('Data sources synchronized for client %d.', 'fp-dms'), $clientId);
+            } else {
+                // Sincronizza tutti i clienti
+                $results = $syncService->syncAllDataSources();
+                $message = __('All data sources synchronized.', 'fp-dms');
+            }
+
+            return new WP_REST_Response([
+                'success' => true,
+                'message' => $message,
+                'results' => $results,
+                'timestamp' => Wp::currentTime('mysql')
+            ]);
+
+        } catch (Throwable $exception) {
+            return new WP_Error('rest_server_error', __('Sync failed: ', 'fp-dms') . $exception->getMessage(), ['status' => 500]);
+        }
     }
 
     public static function checkManageOptions(): bool

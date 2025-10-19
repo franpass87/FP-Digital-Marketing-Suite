@@ -7,6 +7,7 @@ namespace FP\DMS\Admin\Pages;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Domain\Repos\DataSourcesRepo;
 use FP\DMS\Services\Connectors\ProviderFactory;
+use FP\DMS\Services\Sync\DataSourceSyncService;
 
 class DebugPage
 {
@@ -19,8 +20,52 @@ class DebugPage
         echo '<div class="wrap">';
         echo '<h1>Debug Providers</h1>';
         
+        // Gestisci la sincronizzazione se richiesta
+        if (isset($_POST['sync_datasources']) && wp_verify_nonce($_POST['_wpnonce'], 'sync_datasources')) {
+            $syncService = new DataSourceSyncService();
+            $clientId = isset($_POST['client_id']) ? (int) $_POST['client_id'] : null;
+            
+            if ($clientId) {
+                $results = $syncService->syncClientDataSources($clientId);
+                echo '<div class="notice notice-success"><p>Sincronizzazione completata per cliente ' . esc_html($clientId) . '</p></div>';
+            } else {
+                $results = $syncService->syncAllDataSources();
+                echo '<div class="notice notice-success"><p>Sincronizzazione completata per tutti i clienti</p></div>';
+            }
+            
+            echo '<details style="margin: 10px 0;"><summary>Risultati sincronizzazione</summary>';
+            echo '<pre>' . esc_html(json_encode($results, JSON_PRETTY_PRINT)) . '</pre>';
+            echo '</details>';
+        }
+        
         echo '<div style="background: #f1f1f1; padding: 20px; margin: 20px 0; border-left: 4px solid #0073aa;">';
         echo '<h2>Informazioni di Debug</h2>';
+        
+        // Pulsante di sincronizzazione
+        echo '<div style="background: #fff; padding: 15px; margin: 10px 0; border: 1px solid #ddd;">';
+        echo '<h3>Sincronizzazione Data Sources</h3>';
+        echo '<p>Usa questo pulsante per sincronizzare i dati dai provider esterni e popolare il campo summary.</p>';
+        
+        echo '<form method="post" style="display: inline-block; margin-right: 10px;">';
+        wp_nonce_field('sync_datasources');
+        echo '<input type="hidden" name="sync_datasources" value="1">';
+        echo '<input type="submit" class="button button-primary" value="Sincronizza Tutti i Clienti">';
+        echo '</form>';
+        
+        if (!empty($clients)) {
+            echo '<form method="post" style="display: inline-block;">';
+            wp_nonce_field('sync_datasources');
+            echo '<input type="hidden" name="sync_datasources" value="1">';
+            echo '<select name="client_id" required>';
+            echo '<option value="">Seleziona cliente specifico...</option>';
+            foreach ($clients as $client) {
+                echo '<option value="' . esc_attr($client->id) . '">' . esc_html($client->name) . ' (ID: ' . esc_html($client->id) . ')</option>';
+            }
+            echo '</select>';
+            echo '<input type="submit" class="button" value="Sincronizza Cliente Selezionato">';
+            echo '</form>';
+        }
+        echo '</div>';
         
         // 1. Verifica clienti
         echo '<h3>1. Verifica clienti:</h3>';
