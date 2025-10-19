@@ -37,8 +37,8 @@ class ConnectionWizardIntegration
      */
     public static function enqueueAssets(string $hook): void
     {
-        // Debug: Log the current hook (rimuovi in produzione)
-        if (defined('WP_DEBUG') && WP_DEBUG) {
+        // Debug logging solo se necessario
+        if (defined('WP_DEBUG') && WP_DEBUG && strpos($hook, 'fpdms') !== false) {
             error_log('FPDMS Hook: ' . $hook);
         }
 
@@ -142,9 +142,16 @@ class ConnectionWizardIntegration
             'canonicalUrl' => __('Suggested canonical format', 'fp-dms'),
         ]);
 
+        // Get client ID from URL parameters if on wizard page
+        $clientId = 0;
+        if (isset($_GET['page']) && $_GET['page'] === 'fpdms-connection-wizard') {
+            $clientId = isset($_GET['client']) ? intval($_GET['client']) : 0;
+        }
+
         wp_localize_script('fpdms-connection-wizard', 'fpdmsWizard', [
             'nonce' => wp_create_nonce('fpdms_connection_wizard'),
             'redirectUrl' => admin_url('admin.php?page=fpdms-data-sources'),
+            'clientId' => $clientId,
         ]);
     }
 

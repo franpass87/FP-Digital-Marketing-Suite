@@ -284,13 +284,33 @@ class ConnectionAjaxHandler
 
     /**
      * Discover resources for a specific provider.
-     * This is a placeholder - full implementation in Phase 2.
      */
     private static function discoverResourcesForProvider(string $provider, array $auth): array
     {
-        // This will be implemented with AutoDiscovery class in Phase 2
-        // For now, return empty array
-        return [];
+        $serviceAccountJson = $auth['service_account'] ?? '';
+        
+        if (empty($serviceAccountJson)) {
+            throw new \RuntimeException(__('Service account credentials required for auto-discovery', 'fp-dms'));
+        }
+
+        switch ($provider) {
+            case 'ga4':
+                return \FP\DMS\Services\Connectors\AutoDiscovery::discoverGA4Properties($serviceAccountJson);
+            
+            case 'gsc':
+                return \FP\DMS\Services\Connectors\AutoDiscovery::discoverGSCSites($serviceAccountJson);
+            
+            case 'google_ads':
+                // TODO: Implement Google Ads discovery when needed
+                return [];
+            
+            case 'meta_ads':
+                // TODO: Implement Meta Ads discovery when needed
+                return [];
+            
+            default:
+                return [];
+        }
     }
 
     /**
@@ -541,52 +561,57 @@ class ConnectionAjaxHandler
      */
     public static function handleSaveConnection(): void
     {
-        // Verify nonce
-        if (!Security::verifyNonce($_POST['nonce'] ?? '', 'fpdms_connection_wizard')) {
-            wp_send_json_error([
-                'message' => __('Invalid security token', 'fp-dms'),
-            ], 403);
-            return;
+        // Debug logging
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FPDMS DEBUG: handleSaveConnection called');
         }
-
-        // Check capabilities
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error([
-                'message' => __('Insufficient permissions', 'fp-dms'),
-            ], 403);
-            return;
-        }
-
-        $provider = sanitize_key($_POST['provider'] ?? '');
-        $dataJson = wp_unslash($_POST['data'] ?? '{}');
-        $data = json_decode($dataJson, true);
-
-        // Check for JSON decode errors
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            wp_send_json_error([
-                'message' => __('Invalid JSON data', 'fp-dms'),
-                'json_error' => json_last_error_msg(),
-            ], 400);
-            return;
-        }
-
-        if (!$provider || !is_array($data)) {
-            wp_send_json_error([
-                'message' => __('Invalid request data', 'fp-dms'),
-            ], 400);
-            return;
-        }
-
-        // Validate provider whitelist
-        $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
-        if (!in_array($provider, $validProviders, true)) {
-            wp_send_json_error([
-                'message' => __('Invalid provider type', 'fp-dms'),
-            ], 400);
-            return;
-        }
-
+        
         try {
+            // Verify nonce
+            if (!Security::verifyNonce($_POST['nonce'] ?? '', 'fpdms_connection_wizard')) {
+                wp_send_json_error([
+                    'message' => __('Invalid security token', 'fp-dms'),
+                ], 403);
+                return;
+            }
+
+            // Check capabilities
+            if (!current_user_can('manage_options')) {
+                wp_send_json_error([
+                    'message' => __('Insufficient permissions', 'fp-dms'),
+                ], 403);
+                return;
+            }
+
+            $provider = sanitize_key($_POST['provider'] ?? '');
+            $dataJson = wp_unslash($_POST['data'] ?? '{}');
+            $data = json_decode($dataJson, true);
+
+            // Check for JSON decode errors
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                wp_send_json_error([
+                    'message' => __('Invalid JSON data', 'fp-dms'),
+                    'json_error' => json_last_error_msg(),
+                ], 400);
+                return;
+            }
+
+            if (!$provider || !is_array($data)) {
+                wp_send_json_error([
+                    'message' => __('Invalid request data', 'fp-dms'),
+                ], 400);
+                return;
+            }
+
+            // Validate provider whitelist
+            $validProviders = ['ga4', 'gsc', 'google_ads', 'meta_ads', 'clarity', 'csv_generic'];
+            if (!in_array($provider, $validProviders, true)) {
+                wp_send_json_error([
+                    'message' => __('Invalid provider type', 'fp-dms'),
+                ], 400);
+                return;
+            }
+
             // Extract client ID from data
             $clientId = isset($data['client_id']) ? intval($data['client_id']) : 0;
 
@@ -604,7 +629,7 @@ class ConnectionAjaxHandler
                 'config' => $data['config'] ?? [],
                 'active' => true,
             ];
-
+            
             $created = $repo->create($payload);
 
             if ($created === null) {
@@ -616,6 +641,9 @@ class ConnectionAjaxHandler
                 'data_source_id' => $created->id,
             ]);
         } catch (\Exception $e) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('FPDMS DEBUG: Exception in handleSaveConnection: ' . $e->getMessage());
+            }
             wp_send_json_error([
                 'message' => __('Failed to save connection', 'fp-dms'),
                 'technical_details' => $e->getMessage(),

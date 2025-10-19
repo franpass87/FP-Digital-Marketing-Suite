@@ -7,6 +7,7 @@ import { FileUploadHandler } from './file-upload.js';
 import { TemplateSelector } from './template-selector.js';
 import { ValidationHandler } from './validation.js';
 import { StepsManager } from './steps.js';
+import { AutoDiscoveryHandler } from './autodiscovery.js';
 
 // Import global classes (defined in connection-validator.js)
 // Note: ConnectionValidator and ValidationUI are loaded globally
@@ -26,6 +27,7 @@ export class ConnectionWizard {
         this.templateSelector = null;
         this.validationHandler = null;
         this.stepsManager = null;
+        this.autoDiscoveryHandler = null;
         
         // Event handlers
         this.eventHandlers = new Map();
@@ -48,12 +50,14 @@ export class ConnectionWizard {
         this.fileUploadHandler = new FileUploadHandler(this.$container, (msg) => this.showError(msg));
         this.templateSelector = new TemplateSelector(this.$container, this.data);
         this.validationHandler = new ValidationHandler(this.$container, this.validator, this.provider);
+        this.autoDiscoveryHandler = new AutoDiscoveryHandler(this.$container, this.validator, this.provider);
 
         // Initialize all components
         this.bindNavigationEvents();
         this.fileUploadHandler.init();
         this.templateSelector.init();
         this.validationHandler.init();
+        this.autoDiscoveryHandler.init();
     }
 
     bindNavigationEvents() {
@@ -216,6 +220,12 @@ export class ConnectionWizard {
     }
 
     async saveConnection() {
+        // Ensure client_id is included in the data
+        const saveData = {
+            ...this.data,
+            client_id: window.fpdmsWizard?.clientId || 0
+        };
+
         return $.ajax({
             url: window.ajaxurl,
             method: 'POST',
@@ -223,7 +233,7 @@ export class ConnectionWizard {
                 action: 'fpdms_save_connection',
                 nonce: window.fpdmsWizard?.nonce,
                 provider: this.provider,
-                data: JSON.stringify(this.data)
+                data: JSON.stringify(saveData)
             }
         });
     }
@@ -272,5 +282,6 @@ export class ConnectionWizard {
         this.fileUploadHandler?.cleanup();
         this.templateSelector?.cleanup();
         this.validationHandler?.cleanup();
+        this.autoDiscoveryHandler?.cleanup();
     }
 }

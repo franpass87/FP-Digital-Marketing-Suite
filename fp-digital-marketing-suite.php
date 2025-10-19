@@ -40,19 +40,8 @@ const FP_DMS_VERSION = '0.1.1';
 const FP_DMS_PLUGIN_FILE = __FILE__;
 const FP_DMS_PLUGIN_DIR = __DIR__;
 
-spl_autoload_register(static function (string $class): void {
-    if (strpos($class, 'FP\\DMS\\') !== 0) {
-        return;
-    }
-
-    $relative = substr($class, strlen('FP\\DMS\\'));
-    $relative = str_replace('\\', DIRECTORY_SEPARATOR, $relative);
-    $path = __DIR__ . '/src/' . $relative . '.php';
-
-    if (file_exists($path)) {
-        require_once $path;
-    }
-});
+// Autoloader personalizzato rimosso per evitare conflitti con Composer
+// Usiamo solo l'autoloader di Composer per evitare problemi di memoria
 
 Cron::bootstrap();
 Mailer::bootstrap();

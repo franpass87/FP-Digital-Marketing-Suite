@@ -31,6 +31,7 @@ class ConnectionWizard
      */
     private function loadSteps(): void
     {
+        // Lazy loading degli step per evitare problemi di memoria
         $this->steps = match ($this->provider) {
             'ga4' => $this->getGA4Steps(),
             'gsc' => $this->getGSCSteps(),
@@ -41,12 +42,14 @@ class ConnectionWizard
             default => [],
         };
 
-        // Allow filtering steps
-        $this->steps = apply_filters(
-            'fpdms_connection_wizard_steps',
-            $this->steps,
-            $this->provider
-        );
+        // Limitiamo il filtering per evitare loop infiniti
+        if (!empty($this->steps)) {
+            $this->steps = apply_filters(
+                'fpdms_connection_wizard_steps',
+                $this->steps,
+                $this->provider
+            );
+        }
     }
 
     /**
