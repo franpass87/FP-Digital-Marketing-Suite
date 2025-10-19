@@ -158,7 +158,7 @@ class ConnectionWizard
 
         ob_start();
         ?>
-        <div class="fpdms-wizard" data-provider="<?php echo esc_attr($this->provider); ?>">
+        <div class="fpdms-wizard" data-provider="<?php echo esc_attr($this->provider); ?>" data-step="<?php echo esc_attr((string)$this->currentStep); ?>">
             <div class="fpdms-wizard-header">
                 <h2 class="fpdms-wizard-title">
                     <?php echo esc_html($currentStepObj->getTitle()); ?>
