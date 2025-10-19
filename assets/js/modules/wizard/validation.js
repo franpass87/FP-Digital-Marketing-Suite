@@ -56,10 +56,15 @@ export class ValidationHandler {
     }
 
     async validateRequiredFields() {
+        console.log('🔵 [DEBUG VALIDATION] validateRequiredFields() chiamato');
         const errors = {};
         let hasErrors = false;
 
         const $requiredFields = this.$container.find(`${SELECTORS.VALIDATED_FIELD}[required]`);
+        console.log('🔵 [DEBUG VALIDATION] Campi required trovati:', $requiredFields.length);
+        $requiredFields.each(function() {
+            console.log('  - Campo:', $(this).attr('name'), 'Valore:', $(this).val());
+        });
         
         for (const field of $requiredFields) {
             const $field = $(field);
@@ -67,17 +72,22 @@ export class ValidationHandler {
             const fieldName = $field.attr('name');
 
             if (!value?.trim()) {
+                console.log('❌ [DEBUG VALIDATION] Campo vuoto:', fieldName);
                 errors[fieldName] = window.fpdmsI18n?.fieldRequired || 'This field is required';
                 hasErrors = true;
             } else {
+                console.log('✅ [DEBUG VALIDATION] Campo compilato:', fieldName);
                 const result = this.validateField(fieldName, value);
+                console.log('🔵 [DEBUG VALIDATION] Risultato validazione campo', fieldName, ':', result);
                 if (!result.valid) {
+                    console.log('❌ [DEBUG VALIDATION] Validazione fallita per:', fieldName, result.error);
                     errors[fieldName] = result.error;
                     hasErrors = true;
                 }
             }
         }
 
+        console.log('🔵 [DEBUG VALIDATION] Risultato finale - Valido:', !hasErrors, 'Errori:', errors);
         return { valid: !hasErrors, errors };
     }
 

@@ -5,6 +5,10 @@
 (function() {
     console.log('✅ wizard-debug.js caricato!');
     
+    // Abilita debug mode
+    window.fpdmsDebug = true;
+    console.log('✅ Debug mode abilitato!');
+    
     // Verifica jQuery
     if (typeof jQuery === 'undefined') {
         console.error('❌ jQuery non è caricato!');

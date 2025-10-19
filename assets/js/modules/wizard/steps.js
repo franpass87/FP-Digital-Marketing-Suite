@@ -41,7 +41,9 @@ export class StepsManager {
     }
 
     async loadStep(stepIndex) {
+        console.log('🔵 [DEBUG STEPS] loadStep() chiamato per step:', stepIndex);
         const $body = this.$container.find(SELECTORS.WIZARD_BODY);
+        console.log('🔵 [DEBUG STEPS] Body trovato:', $body.length);
         const loader = ValidationUI.showLoading($body[0], window.fpdmsI18n?.loading || 'Loading...');
 
         if (window.fpdmsDebug) {
@@ -49,6 +51,15 @@ export class StepsManager {
         }
 
         try {
+            console.log('🔵 [DEBUG STEPS] Invio richiesta AJAX...');
+            console.log('🔵 [DEBUG STEPS] AJAX params:', {
+                action: 'fpdms_wizard_load_step',
+                nonce: window.fpdmsWizard?.nonce,
+                provider: this.provider,
+                step: stepIndex,
+                data: this.data
+            });
+            
             const response = await $.ajax({
                 url: window.ajaxurl,
                 method: 'POST',
@@ -61,6 +72,8 @@ export class StepsManager {
                 }
             });
 
+            console.log('🔵 [DEBUG STEPS] AJAX completato, response:', response);
+            
             if (window.fpdmsDebug) {
                 console.log('AJAX response:', response);
             }
@@ -71,14 +84,17 @@ export class StepsManager {
             }
 
             if (response.success) {
+                console.log('✅ [DEBUG STEPS] Step caricato con successo!');
                 return {
                     success: true,
                     html: response.data.html
                 };
             } else {
+                console.log('❌ [DEBUG STEPS] Response.success = false:', response.data?.message);
                 throw new Error(response.data?.message || 'Failed to load step');
             }
         } catch (error) {
+            console.log('❌ [DEBUG STEPS] Errore AJAX:', error);
             if (window.fpdmsDebug) {
                 console.error('Error loading step:', error);
             }
