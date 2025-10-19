@@ -34,6 +34,9 @@ export class ConnectionWizard {
     }
 
     init() {
+        console.log('🔵 [DEBUG] ConnectionWizard.init() chiamato per provider:', this.provider);
+        console.log('🔵 [DEBUG] Container:', this.$container);
+        
         // Initialize validator
         this.validator = new ConnectionValidator(this.provider, {
             ajaxUrl: window.ajaxurl,
@@ -56,6 +59,7 @@ export class ConnectionWizard {
     bindNavigationEvents() {
         const handlers = {
             [SELECTORS.BTN_NEXT]: (e) => {
+                console.log('🔵 [DEBUG] Pulsante Avanti cliccato!');
                 e.preventDefault();
                 this.nextStep();
             },
@@ -91,26 +95,35 @@ export class ConnectionWizard {
     }
 
     async nextStep() {
+        console.log('🔵 [DEBUG] nextStep() chiamato');
+        console.log('🔵 [DEBUG] Current step:', this.stepsManager.getCurrentStep());
+        
         // Collect current step data
         const stepData = this.stepsManager.collectStepData();
+        console.log('🔵 [DEBUG] Dati raccolti dallo step:', stepData);
 
         if (window.fpdmsDebug) {
             console.log('Next step - collected data:', stepData);
         }
 
         // Validate
+        console.log('🔵 [DEBUG] Inizio validazione...');
         const validation = await this.validationHandler.validateRequiredFields();
+        console.log('🔵 [DEBUG] Risultato validazione:', validation);
 
         if (window.fpdmsDebug) {
             console.log('Validation result:', validation);
         }
 
         if (!validation.valid) {
+            console.log('❌ [DEBUG] Validazione fallita, errori:', validation.errors);
             this.validationHandler.showValidationErrors(validation.errors);
             this.showError(window.fpdmsI18n?.validationFailed || 'Please fix the errors above');
             return;
         }
 
+        console.log('✅ [DEBUG] Validazione superata!');
+        
         // Merge with wizard data
         Object.assign(this.data, stepData);
 
@@ -119,8 +132,13 @@ export class ConnectionWizard {
         }
 
         // Move to next step
+        console.log('🔵 [DEBUG] Incremento step...');
         this.stepsManager.incrementStep();
+        console.log('🔵 [DEBUG] Nuovo step:', this.stepsManager.getCurrentStep());
+        
+        console.log('🔵 [DEBUG] Caricamento step successivo...');
         await this.loadCurrentStep();
+        console.log('✅ [DEBUG] Step caricato!');
     }
 
     prevStep() {
@@ -134,26 +152,35 @@ export class ConnectionWizard {
     }
 
     async loadCurrentStep() {
+        console.log('🔵 [DEBUG] loadCurrentStep() chiamato');
+        console.log('🔵 [DEBUG] Step da caricare:', this.stepsManager.getCurrentStep());
+        
         if (window.fpdmsDebug) {
             console.log('Loading step:', this.stepsManager.getCurrentStep());
         }
 
         const result = await this.stepsManager.loadStep(this.stepsManager.getCurrentStep());
+        console.log('🔵 [DEBUG] Risultato loadStep:', result);
         
         if (window.fpdmsDebug) {
             console.log('Step load result:', result);
         }
 
         if (result.success) {
+            console.log('✅ [DEBUG] Step caricato con successo, sostituisco container...');
             // Cleanup old event handlers before replacing
             this.cleanup();
             
             // Create new container from HTML and replace old one
             const $newContainer = $(result.html);
+            console.log('🔵 [DEBUG] Nuovo container creato:', $newContainer);
             this.$container.replaceWith($newContainer);
             this.$container = $newContainer;
+            console.log('🔵 [DEBUG] Re-inizializzo wizard...');
             this.init();
+            console.log('✅ [DEBUG] Wizard re-inizializzato!');
         } else {
+            console.log('❌ [DEBUG] Errore nel caricamento step:', result.error);
             this.showError(result.error);
         }
     }
