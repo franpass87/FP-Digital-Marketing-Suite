@@ -148,8 +148,10 @@ export class ConnectionWizard {
             // Cleanup old event handlers before replacing
             this.cleanup();
             
-            this.$container.replaceWith(result.html);
-            this.$container = $(SELECTORS.WIZARD);
+            // Create new container from HTML and replace old one
+            const $newContainer = $(result.html);
+            this.$container.replaceWith($newContainer);
+            this.$container = $newContainer;
             this.init();
         } else {
             this.showError(result.error);
