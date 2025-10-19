@@ -19,6 +19,49 @@ class ScheduleProvider
      */
     public static function register(Scheduler $scheduler): void
     {
+        // ===== DATA COLLECTION =====
+
+        // Sincronizzazione dati ogni ora
+        $scheduler->schedule('data:sync', function () {
+            try {
+                $clients = new \FP\DMS\Domain\Repos\ClientsRepo();
+                $schedules = new \FP\DMS\Domain\Repos\SchedulesRepo();
+                
+                foreach ($clients->all() as $client) {
+                    $clientSchedules = $schedules->forClient($client->id ?? 0);
+                    
+                    foreach ($clientSchedules as $schedule) {
+                        if (!$schedule->active) {
+                            continue;
+                        }
+                        
+                        $now = \FP\DMS\Support\Wp::currentTime('mysql');
+                        if ($schedule->nextRunAt && $schedule->nextRunAt <= $now) {
+                            // Crea job per raccogliere dati
+                            $job = \FP\DMS\Infra\Queue::enqueue(
+                                $client->id ?? 0,
+                                date('Y-m-d', strtotime('-1 day')),
+                                date('Y-m-d', strtotime('-1 day')),
+                                $schedule->templateId,
+                                $schedule->id,
+                                ['origin' => 'schedule']
+                            );
+                            
+                            if ($job) {
+                                // Aggiorna prossimo run
+                                $nextRun = self::calculateNextRun($schedule->frequency, $schedule->nextRunAt);
+                                $schedules->update($schedule->id ?? 0, [
+                                    'next_run_at' => $nextRun
+                                ]);
+                            }
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                error_log('Data sync failed: ' . $e->getMessage());
+            }
+        })->hourly();
+
         // ===== QUEUE PROCESSING =====
 
         // Queue tick ogni 5 minuti
@@ -104,5 +147,24 @@ class ScheduleProvider
         $scheduler->schedule('stats:aggregate', function () {
             // Aggrega statistiche giornaliere
         })->dailyAt('23:00');
+    }
+
+    /**
+     * Calcola il prossimo run basato sulla frequenza
+     */
+    private static function calculateNextRun(string $frequency, string $currentRunAt): string
+    {
+        $current = new \DateTimeImmutable($currentRunAt);
+        
+        switch ($frequency) {
+            case 'daily':
+                return $current->add(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
+            case 'weekly':
+                return $current->add(new \DateInterval('P1W'))->format('Y-m-d H:i:s');
+            case 'monthly':
+                return $current->add(new \DateInterval('P1M'))->format('Y-m-d H:i:s');
+            default:
+                return $current->add(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
+        }
     }
 }

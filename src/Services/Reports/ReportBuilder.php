@@ -49,6 +49,10 @@ class ReportBuilder
         );
 
         try {
+            // Log debug information
+            error_log(sprintf('[ReportBuilder] Starting report generation for client %d, job %d', $client->id ?? 0, $job->id ?? 0));
+            error_log(sprintf('[ReportBuilder] Collected data sources: %s', json_encode(array_keys($collected))));
+            
             $context = $this->buildContext($client, $period, $meta);
             $html = $this->html->render($template, $context);
             [$absolute, $relative] = $this->determinePath($client, $period);
@@ -59,7 +63,12 @@ class ReportBuilder
                 'storage_path' => $relative,
                 'meta' => array_merge($meta, ['completed_at' => $timestamp]),
             ]);
+            
+            error_log(sprintf('[ReportBuilder] Report generated successfully for client %d', $client->id ?? 0));
         } catch (Exception $e) {
+            error_log(sprintf('[ReportBuilder] Report generation failed for client %d: %s', $client->id ?? 0, $e->getMessage()));
+            error_log(sprintf('[ReportBuilder] Exception trace: %s', $e->getTraceAsString()));
+            
             $this->reports->update($job->id ?? 0, [
                 'status' => 'failed',
                 'meta' => array_merge($meta, [
@@ -85,31 +94,42 @@ class ReportBuilder
         $sources = [];
         $hasMetricRows = false;
 
+        error_log(sprintf('[ReportBuilder] Collecting data from %d providers', count($providers)));
+
         foreach ($providers as $provider) {
-            $definition = $provider->describe();
-            // Use describe() method instead of Reflection for better performance
-            $defaultSource = is_string($definition['name'] ?? null) ? (string) $definition['name'] : 'unknown';
-            if (! empty($definition['label']) && is_string($definition['label'])) {
-                $sources[$defaultSource] = (string) $definition['label'];
-            }
-
-            $rows = [];
-            foreach ($provider->fetchMetrics($period) as $row) {
-                if (! is_array($row)) {
-                    continue;
+            try {
+                $definition = $provider->describe();
+                // Use describe() method instead of Reflection for better performance
+                $defaultSource = is_string($definition['name'] ?? null) ? (string) $definition['name'] : 'unknown';
+                if (! empty($definition['label']) && is_string($definition['label'])) {
+                    $sources[$defaultSource] = (string) $definition['label'];
                 }
 
-                $row['source'] = $row['source'] ?? $defaultSource;
-                $row['date'] = $row['date'] ?? $period->end->format('Y-m-d');
-                $normalized = Normalizer::ensureKeys($row);
-                if ($this->hasValues($normalized)) {
-                    $hasMetricRows = true;
-                }
-                $rows[] = $normalized;
-            }
+                error_log(sprintf('[ReportBuilder] Fetching metrics from provider: %s', $defaultSource));
 
-            if (! empty($rows)) {
-                $metrics[$defaultSource] = $rows;
+                $rows = [];
+                foreach ($provider->fetchMetrics($period) as $row) {
+                    if (! is_array($row)) {
+                        continue;
+                    }
+
+                    $row['source'] = $row['source'] ?? $defaultSource;
+                    $row['date'] = $row['date'] ?? $period->end->format('Y-m-d');
+                    $normalized = Normalizer::ensureKeys($row);
+                    if ($this->hasValues($normalized)) {
+                        $hasMetricRows = true;
+                    }
+                    $rows[] = $normalized;
+                }
+
+                error_log(sprintf('[ReportBuilder] Provider %s returned %d metric rows', $defaultSource, count($rows)));
+
+                if (! empty($rows)) {
+                    $metrics[$defaultSource] = $rows;
+                }
+            } catch (Exception $e) {
+                error_log(sprintf('[ReportBuilder] Error collecting data from provider: %s', $e->getMessage()));
+                // Continue with other providers
             }
 
             $dimensionRows = $provider->fetchDimensions($period);

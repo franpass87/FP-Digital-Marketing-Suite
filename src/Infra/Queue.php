@@ -183,8 +183,22 @@ class Queue
 
         $previousMetrics = self::previousMetrics($reports, $job);
 
+        error_log(sprintf('[Queue] Starting report generation for client %d, job %d', $client->id ?? 0, $job->id ?? 0));
+        error_log(sprintf('[Queue] Found %d providers for client', count($providers)));
+        
         $result = $builder->generate($job, $client, $providers, $period, $template, $previousMetrics);
-        if (! $result || $result->status !== 'success') {
+        
+        if (! $result) {
+            error_log(sprintf('[Queue] ReportBuilder returned null for client %d', $client->id ?? 0));
+            Logger::log(sprintf('Report generation failed for client %d.', $client->id ?? 0));
+            return;
+        }
+        
+        if ($result->status !== 'success') {
+            error_log(sprintf('[Queue] Report generation failed for client %d with status: %s', $client->id ?? 0, $result->status ?? 'unknown'));
+            if (isset($result->meta['error'])) {
+                error_log(sprintf('[Queue] Error details: %s', $result->meta['error']));
+            }
             Logger::log(sprintf('Report generation failed for client %d.', $client->id ?? 0));
             return;
         }
