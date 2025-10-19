@@ -44,7 +44,13 @@ import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } f
         actionStatus: document.getElementById('fpdms-overview-action-status'),
         refreshToggle: document.getElementById('fpdms-overview-refresh-toggle'),
         refreshSelect: document.getElementById('fpdms-overview-refresh-interval'),
-        lastRefresh: document.getElementById('fpdms-overview-last-refresh')
+        lastRefresh: document.getElementById('fpdms-overview-last-refresh'),
+        reportsList: document.getElementById('fpdms-overview-reports-list'),
+        reportViewer: document.getElementById('fpdms-overview-report-viewer'),
+        reportViewerTitle: document.getElementById('fpdms-report-viewer-title'),
+        reportViewerContent: document.getElementById('fpdms-report-viewer-content'),
+        reportViewerClose: document.getElementById('fpdms-report-viewer-close'),
+        reportViewerDownload: document.getElementById('fpdms-report-viewer-download')
     };
 
     // Initialize modules
