@@ -248,6 +248,146 @@ final class TemplateBlueprints
             )
             ->build();
 
+        // Hospitality focused blueprint
+        $hospitalityBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Performance Ricettivo', 'fp-dms'),
+                '<p>' . esc_html__('Analisi completa delle performance della struttura ricettiva per il periodo {{period.start}} - {{period.end}}.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Metriche Chiave', 'fp-dms'), [
+                ['label' => esc_html__('Tasso di Occupazione', 'fp-dms'), 'value' => '{{hospitality.occupancy_rate}}'],
+                ['label' => esc_html__('Ricavo per Camera', 'fp-dms'), 'value' => '{{hospitality.revenue_per_room}}'],
+                ['label' => esc_html__('Durata Media Soggiorno', 'fp-dms'), 'value' => '{{hospitality.average_stay_duration}}'],
+                ['label' => esc_html__('Soddisfazione Ospiti', 'fp-dms'), 'value' => '{{hospitality.guest_satisfaction}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('Analisi Prenotazioni', 'fp-dms'),
+                '<p>' . esc_html__('Breakdown delle prenotazioni per canale e tipologia di ospite.', 'fp-dms') . '</p>'
+            )
+            ->addSection(
+                esc_html__('Performance Stagionale', 'fp-dms'),
+                '<p>' . esc_html__('Analisi delle performance stagionali e trend di mercato.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Raccomandazioni Strategiche', 'fp-dms'),
+                '<ul><li>' . esc_html__('Ottimizzare i canali di prenotazione più performanti', 'fp-dms') . '</li><li>' . esc_html__('Migliorare l\'esperienza ospiti per aumentare la retention', 'fp-dms') . '</li><li>' . esc_html__('Sviluppare pacchetti stagionali per massimizzare i ricavi', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // Hotel focused blueprint
+        $hotelBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Performance Hotel', 'fp-dms'),
+                '<p>' . esc_html__('Report dettagliato delle performance dell\'hotel {{client.name}} per il periodo {{period.start}} - {{period.end}}.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Ricavi per Dipartimento', 'fp-dms'), [
+                ['label' => esc_html__('Ricavi Camere', 'fp-dms'), 'value' => '{{hotel.room_revenue}}'],
+                ['label' => esc_html__('Ricavi F&B', 'fp-dms'), 'value' => '{{hotel.food_beverage_revenue}}'],
+                ['label' => esc_html__('Ricavi Conferenze', 'fp-dms'), 'value' => '{{hotel.conference_revenue}}'],
+                ['label' => esc_html__('Ricavi Spa', 'fp-dms'), 'value' => '{{hotel.spa_revenue}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('Analisi Ospiti', 'fp-dms'),
+                '<p>' . esc_html__('Breakdown degli ospiti per tipologia e comportamento di prenotazione.', 'fp-dms') . '</p>'
+            )
+            ->addSection(
+                esc_html__('Performance Marketing', 'fp-dms'),
+                '<p>' . esc_html__('Analisi delle campagne marketing e dei canali di acquisizione.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Piano di Azione', 'fp-dms'),
+                '<ul><li>' . esc_html__('Massimizzare i ricavi dai servizi ancillari', 'fp-dms') . '</li><li>' . esc_html__('Sviluppare programmi di loyalty per ospiti business', 'fp-dms') . '</li><li>' . esc_html__('Ottimizzare la gestione dei gruppi e conferenze', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // Resort focused blueprint
+        $resortBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Performance Resort', 'fp-dms'),
+                '<p>' . esc_html__('Analisi completa delle performance del resort {{client.name}} per il periodo {{period.start}} - {{period.end}}.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Metriche Resort', 'fp-dms'), [
+                ['label' => esc_html__('Occupazione Ville', 'fp-dms'), 'value' => '{{resort.villa_occupancy}}'],
+                ['label' => esc_html__('Ricavi Attività', 'fp-dms'), 'value' => '{{resort.activity_revenue}}'],
+                ['label' => esc_html__('Ricavi Matrimoni', 'fp-dms'), 'value' => '{{resort.wedding_revenue}}'],
+                ['label' => esc_html__('Ricavi Golf', 'fp-dms'), 'value' => '{{resort.golf_revenue}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('Analisi Pacchetti', 'fp-dms'),
+                '<p>' . esc_html__('Performance dei pacchetti all-inclusive e delle esperienze premium.', 'fp-dms') . '</p>'
+            )
+            ->addSection(
+                esc_html__('Utilizzo Servizi', 'fp-dms'),
+                '<p>' . esc_html__('Analisi dell\'utilizzo di spiaggia, spa e attività ricreative.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Strategia Resort', 'fp-dms'),
+                '<ul><li>' . esc_html__('Sviluppare pacchetti family e honeymoon premium', 'fp-dms') . '</li><li>' . esc_html__('Massimizzare i ricavi dalle attività e servizi', 'fp-dms') . '</li><li>' . esc_html__('Creare esperienze esclusive per ospiti VIP', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // Wine industry focused blueprint
+        $wineBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Performance Azienda Vinicola', 'fp-dms'),
+                '<p>' . esc_html__('Report completo delle performance di {{client.name}} per il periodo {{period.start}} - {{period.end}}.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Ricavi per Canale', 'fp-dms'), [
+                ['label' => esc_html__('Vendite Cantina', 'fp-dms'), 'value' => '{{wine.cellar_sales}}'],
+                ['label' => esc_html__('Ricavi Degustazioni', 'fp-dms'), 'value' => '{{wine.tasting_revenue}}'],
+                ['label' => esc_html__('Ricavi Ristorante', 'fp-dms'), 'value' => '{{wine.restaurant_revenue}}'],
+                ['label' => esc_html__('Ricavi Matrimoni', 'fp-dms'), 'value' => '{{wine.wedding_venue_revenue}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('Wine Tourism', 'fp-dms'),
+                '<p>' . esc_html__('Analisi del turismo enogastronomico e delle esperienze offerte.', 'fp-dms') . '</p>'
+            )
+            ->addSection(
+                esc_html__('Club Vino e Fedeltà', 'fp-dms'),
+                '<p>' . esc_html__('Performance del wine club e programmi di fedeltà.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Strategia Enoturistica', 'fp-dms'),
+                '<ul><li>' . esc_html__('Sviluppare esperienze enoturistiche premium', 'fp-dms') . '</li><li>' . esc_html__('Ampliare il wine club e i programmi di fedeltà', 'fp-dms') . '</li><li>' . esc_html__('Massimizzare i ricavi da eventi e matrimoni', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // B&B focused blueprint
+        $bnbBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Performance B&B', 'fp-dms'),
+                '<p>' . esc_html__('Analisi delle performance del B&B {{client.name}} per il periodo {{period.start}} - {{period.end}}.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Metriche B&B', 'fp-dms'), [
+                ['label' => esc_html__('Occupazione Camere', 'fp-dms'), 'value' => '{{bnb.room_occupancy}}'],
+                ['label' => esc_html__('Ricavi Colazione', 'fp-dms'), 'value' => '{{bnb.breakfast_revenue}}'],
+                ['label' => esc_html__('Esperienze Locali', 'fp-dms'), 'value' => '{{bnb.local_experiences}}'],
+                ['label' => esc_html__('Prenotazioni Weekend', 'fp-dms'), 'value' => '{{bnb.weekend_bookings}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('Esperienze Autentiche', 'fp-dms'),
+                '<p>' . esc_html__('Analisi delle esperienze locali e dei pacchetti romantici.', 'fp-dms') . '</p>'
+            )
+            ->addSection(
+                esc_html__('Turismo Sostenibile', 'fp-dms'),
+                '<p>' . esc_html__('Performance del turismo sostenibile e delle partnership locali.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Strategia B&B', 'fp-dms'),
+                '<ul><li>' . esc_html__('Sviluppare esperienze autentiche e locali', 'fp-dms') . '</li><li>' . esc_html__('Massimizzare le prenotazioni weekend e romantiche', 'fp-dms') . '</li><li>' . esc_html__('Rafforzare le partnership con operatori locali', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
         self::$cache = [
             'balanced' => new TemplateBlueprint(
                 'balanced',
@@ -308,6 +448,36 @@ final class TemplateBlueprints
                 esc_html__('Report Content Marketing', 'fp-dms'),
                 esc_html__('Analisi di engagement, lettori e ROI del content marketing.', 'fp-dms'),
                 $contentBlueprint
+            ),
+            'hospitality' => new TemplateBlueprint(
+                'hospitality',
+                esc_html__('Report Hospitality', 'fp-dms'),
+                esc_html__('Analisi completa per strutture ricettive e turismo.', 'fp-dms'),
+                $hospitalityBlueprint
+            ),
+            'hotel' => new TemplateBlueprint(
+                'hotel',
+                esc_html__('Report Hotel', 'fp-dms'),
+                esc_html__('Metriche specializzate per hotel e strutture alberghiere.', 'fp-dms'),
+                $hotelBlueprint
+            ),
+            'resort' => new TemplateBlueprint(
+                'resort',
+                esc_html__('Report Resort', 'fp-dms'),
+                esc_html__('Analisi per resort di lusso e strutture premium.', 'fp-dms'),
+                $resortBlueprint
+            ),
+            'wine' => new TemplateBlueprint(
+                'wine',
+                esc_html__('Report Aziende di Vino', 'fp-dms'),
+                esc_html__('Metriche per cantine, vigneti e wine tourism.', 'fp-dms'),
+                $wineBlueprint
+            ),
+            'bnb' => new TemplateBlueprint(
+                'bnb',
+                esc_html__('Report B&B', 'fp-dms'),
+                esc_html__('Analisi per B&B, agriturismi e turismo rurale.', 'fp-dms'),
+                $bnbBlueprint
             ),
         ];
 

@@ -134,13 +134,54 @@ class TemplateSuggestionEngine
             }
         }
 
+        // Hospitality suggestions
+        if (
+            in_array('hotel', $keywords, true) ||
+            in_array('resort', $keywords, true) ||
+            in_array('hospitality', $keywords, true) ||
+            $businessType === 'hospitality' ||
+            $industry === 'hospitality'
+        ) {
+            $suggestions[] = 'ga4_hotel';
+            $suggestions[] = 'meta_ads_hospitality';
+            $suggestions[] = 'google_ads_hospitality';
+        }
+
+        // Wine industry suggestions
+        if (
+            in_array('wine', $keywords, true) ||
+            in_array('vineyard', $keywords, true) ||
+            in_array('winery', $keywords, true) ||
+            in_array('cantine', $keywords, true) ||
+            $businessType === 'wine' ||
+            $industry === 'wine'
+        ) {
+            $suggestions[] = 'ga4_wine_estate';
+            $suggestions[] = 'meta_ads_wine_tourism';
+            $suggestions[] = 'google_ads_wine_tourism';
+        }
+
+        // B&B suggestions
+        if (
+            in_array('bnb', $keywords, true) ||
+            in_array('bed and breakfast', $keywords, true) ||
+            in_array('agriturismo', $keywords, true) ||
+            in_array('rural', $keywords, true) ||
+            $businessType === 'bnb' ||
+            $industry === 'bnb'
+        ) {
+            $suggestions[] = 'ga4_bnb';
+            $suggestions[] = 'meta_ads_bnb';
+            $suggestions[] = 'gsc_local';
+        }
+
         // Local business suggestions
         if (
             in_array('local', $keywords, true) ||
             in_array('restaurant', $keywords, true) ||
             in_array('store', $keywords, true) ||
             $businessType === 'local' ||
-            $industry === 'hospitality'
+            $industry === 'retail'
         ) {
             $suggestions[] = 'gsc_local';
             $suggestions[] = 'ga4_basic';
@@ -250,12 +291,42 @@ class TemplateSuggestionEngine
             $suggestions[] = 'b2b';
         }
 
+        // Hospitality suggestions
+        if (
+            in_array('hotel', $keywords, true) ||
+            in_array('resort', $keywords, true) ||
+            $businessType === 'hospitality' ||
+            $industry === 'hospitality'
+        ) {
+            $suggestions[] = 'hotel';
+        }
+
+        // Wine industry suggestions
+        if (
+            in_array('wine', $keywords, true) ||
+            in_array('vineyard', $keywords, true) ||
+            $businessType === 'wine' ||
+            $industry === 'wine'
+        ) {
+            $suggestions[] = 'wine';
+        }
+
+        // B&B suggestions
+        if (
+            in_array('bnb', $keywords, true) ||
+            in_array('agriturismo', $keywords, true) ||
+            $businessType === 'bnb' ||
+            $industry === 'bnb'
+        ) {
+            $suggestions[] = 'bnb';
+        }
+
         // Local business suggestions
         if (
             in_array('local', $keywords, true) ||
             in_array('restaurant', $keywords, true) ||
             $businessType === 'local' ||
-            $industry === 'hospitality'
+            $industry === 'retail'
         ) {
             $suggestions[] = 'local';
         }

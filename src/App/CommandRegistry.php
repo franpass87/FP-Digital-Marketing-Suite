@@ -7,6 +7,8 @@ namespace FP\DMS\App;
 use FP\DMS\App\Commands\DatabaseMigrateCommand;
 use FP\DMS\App\Commands\RunReportCommand;
 use FP\DMS\App\Commands\QueueListCommand;
+use FP\DMS\App\Commands\ScheduleRunCommand;
+use FP\DMS\App\Commands\ScheduleListCommand;
 use FP\DMS\App\Commands\AnomalyScanCommand;
 use FP\DMS\App\Commands\AnomalyEvaluateCommand;
 use FP\DMS\App\Commands\AnomalyNotifyCommand;

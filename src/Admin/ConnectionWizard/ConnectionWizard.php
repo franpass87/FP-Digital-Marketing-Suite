@@ -95,7 +95,7 @@ class ConnectionWizard
     {
         return [
             new Steps\IntroStep('intro', $this->provider),
-            new Steps\ServiceAccountStep('service_account', $this->provider),
+            new Steps\GoogleAdsOAuthStep('oauth', $this->provider),
             new Steps\GoogleAdsCustomerStep('customer', $this->provider),
             new Steps\TestConnectionStep('test', $this->provider),
             new Steps\FinishStep('finish', $this->provider),
