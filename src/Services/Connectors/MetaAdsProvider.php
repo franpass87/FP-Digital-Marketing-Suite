@@ -21,8 +21,13 @@ class MetaAdsProvider implements DataSourceProviderInterface
         'revenue' => ['revenue', 'purchaseconversionvalue*', 'purchasesconversionvalue*'],
     ];
 
-    public function __construct(private array $auth, private array $config)
+    protected array $auth;
+    protected array $config;
+
+    public function __construct(array $auth, array $config)
     {
+        $this->auth = $auth;
+        $this->config = $config;
     }
 
     public function testConnection(): ConnectionResult
