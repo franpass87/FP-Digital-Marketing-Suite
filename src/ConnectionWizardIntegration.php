@@ -150,7 +150,7 @@ class ConnectionWizardIntegration
 
         wp_localize_script('fpdms-connection-wizard', 'fpdmsWizard', [
             'nonce' => wp_create_nonce('fpdms_connection_wizard'),
-            'redirectUrl' => admin_url('admin.php?page=fpdms-data-sources'),
+            'redirectUrl' => admin_url('admin.php?page=fp-dms-datasources'),
             'clientId' => $clientId,
         ]);
     }

@@ -52,7 +52,7 @@ class Menu
         add_submenu_page('fp-dms-dashboard', __('QA Automation', 'fp-dms'), __('QA Automation', 'fp-dms'), 'manage_options', 'fp-dms-qa', [QaPage::class, 'render']);
 
         if ($hook) {
-            add_action('load-' . $hook, [self::class, 'enqueue_assets']);
+            add_action('load-' . $hook, [self::class, 'enqueueAssets']);
             DashboardPage::registerAssetsHook($hook);
         }
 

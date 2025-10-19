@@ -205,7 +205,7 @@ export class ConnectionWizard {
                 this.showSuccess(window.fpdmsI18n?.connectionSuccess || 'Connection successful!');
                 
                 setTimeout(() => {
-                    window.location.href = window.fpdmsWizard?.redirectUrl || 'admin.php?page=fpdms-data-sources';
+                    window.location.href = window.fpdmsWizard?.redirectUrl || 'admin.php?page=fp-dms-datasources';
                 }, 1500);
             } else {
                 this.showError(result.data?.message || window.fpdmsI18n?.connectionFailed || 'Connection failed');

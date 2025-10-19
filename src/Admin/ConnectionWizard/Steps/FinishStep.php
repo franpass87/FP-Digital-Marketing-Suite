@@ -52,13 +52,13 @@ class FinishStep extends AbstractWizardStep
             <div class="fpdms-quick-actions">
                 <h4><?php _e('Quick Actions', 'fp-dms'); ?></h4>
                 <div class="fpdms-action-buttons">
-                    <a href="<?php echo admin_url('admin.php?page=fpdms-data-sources'); ?>" class="button">
+                    <a href="<?php echo admin_url('admin.php?page=fp-dms-datasources'); ?>" class="button">
                         📊 <?php _e('View All Data Sources', 'fp-dms'); ?>
                     </a>
-                    <a href="<?php echo admin_url('admin.php?page=fpdms-schedules'); ?>" class="button">
+                    <a href="<?php echo admin_url('admin.php?page=fp-dms-schedules'); ?>" class="button">
                         ⏰ <?php _e('Configure Schedules', 'fp-dms'); ?>
                     </a>
-                    <a href="<?php echo admin_url('admin.php?page=fpdms-reports'); ?>" class="button">
+                    <a href="<?php echo admin_url('admin.php?page=fp-dms-overview'); ?>" class="button">
                         📈 <?php _e('View Reports', 'fp-dms'); ?>
                     </a>
                 </div>
@@ -75,7 +75,7 @@ class FinishStep extends AbstractWizardStep
                         ); ?>
                     </p>
                     <p>
-                        <a href="<?php echo admin_url('admin.php?page=fpdms-data-sources&action=edit&id=' . ($data['id'] ?? '')); ?>">
+                        <a href="<?php echo admin_url('admin.php?page=fp-dms-datasources&action=edit&id=' . ($data['id'] ?? '')); ?>">
                             <?php _e('Customize metrics →', 'fp-dms'); ?>
                         </a>
                     </p>

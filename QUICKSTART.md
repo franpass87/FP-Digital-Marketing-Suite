@@ -63,7 +63,7 @@ public function render(): void
                class="button button-primary button-hero">
                 🧙 <?php _e('Add Data Source (Wizard)', 'fp-dms'); ?>
             </a>
-            <a href="<?php echo admin_url('admin.php?page=fpdms-data-sources&action=new'); ?>" 
+            <a href="<?php echo admin_url('admin.php?page=fp-dms-datasources&action=new'); ?>" 
                class="button">
                 ➕ <?php _e('Add Manually', 'fp-dms'); ?>
             </a>
