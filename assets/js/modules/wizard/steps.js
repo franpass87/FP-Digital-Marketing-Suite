@@ -14,7 +14,13 @@ export class StepsManager {
         this.$container = $container;
         this.provider = provider;
         this.data = data;
-        this.currentStep = 0;
+        // Leggi lo step corrente dal DOM se presente, altrimenti inizia da 0
+        const stepFromDom = $container.data('step');
+        this.currentStep = stepFromDom !== undefined ? parseInt(stepFromDom, 10) : 0;
+        
+        if (window.fpdmsDebug) {
+            console.log('🔵 [DEBUG STEPS] StepsManager inizializzato con currentStep:', this.currentStep);
+        }
     }
 
     collectStepData() {
