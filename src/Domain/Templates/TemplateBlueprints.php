@@ -75,24 +75,239 @@ final class TemplateBlueprints
             ->addRawSection('{{sections.anomalies|raw}}')
             ->build();
 
+        // E-commerce focused blueprint
+        $ecommerceBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Executive Summary', 'fp-dms'),
+                '<p>' . esc_html__('Overview of e-commerce performance including revenue, conversions, and key trends.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Revenue & Sales', 'fp-dms'), [
+                ['label' => esc_html__('Total Revenue', 'fp-dms'), 'value' => '{{kpi.ga4.totalRevenue|currency}}'],
+                ['label' => esc_html__('Transactions', 'fp-dms'), 'value' => '{{kpi.ga4.transactions|number}}'],
+                ['label' => esc_html__('Average Order Value', 'fp-dms'), 'value' => '{{kpi.ga4.averageOrderValue|currency}}'],
+                ['label' => esc_html__('Conversion Rate', 'fp-dms'), 'value' => '{{kpi.ga4.conversionRate|percentage}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('Product Performance', 'fp-dms'),
+                '<p>' . esc_html__('Analysis of top-performing products and categories.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Marketing Channel Analysis', 'fp-dms'),
+                '<p>' . esc_html__('Performance breakdown by traffic sources and campaigns.', 'fp-dms') . '</p>'
+            )
+            ->addSection(
+                esc_html__('Next Steps & Recommendations', 'fp-dms'),
+                '<ul><li>' . esc_html__('Optimize underperforming product categories', 'fp-dms') . '</li><li>' . esc_html__('Scale successful marketing channels', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // SaaS/Software focused blueprint
+        $saasBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Product Performance Overview', 'fp-dms'),
+                '<p>' . esc_html__('Key metrics for software adoption, engagement, and user retention.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('User Engagement', 'fp-dms'), [
+                ['label' => esc_html__('Active Users', 'fp-dms'), 'value' => '{{kpi.ga4.activeUsers|number}}'],
+                ['label' => esc_html__('Session Duration', 'fp-dms'), 'value' => '{{kpi.ga4.averageSessionDuration|duration}}'],
+                ['label' => esc_html__('Feature Usage', 'fp-dms'), 'value' => '{{kpi.ga4.eventCount|number}}'],
+                ['label' => esc_html__('Retention Rate', 'fp-dms'), 'value' => '{{kpi.ga4.retentionRate|percentage}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('User Journey Analysis', 'fp-dms'),
+                '<p>' . esc_html__('Insights into user behavior and feature adoption patterns.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Product Development Insights', 'fp-dms'),
+                '<ul><li>' . esc_html__('Identify features driving user engagement', 'fp-dms') . '</li><li>' . esc_html__('Address user experience bottlenecks', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // Healthcare focused blueprint
+        $healthcareBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Patient Engagement Summary', 'fp-dms'),
+                '<p>' . esc_html__('Overview of website traffic, patient inquiries, and service engagement.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Patient Metrics', 'fp-dms'), [
+                ['label' => esc_html__('Website Visitors', 'fp-dms'), 'value' => '{{kpi.ga4.activeUsers|number}}'],
+                ['label' => esc_html__('Page Views', 'fp-dms'), 'value' => '{{kpi.ga4.pageViews|number}}'],
+                ['label' => esc_html__('Contact Forms', 'fp-dms'), 'value' => '{{kpi.ga4.formSubmissions|number}}'],
+                ['label' => esc_html__('Engagement Rate', 'fp-dms'), 'value' => '{{kpi.ga4.engagementRate|percentage}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('Service Page Performance', 'fp-dms'),
+                '<p>' . esc_html__('Analysis of which services and pages are most popular with patients.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.gsc|raw}}')
+            ->addSection(
+                esc_html__('Patient Communication Insights', 'fp-dms'),
+                '<ul><li>' . esc_html__('Optimize high-traffic service pages', 'fp-dms') . '</li><li>' . esc_html__('Improve contact form conversion rates', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // Education focused blueprint
+        $educationBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Educational Platform Performance', 'fp-dms'),
+                '<p>' . esc_html__('Overview of student engagement, course completion, and learning outcomes.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Learning Metrics', 'fp-dms'), [
+                ['label' => esc_html__('Active Students', 'fp-dms'), 'value' => '{{kpi.ga4.activeUsers|number}}'],
+                ['label' => esc_html__('Course Completions', 'fp-dms'), 'value' => '{{kpi.ga4.courseCompletions|number}}'],
+                ['label' => esc_html__('Enrollments', 'fp-dms'), 'value' => '{{kpi.ga4.enrollments|number}}'],
+                ['label' => esc_html__('Engagement Rate', 'fp-dms'), 'value' => '{{kpi.ga4.engagementRate|percentage}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('Content Performance', 'fp-dms'),
+                '<p>' . esc_html__('Analysis of course materials, resources, and student interaction patterns.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Learning Optimization', 'fp-dms'),
+                '<ul><li>' . esc_html__('Enhance high-performing course content', 'fp-dms') . '</li><li>' . esc_html__('Address learning engagement challenges', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // B2B/Lead Generation focused blueprint
+        $b2bBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Lead Generation Performance', 'fp-dms'),
+                '<p>' . esc_html__('Overview of lead quality, conversion rates, and sales pipeline metrics.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Lead Metrics', 'fp-dms'), [
+                ['label' => esc_html__('Total Leads', 'fp-dms'), 'value' => '{{kpi.ga4.conversions|number}}'],
+                ['label' => esc_html__('Conversion Rate', 'fp-dms'), 'value' => '{{kpi.ga4.conversionRate|percentage}}'],
+                ['label' => esc_html__('Cost per Lead', 'fp-dms'), 'value' => '{{kpi.google_ads.cost_per_conversion|currency}}'],
+                ['label' => esc_html__('Lead Quality Score', 'fp-dms'), 'value' => '{{kpi.linkedin_ads.lead_quality_score|number}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                esc_html__('Channel Performance', 'fp-dms'),
+                '<p>' . esc_html__('Analysis of lead generation channels and campaign effectiveness.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Sales Pipeline Insights', 'fp-dms'),
+                '<ul><li>' . esc_html__('Optimize high-converting lead sources', 'fp-dms') . '</li><li>' . esc_html__('Improve lead nurturing processes', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // Local Business focused blueprint
+        $localBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Local Business Performance', 'fp-dms'),
+                '<p>' . esc_html__('Overview of local visibility, customer engagement, and location-based metrics.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Local Metrics', 'fp-dms'), [
+                ['label' => esc_html__('Local Searches', 'fp-dms'), 'value' => '{{kpi.gsc.clicks|number}}'],
+                ['label' => esc_html__('Website Visitors', 'fp-dms'), 'value' => '{{kpi.ga4.activeUsers|number}}'],
+                ['label' => esc_html__('Contact Inquiries', 'fp-dms'), 'value' => '{{kpi.ga4.formSubmissions|number}}'],
+                ['label' => esc_html__('Local CTR', 'fp-dms'), 'value' => '{{kpi.gsc.ctr|percentage}}'],
+            ])
+            ->addRawSection('{{sections.gsc|raw}}')
+            ->addSection(
+                esc_html__('Local SEO Performance', 'fp-dms'),
+                '<p>' . esc_html__('Analysis of local search rankings and Google My Business insights.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Local Marketing Strategy', 'fp-dms'),
+                '<ul><li>' . esc_html__('Improve local search visibility', 'fp-dms') . '</li><li>' . esc_html__('Enhance customer engagement', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
+        // Content Marketing focused blueprint
+        $contentBlueprint = TemplateBuilder::make()
+            ->addSection(
+                esc_html__('Content Performance Overview', 'fp-dms'),
+                '<p>' . esc_html__('Analysis of content engagement, readership, and content marketing ROI.', 'fp-dms') . '</p>'
+            )
+            ->addKpiSection(esc_html__('Content Metrics', 'fp-dms'), [
+                ['label' => esc_html__('Page Views', 'fp-dms'), 'value' => '{{kpi.ga4.pageViews|number}}'],
+                ['label' => esc_html__('Average Session Duration', 'fp-dms'), 'value' => '{{kpi.ga4.averageSessionDuration|duration}}'],
+                ['label' => esc_html__('Engagement Rate', 'fp-dms'), 'value' => '{{kpi.ga4.engagementRate|percentage}}'],
+                ['label' => esc_html__('Organic Traffic', 'fp-dms'), 'value' => '{{kpi.gsc.clicks|number}}'],
+            ])
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addRawSection('{{sections.gsc|raw}}')
+            ->addSection(
+                esc_html__('Top Performing Content', 'fp-dms'),
+                '<p>' . esc_html__('Analysis of most engaging articles, topics, and content formats.', 'fp-dms') . '</p>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                esc_html__('Content Strategy Insights', 'fp-dms'),
+                '<ul><li>' . esc_html__('Scale successful content topics', 'fp-dms') . '</li><li>' . esc_html__('Optimize underperforming content', 'fp-dms') . '</li></ul>'
+            )
+            ->build();
+
         self::$cache = [
             'balanced' => new TemplateBlueprint(
                 'balanced',
-                esc_html__('Balanced performance report', 'fp-dms'),
-                esc_html__('Combines KPI, trend, and search insights with space for commentary.', 'fp-dms'),
+                esc_html__('Report Bilanciato', 'fp-dms'),
+                esc_html__('Combina KPI, trend e insights di ricerca con spazio per commenti.', 'fp-dms'),
                 $balanced
             ),
             'kpi' => new TemplateBlueprint(
                 'kpi',
-                esc_html__('KPI-focused summary', 'fp-dms'),
-                esc_html__('Puts the spotlight on headline metrics and qualitative insights.', 'fp-dms'),
+                esc_html__('Focus su KPI', 'fp-dms'),
+                esc_html__('Mette in evidenza le metriche principali e gli insights qualitativi.', 'fp-dms'),
                 $kpiFocused
             ),
             'search' => new TemplateBlueprint(
                 'search',
-                esc_html__('Search visibility recap', 'fp-dms'),
-                esc_html__('Centres the report on Google Search Console findings and next steps.', 'fp-dms'),
+                esc_html__('Recap Visibilità Search', 'fp-dms'),
+                esc_html__('Centra il report sui risultati di Google Search Console e prossimi passi.', 'fp-dms'),
                 $searchBlueprint
+            ),
+            'ecommerce' => new TemplateBlueprint(
+                'ecommerce',
+                esc_html__('Report E-commerce', 'fp-dms'),
+                esc_html__('Ottimizzato per analisi di vendite, prodotti e performance commerciali.', 'fp-dms'),
+                $ecommerceBlueprint
+            ),
+            'saas' => new TemplateBlueprint(
+                'saas',
+                esc_html__('Report SaaS & Software', 'fp-dms'),
+                esc_html__('Focus su engagement utenti, retention e metriche di prodotto.', 'fp-dms'),
+                $saasBlueprint
+            ),
+            'healthcare' => new TemplateBlueprint(
+                'healthcare',
+                esc_html__('Report Sanità', 'fp-dms'),
+                esc_html__('Metriche per cliniche, centri medici e servizi di benessere.', 'fp-dms'),
+                $healthcareBlueprint
+            ),
+            'education' => new TemplateBlueprint(
+                'education',
+                esc_html__('Report Educazione', 'fp-dms'),
+                esc_html__('Analisi per scuole, università e piattaforme di apprendimento.', 'fp-dms'),
+                $educationBlueprint
+            ),
+            'b2b' => new TemplateBlueprint(
+                'b2b',
+                esc_html__('Report B2B & Lead Gen', 'fp-dms'),
+                esc_html__('Focus su generazione lead, qualità e pipeline di vendita.', 'fp-dms'),
+                $b2bBlueprint
+            ),
+            'local' => new TemplateBlueprint(
+                'local',
+                esc_html__('Report Business Locali', 'fp-dms'),
+                esc_html__('Metriche per ristoranti, negozi e business locali.', 'fp-dms'),
+                $localBlueprint
+            ),
+            'content' => new TemplateBlueprint(
+                'content',
+                esc_html__('Report Content Marketing', 'fp-dms'),
+                esc_html__('Analisi di engagement, lettori e ROI del content marketing.', 'fp-dms'),
+                $contentBlueprint
             ),
         ];
 
