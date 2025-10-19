@@ -196,11 +196,18 @@ class ConnectionWizardIntegration
         $clientId = isset($_GET['client']) ? intval($_GET['client']) : 0;
 
         if (empty($provider)) {
-            wp_die(__('Invalid provider specified.', 'fp-dms'));
+            echo '<div class="wrap"><div class="notice notice-error"><p>';
+            echo esc_html__('Invalid provider specified. Please provide a valid provider parameter.', 'fp-dms');
+            echo '</p><p><strong>Debug info:</strong> URL completo necessario: <code>?page=fpdms-connection-wizard&provider=ga4&client=1</code></p></div></div>';
+            return;
         }
 
         if ($clientId <= 0) {
-            wp_die(__('Invalid client specified. Please select a client first.', 'fp-dms'));
+            echo '<div class="wrap"><div class="notice notice-error"><p>';
+            echo esc_html__('Invalid client specified. Please select a client first.', 'fp-dms');
+            echo '</p><p><strong>Debug info:</strong> Client ID ricevuto: <code>' . esc_html($clientId) . '</code></p>';
+            echo '<p>URL completo necessario: <code>?page=fpdms-connection-wizard&provider=' . esc_html($provider) . '&client=1</code></p></div></div>';
+            return;
         }
 
         $wizard = new \FP\DMS\Admin\ConnectionWizard\ConnectionWizard($provider);
