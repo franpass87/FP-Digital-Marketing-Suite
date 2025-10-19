@@ -37,6 +37,11 @@ class ConnectionWizardIntegration
      */
     public static function enqueueAssets(string $hook): void
     {
+        // Debug: Log the current hook (rimuovi in produzione)
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FPDMS Hook: ' . $hook);
+        }
+
         // Only load on data sources and wizard pages
         $allowed_hooks = [
             'toplevel_page_fp-dms-dashboard',
@@ -44,12 +49,24 @@ class ConnectionWizardIntegration
             'admin_page_fpdms-connection-wizard'
         ];
 
-        if (!in_array($hook, $allowed_hooks, true)) {
+        // Carica anche se la query string contiene page=fpdms-connection-wizard
+        $is_wizard_page = isset($_GET['page']) && $_GET['page'] === 'fpdms-connection-wizard';
+
+        if (!in_array($hook, $allowed_hooks, true) && !$is_wizard_page) {
             return;
         }
 
         $version = defined('FP_DMS_VERSION') ? FP_DMS_VERSION : '1.0.0';
         $pluginDir = defined('FP_DMS_PLUGIN_DIR') ? FP_DMS_PLUGIN_DIR : dirname(__DIR__);
+
+        // Debug script (caricato per primo, senza module)
+        wp_enqueue_script(
+            'fpdms-wizard-debug',
+            plugins_url('assets/js/wizard-debug.js', $pluginDir . '/fp-digital-marketing-suite.php'),
+            ['jquery'],
+            $version,
+            true
+        );
 
         // Enqueue validator
         wp_enqueue_script(
@@ -179,11 +196,18 @@ class ConnectionWizardIntegration
         $clientId = isset($_GET['client']) ? intval($_GET['client']) : 0;
 
         if (empty($provider)) {
-            wp_die(__('Invalid provider specified.', 'fp-dms'));
+            echo '<div class="wrap"><div class="notice notice-error"><p>';
+            echo esc_html__('Invalid provider specified. Please provide a valid provider parameter.', 'fp-dms');
+            echo '</p><p><strong>Debug info:</strong> URL completo necessario: <code>?page=fpdms-connection-wizard&provider=ga4&client=1</code></p></div></div>';
+            return;
         }
 
         if ($clientId <= 0) {
-            wp_die(__('Invalid client specified. Please select a client first.', 'fp-dms'));
+            echo '<div class="wrap"><div class="notice notice-error"><p>';
+            echo esc_html__('Invalid client specified. Please select a client first.', 'fp-dms');
+            echo '</p><p><strong>Debug info:</strong> Client ID ricevuto: <code>' . esc_html($clientId) . '</code></p>';
+            echo '<p>URL completo necessario: <code>?page=fpdms-connection-wizard&provider=' . esc_html($provider) . '&client=1</code></p></div></div>';
+            return;
         }
 
         $wizard = new \FP\DMS\Admin\ConnectionWizard\ConnectionWizard($provider);
