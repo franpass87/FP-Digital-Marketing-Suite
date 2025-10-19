@@ -53,7 +53,7 @@ class GoogleAdsCustomerStep extends AbstractWizardStep
 
             <div class="fpdms-manual-entry">
                 <?php echo $this->renderTextField(
-                    'customer_id',
+                    'config[customer_id]',
                     __('Customer ID', 'fp-dms'),
                     $selectedCustomerId,
                     [

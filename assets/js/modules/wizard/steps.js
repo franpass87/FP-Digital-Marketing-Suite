@@ -44,6 +44,10 @@ export class StepsManager {
         const $body = this.$container.find(SELECTORS.WIZARD_BODY);
         const loader = ValidationUI.showLoading($body[0], window.fpdmsI18n?.loading || 'Loading...');
 
+        if (window.fpdmsDebug) {
+            console.log('Loading step', stepIndex, 'with data:', this.data);
+        }
+
         try {
             const response = await $.ajax({
                 url: window.ajaxurl,
@@ -56,6 +60,10 @@ export class StepsManager {
                     data: JSON.stringify(this.data)
                 }
             });
+
+            if (window.fpdmsDebug) {
+                console.log('AJAX response:', response);
+            }
 
             // Rimuovi il loader PRIMA di ritornare il risultato
             if (loader && loader.parentNode) {
@@ -71,6 +79,9 @@ export class StepsManager {
                 throw new Error(response.data?.message || 'Failed to load step');
             }
         } catch (error) {
+            if (window.fpdmsDebug) {
+                console.error('Error loading step:', error);
+            }
             // Rimuovi il loader anche in caso di errore
             if (loader && loader.parentNode) {
                 loader.remove();

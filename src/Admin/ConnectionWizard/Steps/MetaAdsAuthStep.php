@@ -51,7 +51,7 @@ class MetaAdsAuthStep extends AbstractWizardStep
                 <h3><?php _e('Step 1: Access Token', 'fp-dms'); ?></h3>
                 
                 <?php echo $this->renderTextareaField(
-                    'access_token',
+                    'auth[access_token]',
                     __('Access Token', 'fp-dms'),
                     $accessToken,
                     [
@@ -94,7 +94,7 @@ class MetaAdsAuthStep extends AbstractWizardStep
                 <?php endif; ?>
 
                 <?php echo $this->renderTextField(
-                    'account_id',
+                    'config[account_id]',
                     __('Ad Account ID', 'fp-dms'),
                     $accountId,
                     [

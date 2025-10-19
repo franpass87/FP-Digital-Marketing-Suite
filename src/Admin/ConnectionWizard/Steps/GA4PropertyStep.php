@@ -55,7 +55,7 @@ class GA4PropertyStep extends AbstractWizardStep
 
             <div class="fpdms-manual-entry">
                 <?php echo $this->renderTextField(
-                    'property_id',
+                    'config[property_id]',
                     __('GA4 Property ID', 'fp-dms'),
                     $selectedPropertyId,
                     [
