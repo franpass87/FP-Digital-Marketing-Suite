@@ -8,6 +8,8 @@ use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Domain\Repos\DataSourcesRepo;
 use FP\DMS\Services\Connectors\ProviderFactory;
 use FP\DMS\Services\Sync\DataSourceSyncService;
+use FP\DMS\Services\Sync\ExternalApiSyncService;
+use FP\DMS\Services\Sync\RealApiSyncService;
 
 class DebugPage
 {
@@ -37,6 +39,64 @@ class DebugPage
             echo '<pre>' . esc_html(json_encode($results, JSON_PRETTY_PRINT)) . '</pre>';
             echo '</details>';
         }
+
+        // Gestisci la sincronizzazione con dati di esempio
+        if (isset($_POST['sync_with_sample_data']) && wp_verify_nonce($_POST['_wpnonce'], 'sync_datasources')) {
+            $externalSyncService = new ExternalApiSyncService();
+            $dataSourcesRepo = new DataSourcesRepo();
+            $clientId = isset($_POST['client_id']) ? (int) $_POST['client_id'] : null;
+            
+            if ($clientId) {
+                $dataSources = $dataSourcesRepo->forClient($clientId);
+                $results = [];
+                foreach ($dataSources as $dataSource) {
+                    if ($dataSource->active) {
+                        $results[$dataSource->id] = $externalSyncService->syncDataSourceDirect($dataSource);
+                    }
+                }
+                echo '<div class="notice notice-success"><p>Sincronizzazione con dati di esempio completata per cliente ' . esc_html($clientId) . '</p></div>';
+            } else {
+                $clientsRepo = new ClientsRepo();
+                $clients = $clientsRepo->all();
+                $results = [];
+                foreach ($clients as $client) {
+                    $dataSources = $dataSourcesRepo->forClient($client->id);
+                    foreach ($dataSources as $dataSource) {
+                        if ($dataSource->active) {
+                            $results[$client->id][$dataSource->id] = $externalSyncService->syncDataSourceDirect($dataSource);
+                        }
+                    }
+                }
+                echo '<div class="notice notice-success"><p>Sincronizzazione con dati di esempio completata per tutti i clienti</p></div>';
+            }
+            
+        echo '<details style="margin: 10px 0;"><summary>Risultati sincronizzazione con dati di esempio</summary>';
+        echo '<pre>' . esc_html(json_encode($results, JSON_PRETTY_PRINT)) . '</pre>';
+        echo '</details>';
+    }
+
+    // Gestisci la sincronizzazione con API reali
+    if (isset($_POST['sync_with_real_api']) && wp_verify_nonce($_POST['_wpnonce'], 'sync_datasources')) {
+        $realApiSyncService = new RealApiSyncService();
+        $clientId = isset($_POST['client_id']) ? (int) $_POST['client_id'] : null;
+        
+        if ($clientId) {
+            $results = $realApiSyncService->syncClientDataSourcesWithRealApi($clientId);
+            echo '<div class="notice notice-success"><p>Sincronizzazione con API reali completata per cliente ' . esc_html($clientId) . '</p></div>';
+        } else {
+            $clientsRepo = new ClientsRepo();
+            $clients = $clientsRepo->all();
+            $results = [];
+            foreach ($clients as $client) {
+                $results[$client->id] = $realApiSyncService->syncClientDataSourcesWithRealApi($client->id);
+            }
+            echo '<div class="notice notice-success"><p>Sincronizzazione con API reali completata per tutti i clienti</p></div>';
+        }
+        
+        echo '<details style="margin: 10px 0;"><summary>Risultati sincronizzazione con API reali</summary>';
+        echo '<pre>' . esc_html(json_encode($results, JSON_PRETTY_PRINT)) . '</pre>';
+        echo '</details>';
+    }
         
         echo '<div style="background: #f1f1f1; padding: 20px; margin: 20px 0; border-left: 4px solid #0073aa;">';
         echo '<h2>Informazioni di Debug</h2>';
@@ -44,8 +104,10 @@ class DebugPage
         // Pulsante di sincronizzazione
         echo '<div style="background: #fff; padding: 15px; margin: 10px 0; border: 1px solid #ddd;">';
         echo '<h3>Sincronizzazione Data Sources</h3>';
-        echo '<p>Usa questo pulsante per sincronizzare i dati dai provider esterni e popolare il campo summary.</p>';
+        echo '<p>Usa questi pulsanti per sincronizzare i dati dai provider esterni e popolare il campo summary.</p>';
         
+        echo '<div style="margin-bottom: 15px;">';
+        echo '<h4>Sincronizzazione Reale (usa le API esterne):</h4>';
         echo '<form method="post" style="display: inline-block; margin-right: 10px;">';
         wp_nonce_field('sync_datasources');
         echo '<input type="hidden" name="sync_datasources" value="1">';
@@ -65,6 +127,57 @@ class DebugPage
             echo '<input type="submit" class="button" value="Sincronizza Cliente Selezionato">';
             echo '</form>';
         }
+        echo '</div>';
+        
+        echo '<div style="border-top: 1px solid #ddd; padding-top: 15px;">';
+        echo '<h4>Sincronizzazione con API Reali (usa le tue credenziali):</h4>';
+        echo '<p style="color: #666; font-size: 12px;">Usa questo per sincronizzare con le API reali usando le credenziali configurate nei data source.</p>';
+        
+        echo '<form method="post" style="display: inline-block; margin-right: 10px;">';
+        wp_nonce_field('sync_datasources');
+        echo '<input type="hidden" name="sync_with_real_api" value="1">';
+        echo '<input type="submit" class="button button-primary" value="Sincronizza con API Reali (Tutti)">';
+        echo '</form>';
+        
+        if (!empty($clients)) {
+            echo '<form method="post" style="display: inline-block;">';
+            wp_nonce_field('sync_datasources');
+            echo '<input type="hidden" name="sync_with_real_api" value="1">';
+            echo '<select name="client_id" required>';
+            echo '<option value="">Seleziona cliente specifico...</option>';
+            foreach ($clients as $client) {
+                echo '<option value="' . esc_attr($client->id) . '">' . esc_html($client->name) . ' (ID: ' . esc_html($client->id) . ')</option>';
+            }
+            echo '</select>';
+            echo '<input type="submit" class="button button-primary" value="Sincronizza con API Reali">';
+            echo '</form>';
+        }
+        echo '</div>';
+        
+        echo '<div style="border-top: 1px solid #ddd; padding-top: 15px;">';
+        echo '<h4>Sincronizzazione con Dati di Esempio (per test):</h4>';
+        echo '<p style="color: #666; font-size: 12px;">Usa questo per testare il sistema con dati di esempio se la sincronizzazione reale non funziona.</p>';
+        
+        echo '<form method="post" style="display: inline-block; margin-right: 10px;">';
+        wp_nonce_field('sync_datasources');
+        echo '<input type="hidden" name="sync_with_sample_data" value="1">';
+        echo '<input type="submit" class="button button-secondary" value="Sincronizza con Dati di Esempio (Tutti)">';
+        echo '</form>';
+        
+        if (!empty($clients)) {
+            echo '<form method="post" style="display: inline-block;">';
+            wp_nonce_field('sync_datasources');
+            echo '<input type="hidden" name="sync_with_sample_data" value="1">';
+            echo '<select name="client_id" required>';
+            echo '<option value="">Seleziona cliente specifico...</option>';
+            foreach ($clients as $client) {
+                echo '<option value="' . esc_attr($client->id) . '">' . esc_html($client->name) . ' (ID: ' . esc_html($client->id) . ')</option>';
+            }
+            echo '</select>';
+            echo '<input type="submit" class="button button-secondary" value="Sincronizza con Dati di Esempio">';
+            echo '</form>';
+        }
+        echo '</div>';
         echo '</div>';
         
         // 1. Verifica clienti
