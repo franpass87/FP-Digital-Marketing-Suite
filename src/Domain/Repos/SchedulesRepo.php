@@ -58,12 +58,14 @@ class SchedulesRepo
     public function forClient(int $clientId): array
     {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE client_id = %d ORDER BY created_at DESC", $clientId);
 
         if ($sql === false) {
             return [];
         }
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
         $rows = $wpdb->get_results($sql, ARRAY_A);
         if (! is_array($rows)) {
             return [];

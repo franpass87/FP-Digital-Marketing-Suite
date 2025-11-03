@@ -22,20 +22,26 @@ class LogsPage
         $logs = $logData['content'];
         $truncated = $logData['truncated'];
         $error = $logData['error'];
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Logs', 'fp-dms') . '</h1>';
+        echo '<div class="wrap fpdms-admin-page">';
+        
+        // Header moderno
+        echo '<div class="fpdms-page-header">';
+        echo '<h1><span class="dashicons dashicons-media-text" style="margin-right:12px;"></span>' . esc_html__('Log Sistema', 'fp-dms') . '</h1>';
+        echo '<p>' . esc_html__('Visualizza i log di sistema per debugging e monitoraggio delle operazioni.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
         if ($error !== '') {
-            echo '<div class="notice notice-error"><p>' . esc_html($error) . '</p></div>';
+            echo '<div class="fpdms-alert fpdms-alert-danger"><span class="dashicons dashicons-warning"></span><p>' . esc_html($error) . '</p></div>';
         }
         if (empty($logs)) {
-            echo '<p>' . esc_html__('No logs available yet.', 'fp-dms') . '</p>';
+            echo '<div class="fpdms-empty-state"><span class="dashicons dashicons-media-text"></span><h3>' . esc_html__('Nessun Log Disponibile', 'fp-dms') . '</h3><p>' . esc_html__('I log appariranno qui quando il sistema inizierà a registrare attività.', 'fp-dms') . '</p></div>';
         } else {
             if ($truncated) {
                 /* translators: %d: size in kilobytes. */
-                $message = sprintf(__('Showing last %d KB of log output.', 'fp-dms'), (int) (self::MAX_BYTES / 1024));
-                echo '<p class="description">' . esc_html($message) . '</p>';
+                $message = sprintf(__('Visualizzazione ultimi %d KB di log.', 'fp-dms'), (int) (self::MAX_BYTES / 1024));
+                echo '<div class="fpdms-alert fpdms-alert-info"><span class="dashicons dashicons-info"></span><p>' . esc_html($message) . '</p></div>';
             }
-            echo '<pre style="background:#111;color:#0f0;padding:20px;max-height:500px;overflow:auto;">' . esc_html($logs) . '</pre>';
+            echo '<div class="fpdms-card"><pre style="background:#1a1a1a;color:#00ff00;padding:20px;max-height:600px;overflow:auto;border-radius:8px;font-family:\'Courier New\',monospace;font-size:12px;line-height:1.4;">' . esc_html($logs) . '</pre></div>';
         }
         echo '</div>';
     }

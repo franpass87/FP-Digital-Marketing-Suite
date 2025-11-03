@@ -324,6 +324,49 @@ export class OverviewUI {
         tbody.appendChild(row);
     }
 
+    updateAIInsights(data) {
+        const container = document.getElementById('fpdms-ai-insights-container');
+        const loading = document.getElementById('fpdms-ai-insights-loading');
+        const content = document.getElementById('fpdms-ai-insights-content');
+        const error = document.getElementById('fpdms-ai-insights-error');
+        
+        if (!container || !loading || !content || !error) return;
+
+        const insights = data?.insights;
+        
+        // Hide loading
+        loading.style.display = 'none';
+
+        // Check if API key is configured
+        if (!insights || insights.has_api_key === false) {
+            error.style.display = 'block';
+            content.style.display = 'none';
+            return;
+        }
+
+        // Show content
+        error.style.display = 'none';
+        content.style.display = 'grid';
+
+        // Update performance analysis
+        const performanceEl = document.getElementById('fpdms-ai-performance-analysis');
+        if (performanceEl && insights.performance) {
+            performanceEl.innerHTML = insights.performance;
+        }
+
+        // Update trend analysis
+        const trendEl = document.getElementById('fpdms-ai-trend-analysis');
+        if (trendEl && insights.trends) {
+            trendEl.innerHTML = insights.trends;
+        }
+
+        // Update recommendations
+        const recommendationsEl = document.getElementById('fpdms-ai-recommendations');
+        if (recommendationsEl && insights.recommendations) {
+            recommendationsEl.innerHTML = insights.recommendations;
+        }
+    }
+
     setLoading(isLoading) {
         const root = document.getElementById('fpdms-overview-root');
         if (root) {

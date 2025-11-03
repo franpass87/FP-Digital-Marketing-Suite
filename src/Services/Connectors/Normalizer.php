@@ -11,7 +11,17 @@ use FP\DMS\Support\Period;
 class Normalizer
 {
     /** @var string[] */
-    private const NUMERIC_KEYS = ['users', 'sessions', 'clicks', 'impressions', 'cost', 'conversions', 'revenue'];
+    private const NUMERIC_KEYS = [
+        'users', 'sessions', 'clicks', 'impressions', 'cost', 'conversions', 'revenue',
+        // GA4 metriche aggiuntive
+        'pageviews', 'events', 'total_users', 'new_users', 'active_users',
+        // GSC metriche aggiuntive
+        'ctr', 'position',
+        // Google Ads metriche aggiuntive
+        'google_clicks', 'google_impressions', 'google_cost', 'google_conversions',
+        // Meta Ads metriche aggiuntive
+        'meta_clicks', 'meta_impressions', 'meta_cost', 'meta_conversions', 'meta_revenue'
+    ];
 
     /**
      * @param array<string, mixed> $row

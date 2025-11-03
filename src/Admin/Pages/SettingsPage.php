@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FP\DMS\Admin\Pages;
 
+use FP\DMS\Admin\Pages\Shared\Breadcrumbs;
 use FP\DMS\Infra\Options;
 use FP\DMS\Support\Validation;
 use FP\DMS\Support\Wp;
@@ -30,9 +31,20 @@ class SettingsPage
         }
         $refreshIntervalsDisplay = implode(', ', array_map(static fn($seconds): string => (string) (int) $seconds, $configuredIntervals));
 
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('FP Suite Settings', 'fp-dms') . '</h1>';
-        settings_errors('fpdms_settings');
+        echo '<div class="wrap fpdms-admin-page">';
+        
+        // Breadcrumbs
+        Breadcrumbs::render(Breadcrumbs::getStandardItems('settings'));
+        
+        // Header moderno
+        echo '<div class="fpdms-page-header">';
+        echo '<h1><span class="dashicons dashicons-admin-settings" style="margin-right:12px;"></span>' . esc_html__('Impostazioni', 'fp-dms') . '</h1>';
+        echo '<p>' . esc_html__('Configura le impostazioni globali del plugin: branding, AI, email, anomalie e notifiche.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
+        // settings_errors are now handled globally in Menu::hideExternalNotices()
+        
+        echo '<div class="fpdms-card">';
         echo '<form method="post" action="">';
         wp_nonce_field('fpdms_save_settings', 'fpdms_settings_nonce');
         echo '<input type="hidden" name="fpdms_settings_action" value="save">';
@@ -56,6 +68,49 @@ class SettingsPage
         echo '<input type="text" class="regular-text" id="fpdms-primary-color" name="pdf_branding[primary_color]" value="' . esc_attr($settings['pdf_branding']['primary_color']) . '"><br><br>';
         echo '<label for="fpdms-footer-text">' . esc_html__('Footer Text', 'fp-dms') . '</label><br>';
         echo '<textarea class="large-text" rows="3" id="fpdms-footer-text" name="pdf_branding[footer_text]">' . esc_textarea($settings['pdf_branding']['footer_text']) . '</textarea>';
+        echo '</td></tr>';
+
+        // AI Settings
+        $openaiKey = Options::get('fpdms_openai_api_key', '');
+        $aiModel = Options::get('fpdms_ai_model', 'gpt-5-nano');
+        echo '<tr><th scope="row">' . esc_html__('AI Content Generation', 'fp-dms') . '</th>';
+        echo '<td>';
+        echo '<label for="fpdms-openai-key">' . esc_html__('OpenAI API Key', 'fp-dms') . '</label><br>';
+        echo '<input type="password" class="regular-text" id="fpdms-openai-key" name="openai_api_key" value="' . esc_attr($openaiKey) . '" placeholder="sk-...">';
+        
+        // Debug: Show if key is saved
+        $savedKey = Options::get('fpdms_openai_api_key', '');
+        if (!empty($savedKey)) {
+            echo '<p class="description" style="color:green;">✅ <strong>Chiave salvata:</strong> ' . substr($savedKey, 0, 10) . '...' . substr($savedKey, -4) . '</p>';
+        } else {
+            echo '<p class="description" style="color:orange;">⚠️ <strong>Nessuna chiave salvata nel database</strong></p>';
+        }
+        
+        echo '<p class="description">' . esc_html__('Chiave API OpenAI per generare automaticamente executive summary, analisi trend e raccomandazioni nei report. Ottieni la tua chiave da platform.openai.com', 'fp-dms') . '</p>';
+        echo '<br><label for="fpdms-ai-model">' . esc_html__('Modello AI', 'fp-dms') . '</label><br>';
+        echo '<select id="fpdms-ai-model" name="ai_model" class="regular-text">';
+        $models = [
+            'gpt-5-nano' => '🚀 GPT-5 Nano (Consigliato - Ultra economico e veloce)',
+            'gpt-5-mini' => '⚡ GPT-5 Mini (Bilanciato qualità/prezzo)',
+            'gpt-5-turbo' => '💎 GPT-5 Turbo (Avanzato - Molto potente)',
+            'gpt-5' => '🎓 GPT-5 (Massima qualità e precisione)',
+            'gpt-4o' => '📦 GPT-4o (Legacy - Non consigliato)',
+            'gpt-4-turbo' => '📦 GPT-4 Turbo (Legacy - Non consigliato)',
+        ];
+        foreach ($models as $value => $label) {
+            echo '<option value="' . esc_attr($value) . '" ' . selected($aiModel, $value, false) . '>' . esc_html($label) . '</option>';
+        }
+        echo '</select>';
+        
+        // Debug: Show saved model
+        $savedModel = Options::get('fpdms_ai_model', '');
+        if (!empty($savedModel)) {
+            echo '<p class="description" style="color:green;">✅ <strong>Modello salvato:</strong> ' . esc_html($savedModel) . '</p>';
+        } else {
+            echo '<p class="description" style="color:orange;">⚠️ <strong>Nessun modello salvato</strong></p>';
+        }
+        
+        echo '<p class="description">' . esc_html__('GPT-5 Nano è il modello consigliato per le AI Insights: performance eccellenti con costi ridottissimi. Usa GPT-5 Turbo o GPT-5 solo per analisi molto complesse.', 'fp-dms') . '</p>';
         echo '</td></tr>';
 
         $settings['mail']['smtp']['secure'] = self::normaliseSecureMode((string) ($settings['mail']['smtp']['secure'] ?? 'none'));
@@ -138,8 +193,9 @@ class SettingsPage
         echo '</td></tr>';
 
         echo '</tbody></table>';
-        submit_button(__('Save Settings', 'fp-dms'));
+        submit_button(__('Salva Impostazioni', 'fp-dms'), 'primary fpdms-button-primary');
         echo '</form>';
+        echo '</div>'; // Chiudi fpdms-card
 
         $tickUrl = esc_url_raw(rest_url('fpdms/v1/tick?key=' . $settings['tick_key']));
         echo '<p><strong>' . esc_html__('Cron Fallback Endpoint:', 'fp-dms') . '</strong> <code>' . esc_html($tickUrl) . '</code></p>';
@@ -195,6 +251,33 @@ class SettingsPage
         $primary = Wp::sanitizeTextField($brandingInput['primary_color'] ?? '#1d4ed8');
         $settings['pdf_branding']['primary_color'] = Validation::isHexColor($primary) ? $primary : '#1d4ed8';
         $settings['pdf_branding']['footer_text'] = Wp::ksesPost((string) ($brandingInput['footer_text'] ?? ''));
+
+        // AI Settings
+        $aiSettingsChanged = false;
+        
+        $openaiKey = Wp::sanitizeTextField($post['openai_api_key'] ?? '');
+        if ($openaiKey !== '') {
+            $oldKey = Options::get('fpdms_openai_api_key', '');
+            if ($oldKey !== $openaiKey) {
+                $aiSettingsChanged = true;
+            }
+            Options::update('fpdms_openai_api_key', $openaiKey);
+        }
+        
+        $aiModel = Wp::sanitizeTextField($post['ai_model'] ?? 'gpt-5-nano');
+        $allowedModels = ['gpt-5-nano', 'gpt-5-mini', 'gpt-5-turbo', 'gpt-5', 'gpt-4o', 'gpt-4-turbo'];
+        if (in_array($aiModel, $allowedModels, true)) {
+            $oldModel = Options::get('fpdms_ai_model', '');
+            if ($oldModel !== $aiModel) {
+                $aiSettingsChanged = true;
+            }
+            Options::update('fpdms_ai_model', $aiModel);
+        }
+        
+        // Clear AI Insights cache if settings changed
+        if ($aiSettingsChanged) {
+            self::clearAICache();
+        }
 
         $mailInput = isset($post['mail']) && is_array($post['mail']) ? $post['mail'] : [];
         $smtpInput = isset($mailInput['smtp']) && is_array($mailInput['smtp']) ? $mailInput['smtp'] : [];
@@ -297,5 +380,26 @@ class SettingsPage
         }
 
         return $intervals;
+    }
+
+    /**
+     * Clear AI Insights cache for all clients
+     * Called when AI settings are changed
+     */
+    private static function clearAICache(): void
+    {
+        try {
+            $cache = new \FP\DMS\Services\Overview\Cache();
+            $clientsRepo = new \FP\DMS\Domain\Repos\ClientsRepo();
+            $clients = $clientsRepo->all();
+            
+            foreach ($clients as $client) {
+                // Clear all overview cache (includes ai_insights)
+                $cache->clearAllForClient($client->id);
+            }
+        } catch (\Throwable $e) {
+            // Fail silently - cache clearing is not critical
+            error_log('[FP-DMS] Failed to clear AI cache: ' . $e->getMessage());
+        }
     }
 }

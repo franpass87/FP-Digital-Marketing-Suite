@@ -48,10 +48,10 @@ class ProviderFactory
 
         // Fallback to built-in providers to maintain backward compatibility
         return match ($type) {
-            'ga4' => new GA4Provider($auth, $config),
-            'gsc' => new GSCProvider($auth, $config),
-            'google_ads' => new GoogleAdsProvider($auth, $config),
-            'meta_ads' => new MetaAdsProvider($auth, $config),
+            'ga4' => new GA4ApiProvider($auth, $config),
+            'gsc' => new GSCApiProvider($auth, $config),
+            'google_ads' => new GoogleAdsApiProvider($auth, $config),
+            'meta_ads' => new MetaAdsApiProvider($auth, $config),
             'clarity' => new ClarityProvider($auth, $config),
             'csv_generic' => new CsvGenericProvider($auth, $config),
             default => null,

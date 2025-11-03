@@ -36,7 +36,7 @@ class CsvGenericProvider implements DataSourceProviderInterface
         $summary = is_array($this->config['summary'] ?? null) ? $this->config['summary'] : [];
         $rows = [];
 
-        if (isset($summary['daily']) && is_array($summary['daily'])) {
+        if (isset($summary['daily']) && is_array($summary['daily']) && !empty($summary['daily'])) {
             foreach ($summary['daily'] as $date => $metrics) {
                 if (! is_array($metrics)) {
                     continue;

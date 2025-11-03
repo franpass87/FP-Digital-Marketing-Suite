@@ -37,6 +37,11 @@ class TemplatesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE id = %d", $id);
+        
+        if ($sql === false) {
+            return null;
+        }
+        
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? Template::fromRow($row) : null;
@@ -46,6 +51,11 @@ class TemplatesRepo
     {
         global $wpdb;
         $sql = $wpdb->prepare("SELECT * FROM {$this->table} WHERE is_default = 1 ORDER BY id ASC LIMIT %d", 1);
+        
+        if ($sql === false) {
+            return null;
+        }
+        
         $row = $wpdb->get_row($sql, ARRAY_A);
 
         return is_array($row) ? Template::fromRow($row) : null;
@@ -112,6 +122,10 @@ class TemplatesRepo
     private function clearOtherDefaults(int $keepId): void
     {
         global $wpdb;
-        $wpdb->query($wpdb->prepare("UPDATE {$this->table} SET is_default = 0 WHERE id != %d", $keepId));
+        $sql = $wpdb->prepare("UPDATE {$this->table} SET is_default = 0 WHERE id != %d", $keepId);
+        
+        if ($sql !== false) {
+            $wpdb->query($sql);
+        }
     }
 }

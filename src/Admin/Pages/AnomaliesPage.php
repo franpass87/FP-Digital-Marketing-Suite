@@ -42,12 +42,18 @@ class AnomaliesPage
         $tab = isset($_GET['tab']) ? Wp::sanitizeKey($_GET['tab']) : 'anomalies';
         $anomalies = $clientId > 0 ? $repo->recentForClient($clientId, 50) : $repo->recent(50);
 
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html(I18n::__('Anomalies')) . '</h1>';
+        echo '<div class="wrap fpdms-admin-page">';
+        
+        // Header moderno
+        echo '<div class="fpdms-page-header">';
+        echo '<h1><span class="dashicons dashicons-warning" style="margin-right:12px;"></span>' . esc_html__('Anomalie', 'fp-dms') . '</h1>';
+        echo '<p>' . esc_html__('Monitora le anomalie rilevate nelle metriche e configura le soglie di allerta.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
         echo '<h2 class="nav-tab-wrapper">';
         $tabs = [
-            'anomalies' => I18n::__('Recent Anomalies'),
-            'policy' => I18n::__('Policy'),
+            'anomalies' => 'Anomalie Recenti',
+            'policy' => 'Configurazione Policy',
         ];
         foreach ($tabs as $key => $label) {
             $url = add_query_arg([

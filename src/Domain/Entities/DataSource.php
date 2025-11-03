@@ -30,7 +30,24 @@ class DataSource
         $cipher = is_string($row['auth'] ?? null) ? (string) $row['auth'] : '[]';
         $failed = false;
         $decoded = Security::decrypt($cipher, $failed);
-        $auth = $failed ? [] : self::decodeJson($decoded);
+        
+        if ($failed) {
+            // Decryption failed - try plain JSON as fallback
+            $auth = self::decodeJson($cipher);
+            if (empty($auth)) {
+                error_log('[FPDMS] Decryption failed and plain JSON fallback also failed for DataSource #' . ($row['id'] ?? 'unknown'));
+            }
+        } else {
+            // Decryption succeeded
+            $auth = self::decodeJson($decoded);
+            
+            // DEBUG: Log if auth is still empty after successful decryption
+            if (empty($auth)) {
+                error_log('[FPDMS] WARNING: DataSource #' . ($row['id'] ?? 'unknown') . ' - Decryption OK but auth is empty!');
+                error_log('[FPDMS] Decoded string length: ' . strlen($decoded));
+                error_log('[FPDMS] Decoded preview: ' . substr($decoded, 0, 200));
+            }
+        }
 
         return new self(
             isset($row['id']) ? (int) $row['id'] : null,

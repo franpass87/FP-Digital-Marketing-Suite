@@ -7,6 +7,7 @@ namespace FP\DMS\Services\Sync;
 use DateTimeImmutable;
 use FP\DMS\Domain\Repos\DataSourcesRepo;
 use FP\DMS\Services\Connectors\ProviderFactory;
+use FP\DMS\Services\Overview\Cache;
 use FP\DMS\Support\Wp;
 
 class DataSourceSyncService
@@ -33,6 +34,10 @@ class DataSourceSyncService
             $results[$dataSource->id] = $result;
         }
 
+        // Clear overview cache for this client so fresh data is loaded immediately
+        $cache = new Cache();
+        $cache->clearAllForClient($clientId);
+
         return $results;
     }
 
@@ -53,10 +58,10 @@ class DataSourceSyncService
 
             // Test connessione
             $connectionResult = $provider->testConnection();
-            if (!$connectionResult->success) {
+            if (!$connectionResult->isSuccess()) {
                 return [
                     'success' => false,
-                    'error' => 'Test connessione fallito: ' . $connectionResult->message
+                    'error' => 'Test connessione fallito: ' . $connectionResult->message()
                 ];
             }
 
@@ -115,15 +120,35 @@ class DataSourceSyncService
     {
         $daily = [];
         $totals = [
+            // GA4
             'users' => 0,
             'sessions' => 0,
+            'pageviews' => 0,
+            'events' => 0,
+            'new_users' => 0,
+            'total_users' => 0,
+            // GSC
+            'gsc_clicks' => 0,
+            'gsc_impressions' => 0,
+            'ctr' => 0,
+            'position' => 0,
+            // Google Ads
+            'google_clicks' => 0,
+            'google_impressions' => 0,
+            'google_cost' => 0,
+            'google_conversions' => 0,
+            // Meta Ads
+            'meta_clicks' => 0,
+            'meta_impressions' => 0,
+            'meta_cost' => 0,
+            'meta_conversions' => 0,
+            'meta_revenue' => 0,
+            // Generiche
             'clicks' => 0,
             'impressions' => 0,
             'conversions' => 0,
             'cost' => 0,
             'revenue' => 0,
-            'gsc_clicks' => 0,
-            'gsc_impressions' => 0
         ];
 
         foreach ($metrics as $row) {
@@ -137,11 +162,22 @@ class DataSourceSyncService
                 $daily[$date] = array_fill_keys(array_keys($totals), 0);
             }
 
-            // Aggrega le metriche per data
-            foreach ($totals as $key => $value) {
-                if (isset($row[$key]) && is_numeric($row[$key])) {
-                    $daily[$date][$key] += (float) $row[$key];
-                    $totals[$key] += (float) $row[$key];
+            // Aggrega TUTTE le metriche disponibili per data
+            foreach ($row as $key => $value) {
+                if ($key === 'date' || $key === 'source') {
+                    continue;
+                }
+                
+                if (is_numeric($value)) {
+                    if (!isset($daily[$date][$key])) {
+                        $daily[$date][$key] = 0;
+                    }
+                    if (!isset($totals[$key])) {
+                        $totals[$key] = 0;
+                    }
+                    
+                    $daily[$date][$key] += (float) $value;
+                    $totals[$key] += (float) $value;
                 }
             }
         }
@@ -169,6 +205,8 @@ class DataSourceSyncService
         foreach ($clients as $client) {
             $results[$client->id] = $this->syncClientDataSources($client->id);
         }
+
+        // Note: cache clearing is already done in syncClientDataSources for each client
 
         return $results;
     }

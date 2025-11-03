@@ -83,13 +83,16 @@ class Lock
         }
 
         // Lock already exists, check if it's expired
-        $existing = $wpdb->get_row(
-            $wpdb->prepare(
-                "SELECT owner, acquired_at FROM {$table} WHERE lock_key = %s",
-                $name
-            ),
-            ARRAY_A
+        $selectSql = $wpdb->prepare(
+            "SELECT owner, acquired_at FROM {$table} WHERE lock_key = %s",
+            $name
         );
+
+        if ($selectSql === false) {
+            return false;
+        }
+
+        $existing = $wpdb->get_row($selectSql, ARRAY_A);
 
         if (! is_array($existing)) {
             return false;

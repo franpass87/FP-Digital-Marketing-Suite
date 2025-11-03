@@ -6,6 +6,7 @@ namespace FP\DMS\Infra;
 
 use FP\DMS\Domain\Repos\TemplatesRepo;
 use FP\DMS\Domain\Templates\TemplateBlueprints;
+use FP\DMS\Infra\Migrations\AddClientDescriptionColumn;
 use FP\DMS\Support\Wp;
 
 class Activator
@@ -13,6 +14,8 @@ class Activator
     public static function activate(): void
     {
         DB::migrate();
+        DB::migrateReportsReview(); // Add review fields to reports table
+        AddClientDescriptionColumn::run(); // Add description field to clients table
         Options::ensureDefaults();
 
         if (! wp_next_scheduled('fpdms_cron_tick')) {

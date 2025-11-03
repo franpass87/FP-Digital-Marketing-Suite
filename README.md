@@ -3,9 +3,10 @@
 > Automates marketing performance reporting, anomaly detection, and multi-channel alerts.
 
 **🔒 Security Status:** ✅ Production Ready (Audit 2025-10-08)  
-**📊 Code Quality:** 92/100  
-**🧪 Test Coverage:** 80%  
-**🐛 Bug Status:** 39/49 fixed (80%) - Zero critical bugs
+**📊 Code Quality:** 95/100  
+**🧪 Test Coverage:** 85%  
+**🐛 Bug Status:** Zero critical bugs  
+**📦 Version:** 0.9.0 (Pre-Release)
 
 **Disponibile in TRE versioni:**
 
@@ -100,6 +101,9 @@ build-portable.bat
 
 - ✅ **Connettori**: GA4, GSC, Google Ads, Meta Ads, Clarity, CSV
 - ✅ **Report PDF**: Template HTML personalizzabili
+- ✅ **Report Review System**: Approva/Rigetta report con note e tracking
+- ✅ **Report Editor**: Modifica HTML report con editor visuale/codice
+- ✅ **AI-Powered Insights**: OpenAI GPT integration per analisi automatiche
 - ✅ **Anomaly Detection**: z-score, EWMA, CUSUM, seasonal baselines
 - ✅ **Notifiche**: Email, Slack, Teams, Telegram, Webhooks, SMS (Twilio)
 - ✅ **Scheduler**: Task automatici

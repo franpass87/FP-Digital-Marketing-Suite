@@ -1,0 +1,92 @@
+/**
+ * Template Presets CSS
+ * Stili per il selettore blueprint nella pagina template
+ */
+
+#fpdms-template-blueprint {
+    display: block;
+    width: 100%;
+    max-width: 400px;
+    padding: 6px 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    background-color: #fff;
+    transition: border-color 0.2s ease;
+}
+
+#fpdms-template-blueprint:focus {
+    border-color: #2271b1;
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+#fpdms-template-blueprint-description {
+    margin-top: 8px;
+    margin-bottom: 12px;
+    color: #646970;
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+#fpdms-apply-template-blueprint {
+    margin-top: 12px;
+    padding: 6px 16px;
+    font-size: 13px;
+    line-height: 2;
+    min-height: 32px;
+    background: #2271b1;
+    border-color: #2271b1;
+    color: #fff;
+    text-decoration: none;
+    text-shadow: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#fpdms-apply-template-blueprint:hover:not(:disabled) {
+    background: #135e96;
+    border-color: #135e96;
+    color: #fff;
+}
+
+#fpdms-apply-template-blueprint:disabled {
+    background: #f0f0f1;
+    border-color: #dcdcde;
+    color: #a7aaad;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+#fpdms-apply-template-blueprint:focus:not(:disabled) {
+    background: #135e96;
+    border-color: #0a4b78;
+    color: #fff;
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 1px #fff, 0 0 0 3px #2271b1;
+}
+
+/* Indicatore visivo quando un campo è auto-riempito */
+[data-autofilled="1"] {
+    background-color: #f0f6fc;
+    border-color: #4f94d4;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Animazione quando viene applicato un preset */
+@keyframes preset-applied {
+    0% {
+        background-color: #e7f5ff;
+    }
+    100% {
+        background-color: #fff;
+    }
+}
+
+.preset-applied-animation {
+    animation: preset-applied 1s ease-out;
+}
+

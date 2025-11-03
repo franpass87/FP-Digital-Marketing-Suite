@@ -118,13 +118,47 @@ class ReportsRepo
                 array_push($params, ...$statuses);
             }
         }
+        
+        if (isset($criteria['review_status'])) {
+            $reviewStatus = (string) $criteria['review_status'];
+            $reviewStatus = preg_replace('/[^a-z_]/', '', strtolower($reviewStatus));
+            if ($reviewStatus !== '') {
+                $where[] = 'review_status = %s';
+                $params[] = $reviewStatus;
+            }
+        }
 
         if (isset($criteria['created_before'])) {
             $where[] = 'created_at < %s';
             $params[] = (string) $criteria['created_before'];
         }
 
-        $sql = 'SELECT * FROM ' . $this->table . ' WHERE ' . implode(' AND ', $where) . ' ORDER BY created_at DESC';
+        // Build ORDER BY clause (whitelist to prevent SQL injection)
+        $orderBy = 'created_at';
+        if (isset($criteria['order_by'])) {
+            $allowedColumns = ['id', 'created_at', 'period_start', 'period_end', 'status'];
+            $requestedColumn = preg_replace('/[^a-z_]/', '', strtolower((string) $criteria['order_by']));
+            if (in_array($requestedColumn, $allowedColumns, true)) {
+                $orderBy = $requestedColumn;
+            }
+        }
+
+        $order = 'DESC';
+        if (isset($criteria['order'])) {
+            $requestedOrder = strtoupper(trim((string) $criteria['order']));
+            if (in_array($requestedOrder, ['ASC', 'DESC'], true)) {
+                $order = $requestedOrder;
+            }
+        }
+
+        $sql = 'SELECT * FROM ' . $this->table . ' WHERE ' . implode(' AND ', $where) . ' ORDER BY ' . $orderBy . ' ' . $order;
+
+        // Add LIMIT clause (safe cast to int)
+        if (isset($criteria['limit'])) {
+            $limit = max(1, min(100, (int) $criteria['limit']));
+            $sql .= ' LIMIT ' . $limit;
+        }
+
         $prepared = $params ? $wpdb->prepare($sql, $params) : $sql;
 
         // Check if prepare failed
@@ -212,11 +246,16 @@ class ReportsRepo
         $payload = [];
         $formats = [];
 
-        foreach (['status', 'storage_path', 'period_start', 'period_end'] as $field) {
+        foreach (['status', 'storage_path', 'period_start', 'period_end', 'review_status', 'review_notes', 'reviewed_at'] as $field) {
             if (array_key_exists($field, $data)) {
                 $payload[$field] = $data[$field];
                 $formats[] = '%s';
             }
+        }
+        
+        if (array_key_exists('reviewed_by', $data)) {
+            $payload['reviewed_by'] = $data['reviewed_by'];
+            $formats[] = '%d';
         }
 
         if (array_key_exists('meta', $data)) {

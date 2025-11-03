@@ -54,14 +54,27 @@ class Queue
 
         $existing = $reports->findByClientAndPeriod($clientId, $periodStart, $periodEnd, ['queued', 'running']);
         if ($existing) {
+            // Validate existing job has valid ID
+            if ($existing->id === null || $existing->id <= 0) {
+                error_log(sprintf('[Queue] Existing job has invalid ID: %s', var_export($existing->id, true)));
+                // Create new job instead of using invalid existing one
+                return $reports->create([
+                    'client_id' => $clientId,
+                    'period_start' => $periodStart,
+                    'period_end' => $periodEnd,
+                    'status' => 'queued',
+                    'meta' => $meta,
+                ]);
+            }
+            
             if (! empty($meta)) {
                 // Refetch to get latest version before merging to reduce race condition
-                $fresh = $reports->find($existing->id ?? 0);
-                if ($fresh) {
-                    $reports->update($fresh->id ?? 0, [
+                $fresh = $reports->find($existing->id);
+                if ($fresh && $fresh->id !== null && $fresh->id > 0) {
+                    $reports->update($fresh->id, [
                         'meta' => array_merge($fresh->meta, $meta),
                     ]);
-                    $existing = $reports->find($fresh->id ?? 0);
+                    $existing = $reports->find($fresh->id);
                 }
             }
 
@@ -93,12 +106,18 @@ class Queue
                 return null;
             }
 
+            // Validate job has valid ID
+            if ($job->id === null || $job->id <= 0) {
+                error_log(sprintf('[Queue] Job from nextQueued() has invalid ID: %s', var_export($job->id, true)));
+                return null;
+            }
+
             // Update metadata with start time
-            $reports->update($job->id ?? 0, [
+            $reports->update($job->id, [
                 'meta' => array_merge($job->meta, ['started_at' => Wp::currentTime('mysql')]),
             ]);
 
-            return $reports->find($job->id ?? 0);
+            return $reports->find($job->id);
         });
 
         if (! $job instanceof ReportJob) {
@@ -113,10 +132,12 @@ class Queue
 
         if ($handled !== true) {
             Logger::log(sprintf('LOCK_CONTENDED:client-%d', $job->clientId));
-            $reports->update($job->id ?? 0, [
-                'status' => 'queued',
-                'meta' => array_merge($job->meta, ['lock_contended_at' => Wp::currentTime('mysql')]),
-            ]);
+            if ($job->id !== null && $job->id > 0) {
+                $reports->update($job->id, [
+                    'status' => 'queued',
+                    'meta' => array_merge($job->meta, ['lock_contended_at' => Wp::currentTime('mysql')]),
+                ]);
+            }
         }
     }
 
@@ -142,6 +163,22 @@ class Queue
             return;
         }
 
+        // SYNC DATA SOURCES PRIMA DI GENERARE IL REPORT
+        error_log('[Queue] Syncing data sources before report generation for client ' . $client->id);
+        $syncService = new \FP\DMS\Services\Sync\DataSourceSyncService($dataSources);
+        $syncResults = $syncService->syncClientDataSources($client->id);
+        
+        $syncSuccess = 0;
+        $syncFailed = 0;
+        foreach ($syncResults as $result) {
+            if (isset($result['success']) && $result['success']) {
+                $syncSuccess++;
+            } else {
+                $syncFailed++;
+            }
+        }
+        error_log(sprintf('[Queue] Sync completed: %d success, %d failed', $syncSuccess, $syncFailed));
+
         $templateId = $job->meta['template_id'] ?? null;
         $template = null;
         if ($templateId) {
@@ -165,10 +202,12 @@ class Queue
 
         // Ensure client ID is valid before fetching data sources
         if (!$client->id || $client->id <= 0) {
-            $reports->update($job->id ?? 0, [
-                'status' => 'failed',
-                'meta' => array_merge($job->meta, ['error' => __('Invalid client ID.', 'fp-dms')]),
-            ]);
+            if ($job->id !== null && $job->id > 0) {
+                $reports->update($job->id, [
+                    'status' => 'failed',
+                    'meta' => array_merge($job->meta, ['error' => __('Invalid client ID.', 'fp-dms')]),
+                ]);
+            }
             return;
         }
 
@@ -179,41 +218,46 @@ class Queue
             $reports,
             new HtmlRenderer(new TokenEngine()),
             new PdfRenderer(),
+            new \FP\DMS\Services\AIReportAnalyzer(),
         );
 
         $previousMetrics = self::previousMetrics($reports, $job);
 
-        error_log(sprintf('[Queue] Starting report generation for client %d, job %d', $client->id ?? 0, $job->id ?? 0));
+        // Log with validated IDs (ReportBuilder will throw if invalid)
+        $clientId = $client->id ?? 0;
+        $jobId = $job->id ?? 0;
+        error_log(sprintf('[Queue] Starting report generation for client %d, job %d', $clientId, $jobId));
         error_log(sprintf('[Queue] Found %d providers for client', count($providers)));
         
         $result = $builder->generate($job, $client, $providers, $period, $template, $previousMetrics);
         
         if (! $result) {
-            error_log(sprintf('[Queue] ReportBuilder returned null for client %d', $client->id ?? 0));
-            Logger::log(sprintf('Report generation failed for client %d.', $client->id ?? 0));
+            error_log(sprintf('[Queue] ReportBuilder returned null for client %d', $clientId));
+            Logger::log(sprintf('Report generation failed for client %d.', $clientId));
             return;
         }
         
         if ($result->status !== 'success') {
-            error_log(sprintf('[Queue] Report generation failed for client %d with status: %s', $client->id ?? 0, $result->status ?? 'unknown'));
+            error_log(sprintf('[Queue] Report generation failed for client %d with status: %s', $clientId, $result->status ?? 'unknown'));
             if (isset($result->meta['error'])) {
                 error_log(sprintf('[Queue] Error details: %s', $result->meta['error']));
             }
-            Logger::log(sprintf('Report generation failed for client %d.', $client->id ?? 0));
+            Logger::log(sprintf('Report generation failed for client %d.', $clientId));
             return;
         }
-
-        Logger::log(sprintf('Report %d generated for client %d.', $result->id ?? 0, $client->id ?? 0));
+        
+        $resultId = $result->id ?? 0;
+        Logger::log(sprintf('Report %d generated for client %d.', $resultId, $clientId));
 
         $detector = new Detector(new AnomaliesRepo());
-        $historySeries = self::metricsHistory($reports, $client->id ?? 0, $result->id ?? null);
-        $anomalies = $detector->evaluatePeriod($client->id ?? 0, $period, $result->meta, $historySeries);
+        $historySeries = self::metricsHistory($reports, $clientId, $resultId);
+        $anomalies = $detector->evaluatePeriod($clientId, $period, $result->meta, $historySeries);
 
-        if (! empty($anomalies)) {
-            $reports->update($result->id ?? 0, [
+        if (! empty($anomalies) && $resultId > 0) {
+            $reports->update($resultId, [
                 'meta' => array_merge($result->meta, ['anomalies' => $anomalies]),
             ]);
-            $result = $reports->find($result->id ?? 0) ?? $result;
+            $result = $reports->find($resultId) ?? $result;
             self::dispatchAnomalyNotifications($client, $period, $anomalies);
         }
 

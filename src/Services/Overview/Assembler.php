@@ -28,15 +28,35 @@ class Assembler
 {
     /** @var array<string, array{label: string, precision: int}> */
     private const KPI_MAP = [
+        // GA4
         'users' => ['label' => 'Users', 'precision' => 0],
         'sessions' => ['label' => 'Sessions', 'precision' => 0],
+        'pageviews' => ['label' => 'Pageviews', 'precision' => 0],
+        'events' => ['label' => 'Events', 'precision' => 0],
+        'new_users' => ['label' => 'New Users', 'precision' => 0],
+        'total_users' => ['label' => 'Total Users', 'precision' => 0],
+        // GSC
+        'gsc_clicks' => ['label' => 'GSC Clicks', 'precision' => 0],
+        'gsc_impressions' => ['label' => 'GSC Impressions', 'precision' => 0],
+        'ctr' => ['label' => 'CTR (%)', 'precision' => 2],
+        'position' => ['label' => 'Avg Position', 'precision' => 1],
+        // Google Ads
+        'google_clicks' => ['label' => 'Google Ads Clicks', 'precision' => 0],
+        'google_impressions' => ['label' => 'Google Ads Impressions', 'precision' => 0],
+        'google_cost' => ['label' => 'Google Ads Cost', 'precision' => 2],
+        'google_conversions' => ['label' => 'Google Ads Conversions', 'precision' => 2],
+        // Meta Ads
+        'meta_clicks' => ['label' => 'Meta Ads Clicks', 'precision' => 0],
+        'meta_impressions' => ['label' => 'Meta Ads Impressions', 'precision' => 0],
+        'meta_cost' => ['label' => 'Meta Ads Cost', 'precision' => 2],
+        'meta_conversions' => ['label' => 'Meta Ads Conversions', 'precision' => 2],
+        'meta_revenue' => ['label' => 'Meta Ads Revenue', 'precision' => 2],
+        // Generiche/Totali
         'clicks' => ['label' => 'Clicks', 'precision' => 0],
         'impressions' => ['label' => 'Impressions', 'precision' => 0],
         'cost' => ['label' => 'Cost', 'precision' => 2],
         'conversions' => ['label' => 'Conversions', 'precision' => 2],
         'revenue' => ['label' => 'Revenue', 'precision' => 2],
-        'gsc_clicks' => ['label' => 'GSC Clicks', 'precision' => 0],
-        'gsc_impressions' => ['label' => 'GSC Impressions', 'precision' => 0],
     ];
 
     /** @var array<string, array<string, string>> */
@@ -44,23 +64,31 @@ class Assembler
         'ga4' => [
             'users' => 'users',
             'sessions' => 'sessions',
+            'pageviews' => 'pageviews',
+            'events' => 'events',
+            'new_users' => 'new_users',
+            'total_users' => 'total_users',
+            'active_users' => 'users', // Alias
             'revenue' => 'revenue',
         ],
         'google_ads' => [
-            'clicks' => 'clicks',
-            'impressions' => 'impressions',
-            'cost' => 'cost',
-            'conversions' => 'conversions',
+            'clicks' => 'google_clicks',
+            'impressions' => 'google_impressions',
+            'cost' => 'google_cost',
+            'conversions' => 'google_conversions',
         ],
         'meta_ads' => [
-            'clicks' => 'clicks',
-            'impressions' => 'impressions',
-            'cost' => 'cost',
-            'conversions' => 'conversions',
+            'clicks' => 'meta_clicks',
+            'impressions' => 'meta_impressions',
+            'cost' => 'meta_cost',
+            'conversions' => 'meta_conversions',
+            'revenue' => 'meta_revenue',
         ],
         'gsc' => [
             'clicks' => 'gsc_clicks',
             'impressions' => 'gsc_impressions',
+            'ctr' => 'ctr',
+            'position' => 'position',
         ],
     ];
 

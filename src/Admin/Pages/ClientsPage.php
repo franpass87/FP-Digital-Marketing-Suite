@@ -6,6 +6,9 @@ namespace FP\DMS\Admin\Pages;
 
 use DateTimeZone;
 use Exception;
+use FP\DMS\Admin\Pages\Shared\Breadcrumbs;
+use FP\DMS\Admin\Pages\Shared\EmptyState;
+use FP\DMS\Admin\Pages\Shared\HelpIcon;
 use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Support\Wp;
@@ -39,8 +42,21 @@ class ClientsPage
             $editing = $repo->find((int) $_GET['client']);
         }
 
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Clients', 'fp-dms') . '</h1>';
+        echo '<div class="wrap fpdms-admin-page">';
+        
+        // Breadcrumbs
+        Breadcrumbs::render(Breadcrumbs::getStandardItems('clients'));
+        
+        // Header moderno
+        echo '<div class="fpdms-page-header">';
+        echo '<h1>';
+        echo '<span class="dashicons dashicons-groups" style="margin-right:12px;"></span>';
+        echo esc_html__('Clienti', 'fp-dms');
+        HelpIcon::render(HelpIcon::getCommonHelp('clients'));
+        echo '</h1>';
+        echo '<p>' . esc_html__('Gestisci i tuoi clienti e le loro configurazioni per report e analisi personalizzate.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
         NoticeStore::flash('fpdms_clients');
         settings_errors('fpdms_clients');
         self::renderForm($editing);
@@ -61,6 +77,7 @@ class ClientsPage
                 'email_cc' => self::sanitizeEmails((string) ($post['email_cc'] ?? '')),
                 'timezone' => Wp::sanitizeTextField($post['timezone'] ?? 'UTC'),
                 'notes' => Wp::ksesPost((string) ($post['notes'] ?? '')),
+                'description' => Wp::sanitizeTextarea($post['description'] ?? ''),
                 'logo_id' => self::sanitizeLogoId($post['logo_id'] ?? null),
             ];
 
@@ -116,17 +133,49 @@ class ClientsPage
     private static function renderList(array $clients): void
     {
         echo '<h2>' . esc_html__('Existing Clients', 'fp-dms') . '</h2>';
-        echo '<table class="widefat striped">';
+        echo '<table class="fpdms-table">';
         echo '<thead><tr>';
-        echo '<th>' . esc_html__('Name', 'fp-dms') . '</th>';
+        echo '<th>' . esc_html__('Nome', 'fp-dms') . '</th>';
         echo '<th>' . esc_html__('Logo', 'fp-dms') . '</th>';
-        echo '<th>' . esc_html__('Emails', 'fp-dms') . '</th>';
+        echo '<th>' . esc_html__('Email', 'fp-dms') . '</th>';
         echo '<th>' . esc_html__('Timezone', 'fp-dms') . '</th>';
-        echo '<th>' . esc_html__('Actions', 'fp-dms') . '</th>';
+        echo '<th>' . esc_html__('Azioni', 'fp-dms') . '</th>';
         echo '</tr></thead><tbody>';
 
         if (empty($clients)) {
-            echo '<tr><td colspan="5">' . esc_html__('No clients found.', 'fp-dms') . '</td></tr>';
+            echo '</tbody></table>';
+            EmptyState::render([
+                'icon' => 'dashicons-groups',
+                'title' => __('Nessun cliente ancora', 'fp-dms'),
+                'description' => __('Inizia aggiungendo il tuo primo cliente per generare report automatici di marketing. Ogni cliente può avere le sue configurazioni personalizzate, sorgenti dati e template.', 'fp-dms'),
+                'primaryAction' => [
+                    'label' => __('+ Aggiungi Primo Cliente', 'fp-dms'),
+                    'url' => 'javascript:void(0)',
+                    'class' => 'button-primary fpdms-scroll-to-form'
+                ],
+                'secondaryAction' => [
+                    'label' => __('📚 Guida Clienti', 'fp-dms'),
+                    'url' => 'https://docs.francescopasseri.com/fp-dms/clients'
+                ],
+                'helpText' => __('Suggerimento: Puoi anche importare clienti via CSV o API', 'fp-dms')
+            ]);
+            echo '<script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var scrollBtn = document.querySelector(".fpdms-scroll-to-form");
+                if (scrollBtn) {
+                    scrollBtn.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        var form = document.querySelector("form[method=post]");
+                        if (form) {
+                            form.scrollIntoView({ behavior: "smooth", block: "start" });
+                            var firstInput = form.querySelector("input[type=text]");
+                            if (firstInput) setTimeout(function() { firstInput.focus(); }, 500);
+                        }
+                    });
+                }
+            });
+            </script>';
+            return;
         }
 
         foreach ($clients as $client) {
@@ -174,8 +223,10 @@ class ClientsPage
         $logoSrc = $logoUrl ? (string) $logoUrl : '';
         $clientName = $client->name ?? '';
         $logoAlt = $clientName !== '' ? $clientName : __('Client logo', 'fp-dms');
-        echo '<div class="card" style="max-width:800px;margin-top:20px;padding:20px;">';
-        echo '<h2>' . esc_html($title) . '</h2>';
+        echo '<div class="fpdms-card" style="max-width:900px;">';
+        echo '<div class="fpdms-card-header">';
+        echo '<h2><span class="dashicons dashicons-admin-users"></span>' . esc_html($title) . '</h2>';
+        echo '</div>';
         echo '<form method="post">';
         wp_nonce_field('fpdms_save_client', 'fpdms_client_nonce');
         echo '<input type="hidden" name="client_id" value="' . esc_attr((string) ($client->id ?? 0)) . '">';
@@ -209,8 +260,18 @@ class ClientsPage
         echo '<p class="description" style="margin-top:8px;">' . esc_html__('Pick an image from the media library to personalise reports for this client.', 'fp-dms') . '</p>';
         echo '</td></tr>';
 
-        echo '<tr><th scope="row"><label for="fpdms-notes">' . esc_html__('Notes', 'fp-dms') . '</label></th>';
-        echo '<td><textarea name="notes" id="fpdms-notes" class="large-text" rows="4">' . esc_textarea($client->notes ?? '') . '</textarea></td></tr>';
+        echo '<tr><th scope="row"><label for="fpdms-notes">' . esc_html__('Note Interne', 'fp-dms') . '</label></th>';
+        echo '<td><textarea name="notes" id="fpdms-notes" class="large-text" rows="4">' . esc_textarea($client->notes ?? '') . '</textarea>';
+        echo '<p class="description">' . esc_html__('Note interne per uso personale (non visibili nei report).', 'fp-dms') . '</p>';
+        echo '</td></tr>';
+
+        echo '<tr><th scope="row"><label for="fpdms-description">' . esc_html__('Descrizione Business per AI', 'fp-dms') . '</label></th>';
+        echo '<td><textarea name="description" id="fpdms-description" class="large-text" rows="6">' . esc_textarea($client->description ?? '') . '</textarea>';
+        echo '<p class="description" style="margin-top:8px;">';
+        echo '<strong>' . esc_html__('Aiuta l\'AI a capire il contesto del cliente:', 'fp-dms') . '</strong><br>';
+        echo esc_html__('Descrivi il tipo di business, settore, obiettivi, target audience, prodotti/servizi principali.', 'fp-dms') . '<br>';
+        echo '<em>' . esc_html__('Esempio: "E-commerce di abbigliamento sportivo. Target: uomini 25-45 anni. Focus su running e ciclismo. Obiettivo: aumentare conversioni e AOV. Competitor principali: Decathlon, SportIT."', 'fp-dms') . '</em>';
+        echo '</p></td></tr>';
 
         echo '</tbody></table>';
         submit_button($client ? __('Update Client', 'fp-dms') : __('Add Client', 'fp-dms'));

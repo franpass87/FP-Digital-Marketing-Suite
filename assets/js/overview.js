@@ -98,6 +98,13 @@ import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } f
             ...(range.to && { to: range.to })
         };
 
+        const aiInsightsParams = {
+            client_id: state.state.clientId,
+            preset: state.state.preset,
+            ...(range.from && { from: range.from }),
+            ...(range.to && { to: range.to })
+        };
+
         const tasks = [
             api.fetchSummary(summaryParams)
                 .then(data => {
@@ -132,6 +139,21 @@ import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } f
                 .catch(error => {
                     if (window.fpdmsDebug) {
                         console.warn('FPDMS overview anomalies unavailable', error);
+                    }
+                }),
+
+            api.fetchAIInsights(aiInsightsParams)
+                .then(data => ui.updateAIInsights(data))
+                .catch(error => {
+                    if (window.fpdmsDebug) {
+                        console.warn('FPDMS overview AI insights unavailable', error);
+                    }
+                    // Show error state in UI
+                    const errorEl = document.getElementById('fpdms-ai-insights-error');
+                    const loadingEl = document.getElementById('fpdms-ai-insights-loading');
+                    if (errorEl && loadingEl) {
+                        loadingEl.style.display = 'none';
+                        errorEl.style.display = 'block';
                     }
                 })
         ];
@@ -487,6 +509,18 @@ import { OverviewState, DatePresets, OverviewAPI, ChartsRenderer, OverviewUI } f
         await originalLoadAll(fromAuto);
         await loadReports();
     };
+
+    // Listen for sync completion event to reload data without page refresh
+    document.addEventListener('fpdms-reload-overview', (e) => {
+        if (window.fpdmsDebug) {
+            console.log('FPDMS: Reloading overview data after sync', e.detail);
+        }
+        
+        // Force reload all data (cache was already cleared on backend)
+        if (state.state.clientId) {
+            loadAll(false);
+        }
+    });
 
     // Initial load
     if (state.state.clientId) {

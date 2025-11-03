@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test JS Syntax</title>
+</head>
+<body>
+    <h1>Test JavaScript Modules</h1>
+    <div id="result"></div>
+    
+    <script type="module">
+        const result = document.getElementById('result');
+        let errors = [];
+        
+        // Test import dei moduli
+        try {
+            await import('./assets/js/modules/wizard/constants.js');
+            result.innerHTML += '<p>✅ constants.js OK</p>';
+        } catch (e) {
+            errors.push('constants.js: ' + e.message);
+            result.innerHTML += '<p>❌ constants.js: ' + e.message + '</p>';
+        }
+        
+        try {
+            await import('./assets/js/modules/wizard/steps.js');
+            result.innerHTML += '<p>✅ steps.js OK</p>';
+        } catch (e) {
+            errors.push('steps.js: ' + e.message);
+            result.innerHTML += '<p>❌ steps.js: ' + e.message + '</p>';
+        }
+        
+        try {
+            await import('./assets/js/modules/wizard/autodiscovery.js');
+            result.innerHTML += '<p>✅ autodiscovery.js OK</p>';
+        } catch (e) {
+            errors.push('autodiscovery.js: ' + e.message);
+            result.innerHTML += '<p>❌ autodiscovery.js: ' + e.message + '</p>';
+        }
+        
+        try {
+            await import('./assets/js/modules/wizard/core.js');
+            result.innerHTML += '<p>✅ core.js OK</p>';
+        } catch (e) {
+            errors.push('core.js: ' + e.message);
+            result.innerHTML += '<p>❌ core.js: ' + e.message + '</p>';
+        }
+        
+        if (errors.length === 0) {
+            result.innerHTML += '<h2 style="color: green;">✅ TUTTI I MODULI OK</h2>';
+        } else {
+            result.innerHTML += '<h2 style="color: red;">❌ ERRORI TROVATI</h2>';
+            result.innerHTML += '<pre>' + errors.join('\n') + '</pre>';
+        }
+    </script>
+</body>
+</html>
+

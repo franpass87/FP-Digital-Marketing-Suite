@@ -54,9 +54,14 @@ class MetaAdsProvider implements DataSourceProviderInterface
         $dailyRows = [];
         $daily = $summary['daily'] ?? [];
 
-        if (is_array($daily)) {
+        if (is_array($daily) && !empty($daily)) {
             foreach ($daily as $date => $metrics) {
                 if (! is_array($metrics) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date)) {
+                    continue;
+                }
+
+                // Filtra solo i dati nel periodo richiesto
+                if (! Normalizer::isWithinPeriod($period, (string) $date)) {
                     continue;
                 }
 

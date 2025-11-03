@@ -45,25 +45,46 @@ class HtmlRenderer
 
         $logoHtml = $logo !== '' ? '<img src="' . $logo . '" alt="logo" style="max-width:200px;">' : '';
 
-        return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>' .
-            'body{font-family:sans-serif;color:#111;margin:0;padding:40px;background:#f3f4f6;}' .
-            'h1,h2,h3{color:' . Wp::escAttr($color) . ';margin:0;}' .
-            '.section{background:#fff;padding:24px;border-radius:12px;margin-bottom:24px;box-shadow:0 1px 2px rgba(15,23,42,0.08);}' .
-            '.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-top:16px;}' .
-            '.kpi{padding:16px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;}' .
-            '.kpi span{display:block;font-size:13px;color:#64748b;margin-bottom:4px;}' .
-            '.trend-table{width:100%;border-collapse:collapse;margin-top:16px;}' .
-            '.trend-table th,.trend-table td{padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:13px;}' .
+        $ebGaramondUrl = 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap';
+        
+        return '<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="' . $ebGaramondUrl . '" rel="stylesheet"><style>' .
+            '@page{size:A4;margin:20mm;}' .
+            'body{font-family:"EB Garamond",Georgia,serif;color:#1a1a1a;margin:0;padding:40px;background:#ffffff;font-size:14pt;line-height:1.6;}' .
+            'h1{font-family:"EB Garamond",Georgia,serif;color:' . Wp::escAttr($color) . ';margin:0 0 8px 0;font-size:32pt;font-weight:700;letter-spacing:-0.5px;}' .
+            'h2{font-family:"EB Garamond",Georgia,serif;color:' . Wp::escAttr($color) . ';margin:24px 0 12px 0;font-size:20pt;font-weight:600;border-bottom:2px solid ' . Wp::escAttr($color) . ';padding-bottom:8px;}' .
+            'h3{font-family:"EB Garamond",Georgia,serif;color:#2c2c2c;margin:16px 0 8px 0;font-size:16pt;font-weight:600;}' .
+            '.report-cover{background:#ffffff;padding:60px 40px;text-align:center;border-bottom:4px solid ' . Wp::escAttr($color) . ';margin:-40px -40px 40px -40px;page-break-after:always;}' .
+            '.report-cover h1{font-size:42pt;margin-bottom:12px;}' .
+            '.report-cover p{font-size:16pt;color:#666;font-style:italic;margin-top:16px;}' .
+            '.report-cover img{max-width:220px;height:auto;margin-bottom:32px;}' .
+            '.section{background:#ffffff;padding:32px 0;margin-bottom:32px;page-break-inside:avoid;}' .
+            '.section:not(:last-child){border-bottom:1px solid #e5e5e5;}' .
+            '.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;margin-top:20px;}' .
+            '.kpi{padding:20px;border-radius:8px;background:#f9fafb;border-left:4px solid ' . Wp::escAttr($color) . ';}' .
+            '.kpi span{display:block;font-size:11pt;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;font-weight:500;}' .
+            '.kpi strong{font-size:24pt;color:#1a1a1a;font-weight:700;}' .
+            '.trend-table{width:100%;border-collapse:collapse;margin-top:20px;font-size:12pt;}' .
+            '.trend-table thead{background:#f5f5f5;border-bottom:2px solid ' . Wp::escAttr($color) . ';}' .
+            '.trend-table th{padding:12px 16px;text-align:left;font-weight:600;color:#2c2c2c;}' .
+            '.trend-table td{padding:10px 16px;border-bottom:1px solid #e5e5e5;}' .
+            '.trend-table tbody tr:hover{background:#fafafa;}' .
             '.trend-up{color:#16a34a;font-weight:600;}' .
             '.trend-down{color:#dc2626;font-weight:600;}' .
-            '.tables-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:16px;}' .
-            '.tables-wrap table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;}' .
-            '.tables-wrap th,.tables-wrap td{padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:left;}' .
-            '.anomalies li{margin-bottom:8px;}' .
-            '.severity-critical{color:#b91c1c;font-weight:600;}' .
-            '.severity-warn{color:#d97706;font-weight:600;}' .
-            '.fpdms-empty{margin-top:16px;padding:20px;border:1px dashed #94a3b8;border-radius:10px;background:#fff;text-align:center;font-style:italic;color:#475569;}' .
-            '.footer{margin-top:24px;font-size:12px;color:#64748b;text-align:center;}' .
+            '.tables-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:20px;}' .
+            '.tables-wrap table{width:100%;border-collapse:collapse;font-size:11pt;background:#fff;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden;}' .
+            '.tables-wrap thead{background:#f5f5f5;}' .
+            '.tables-wrap th{padding:10px 12px;text-align:left;font-weight:600;color:#2c2c2c;border-bottom:2px solid #e5e5e5;}' .
+            '.tables-wrap td{padding:8px 12px;border-bottom:1px solid #f0f0f0;}' .
+            '.tables-wrap tbody tr:last-child td{border-bottom:none;}' .
+            '.anomalies{list-style:none;padding:0;margin:16px 0;}' .
+            '.anomalies li{margin-bottom:12px;padding:12px 16px;border-radius:6px;background:#fff8f0;border-left:4px solid #f59e0b;}' .
+            '.severity-critical{background:#fef2f2;border-left-color:#dc2626;color:#991b1b;font-weight:600;}' .
+            '.severity-warn{background:#fff7ed;border-left-color:#f59e0b;color:#9a3412;font-weight:600;}' .
+            '.fpdms-empty{margin-top:20px;padding:32px;border:2px dashed #d1d5db;border-radius:8px;background:#fafafa;text-align:center;font-style:italic;color:#666;}' .
+            '.footer{margin-top:48px;padding-top:24px;border-top:1px solid #e5e5e5;font-size:10pt;color:#999;text-align:center;line-height:1.4;}' .
+            '@media print{body{background:#fff;padding:0;}' .
+            '.report-cover{margin:-40px -40px 20px -40px;}' .
+            '.section{page-break-inside:avoid;}}' .
             '</style></head><body>' .
             '<div class="section report-cover">' . $logoHtml . '<h1>' . Wp::escHtml((string) ($context['client']['name'] ?? '')) . '</h1>' .
             '<p style="color:#475569;margin-top:8px;">' . Wp::escHtml((string) ($context['period']['label'] ?? '')) . '</p></div>' .
@@ -92,13 +113,14 @@ class HtmlRenderer
     {
         $totals = is_array($context['kpi']['totals'] ?? null) ? $context['kpi']['totals'] : [];
         $metrics = [
-            'users' => I18n::__('Users'),
-            'sessions' => I18n::__('Sessions'),
-            'clicks' => I18n::__('Clicks'),
-            'impressions' => I18n::__('Impressions'),
-            'cost' => I18n::__('Cost'),
-            'conversions' => I18n::__('Conversions'),
-            'revenue' => I18n::__('Revenue'),
+            'users' => 'Utenti',
+            'sessions' => 'Sessioni',
+            'pageviews' => 'Pagine viste',
+            'clicks' => 'Clic',
+            'impressions' => 'Impressioni',
+            'cost' => 'Costo',
+            'conversions' => 'Conversioni',
+            'revenue' => 'Fatturato',
         ];
 
         $cards = '';
@@ -107,29 +129,33 @@ class HtmlRenderer
                 (float) Arr::get($totals, $key, 0.0),
                 in_array($key, ['cost', 'revenue'], true) ? 2 : 0
             );
-            $cards .= '<div class="kpi"><span>' . Wp::escHtml($label) . '</span><strong style="font-size:20px;">' . Wp::escHtml($value) . '</strong></div>';
+            if (in_array($key, ['cost', 'revenue'], true)) {
+                $value = '€ ' . $value;
+            }
+            $cards .= '<div class="kpi"><span>' . Wp::escHtml($label) . '</span><strong>' . Wp::escHtml($value) . '</strong></div>';
         }
 
-        return '<div class="section"><h2>' . Wp::escHtml(I18n::__('Key performance indicators')) . '</h2><div class="kpi-grid">' . $cards . '</div></div>';
+        return '<div class="section"><h2>Indicatori chiave di performance</h2><div class="kpi-grid">' . $cards . '</div></div>';
     }
 
     private function buildTrendsSection(array $context): string
     {
         $trends = is_array($context['trends'] ?? null) ? $context['trends'] : [];
         $labels = [
-            'users' => I18n::__('Users'),
-            'sessions' => I18n::__('Sessions'),
-            'clicks' => I18n::__('Clicks'),
-            'impressions' => I18n::__('Impressions'),
-            'conversions' => I18n::__('Conversions'),
-            'cost' => I18n::__('Cost'),
-            'revenue' => I18n::__('Revenue'),
+            'users' => 'Utenti',
+            'sessions' => 'Sessioni',
+            'pageviews' => 'Pagine viste',
+            'clicks' => 'Clic',
+            'impressions' => 'Impressioni',
+            'conversions' => 'Conversioni',
+            'cost' => 'Costo',
+            'revenue' => 'Fatturato',
         ];
 
         $tables = '';
         $windows = [
-            'wow' => I18n::__('Week over week'),
-            'mom' => I18n::__('Month over month'),
+            'wow' => 'Confronto settimanale',
+            'mom' => 'Confronto mensile',
         ];
 
         foreach ($windows as $key => $heading) {
@@ -145,7 +171,7 @@ class HtmlRenderer
             return '';
         }
 
-        return '<div class="section"><h2>' . Wp::escHtml(I18n::__('Trend comparison')) . '</h2><div class="tables-wrap trend-tables">' . $tables . '</div></div>';
+        return '<div class="section"><h2>Andamento temporale</h2><div class="tables-wrap trend-tables">' . $tables . '</div></div>';
     }
 
     /**
@@ -173,7 +199,7 @@ class HtmlRenderer
             $rows .= '<tr><td>' . Wp::escHtml($label) . '</td><td>' . Wp::escHtml($current) . '</td><td>' . Wp::escHtml($previous) . '</td><td class="' . Wp::escAttr($class) . '">' . Wp::escHtml($pctString) . '</td></tr>';
         }
 
-        return '<div><h3>' . Wp::escHtml($heading) . '</h3><table class="trend-table"><thead><tr><th>' . Wp::escHtml(I18n::__('Metric')) . '</th><th>' . Wp::escHtml(I18n::__('Current')) . '</th><th>' . Wp::escHtml(I18n::__('Previous')) . '</th><th>' . Wp::escHtml(I18n::__('Δ %')) . '</th></tr></thead><tbody>' . $rows . '</tbody></table></div>';
+        return '<div><h3>' . Wp::escHtml($heading) . '</h3><table class="trend-table"><thead><tr><th>Metrica</th><th>Attuale</th><th>Precedente</th><th>Δ %</th></tr></thead><tbody>' . $rows . '</tbody></table></div>';
     }
 
     private function buildGscSection(array $context): string
@@ -184,10 +210,10 @@ class HtmlRenderer
             return '';
         }
 
-        $queryTable = $this->renderSimpleTable($queries, I18n::__('Top queries'));
-        $pagesTable = $this->renderSimpleTable($pages, I18n::__('Top pages'));
+        $queryTable = $this->renderSimpleTable($queries, 'Query più performanti');
+        $pagesTable = $this->renderSimpleTable($pages, 'Pagine più visitate');
 
-        return '<div class="section"><h2>' . Wp::escHtml(I18n::__('Search Console insights')) . '</h2><div class="tables-wrap">' . $queryTable . $pagesTable . '</div></div>';
+        return '<div class="section"><h2>Dati Search Console</h2><div class="tables-wrap">' . $queryTable . $pagesTable . '</div></div>';
     }
 
     private function buildAnomaliesSection(array $context): string
@@ -202,7 +228,7 @@ class HtmlRenderer
             if (! is_array($anomaly)) {
                 continue;
             }
-            $metric = (string) ($anomaly['metric'] ?? I18n::__('Metric'));
+            $metric = (string) ($anomaly['metric'] ?? 'Metrica');
             $severity = strtolower((string) ($anomaly['severity'] ?? 'warn'));
             $delta = isset($anomaly['delta_percent'])
                 ? Wp::numberFormatI18n((float) $anomaly['delta_percent'], 1) . '%'
@@ -211,7 +237,7 @@ class HtmlRenderer
             $items .= '<li class="' . Wp::escAttr('severity-' . $severity) . '">' . Wp::escHtml($label) . '</li>';
         }
 
-        return '<div class="section"><h2>' . Wp::escHtml(I18n::__('Anomalies detected')) . '</h2><ul class="anomalies">' . $items . '</ul></div>';
+        return '<div class="section"><h2>Anomalie rilevate</h2><ul class="anomalies">' . $items . '</ul></div>';
     }
 
     /**

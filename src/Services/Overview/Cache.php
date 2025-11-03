@@ -54,6 +54,37 @@ class Cache
     }
 
     /**
+     * Clear all overview caches for a specific client
+     * This is useful after syncing data sources to ensure fresh data is loaded
+     */
+    public function clearAllForClient(int $clientId): void
+    {
+        global $wpdb;
+        
+        // Clear all transients that match the pattern for this client
+        $pattern = $wpdb->esc_like($this->prefix . '_' . $clientId . '_') . '%';
+        
+        // Delete from options table (non-persistent transients)
+        $sql1 = $wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+            '_transient_' . $pattern
+        );
+        
+        if ($sql1 !== false) {
+            $wpdb->query($sql1);
+        }
+        
+        $sql2 = $wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+            '_transient_timeout_' . $pattern
+        );
+        
+        if ($sql2 !== false) {
+            $wpdb->query($sql2);
+        }
+    }
+
+    /**
      * @param array<string, scalar> $context
      */
     private function buildKey(int $clientId, string $section, array $context = []): string

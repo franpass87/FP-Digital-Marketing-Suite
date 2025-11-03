@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Admin\Pages\Overview;
 
+use FP\DMS\Admin\Pages\Shared\HelpIcon;
+
 use function __;
 use function add_query_arg;
 use function admin_url;
@@ -77,6 +79,15 @@ class OverviewRenderer
         echo '</div>';
         echo '</div>';
 
+        // Sync Data Sources button
+        echo '<div class="fpdms-overview-sync">';
+        echo '<button type="button" id="fpdms-sync-datasources-overview" class="button button-primary" style="display:flex;align-items:center;gap:6px;">';
+        echo '<span class="dashicons dashicons-update" style="margin-top:3px;"></span>';
+        echo esc_html__('Sync Data Sources', 'fp-dms');
+        echo '</button>';
+        echo '<div id="fpdms-sync-feedback-overview" style="margin-left:12px;display:none;"></div>';
+        echo '</div>';
+
         // Auto-refresh controls
         echo '<div class="fpdms-overview-refresh" aria-live="polite">';
         echo '<label for="fpdms-overview-refresh-toggle">';
@@ -100,16 +111,230 @@ class OverviewRenderer
     public static function renderSummarySection(): void
     {
         echo '<section class="fpdms-section fpdms-overview-section" aria-labelledby="fpdms-overview-kpis-heading">';
-        echo '<header>';
-        echo '<h2 id="fpdms-overview-kpis-heading">' . esc_html__('Key metrics', 'fp-dms') . '</h2>';
+        echo '<header style="display:flex;justify-content:space-between;align-items:center;">';
+        echo '<div>';
+        echo '<h2 id="fpdms-overview-kpis-heading" style="margin:0;">' . esc_html__('Key metrics', 'fp-dms') . '</h2>';
         echo '<div class="fpdms-overview-period" id="fpdms-overview-period"><span id="fpdms-overview-period-label">' . esc_html__('Loading…', 'fp-dms') . '</span><span class="fpdms-overview-spinner">&#x27F3;</span></div>';
+        echo '</div>';
+        echo '<button type="button" id="fpdms-customize-metrics" class="button" style="display:flex;align-items:center;gap:6px;">';
+        echo '<span class="dashicons dashicons-admin-settings" style="margin-top:3px;"></span>';
+        echo esc_html__('Customize Metrics', 'fp-dms');
+        echo '</button>';
         echo '</header>';
-        echo '<div class="fpdms-overview-kpis" id="fpdms-overview-kpis" aria-live="polite">';
-        foreach (OverviewConfigService::KPI_LABELS as $metric => $label) {
-            self::renderKpiCard($metric, $label);
+        
+        // Container principale con ID per compatibilità JavaScript
+        echo '<div id="fpdms-overview-kpis">';
+        
+        // Sezione GA4 (Google Analytics 4)
+        echo '<div class="fpdms-metrics-section" data-section="ga4">';
+        echo '<h3 class="fpdms-metrics-section-title"><span class="dashicons dashicons-chart-area"></span>' . esc_html__('Google Analytics 4', 'fp-dms') . '</h3>';
+        echo '<div class="fpdms-overview-kpis-grid" aria-live="polite">';
+        $ga4Metrics = ['users', 'sessions', 'pageviews', 'events', 'new_users', 'total_users'];
+        foreach ($ga4Metrics as $metric) {
+            if (isset(OverviewConfigService::KPI_LABELS[$metric])) {
+                self::renderKpiCard($metric, OverviewConfigService::KPI_LABELS[$metric]);
+            }
         }
         echo '</div>';
+        echo '</div>';
+        
+        // Sezione GSC (Google Search Console)
+        echo '<div class="fpdms-metrics-section" data-section="gsc" style="margin-top:32px;">';
+        echo '<h3 class="fpdms-metrics-section-title"><span class="dashicons dashicons-search"></span>' . esc_html__('Google Search Console', 'fp-dms') . '</h3>';
+        echo '<div class="fpdms-overview-kpis-grid" aria-live="polite">';
+        $gscMetrics = ['gsc_clicks', 'gsc_impressions', 'ctr', 'position'];
+        foreach ($gscMetrics as $metric) {
+            if (isset(OverviewConfigService::KPI_LABELS[$metric])) {
+                self::renderKpiCard($metric, OverviewConfigService::KPI_LABELS[$metric]);
+            }
+        }
+        echo '</div>';
+        echo '</div>';
+        
+        // Sezione Google Ads
+        echo '<div class="fpdms-metrics-section" data-section="google-ads" style="margin-top:32px;">';
+        echo '<h3 class="fpdms-metrics-section-title"><span class="dashicons dashicons-google"></span>' . esc_html__('Google Ads', 'fp-dms') . '</h3>';
+        echo '<div class="fpdms-overview-kpis-grid" aria-live="polite">';
+        $googleAdsMetrics = ['google_clicks', 'google_impressions', 'google_cost', 'google_conversions'];
+        foreach ($googleAdsMetrics as $metric) {
+            if (isset(OverviewConfigService::KPI_LABELS[$metric])) {
+                self::renderKpiCard($metric, OverviewConfigService::KPI_LABELS[$metric]);
+            }
+        }
+        echo '</div>';
+        echo '</div>';
+        
+        // Sezione Meta Ads
+        echo '<div class="fpdms-metrics-section" data-section="meta-ads" style="margin-top:32px;">';
+        echo '<h3 class="fpdms-metrics-section-title"><span class="dashicons dashicons-facebook"></span>' . esc_html__('Meta Ads (Facebook/Instagram)', 'fp-dms') . '</h3>';
+        echo '<div class="fpdms-overview-kpis-grid" aria-live="polite">';
+        $metaAdsMetrics = ['meta_clicks', 'meta_impressions', 'meta_cost', 'meta_conversions', 'meta_revenue'];
+        foreach ($metaAdsMetrics as $metric) {
+            if (isset(OverviewConfigService::KPI_LABELS[$metric])) {
+                self::renderKpiCard($metric, OverviewConfigService::KPI_LABELS[$metric]);
+            }
+        }
+        echo '</div>';
+        echo '</div>';
+        
+        // Sezione Revenue Totale
+        echo '<div class="fpdms-metrics-section" data-section="revenue" style="margin-top:32px;">';
+        echo '<h3 class="fpdms-metrics-section-title"><span class="dashicons dashicons-money-alt"></span>' . esc_html__('Total Revenue', 'fp-dms') . '</h3>';
+        echo '<div class="fpdms-overview-kpis-grid" aria-live="polite">';
+        $revenueMetrics = ['revenue'];
+        foreach ($revenueMetrics as $metric) {
+            if (isset(OverviewConfigService::KPI_LABELS[$metric])) {
+                self::renderKpiCard($metric, OverviewConfigService::KPI_LABELS[$metric]);
+            }
+        }
+        echo '</div>';
+        echo '</div>';
+        
+        echo '</div>'; // Fine #fpdms-overview-kpis
+        
+        // CSS per le sezioni
+        echo '<style>
+        .fpdms-metrics-section{margin-top:24px;}
+        .fpdms-metrics-section:first-child{margin-top:0;}
+        .fpdms-metrics-section-title{font-size:16px;font-weight:600;color:#333;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:2px solid #e0e0e0;}
+        .fpdms-metrics-section-title .dashicons{color:#2271b1;font-size:20px;}
+        .fpdms-overview-kpis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;}
+        </style>';
+        
+        // Modal per selezione metriche
+        self::renderMetricsModal();
+        
         echo '</section>';
+    }
+
+    /**
+     * Render metrics customization modal
+     */
+    private static function renderMetricsModal(): void
+    {
+        echo '<div id="fpdms-metrics-modal" class="fpdms-modal" style="display:none;">';
+        echo '<div class="fpdms-modal-overlay"></div>';
+        echo '<div class="fpdms-modal-content">';
+        echo '<div class="fpdms-modal-header">';
+        echo '<h3>' . esc_html__('Customize Metrics', 'fp-dms') . '</h3>';
+        echo '<button type="button" class="fpdms-modal-close" aria-label="' . esc_attr__('Close', 'fp-dms') . '">&times;</button>';
+        echo '</div>';
+        echo '<div class="fpdms-modal-body">';
+        echo '<p class="description">' . esc_html__('Select which metrics you want to display in the Overview dashboard.', 'fp-dms') . '</p>';
+        
+        // Preset per tipo di business
+        echo '<div class="fpdms-business-presets" style="margin-bottom:24px;padding:16px;background:#f8f9fa;border-radius:4px;">';
+        echo '<label style="display:block;font-weight:600;margin-bottom:8px;">' . esc_html__('Quick Preset (Business Type)', 'fp-dms') . '</label>';
+        echo '<select id="fpdms-business-preset" class="regular-text">';
+        echo '<option value="">' . esc_html__('-- Select a preset --', 'fp-dms') . '</option>';
+        echo '<option value="bnb">' . esc_html__('B&B / Affittacamere', 'fp-dms') . '</option>';
+        echo '<option value="hotel">' . esc_html__('Hotel / Resort', 'fp-dms') . '</option>';
+        echo '<option value="winery">' . esc_html__('Cantina / Azienda Vinicola', 'fp-dms') . '</option>';
+        echo '<option value="restaurant">' . esc_html__('Ristorante / Agriturismo', 'fp-dms') . '</option>';
+        echo '<option value="ecommerce">' . esc_html__('E-commerce / Shop Online', 'fp-dms') . '</option>';
+        echo '<option value="leadgen">' . esc_html__('Lead Generation / Servizi', 'fp-dms') . '</option>';
+        echo '<option value="tourism">' . esc_html__('Agenzia Viaggi / Tour Operator', 'fp-dms') . '</option>';
+        echo '<option value="custom">' . esc_html__('Personalizzato (seleziona manualmente)', 'fp-dms') . '</option>';
+        echo '</select>';
+        echo '<p class="description" style="margin-top:8px;">' . esc_html__('Seleziona un preset per configurare automaticamente le metriche più rilevanti per il tuo tipo di attività.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
+        // Sezione GA4
+        echo '<div class="fpdms-metrics-category">';
+        echo '<h4><span class="dashicons dashicons-chart-area"></span>' . esc_html__('Google Analytics 4', 'fp-dms') . '</h4>';
+        echo '<div class="fpdms-metrics-grid">';
+        $ga4ModalMetrics = ['users' => 'Users', 'sessions' => 'Sessions', 'pageviews' => 'Pageviews', 'events' => 'Events', 'new_users' => 'New Users', 'total_users' => 'Total Users'];
+        foreach ($ga4ModalMetrics as $metric => $label) {
+            echo '<label class="fpdms-metric-option">';
+            echo '<input type="checkbox" name="fpdms_visible_metrics[]" value="' . esc_attr($metric) . '" checked>';
+            echo '<span>' . esc_html__($label, 'fp-dms') . '</span>';
+            echo '</label>';
+        }
+        echo '</div>';
+        echo '</div>';
+        
+        // Sezione GSC
+        echo '<div class="fpdms-metrics-category">';
+        echo '<h4><span class="dashicons dashicons-search"></span>' . esc_html__('Google Search Console', 'fp-dms') . '</h4>';
+        echo '<div class="fpdms-metrics-grid">';
+        $gscModalMetrics = ['gsc_clicks' => 'GSC Clicks', 'gsc_impressions' => 'GSC Impressions', 'ctr' => 'CTR (%)', 'position' => 'Avg Position'];
+        foreach ($gscModalMetrics as $metric => $label) {
+            echo '<label class="fpdms-metric-option">';
+            echo '<input type="checkbox" name="fpdms_visible_metrics[]" value="' . esc_attr($metric) . '" checked>';
+            echo '<span>' . esc_html__($label, 'fp-dms') . '</span>';
+            echo '</label>';
+        }
+        echo '</div>';
+        echo '</div>';
+        
+        // Sezione Google Ads
+        echo '<div class="fpdms-metrics-category">';
+        echo '<h4><span class="dashicons dashicons-google"></span>' . esc_html__('Google Ads', 'fp-dms') . '</h4>';
+        echo '<div class="fpdms-metrics-grid">';
+        $googleAdsModalMetrics = ['google_clicks' => 'Clicks', 'google_impressions' => 'Impressions', 'google_cost' => 'Cost', 'google_conversions' => 'Conversions'];
+        foreach ($googleAdsModalMetrics as $metric => $label) {
+            echo '<label class="fpdms-metric-option">';
+            echo '<input type="checkbox" name="fpdms_visible_metrics[]" value="' . esc_attr($metric) . '" checked>';
+            echo '<span>' . esc_html__($label, 'fp-dms') . '</span>';
+            echo '</label>';
+        }
+        echo '</div>';
+        echo '</div>';
+        
+        // Sezione Meta Ads
+        echo '<div class="fpdms-metrics-category">';
+        echo '<h4><span class="dashicons dashicons-facebook"></span>' . esc_html__('Meta Ads', 'fp-dms') . '</h4>';
+        echo '<div class="fpdms-metrics-grid">';
+        $metaAdsModalMetrics = ['meta_clicks' => 'Clicks', 'meta_impressions' => 'Impressions', 'meta_cost' => 'Cost', 'meta_conversions' => 'Conversions', 'meta_revenue' => 'Revenue'];
+        foreach ($metaAdsModalMetrics as $metric => $label) {
+            echo '<label class="fpdms-metric-option">';
+            echo '<input type="checkbox" name="fpdms_visible_metrics[]" value="' . esc_attr($metric) . '" checked>';
+            echo '<span>' . esc_html__($label, 'fp-dms') . '</span>';
+            echo '</label>';
+        }
+        echo '</div>';
+        echo '</div>';
+        
+        // Sezione Revenue Totale
+        echo '<div class="fpdms-metrics-category">';
+        echo '<h4><span class="dashicons dashicons-money-alt"></span>' . esc_html__('Total Revenue', 'fp-dms') . '</h4>';
+        echo '<div class="fpdms-metrics-grid">';
+        echo '<label class="fpdms-metric-option">';
+        echo '<input type="checkbox" name="fpdms_visible_metrics[]" value="revenue" checked>';
+        echo '<span>' . esc_html__('Revenue', 'fp-dms') . '</span>';
+        echo '</label>';
+        echo '</div>';
+        echo '</div>';
+        
+        echo '</div>';
+        echo '<div class="fpdms-modal-footer">';
+        echo '<button type="button" class="button button-secondary fpdms-modal-cancel">' . esc_html__('Cancel', 'fp-dms') . '</button>';
+        echo '<button type="button" class="button button-primary" id="fpdms-save-metrics">' . esc_html__('Save Selection', 'fp-dms') . '</button>';
+        echo '</div>';
+        echo '</div>';
+        echo '</div>';
+        
+        // CSS inline per il modal
+        echo '<style>
+        .fpdms-modal{position:fixed;top:0;left:0;width:100%;height:100%;z-index:100000;display:flex;align-items:center;justify-content:center;}
+        .fpdms-modal-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);cursor:pointer;}
+        .fpdms-modal-content{position:relative;background:white;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.2);max-width:700px;width:90%;max-height:80vh;overflow:auto;z-index:1;}
+        .fpdms-modal-header{padding:20px 24px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;}
+        .fpdms-modal-header h3{margin:0;font-size:18px;}
+        .fpdms-modal-close{background:none;border:none;font-size:28px;line-height:1;cursor:pointer;color:#666;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:4px;}
+        .fpdms-modal-close:hover{background:#f0f0f0;color:#000;}
+        .fpdms-modal-body{padding:24px;}
+        .fpdms-modal-footer{padding:16px 24px;border-top:1px solid #ddd;display:flex;justify-content:flex-end;gap:8px;}
+        .fpdms-metrics-category{margin-bottom:24px;}
+        .fpdms-metrics-category:last-child{margin-bottom:0;}
+        .fpdms-metrics-category h4{margin:0 0 12px 0;font-size:15px;font-weight:600;color:#333;display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid #e0e0e0;}
+        .fpdms-metrics-category h4 .dashicons{color:#2271b1;font-size:18px;}
+        .fpdms-metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;}
+        .fpdms-metric-option{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #ddd;border-radius:4px;cursor:pointer;transition:all 0.2s;}
+        .fpdms-metric-option:hover{background:#f5f5f5;border-color:#2271b1;}
+        .fpdms-metric-option input{margin:0;}
+        .fpdms-metric-option span{font-weight:500;font-size:14px;}
+        </style>';
     }
 
     /**
@@ -173,6 +398,99 @@ class OverviewRenderer
         echo '</tbody>';
         echo '</table>';
         echo '</div>';
+        echo '</section>';
+    }
+
+    /**
+     * Render AI Insights section
+     */
+    public static function renderAIInsightsSection(): void
+    {
+        echo '<section class="fpdms-section fpdms-overview-section fpdms-ai-insights-section" aria-labelledby="fpdms-overview-ai-heading">';
+        echo '<header>';
+        echo '<h2 id="fpdms-overview-ai-heading">';
+        echo '<span class="dashicons dashicons-lightbulb" style="color:#f0b429;"></span>';
+        echo esc_html__('AI Insights', 'fp-dms');
+        HelpIcon::render(HelpIcon::getCommonHelp('ai_insights'));
+        echo '</h2>';
+        echo '<span class="fpdms-overview-period" id="fpdms-overview-ai-meta">' . esc_html__('Interpretazione intelligente dei dati del periodo.', 'fp-dms') . '</span>';
+        echo '</header>';
+        
+        echo '<div class="fpdms-ai-insights-container" id="fpdms-ai-insights-container">';
+        
+        // Loading state
+        echo '<div class="fpdms-ai-insights-loading" id="fpdms-ai-insights-loading">';
+        echo '<div class="fpdms-spinner"></div>';
+        echo '<p>' . esc_html__('Sto analizzando i dati con l\'intelligenza artificiale...', 'fp-dms') . '</p>';
+        echo '</div>';
+        
+        // Content area
+        echo '<div class="fpdms-ai-insights-content" id="fpdms-ai-insights-content" style="display:none;">';
+        echo '<div class="fpdms-ai-insight-card">';
+        echo '<h3 class="fpdms-ai-insight-title">';
+        echo '<span class="dashicons dashicons-chart-line"></span>';
+        echo esc_html__('Analisi Performance', 'fp-dms');
+        echo '</h3>';
+        echo '<div class="fpdms-ai-insight-text" id="fpdms-ai-performance-analysis"></div>';
+        echo '</div>';
+        
+        echo '<div class="fpdms-ai-insight-card">';
+        echo '<h3 class="fpdms-ai-insight-title">';
+        echo '<span class="dashicons dashicons-trending-up"></span>';
+        echo esc_html__('Trend Rilevati', 'fp-dms');
+        echo '</h3>';
+        echo '<div class="fpdms-ai-insight-text" id="fpdms-ai-trend-analysis"></div>';
+        echo '</div>';
+        
+        echo '<div class="fpdms-ai-insight-card">';
+        echo '<h3 class="fpdms-ai-insight-title">';
+        echo '<span class="dashicons dashicons-star-filled"></span>';
+        echo esc_html__('Raccomandazioni', 'fp-dms');
+        echo '</h3>';
+        echo '<div class="fpdms-ai-insight-text" id="fpdms-ai-recommendations"></div>';
+        echo '</div>';
+        echo '</div>';
+        
+        // Error state
+        echo '<div class="fpdms-ai-insights-error" id="fpdms-ai-insights-error" style="display:none;">';
+        echo '<div class="fpdms-notice fpdms-notice-warning">';
+        echo '<p>';
+        echo '<strong>' . esc_html__('AI non disponibile', 'fp-dms') . '</strong><br>';
+        echo esc_html__('Per utilizzare questa funzionalità, configura la tua API Key OpenAI nelle impostazioni.', 'fp-dms');
+        echo '</p>';
+        echo '<a href="' . esc_url(add_query_arg(['page' => 'fp-dms-settings'], admin_url('admin.php'))) . '" class="button button-primary">';
+        echo esc_html__('Vai alle Impostazioni', 'fp-dms');
+        echo '</a>';
+        echo '</div>';
+        echo '</div>';
+        
+        echo '</div>'; // .fpdms-ai-insights-container
+        
+        // Inline CSS
+        echo '<style>
+        .fpdms-ai-insights-section h2{display:flex;align-items:center;gap:8px;}
+        .fpdms-ai-insights-container{min-height:200px;position:relative;}
+        .fpdms-ai-insights-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;}
+        .fpdms-spinner{border:3px solid #f3f3f3;border-top:3px solid #2271b1;border-radius:50%;width:40px;height:40px;animation:fpdms-spin 1s linear infinite;margin-bottom:16px;}
+        @keyframes fpdms-spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+        .fpdms-ai-insights-content{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;padding:4px;}
+        .fpdms-ai-insight-card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;box-shadow:0 2px 4px rgba(0,0,0,0.05);transition:all 0.3s;}
+        .fpdms-ai-insight-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);transform:translateY(-2px);}
+        .fpdms-ai-insight-title{font-size:16px;font-weight:600;color:#1d2327;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:2px solid #f0f0f0;}
+        .fpdms-ai-insight-title .dashicons{font-size:20px;color:#2271b1;}
+        .fpdms-ai-insight-text{font-size:14px;line-height:1.7;color:#3c434a;}
+        .fpdms-ai-insight-text p{margin:0 0 12px 0;}
+        .fpdms-ai-insight-text p:last-child{margin-bottom:0;}
+        .fpdms-ai-insight-text ul,.fpdms-ai-insight-text ol{margin:0 0 12px 0;padding-left:24px;}
+        .fpdms-ai-insight-text li{margin-bottom:8px;}
+        .fpdms-ai-insight-text strong{color:#1d2327;font-weight:600;}
+        .fpdms-ai-insights-error{padding:20px;}
+        .fpdms-notice{background:#fff;border-left:4px solid #d63638;padding:16px;border-radius:4px;}
+        .fpdms-notice-warning{border-left-color:#f0b429;}
+        .fpdms-notice p{margin:0 0 12px 0;}
+        .fpdms-notice p:last-child{margin-bottom:0;}
+        </style>';
+        
         echo '</section>';
     }
 

@@ -3,13 +3,12 @@ Contributors: francescopasseri
 Donate link: https://francescopasseri.com
 Tags: marketing, analytics, reports, automation, alerts
 Requires at least: 6.4
-Tested up to: 6.4
+Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 0.1.1
+Stable tag: 0.9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.
 Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.
 
 == Description ==

@@ -29,6 +29,7 @@ class ReportBuilder
         private ReportsRepo $reports,
         private HtmlRenderer $html,
         private PdfRenderer $pdf,
+        private \FP\DMS\Services\AIReportAnalyzer $ai,
     ) {
     }
 
@@ -37,6 +38,17 @@ class ReportBuilder
      */
     public function generate(ReportJob $job, Client $client, array $providers, Period $period, Template $template, array $previousMetrics = []): ?ReportJob
     {
+        // Validate that job has a valid ID
+        if ($job->id === null || $job->id <= 0) {
+            error_log(sprintf('[ReportBuilder] Invalid job ID provided: %s', var_export($job->id, true)));
+            throw new RuntimeException('Report job must have a valid ID before generation');
+        }
+        
+        if ($client->id === null || $client->id <= 0) {
+            error_log(sprintf('[ReportBuilder] Invalid client ID provided: %s', var_export($client->id, true)));
+            throw new RuntimeException('Client must have a valid ID before report generation');
+        }
+        
         $collected = $this->collectData($providers, $period, $previousMetrics);
         $timestamp = Wp::currentTime('mysql');
         $meta = array_merge(
@@ -50,7 +62,7 @@ class ReportBuilder
 
         try {
             // Log debug information
-            error_log(sprintf('[ReportBuilder] Starting report generation for client %d, job %d', $client->id ?? 0, $job->id ?? 0));
+            error_log(sprintf('[ReportBuilder] Starting report generation for client %d, job %d', $client->id, $job->id));
             error_log(sprintf('[ReportBuilder] Collected data sources: %s', json_encode(array_keys($collected))));
             
             $context = $this->buildContext($client, $period, $meta);
@@ -58,18 +70,23 @@ class ReportBuilder
             [$absolute, $relative] = $this->determinePath($client, $period);
             $this->pdf->render($html, $absolute);
 
-            $this->reports->update($job->id ?? 0, [
+            // Save HTML content for editing capabilities
+            $this->reports->update($job->id, [
                 'status' => 'success',
                 'storage_path' => $relative,
-                'meta' => array_merge($meta, ['completed_at' => $timestamp]),
+                'meta' => array_merge($meta, [
+                    'completed_at' => $timestamp,
+                    'html_content' => $html, // Save HTML for editing
+                    'template_id' => $template->id ?? null,
+                ]),
             ]);
             
-            error_log(sprintf('[ReportBuilder] Report generated successfully for client %d', $client->id ?? 0));
+            error_log(sprintf('[ReportBuilder] Report generated successfully for client %d', $client->id));
         } catch (Exception $e) {
-            error_log(sprintf('[ReportBuilder] Report generation failed for client %d: %s', $client->id ?? 0, $e->getMessage()));
+            error_log(sprintf('[ReportBuilder] Report generation failed for client %d: %s', $client->id, $e->getMessage()));
             error_log(sprintf('[ReportBuilder] Exception trace: %s', $e->getTraceAsString()));
             
-            $this->reports->update($job->id ?? 0, [
+            $this->reports->update($job->id, [
                 'status' => 'failed',
                 'meta' => array_merge($meta, [
                     'error' => $e->getMessage(),
@@ -77,10 +94,10 @@ class ReportBuilder
                 ]),
             ]);
 
-            return $this->reports->find($job->id ?? 0);
+            return $this->reports->find($job->id);
         }
 
-        return $this->reports->find($job->id ?? 0);
+        return $this->reports->find($job->id);
     }
 
     /**
@@ -190,7 +207,9 @@ class ReportBuilder
         $anomalies = is_array($meta['anomalies'] ?? null) ? $meta['anomalies'] : [];
 
         $bySource = is_array($meta['kpi'] ?? null) ? $meta['kpi'] : [];
-        return [
+        
+        // Build base context
+        $baseContext = [
             'client' => [
                 'name' => $client->name,
                 'timezone' => $client->timezone,
@@ -225,6 +244,27 @@ class ReportBuilder
                 'empty_message' => I18n::__('No data available for this period.'),
             ],
         ];
+        
+        // Generate AI content if available (with 24h cache)
+        $industry = $client->meta['industry'] ?? 'general';
+        $aiCacheKey = 'fpdms_ai_report_' . $client->id . '_' . md5($period->start->format('Y-m-d') . $period->end->format('Y-m-d'));
+        $cachedAI = get_transient($aiCacheKey);
+        
+        if ($cachedAI !== false && is_array($cachedAI)) {
+            $baseContext['ai'] = $cachedAI;
+        } else {
+            $baseContext['ai'] = [
+                'executive_summary' => $this->ai->generateExecutiveSummary($baseContext, $industry),
+                'trend_analysis' => $this->ai->analyzeTrends($baseContext, $industry),
+                'recommendations' => $this->ai->generateRecommendations($baseContext, $industry),
+                'anomaly_explanation' => $this->ai->explainAnomalies($anomalies, $baseContext, $industry),
+            ];
+            
+            // Cache AI results for 24 hours
+            set_transient($aiCacheKey, $baseContext['ai'], DAY_IN_SECONDS);
+        }
+        
+        return $baseContext;
     }
 
     /**

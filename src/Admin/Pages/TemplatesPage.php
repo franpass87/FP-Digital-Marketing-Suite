@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FP\DMS\Admin\Pages;
 
+use FP\DMS\Admin\Pages\Shared\Breadcrumbs;
+use FP\DMS\Admin\Pages\Shared\HelpIcon;
 use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Entities\Template;
 use FP\DMS\Domain\Repos\TemplatesRepo;
@@ -28,8 +30,26 @@ class TemplatesPage
             $editing = $repo->find((int) $_GET['template']);
         }
 
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Templates', 'fp-dms') . '</h1>';
+        // Enqueue script per i presets (solo se stiamo creando un nuovo template)
+        if (! $editing) {
+            self::enqueuePresetsScript();
+        }
+
+        echo '<div class="wrap fpdms-admin-page">';
+        
+        // Breadcrumbs
+        Breadcrumbs::render(Breadcrumbs::getStandardItems('templates'));
+        
+        // Header moderno
+        echo '<div class="fpdms-page-header">';
+        echo '<h1>';
+        echo '<span class="dashicons dashicons-media-document" style="margin-right:12px;"></span>';
+        echo esc_html__('Template Report', 'fp-dms');
+        HelpIcon::render(HelpIcon::getCommonHelp('templates'));
+        echo '</h1>';
+        echo '<p>' . esc_html__('Crea e personalizza i template per i report automatici. Usa l\'AI per generare analisi professionali con EB Garamond.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
         settings_errors('fpdms_templates');
 
         self::renderForm($editing);
@@ -81,11 +101,54 @@ class TemplatesPage
         exit;
     }
 
+    private static function enqueuePresetsScript(): void
+    {
+        $scriptUrl = plugins_url('assets/js/template-presets.js', FP_DMS_PLUGIN_FILE);
+        $cssUrl = plugins_url('assets/css/template-presets.css', FP_DMS_PLUGIN_FILE);
+        $editorJsUrl = plugins_url('assets/js/template-editor.js', FP_DMS_PLUGIN_FILE);
+        $editorCssUrl = plugins_url('assets/css/template-editor.css', FP_DMS_PLUGIN_FILE);
+        $version = FP_DMS_VERSION;
+        
+        // Enqueue CSS
+        wp_enqueue_style('fpdms-template-presets', $cssUrl, [], $version);
+        wp_enqueue_style('fpdms-template-editor', $editorCssUrl, [], $version);
+        
+        // Enqueue JS
+        wp_enqueue_script('fpdms-template-presets', $scriptUrl, ['jquery'], $version, true);
+        wp_enqueue_script('fpdms-template-editor', $editorJsUrl, ['jquery'], $version, true);
+        
+        // Prepara i dati dei blueprints
+        $blueprints = TemplateBlueprints::all();
+        $data = [];
+        foreach ($blueprints as $blueprint) {
+            $data[$blueprint->key] = [
+                'name' => $blueprint->name,
+                'description' => $blueprint->description,
+                'content' => $blueprint->content,
+            ];
+        }
+        
+        wp_localize_script('fpdms-template-presets', 'fpdmsTemplateBlueprints', $data);
+        
+        // Dati per l'editor con preview
+        wp_localize_script('fpdms-template-editor', 'fpdmsTemplateEditor', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('fpdms_template_preview'),
+        ]);
+    }
+
     private static function renderForm(?Template $template): void
     {
-        $title = $template ? __('Edit template', 'fp-dms') : __('Create template', 'fp-dms');
-        echo '<div class="card" style="margin-top:20px;padding:20px;max-width:900px;">';
-        echo '<h2>' . esc_html($title) . '</h2>';
+        $title = $template ? __('Modifica Template', 'fp-dms') : __('Crea Nuovo Template', 'fp-dms');
+        
+        echo '<div class="fpdms-template-editor-container">';
+        
+        // Pannello sinistro - Editor
+        echo '<div class="fpdms-template-editor-panel">';
+        echo '<div class="fpdms-card">';
+        echo '<div class="fpdms-card-header">';
+        echo '<h2><span class="dashicons dashicons-edit"></span>' . esc_html($title) . '</h2>';
+        echo '</div>';
         echo '<form method="post">';
         wp_nonce_field('fpdms_save_template', 'fpdms_template_nonce');
         echo '<input type="hidden" name="template_id" value="' . esc_attr((string) ($template->id ?? 0)) . '">';
@@ -129,6 +192,14 @@ class TemplatesPage
         submit_button($template ? __('Update template', 'fp-dms') : __('Create template', 'fp-dms'));
         echo '</form>';
         echo '</div>';
+        echo '</div>';
+        
+        // Pannello destro - Live Preview
+        echo '<div class="fpdms-template-preview-panel">';
+        self::renderPreviewPanel();
+        echo '</div>';
+        
+        echo '</div>'; // Close fpdms-template-editor-container
     }
 
     private static function renderBlueprintSelector(): void
@@ -139,29 +210,57 @@ class TemplatesPage
         }
 
         $options = '<option value="">' . esc_html__('Start from scratch', 'fp-dms') . '</option>';
-        $data = [];
         foreach ($blueprints as $blueprint) {
             $options .= '<option value="' . esc_attr($blueprint->key) . '">' . esc_html($blueprint->name) . '</option>';
-            $data[$blueprint->key] = [
-                'name' => $blueprint->name,
-                'description' => $blueprint->description,
-                'content' => $blueprint->content,
-            ];
         }
 
         $defaultDescription = esc_html__('Pick a preset to pre-fill the template details with a structured layout.', 'fp-dms');
-        $json = Wp::jsonEncode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
-        if (! is_string($json)) {
-            $json = '{}';
-        }
 
         echo '<tr><th scope="row"><label for="fpdms-template-blueprint">' . esc_html__('Blueprint', 'fp-dms') . '</label></th><td>';
         echo '<select id="fpdms-template-blueprint" class="regular-text" style="max-width:320px;">' . $options . '</select>';
         echo '<p class="description" id="fpdms-template-blueprint-description" data-default="' . esc_attr($defaultDescription) . '">' . $defaultDescription . '</p>';
         echo '<button type="button" class="button" id="fpdms-apply-template-blueprint" disabled>' . esc_html__('Use preset', 'fp-dms') . '</button>';
         echo '</td></tr>';
+    }
 
-        echo '<script>(function(){document.addEventListener("DOMContentLoaded",function(){var select=document.getElementById("fpdms-template-blueprint");if(!select){return;}var apply=document.getElementById("fpdms-apply-template-blueprint");var desc=document.getElementById("fpdms-template-blueprint-description");var textarea=document.getElementById("fpdms-template-content");var nameInput=document.getElementById("fpdms-template-name");var descriptionInput=document.getElementById("fpdms-template-description");if(!apply||!desc||!textarea){return;}var blueprints=' . $json . ';var markManual=function(el){if(!el){return;}el.addEventListener("input",function(){if(el.dataset){delete el.dataset.autofilled;}});};markManual(nameInput);markManual(descriptionInput);markManual(textarea);var fillField=function(el,value,force){if(!el){return;}var currentValue=typeof el.value==="string"?el.value:"";var currentTrimmed=typeof currentValue==="string"?currentValue.trim():"";if(force||!currentTrimmed||(el.dataset&&el.dataset.autofilled==="1")){if(currentValue!==value){el.value=value;if(el.dataset){el.dataset.autofilled="1";}if(el===textarea){el.dispatchEvent(new Event("input",{bubbles:true}));}}else if(el.dataset){el.dataset.autofilled="1";}}};var applyPreset=function(force){var key=select.value;if(!key||!blueprints[key]){return;}var preset=blueprints[key];fillField(nameInput,preset.name,force);fillField(descriptionInput,preset.description,force);fillField(textarea,preset.content,force);};var updateDescription=function(){var key=select.value;if(key&&blueprints[key]){desc.textContent=blueprints[key].description;apply.disabled=false;applyPreset(false);}else{desc.textContent=desc.dataset.default||"";apply.disabled=true;}};select.addEventListener("change",updateDescription);apply.addEventListener("click",function(){applyPreset(true);});updateDescription();});})();</script>';
+    private static function renderPreviewPanel(): void
+    {
+        // Ottieni lista clienti per il selettore
+        $clientsRepo = new \FP\DMS\Domain\Repos\ClientsRepo();
+        $clients = $clientsRepo->all();
+        
+        echo '<div class="fpdms-preview-container">';
+        echo '<div class="fpdms-preview-header">';
+        echo '<h3><span class="dashicons dashicons-visibility"></span>' . esc_html__('Anteprima Live', 'fp-dms') . '</h3>';
+        echo '<div class="fpdms-preview-controls">';
+        echo '<button type="button" class="fpdms-preview-refresh-btn" id="fpdms-preview-refresh" title="' . esc_attr__('Aggiorna anteprima', 'fp-dms') . '">';
+        echo '<span class="dashicons dashicons-update"></span>';
+        echo '</button>';
+        echo '</div>';
+        echo '</div>';
+        
+        // Selettore cliente per la preview
+        echo '<div class="fpdms-preview-client-selector">';
+        echo '<label for="fpdms-preview-client-id">' . esc_html__('Cliente per l\'anteprima:', 'fp-dms') . '</label>';
+        echo '<select id="fpdms-preview-client-id">';
+        echo '<option value="">' . esc_html__('Nessun cliente selezionato', 'fp-dms') . '</option>';
+        foreach ($clients as $client) {
+            echo '<option value="' . esc_attr((string) $client->id) . '">' . esc_html($client->name) . '</option>';
+        }
+        echo '</select>';
+        echo '</div>';
+        
+        // Area preview
+        echo '<div id="fpdms-template-preview-content" class="fpdms-preview-content">';
+        echo '<div id="fpdms-preview-body">';
+        echo '<div class="fpdms-preview-empty">';
+        echo '<span class="dashicons dashicons-media-document"></span>';
+        echo '<p>' . esc_html__('Inizia a scrivere il contenuto per vedere l\'anteprima', 'fp-dms') . '</p>';
+        echo '</div>';
+        echo '</div>';
+        echo '</div>';
+        
+        echo '</div>';
     }
 
     /**
@@ -169,11 +268,44 @@ class TemplatesPage
      */
     private static function renderList(array $templates): void
     {
-        echo '<h2 style="margin-top:40px;">' . esc_html__('Available templates', 'fp-dms') . '</h2>';
-        echo '<table class="widefat striped">';
-        echo '<thead><tr><th>' . esc_html__('Name', 'fp-dms') . '</th><th>' . esc_html__('Description', 'fp-dms') . '</th><th>' . esc_html__('Default', 'fp-dms') . '</th><th>' . esc_html__('Actions', 'fp-dms') . '</th></tr></thead><tbody>';
+        echo '<div style="margin-top:40px;">';
+        echo '<h2 style="font-size:20px;font-weight:600;color:#1f2937;margin-bottom:16px;">' . esc_html__('Template Disponibili', 'fp-dms') . '</h2>';
+        echo '<table class="fpdms-table">';
+        echo '<thead><tr><th>' . esc_html__('Nome', 'fp-dms') . '</th><th>' . esc_html__('Descrizione', 'fp-dms') . '</th><th>' . esc_html__('Default', 'fp-dms') . '</th><th>' . esc_html__('Azioni', 'fp-dms') . '</th></tr></thead><tbody>';
         if (empty($templates)) {
-            echo '<tr><td colspan="4">' . esc_html__('No templates yet.', 'fp-dms') . '</td></tr>';
+            echo '</tbody></table>';
+            EmptyState::render([
+                'icon' => 'dashicons-media-document',
+                'title' => __('Nessun Template Report', 'fp-dms'),
+                'description' => __('I template definiscono l\'aspetto e la struttura dei tuoi report PDF. Crea il tuo primo template personalizzato o usa uno dei preset disponibili per diversi settori (hospitality, e-commerce, etc).', 'fp-dms'),
+                'primaryAction' => [
+                    'label' => __('+ Crea Template', 'fp-dms'),
+                    'url' => 'javascript:void(0)',
+                    'class' => 'button-primary fpdms-scroll-to-form'
+                ],
+                'secondaryAction' => [
+                    'label' => __('📚 Guida Template', 'fp-dms'),
+                    'url' => 'https://docs.francescopasseri.com/fp-dms/templates'
+                ],
+                'helpText' => __('Suggerimento: Ogni template supporta variabili dinamiche e AI insights', 'fp-dms')
+            ]);
+            echo '<script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var scrollBtn = document.querySelector(".fpdms-scroll-to-form");
+                if (scrollBtn) {
+                    scrollBtn.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        var form = document.querySelector("form[method=post]");
+                        if (form) {
+                            form.scrollIntoView({ behavior: "smooth", block: "start" });
+                            var firstInput = form.querySelector("input[type=text]");
+                            if (firstInput) setTimeout(function() { firstInput.focus(); }, 500);
+                        }
+                    });
+                }
+            });
+            </script>';
+            return;
         }
 
         foreach ($templates as $template) {

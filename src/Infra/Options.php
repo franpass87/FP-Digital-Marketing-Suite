@@ -17,6 +17,41 @@ class Options
     private const ANOMALY_POLICY_PREFIX = 'fpdms_anomaly_policy_';
     private const SMTP_SECURE_MODES = ['none', 'ssl', 'tls'];
 
+    /**
+     * Get a single option from WordPress
+     * 
+     * @param string $option The option name
+     * @param mixed $default The default value if option doesn't exist
+     * @return mixed The option value
+     */
+    public static function get(string $option, $default = '')
+    {
+        return get_option($option, $default);
+    }
+
+    /**
+     * Update a single option in WordPress
+     * 
+     * @param string $option The option name
+     * @param mixed $value The value to store
+     * @return bool True if updated, false otherwise
+     */
+    public static function update(string $option, $value): bool
+    {
+        return update_option($option, $value);
+    }
+
+    /**
+     * Delete a single option from WordPress
+     * 
+     * @param string $option The option name
+     * @return bool True if deleted, false otherwise
+     */
+    public static function delete(string $option): bool
+    {
+        return delete_option($option);
+    }
+
     public static function getGlobalSettings(): array
     {
         $value = get_option(self::GLOBAL_SETTINGS, []);

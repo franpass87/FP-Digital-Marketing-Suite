@@ -22,55 +22,55 @@ final class TemplateBlueprints
 
         $balanced = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Executive summary', 'fp-dms'),
-                '<p>' . esc_html__('Use this space to summarise wins, challenges, and context for the reporting period.', 'fp-dms') . '</p>'
+                'Sommario Esecutivo',
+                '<p>Utilizza questo spazio per riassumere i successi, le sfide e il contesto del periodo di reporting.</p>'
             )
             ->addRawSection('{{sections.kpi|raw}}')
             ->addSection(
-                esc_html__('Key takeaways', 'fp-dms'),
-                '<ul><li>' . esc_html__('Call out the marketing activities that moved the numbers.', 'fp-dms') . '</li><li>' . esc_html__('Highlight optimisation opportunities for the next cycle.', 'fp-dms') . '</li></ul>'
+                'Punti Chiave',
+                '<ul><li>Evidenzia le attività di marketing che hanno mosso i numeri.</li><li>Metti in luce le opportunità di ottimizzazione per il prossimo ciclo.</li></ul>'
             )
             ->addRawSection('{{sections.trends|raw}}')
             ->addRawSection('{{sections.gsc|raw}}')
             ->addRawSection('{{sections.anomalies|raw}}')
             ->addSection(
-                esc_html__('Next steps', 'fp-dms'),
-                '<p>' . esc_html__('Outline the actions you will take to sustain growth or fix bottlenecks.', 'fp-dms') . '</p>'
+                'Prossimi Passi',
+                '<p>Delinea le azioni che intraprenderai per sostenere la crescita o risolvere i colli di bottiglia.</p>'
             )
             ->build();
 
         $kpiFocused = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Performance snapshot', 'fp-dms'),
-                '<p>' . esc_html__('Summarise how the account performed during this period in one paragraph.', 'fp-dms') . '</p>'
+                'Snapshot delle Performance',
+                '<p>Riassumi in un paragrafo come ha performato l\'account durante questo periodo.</p>'
             )
-            ->addKpiSection(esc_html__('KPI overview', 'fp-dms'), [
-                ['label' => esc_html__('Users', 'fp-dms'), 'value' => '{{kpi.ga4.users|number}}'],
-                ['label' => esc_html__('Sessions', 'fp-dms'), 'value' => '{{kpi.ga4.sessions|number}}'],
-                ['label' => esc_html__('Clicks', 'fp-dms'), 'value' => '{{kpi.google_ads.clicks|number}}'],
-                ['label' => esc_html__('Conversions', 'fp-dms'), 'value' => '{{kpi.google_ads.conversions|number}}'],
-                ['label' => esc_html__('Cost', 'fp-dms'), 'value' => '{{kpi.google_ads.cost|number}}'],
+            ->addKpiSection('Panoramica KPI', [
+                ['label' => 'Utenti', 'value' => '{{kpi.ga4.users|number}}'],
+                ['label' => 'Sessioni', 'value' => '{{kpi.ga4.sessions|number}}'],
+                ['label' => 'Clic', 'value' => '{{kpi.google_ads.clicks|number}}'],
+                ['label' => 'Conversioni', 'value' => '{{kpi.google_ads.conversions|number}}'],
+                ['label' => 'Costo', 'value' => '{{kpi.google_ads.cost|number}}'],
             ])
             ->addSection(
-                esc_html__('Insights and commentary', 'fp-dms'),
-                '<p>' . esc_html__('Explain what caused major swings and how they align with your objectives.', 'fp-dms') . '</p>'
+                'Insights e Commenti',
+                '<p>Spiega cosa ha causato le variazioni principali e come si allineano con i tuoi obiettivi.</p>'
             )
             ->addRawSection('{{sections.anomalies|raw}}')
             ->addSection(
-                esc_html__('Action plan', 'fp-dms'),
-                '<ul><li>' . esc_html__('List the optimisations you will tackle next.', 'fp-dms') . '</li></ul>'
+                'Piano d\'Azione',
+                '<ul><li>Elenca le ottimizzazioni che affronterai prossimamente.</li></ul>'
             )
             ->build();
 
         $searchBlueprint = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Organic performance overview', 'fp-dms'),
-                '<p>' . esc_html__('Frame the organic search visibility achieved in the selected window.', 'fp-dms') . '</p>'
+                'Panoramica Performance Organica',
+                '<p>Inquadra la visibilità di ricerca organica raggiunta nella finestra selezionata.</p>'
             )
             ->addRawSection('{{sections.gsc|raw}}')
             ->addSection(
-                esc_html__('Opportunities', 'fp-dms'),
-                '<ul><li>' . esc_html__('Identify keyword clusters or pages that deserve extra attention.', 'fp-dms') . '</li><li>' . esc_html__('Describe experiments or content you will launch.', 'fp-dms') . '</li></ul>'
+                'Opportunità',
+                '<ul><li>Identifica cluster di parole chiave o pagine che meritano attenzione extra.</li><li>Descrivi esperimenti o contenuti che lancerai.</li></ul>'
             )
             ->addRawSection('{{sections.anomalies|raw}}')
             ->build();
@@ -78,173 +78,173 @@ final class TemplateBlueprints
         // E-commerce focused blueprint
         $ecommerceBlueprint = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Executive Summary', 'fp-dms'),
-                '<p>' . esc_html__('Overview of e-commerce performance including revenue, conversions, and key trends.', 'fp-dms') . '</p>'
+                'Sommario Esecutivo',
+                '<p>Panoramica delle performance e-commerce inclusi ricavi, conversioni e trend chiave.</p>'
             )
-            ->addKpiSection(esc_html__('Revenue & Sales', 'fp-dms'), [
-                ['label' => esc_html__('Total Revenue', 'fp-dms'), 'value' => '{{kpi.ga4.totalRevenue|currency}}'],
-                ['label' => esc_html__('Transactions', 'fp-dms'), 'value' => '{{kpi.ga4.transactions|number}}'],
-                ['label' => esc_html__('Average Order Value', 'fp-dms'), 'value' => '{{kpi.ga4.averageOrderValue|currency}}'],
-                ['label' => esc_html__('Conversion Rate', 'fp-dms'), 'value' => '{{kpi.ga4.conversionRate|percentage}}'],
+            ->addKpiSection('Ricavi & Vendite', [
+                ['label' => 'Ricavo Totale', 'value' => '{{kpi.ga4.totalRevenue|currency}}'],
+                ['label' => 'Transazioni', 'value' => '{{kpi.ga4.transactions|number}}'],
+                ['label' => 'Valore Medio Ordine', 'value' => '{{kpi.ga4.averageOrderValue|currency}}'],
+                ['label' => 'Tasso di Conversione', 'value' => '{{kpi.ga4.conversionRate|percentage}}'],
             ])
             ->addRawSection('{{sections.trends|raw}}')
             ->addSection(
-                esc_html__('Product Performance', 'fp-dms'),
-                '<p>' . esc_html__('Analysis of top-performing products and categories.', 'fp-dms') . '</p>'
+                'Performance Prodotti',
+                '<p>Analisi dei prodotti e categorie più performanti.</p>'
             )
             ->addRawSection('{{sections.anomalies|raw}}')
             ->addSection(
-                esc_html__('Marketing Channel Analysis', 'fp-dms'),
-                '<p>' . esc_html__('Performance breakdown by traffic sources and campaigns.', 'fp-dms') . '</p>'
+                'Analisi Canali Marketing',
+                '<p>Ripartizione delle performance per sorgenti di traffico e campagne.</p>'
             )
             ->addSection(
-                esc_html__('Next Steps & Recommendations', 'fp-dms'),
-                '<ul><li>' . esc_html__('Optimize underperforming product categories', 'fp-dms') . '</li><li>' . esc_html__('Scale successful marketing channels', 'fp-dms') . '</li></ul>'
+                'Prossimi Passi e Raccomandazioni',
+                '<ul><li>Ottimizza le categorie di prodotti sottoperformanti</li><li>Scala i canali marketing di successo</li></ul>'
             )
             ->build();
 
         // SaaS/Software focused blueprint
         $saasBlueprint = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Product Performance Overview', 'fp-dms'),
-                '<p>' . esc_html__('Key metrics for software adoption, engagement, and user retention.', 'fp-dms') . '</p>'
+                'Panoramica Performance Prodotto',
+                '<p>Metriche chiave per adozione software, engagement e retention utenti.</p>'
             )
-            ->addKpiSection(esc_html__('User Engagement', 'fp-dms'), [
-                ['label' => esc_html__('Active Users', 'fp-dms'), 'value' => '{{kpi.ga4.activeUsers|number}}'],
-                ['label' => esc_html__('Session Duration', 'fp-dms'), 'value' => '{{kpi.ga4.averageSessionDuration|duration}}'],
-                ['label' => esc_html__('Feature Usage', 'fp-dms'), 'value' => '{{kpi.ga4.eventCount|number}}'],
-                ['label' => esc_html__('Retention Rate', 'fp-dms'), 'value' => '{{kpi.ga4.retentionRate|percentage}}'],
+            ->addKpiSection('Engagement Utenti', [
+                ['label' => 'Utenti Attivi', 'value' => '{{kpi.ga4.activeUsers|number}}'],
+                ['label' => 'Durata Sessione', 'value' => '{{kpi.ga4.averageSessionDuration|duration}}'],
+                ['label' => 'Utilizzo Funzionalità', 'value' => '{{kpi.ga4.eventCount|number}}'],
+                ['label' => 'Tasso di Retention', 'value' => '{{kpi.ga4.retentionRate|percentage}}'],
             ])
             ->addRawSection('{{sections.trends|raw}}')
             ->addSection(
-                esc_html__('User Journey Analysis', 'fp-dms'),
-                '<p>' . esc_html__('Insights into user behavior and feature adoption patterns.', 'fp-dms') . '</p>'
+                'Analisi User Journey',
+                '<p>Insights sul comportamento degli utenti e pattern di adozione delle funzionalità.</p>'
             )
             ->addRawSection('{{sections.anomalies|raw}}')
             ->addSection(
-                esc_html__('Product Development Insights', 'fp-dms'),
-                '<ul><li>' . esc_html__('Identify features driving user engagement', 'fp-dms') . '</li><li>' . esc_html__('Address user experience bottlenecks', 'fp-dms') . '</li></ul>'
+                'Insights Sviluppo Prodotto',
+                '<ul><li>Identifica le funzionalità che generano maggior engagement</li><li>Risolvi i colli di bottiglia nell\'esperienza utente</li></ul>'
             )
             ->build();
 
         // Healthcare focused blueprint
         $healthcareBlueprint = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Patient Engagement Summary', 'fp-dms'),
-                '<p>' . esc_html__('Overview of website traffic, patient inquiries, and service engagement.', 'fp-dms') . '</p>'
+                'Sommario Engagement Pazienti',
+                '<p>Panoramica del traffico sito web, richieste pazienti e engagement servizi.</p>'
             )
-            ->addKpiSection(esc_html__('Patient Metrics', 'fp-dms'), [
-                ['label' => esc_html__('Website Visitors', 'fp-dms'), 'value' => '{{kpi.ga4.activeUsers|number}}'],
-                ['label' => esc_html__('Page Views', 'fp-dms'), 'value' => '{{kpi.ga4.pageViews|number}}'],
-                ['label' => esc_html__('Contact Forms', 'fp-dms'), 'value' => '{{kpi.ga4.formSubmissions|number}}'],
-                ['label' => esc_html__('Engagement Rate', 'fp-dms'), 'value' => '{{kpi.ga4.engagementRate|percentage}}'],
+            ->addKpiSection('Metriche Pazienti', [
+                ['label' => 'Visitatori Sito Web', 'value' => '{{kpi.ga4.activeUsers|number}}'],
+                ['label' => 'Visualizzazioni Pagina', 'value' => '{{kpi.ga4.pageViews|number}}'],
+                ['label' => 'Form di Contatto', 'value' => '{{kpi.ga4.formSubmissions|number}}'],
+                ['label' => 'Tasso di Engagement', 'value' => '{{kpi.ga4.engagementRate|percentage}}'],
             ])
             ->addRawSection('{{sections.trends|raw}}')
             ->addSection(
-                esc_html__('Service Page Performance', 'fp-dms'),
-                '<p>' . esc_html__('Analysis of which services and pages are most popular with patients.', 'fp-dms') . '</p>'
+                'Performance Pagine Servizi',
+                '<p>Analisi di quali servizi e pagine sono più popolari tra i pazienti.</p>'
             )
             ->addRawSection('{{sections.gsc|raw}}')
             ->addSection(
-                esc_html__('Patient Communication Insights', 'fp-dms'),
-                '<ul><li>' . esc_html__('Optimize high-traffic service pages', 'fp-dms') . '</li><li>' . esc_html__('Improve contact form conversion rates', 'fp-dms') . '</li></ul>'
+                'Insights Comunicazione Pazienti',
+                '<ul><li>Ottimizza le pagine servizi ad alto traffico</li><li>Migliora i tassi di conversione dei form di contatto</li></ul>'
             )
             ->build();
 
         // Education focused blueprint
         $educationBlueprint = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Educational Platform Performance', 'fp-dms'),
-                '<p>' . esc_html__('Overview of student engagement, course completion, and learning outcomes.', 'fp-dms') . '</p>'
+                'Performance Piattaforma Educativa',
+                '<p>Panoramica dell\'engagement studenti, completamento corsi e risultati di apprendimento.</p>'
             )
-            ->addKpiSection(esc_html__('Learning Metrics', 'fp-dms'), [
-                ['label' => esc_html__('Active Students', 'fp-dms'), 'value' => '{{kpi.ga4.activeUsers|number}}'],
-                ['label' => esc_html__('Course Completions', 'fp-dms'), 'value' => '{{kpi.ga4.courseCompletions|number}}'],
-                ['label' => esc_html__('Enrollments', 'fp-dms'), 'value' => '{{kpi.ga4.enrollments|number}}'],
-                ['label' => esc_html__('Engagement Rate', 'fp-dms'), 'value' => '{{kpi.ga4.engagementRate|percentage}}'],
+            ->addKpiSection('Metriche di Apprendimento', [
+                ['label' => 'Studenti Attivi', 'value' => '{{kpi.ga4.activeUsers|number}}'],
+                ['label' => 'Corsi Completati', 'value' => '{{kpi.ga4.courseCompletions|number}}'],
+                ['label' => 'Iscrizioni', 'value' => '{{kpi.ga4.enrollments|number}}'],
+                ['label' => 'Tasso di Engagement', 'value' => '{{kpi.ga4.engagementRate|percentage}}'],
             ])
             ->addRawSection('{{sections.trends|raw}}')
             ->addSection(
-                esc_html__('Content Performance', 'fp-dms'),
-                '<p>' . esc_html__('Analysis of course materials, resources, and student interaction patterns.', 'fp-dms') . '</p>'
+                'Performance Contenuti',
+                '<p>Analisi dei materiali del corso, risorse e pattern di interazione degli studenti.</p>'
             )
             ->addRawSection('{{sections.anomalies|raw}}')
             ->addSection(
-                esc_html__('Learning Optimization', 'fp-dms'),
-                '<ul><li>' . esc_html__('Enhance high-performing course content', 'fp-dms') . '</li><li>' . esc_html__('Address learning engagement challenges', 'fp-dms') . '</li></ul>'
+                'Ottimizzazione Apprendimento',
+                '<ul><li>Migliora i contenuti dei corsi più performanti</li><li>Affronta le sfide di engagement nell\'apprendimento</li></ul>'
             )
             ->build();
 
         // B2B/Lead Generation focused blueprint
         $b2bBlueprint = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Lead Generation Performance', 'fp-dms'),
-                '<p>' . esc_html__('Overview of lead quality, conversion rates, and sales pipeline metrics.', 'fp-dms') . '</p>'
+                'Performance Lead Generation',
+                '<p>Panoramica della qualità dei lead, tassi di conversione e metriche pipeline vendite.</p>'
             )
-            ->addKpiSection(esc_html__('Lead Metrics', 'fp-dms'), [
-                ['label' => esc_html__('Total Leads', 'fp-dms'), 'value' => '{{kpi.ga4.conversions|number}}'],
-                ['label' => esc_html__('Conversion Rate', 'fp-dms'), 'value' => '{{kpi.ga4.conversionRate|percentage}}'],
-                ['label' => esc_html__('Cost per Lead', 'fp-dms'), 'value' => '{{kpi.google_ads.cost_per_conversion|currency}}'],
-                ['label' => esc_html__('Lead Quality Score', 'fp-dms'), 'value' => '{{kpi.linkedin_ads.lead_quality_score|number}}'],
+            ->addKpiSection('Metriche Lead', [
+                ['label' => 'Lead Totali', 'value' => '{{kpi.ga4.conversions|number}}'],
+                ['label' => 'Tasso di Conversione', 'value' => '{{kpi.ga4.conversionRate|percentage}}'],
+                ['label' => 'Costo per Lead', 'value' => '{{kpi.google_ads.cost_per_conversion|currency}}'],
+                ['label' => 'Qualità Lead Score', 'value' => '{{kpi.linkedin_ads.lead_quality_score|number}}'],
             ])
             ->addRawSection('{{sections.trends|raw}}')
             ->addSection(
-                esc_html__('Channel Performance', 'fp-dms'),
-                '<p>' . esc_html__('Analysis of lead generation channels and campaign effectiveness.', 'fp-dms') . '</p>'
+                'Performance Canali',
+                '<p>Analisi dei canali di lead generation ed efficacia delle campagne.</p>'
             )
             ->addRawSection('{{sections.anomalies|raw}}')
             ->addSection(
-                esc_html__('Sales Pipeline Insights', 'fp-dms'),
-                '<ul><li>' . esc_html__('Optimize high-converting lead sources', 'fp-dms') . '</li><li>' . esc_html__('Improve lead nurturing processes', 'fp-dms') . '</li></ul>'
+                'Insights Pipeline Vendite',
+                '<ul><li>Ottimizza le fonti di lead ad alta conversione</li><li>Migliora i processi di nurturing dei lead</li></ul>'
             )
             ->build();
 
         // Local Business focused blueprint
         $localBlueprint = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Local Business Performance', 'fp-dms'),
-                '<p>' . esc_html__('Overview of local visibility, customer engagement, and location-based metrics.', 'fp-dms') . '</p>'
+                'Performance Business Locale',
+                '<p>Panoramica della visibilità locale, engagement clienti e metriche basate sulla posizione.</p>'
             )
-            ->addKpiSection(esc_html__('Local Metrics', 'fp-dms'), [
-                ['label' => esc_html__('Local Searches', 'fp-dms'), 'value' => '{{kpi.gsc.clicks|number}}'],
-                ['label' => esc_html__('Website Visitors', 'fp-dms'), 'value' => '{{kpi.ga4.activeUsers|number}}'],
-                ['label' => esc_html__('Contact Inquiries', 'fp-dms'), 'value' => '{{kpi.ga4.formSubmissions|number}}'],
-                ['label' => esc_html__('Local CTR', 'fp-dms'), 'value' => '{{kpi.gsc.ctr|percentage}}'],
+            ->addKpiSection('Metriche Locali', [
+                ['label' => 'Ricerche Locali', 'value' => '{{kpi.gsc.clicks|number}}'],
+                ['label' => 'Visitatori Sito Web', 'value' => '{{kpi.ga4.activeUsers|number}}'],
+                ['label' => 'Richieste di Contatto', 'value' => '{{kpi.ga4.formSubmissions|number}}'],
+                ['label' => 'CTR Locale', 'value' => '{{kpi.gsc.ctr|percentage}}'],
             ])
             ->addRawSection('{{sections.gsc|raw}}')
             ->addSection(
-                esc_html__('Local SEO Performance', 'fp-dms'),
-                '<p>' . esc_html__('Analysis of local search rankings and Google My Business insights.', 'fp-dms') . '</p>'
+                'Performance SEO Locale',
+                '<p>Analisi del posizionamento nelle ricerche locali e insights Google My Business.</p>'
             )
             ->addRawSection('{{sections.anomalies|raw}}')
             ->addSection(
-                esc_html__('Local Marketing Strategy', 'fp-dms'),
-                '<ul><li>' . esc_html__('Improve local search visibility', 'fp-dms') . '</li><li>' . esc_html__('Enhance customer engagement', 'fp-dms') . '</li></ul>'
+                'Strategia Marketing Locale',
+                '<ul><li>Migliora la visibilità nelle ricerche locali</li><li>Potenzia l\'engagement con i clienti</li></ul>'
             )
             ->build();
 
         // Content Marketing focused blueprint
         $contentBlueprint = TemplateBuilder::make()
             ->addSection(
-                esc_html__('Content Performance Overview', 'fp-dms'),
-                '<p>' . esc_html__('Analysis of content engagement, readership, and content marketing ROI.', 'fp-dms') . '</p>'
+                'Panoramica Performance Contenuti',
+                '<p>Analisi dell\'engagement contenuti, lettorato e ROI del content marketing.</p>'
             )
-            ->addKpiSection(esc_html__('Content Metrics', 'fp-dms'), [
-                ['label' => esc_html__('Page Views', 'fp-dms'), 'value' => '{{kpi.ga4.pageViews|number}}'],
-                ['label' => esc_html__('Average Session Duration', 'fp-dms'), 'value' => '{{kpi.ga4.averageSessionDuration|duration}}'],
-                ['label' => esc_html__('Engagement Rate', 'fp-dms'), 'value' => '{{kpi.ga4.engagementRate|percentage}}'],
-                ['label' => esc_html__('Organic Traffic', 'fp-dms'), 'value' => '{{kpi.gsc.clicks|number}}'],
+            ->addKpiSection('Metriche Contenuti', [
+                ['label' => 'Visualizzazioni Pagina', 'value' => '{{kpi.ga4.pageViews|number}}'],
+                ['label' => 'Durata Media Sessione', 'value' => '{{kpi.ga4.averageSessionDuration|duration}}'],
+                ['label' => 'Tasso di Engagement', 'value' => '{{kpi.ga4.engagementRate|percentage}}'],
+                ['label' => 'Traffico Organico', 'value' => '{{kpi.gsc.clicks|number}}'],
             ])
             ->addRawSection('{{sections.trends|raw}}')
             ->addRawSection('{{sections.gsc|raw}}')
             ->addSection(
-                esc_html__('Top Performing Content', 'fp-dms'),
-                '<p>' . esc_html__('Analysis of most engaging articles, topics, and content formats.', 'fp-dms') . '</p>'
+                'Contenuti Top Performanti',
+                '<p>Analisi degli articoli, argomenti e formati di contenuto più coinvolgenti.</p>'
             )
             ->addRawSection('{{sections.anomalies|raw}}')
             ->addSection(
-                esc_html__('Content Strategy Insights', 'fp-dms'),
-                '<ul><li>' . esc_html__('Scale successful content topics', 'fp-dms') . '</li><li>' . esc_html__('Optimize underperforming content', 'fp-dms') . '</li></ul>'
+                'Insights Strategia Contenuti',
+                '<ul><li>Scala gli argomenti di contenuto di successo</li><li>Ottimizza i contenuti sottoperformanti</li></ul>'
             )
             ->build();
 
@@ -388,7 +388,90 @@ final class TemplateBlueprints
             )
             ->build();
 
+        // Professional Complete Blueprint (IT) - Con tutte le metriche separate e AI
+        $professionalComplete = TemplateBuilder::make()
+            ->addSection(
+                'Sommario Esecutivo',
+                '<div style="background:#f8f9fa;padding:20px;border-left:4px solid #667eea;margin-bottom:24px;">
+                    {{ai.executive_summary|raw}}
+                </div>
+                <p><em>Questo report analizza le performance digitali di <strong>{{client.name}}</strong> per il periodo {{period.start}} - {{period.end}}, fornendo insights basati su dati reali provenienti da Google Analytics 4, Google Search Console, Google Ads e Meta Ads.</em></p>'
+            )
+            ->addSection(
+                'Google Analytics 4 - Traffico e Comportamento Utenti',
+                '<div class="kpi-grid">
+                    <div class="kpi"><span>Utenti Attivi</span><strong>{{kpi.ga4.users|number}}</strong></div>
+                    <div class="kpi"><span>Sessioni Totali</span><strong>{{kpi.ga4.sessions|number}}</strong></div>
+                    <div class="kpi"><span>Pagine Visualizzate</span><strong>{{kpi.ga4.pageviews|number}}</strong></div>
+                    <div class="kpi"><span>Eventi Registrati</span><strong>{{kpi.ga4.events|number}}</strong></div>
+                    <div class="kpi"><span>Nuovi Utenti</span><strong>{{kpi.ga4.new_users|number}}</strong></div>
+                    <div class="kpi"><span>Utenti Totali</span><strong>{{kpi.ga4.total_users|number}}</strong></div>
+                </div>
+                <p><em>Analisi del comportamento degli utenti sul sito web e delle interazioni registrate da Google Analytics 4.</em></p>'
+            )
+            ->addSection(
+                'Google Search Console - Visibilità Organica',
+                '<div class="kpi-grid">
+                    <div class="kpi"><span>Clic da Ricerca</span><strong>{{kpi.gsc.clicks|number}}</strong></div>
+                    <div class="kpi"><span>Impressioni Organiche</span><strong>{{kpi.gsc.impressions|number}}</strong></div>
+                    <div class="kpi"><span>CTR Medio</span><strong>{{kpi.gsc.ctr|percentage}}</strong></div>
+                    <div class="kpi"><span>Posizione Media</span><strong>{{kpi.gsc.position|number}}</strong></div>
+                </div>
+                <p><em>Performance della visibilità organica su Google Search e posizionamento medio delle keyword.</em></p>'
+            )
+            ->addRawSection('{{sections.gsc|raw}}')
+            ->addSection(
+                'Google Ads - Performance Campagne',
+                '<div class="kpi-grid">
+                    <div class="kpi"><span>Clic Google Ads</span><strong>{{kpi.google_ads.clicks|number}}</strong></div>
+                    <div class="kpi"><span>Impressioni Google Ads</span><strong>{{kpi.google_ads.impressions|number}}</strong></div>
+                    <div class="kpi"><span>Costo Totale</span><strong>€ {{kpi.google_ads.cost|number}}</strong></div>
+                    <div class="kpi"><span>Conversioni</span><strong>{{kpi.google_ads.conversions|number}}</strong></div>
+                </div>
+                <p><em>Analisi delle campagne pubblicitarie su Google Ads con focus su ROI e conversioni.</em></p>'
+            )
+            ->addSection(
+                'Meta Ads - Performance Social Advertising',
+                '<div class="kpi-grid">
+                    <div class="kpi"><span>Clic Meta Ads</span><strong>{{kpi.meta_ads.clicks|number}}</strong></div>
+                    <div class="kpi"><span>Impressioni Meta Ads</span><strong>{{kpi.meta_ads.impressions|number}}</strong></div>
+                    <div class="kpi"><span>Costo Meta Ads</span><strong>€ {{kpi.meta_ads.cost|number}}</strong></div>
+                    <div class="kpi"><span>Conversioni Meta</span><strong>{{kpi.meta_ads.conversions|number}}</strong></div>
+                    <div class="kpi"><span>Fatturato Meta</span><strong>€ {{kpi.meta_ads.revenue|number}}</strong></div>
+                </div>
+                <p><em>Risultati delle campagne pubblicitarie su Facebook e Instagram gestite tramite Meta Business Suite.</em></p>'
+            )
+            ->addRawSection('{{sections.trends|raw}}')
+            ->addSection(
+                'Analisi Trend (AI)',
+                '<div style="background:#f0fdf4;padding:20px;border-left:4px solid #4caf50;margin:20px 0;">
+                    {{ai.trend_analysis|raw}}
+                </div>'
+            )
+            ->addRawSection('{{sections.anomalies|raw}}')
+            ->addSection(
+                'Spiegazione Anomalie (AI)',
+                '<div style="background:#fff7ed;padding:20px;border-left:4px solid #f59e0b;margin:20px 0;">
+                    {{ai.anomaly_explanation|raw}}
+                </div>'
+            )
+            ->addSection(
+                'Raccomandazioni Strategiche (AI)',
+                '<div style="background:#eff6ff;padding:24px;border-left:4px solid #2196f3;margin:20px 0;">
+                    <h3 style="margin-top:0;color:#1976d2;">Piano d\'Azione Consigliato</h3>
+                    {{ai.recommendations|raw}}
+                </div>
+                <p style="margin-top:20px;font-size:12pt;color:#666;"><em><strong>Nota:</strong> Le analisi e raccomandazioni in questo report sono generate automaticamente utilizzando intelligenza artificiale basata sui dati reali del periodo. Si consiglia di valutare ogni raccomandazione nel contesto specifico del business.</em></p>'
+            )
+            ->build();
+
         self::$cache = [
+            'professional' => new TemplateBlueprint(
+                'professional',
+                'Report Professionale Completo',
+                'Template professionale in italiano con tutte le metriche separate (GA4, GSC, Google Ads, Meta Ads). Ideale per report mensili dettagliati.',
+                $professionalComplete
+            ),
             'balanced' => new TemplateBlueprint(
                 'balanced',
                 esc_html__('Report Bilanciato', 'fp-dms'),

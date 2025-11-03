@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace FP\DMS\Admin\Pages;
 
+use FP\DMS\Admin\Pages\Shared\Breadcrumbs;
+use FP\DMS\Admin\Pages\Shared\EmptyState;
+use FP\DMS\Admin\Pages\Shared\HelpIcon;
 use FP\DMS\Domain\Entities\Client;
 use FP\DMS\Domain\Entities\DataSource;
 use FP\DMS\Domain\Repos\ClientsRepo;
@@ -16,6 +19,15 @@ use function selected;
 
 class DataSourcesPage
 {
+    /**
+     * Register assets hook for this page
+     * (Assets now moved to Overview page where sync button is located)
+     */
+    public static function registerAssetsHook(string $hook): void
+    {
+        // No assets needed - sync button is now in Overview
+    }
+
     public static function render(): void
     {
         if (! current_user_can('manage_options')) {
@@ -30,8 +42,20 @@ class DataSourcesPage
         self::outputInlineAssets();
 
         $clients = $clientsRepo->all();
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Data Sources', 'fp-dms') . '</h1>';
+        echo '<div class="wrap fpdms-admin-page">';
+        
+        // Breadcrumbs
+        Breadcrumbs::render(Breadcrumbs::getStandardItems('datasources'));
+        
+        // Header moderno
+        echo '<div class="fpdms-page-header">';
+        echo '<h1>';
+        echo '<span class="dashicons dashicons-networking" style="margin-right:12px;"></span>';
+        echo esc_html__('Connessioni', 'fp-dms');
+        HelpIcon::render(HelpIcon::getCommonHelp('datasources'));
+        echo '</h1>';
+        echo '<p>' . esc_html__('Gestisci le fonti dati collegate ai tuoi clienti: GA4, Google Search Console, Google Ads, Meta Ads e altro.', 'fp-dms') . '</p>';
+        echo '</div>';
 
         if (empty($clients)) {
             self::renderEmptyState();
@@ -66,6 +90,7 @@ class DataSourcesPage
         $definitions = ProviderFactory::definitions();
 
         self::renderForm($selectedClientId, $editing, $definitions);
+        self::renderBeginnersGuide();
         self::renderList($dataSources, $definitions, $selectedClientId);
 
         echo '</div>';
@@ -203,9 +228,20 @@ class DataSourcesPage
 
     private static function renderEmptyState(): void
     {
-        echo '<div class="notice notice-info"><p>' . esc_html__('Add at least one client before configuring data sources.', 'fp-dms') . '</p>';
-        $url = add_query_arg(['page' => 'fp-dms-clients'], admin_url('admin.php'));
-        echo '<p><a class="button button-primary" href="' . esc_url($url) . '">' . esc_html__('Add client', 'fp-dms') . '</a></p></div>';
+        EmptyState::render([
+            'icon' => 'dashicons-networking',
+            'title' => __('Nessuna Connessione Dati', 'fp-dms'),
+            'description' => __('Prima di configurare le connessioni dati (GA4, Google Ads, Meta Ads, ecc.), devi aggiungere almeno un cliente. Le connessioni sono sempre associate a un cliente specifico.', 'fp-dms'),
+            'primaryAction' => [
+                'label' => __('+ Aggiungi Cliente', 'fp-dms'),
+                'url' => add_query_arg(['page' => 'fp-dms-clients'], admin_url('admin.php'))
+            ],
+            'secondaryAction' => [
+                'label' => __('📚 Guida Connessioni', 'fp-dms'),
+                'url' => 'https://docs.francescopasseri.com/fp-dms/connectors'
+            ],
+            'helpText' => __('Connettori disponibili: GA4, GSC, Google Ads, Meta Ads, Clarity, CSV', 'fp-dms')
+        ]);
     }
 
     /**
@@ -272,27 +308,7 @@ class DataSourcesPage
 
         echo '<div class="card" style="margin-top:20px;padding:20px;max-width:960px;">';
         echo '<h2>' . esc_html($editing ? __('Edit data source', 'fp-dms') : __('Add data source', 'fp-dms')) . '</h2>';
-
-        if (!$isEditing) {
-            echo '<div style="background: #e7f5ff; border-left: 4px solid #2271b1; padding: 12px 16px; margin: 16px 0;">';
-            echo '<p style="margin: 0 0 8px 0;"><strong>💡 ' . esc_html__('New: Use the Guided Setup Wizard', 'fp-dms') . '</strong></p>';
-            echo '<p style="margin: 0 0 12px 0; font-size: 13px;">' . esc_html__('Our step-by-step wizard makes it easy to configure connections with validation and helpful guidance.', 'fp-dms') . '</p>';
-            echo '<div class="fpdms-wizard-options" style="display: flex; gap: 8px; flex-wrap: wrap;">';
-            foreach ($definitions as $type => $definition) {
-                $wizardUrl = add_query_arg([
-                    'page' => 'fpdms-connection-wizard',
-                    'provider' => $type,
-                    'client' => $clientId,
-                ], admin_url('admin.php'));
-                echo '<a href="' . esc_url($wizardUrl) . '" class="button button-secondary">';
-                echo esc_html(sprintf(__('%s Wizard', 'fp-dms'), $definition['label'] ?? ucfirst($type)));
-                echo '</a>';
-            }
-            echo '</div>';
-            echo '</div>';
-            echo '<p style="text-align: center; margin: 16px 0; color: #666;">' . esc_html__('— or configure manually below —', 'fp-dms') . '</p>';
-        }
-        echo '<form method="post" enctype="multipart/form-data">';
+        echo '<form method="post" enctype="multipart/form-data" id="fpdms-datasource-form">';
         wp_nonce_field('fpdms_manage_datasource', 'fpdms_datasource_nonce');
         echo '<input type="hidden" name="fpdms_datasource_action" value="save">';
         echo '<input type="hidden" name="client_id" value="' . esc_attr((string) $clientId) . '">';
@@ -355,7 +371,38 @@ class DataSourcesPage
         echo '</form>';
         echo '</div>';
 
-        echo '<script>document.addEventListener("DOMContentLoaded",function(){var select=document.getElementById("fpdms-datasource-type");var groups=document.querySelectorAll(".fpdms-ds-fields");var guides=document.querySelectorAll(".fpdms-guidance-block");var cards=document.querySelectorAll(".fpdms-connector-card");var update=function(type){if(!type){return;}if(select&&select.value!==type){select.value=type;}groups.forEach(function(group){group.style.display=group.getAttribute("data-type")===type?"table-row-group":"none";});guides.forEach(function(guide){guide.style.display=guide.getAttribute("data-type")===type?"block":"none";});cards.forEach(function(card){var active=card.getAttribute("data-type")===type;card.classList.toggle("is-active",active);if(active){card.setAttribute("aria-pressed","true");}else{card.setAttribute("aria-pressed","false");}});};if(cards.length){document.body.classList.add("fpdms-has-guided-picker");cards.forEach(function(card){if(card.hasAttribute("data-locked")){return;}card.addEventListener("click",function(event){event.preventDefault();update(card.getAttribute("data-type"));if(select){select.dispatchEvent(new Event("change"));}});});}if(select){select.addEventListener("change",function(){update(select.value);});update(select.value);}else if(cards.length){var activeCard=document.querySelector(".fpdms-connector-card.is-active");update(activeCard?activeCard.getAttribute("data-type"):cards[0].getAttribute("data-type"));}});</script>';
+        echo '<script>document.addEventListener("DOMContentLoaded",function(){
+// Funzione per inizializzare i toggle dei credential source
+var initCredentialSourceToggles=function(){var credSourceSelects=document.querySelectorAll(".fpdms-credential-source-select");credSourceSelects.forEach(function(sel){var updateCredFields=function(){var sourceType=sel.value;var parent=sel.closest("tbody");if(!parent){return;}var manualRows=parent.querySelectorAll("tr[data-credential-field=\\"manual\\"]");var constantRows=parent.querySelectorAll("tr[data-credential-field=\\"constant\\"]");manualRows.forEach(function(row){row.style.display=sourceType==="manual"?"table-row":"none";});constantRows.forEach(function(row){row.style.display=sourceType==="constant"?"table-row":"none";});};sel.removeEventListener("change",updateCredFields);sel.addEventListener("change",updateCredFields);updateCredFields();});};
+
+var select=document.getElementById("fpdms-datasource-type");var groups=document.querySelectorAll(".fpdms-ds-fields");var guides=document.querySelectorAll(".fpdms-guidance-block");var cards=document.querySelectorAll(".fpdms-connector-card");
+var update=function(type){if(!type){return;}if(select&&select.value!==type){select.value=type;}groups.forEach(function(group){group.style.display=group.getAttribute("data-type")===type?"table-row-group":"none";});guides.forEach(function(guide){guide.style.display=guide.getAttribute("data-type")===type?"block":"none";});cards.forEach(function(card){var active=card.getAttribute("data-type")===type;card.classList.toggle("is-active",active);if(active){card.setAttribute("aria-pressed","true");}else{card.setAttribute("aria-pressed","false");}});
+// Reinizializza i toggle dopo aver cambiato tipo
+setTimeout(initCredentialSourceToggles,50);};
+
+if(cards.length){document.body.classList.add("fpdms-has-guided-picker");cards.forEach(function(card){if(card.hasAttribute("data-locked")){return;}card.addEventListener("click",function(event){event.preventDefault();update(card.getAttribute("data-type"));if(select){select.dispatchEvent(new Event("change"));}});});}
+if(select){select.addEventListener("change",function(){update(select.value);});update(select.value);}else if(cards.length){var activeCard=document.querySelector(".fpdms-connector-card.is-active");update(activeCard?activeCard.getAttribute("data-type"):cards[0].getAttribute("data-type"));}
+
+// Inizializza i toggle al caricamento
+initCredentialSourceToggles();
+
+// FIX: Rimuovi campi nascosti prima del submit per evitare che vengano inviati vuoti
+var form=document.getElementById("fpdms-datasource-form");
+if(form){
+form.addEventListener("submit",function(e){
+var currentType=select?select.value:null;
+if(!currentType){return;}
+// Rimuovi i campi dei tbody NON selezionati
+groups.forEach(function(group){
+if(group.getAttribute("data-type")!==currentType){
+// Rimuovi tutti i campi di questo gruppo
+var inputs=group.querySelectorAll("input,textarea,select");
+inputs.forEach(function(input){input.remove();});
+}
+});
+});
+}
+});</script>';
     }
 
     private static function renderInputRow(string $name, array $info, string $value): void
@@ -363,8 +410,16 @@ class DataSourcesPage
         $label = $info['label'] ?? '';
         $description = $info['description'] ?? '';
         $type = $info['type'] ?? 'text';
+        
+        // Add data attribute for conditional visibility
+        $dataToggle = '';
+        if (strpos($name, 'service_account]') !== false && strpos($name, 'constant') === false) {
+            $dataToggle = ' data-credential-field="manual"';
+        } elseif (strpos($name, 'service_account_constant]') !== false) {
+            $dataToggle = ' data-credential-field="constant"';
+        }
 
-        echo '<tr><th scope="row"><label>' . esc_html($label) . '</label></th><td>';
+        echo '<tr' . $dataToggle . '><th scope="row"><label>' . esc_html($label) . '</label></th><td>';
         if ($type === 'textarea') {
             echo '<textarea name="' . esc_attr($name) . '" rows="6" class="large-text code">' . esc_textarea($value) . '</textarea>';
         } elseif ($type === 'select') {
@@ -376,7 +431,11 @@ class DataSourcesPage
             if ($current === '' && isset($info['default'])) {
                 $current = (string) $info['default'];
             }
-            echo '<select name="' . esc_attr($name) . '" class="regular-text">';
+            $selectClass = 'regular-text';
+            if (strpos($name, 'credential_source]') !== false) {
+                $selectClass .= ' fpdms-credential-source-select';
+            }
+            echo '<select name="' . esc_attr($name) . '" class="' . esc_attr($selectClass) . '">';
             foreach ($options as $optionValue => $optionLabel) {
                 $optionValue = (string) $optionValue;
                 $optionLabel = (string) $optionLabel;
@@ -420,13 +479,150 @@ class DataSourcesPage
         echo '</td></tr>';
     }
 
+    private static function renderBeginnersGuide(): void
+    {
+        echo '<div class="fpdms-beginners-guide" style="margin-top:40px;max-width:960px;">';
+        echo '<details style="border:1px solid #dcdcde;border-radius:6px;padding:20px;background:#fff;">';
+        echo '<summary style="cursor:pointer;font-weight:600;font-size:16px;margin-bottom:0;">';
+        echo '<span class="dashicons dashicons-book-alt" style="margin-right:8px;"></span>';
+        echo esc_html__('📚 Guida per principianti: Come collegare i data sources', 'fp-dms');
+        echo '</summary>';
+        
+        echo '<div style="margin-top:20px;line-height:1.6;">';
+        
+        // Introduzione generale
+        echo '<div style="background:#f0f6fc;border-left:4px solid #2271b1;padding:16px;margin-bottom:24px;">';
+        echo '<h3 style="margin:0 0 12px;font-size:15px;">' . esc_html__('Benvenuto! 👋', 'fp-dms') . '</h3>';
+        echo '<p style="margin:0 0 8px;">' . esc_html__('Questa guida ti aiuterà a collegare le tue fonti dati (Google Analytics, Meta Ads, ecc.) al sistema di reporting. Ogni piattaforma richiede credenziali API specifiche che puoi ottenere gratuitamente.', 'fp-dms') . '</p>';
+        echo '<p style="margin:0;"><strong>' . esc_html__('Tempo stimato per connettore:', 'fp-dms') . '</strong> ' . esc_html__('5-15 minuti', 'fp-dms') . '</p>';
+        echo '</div>';
+        
+        // Google Analytics 4 (GA4)
+        echo '<div style="margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid #dcdcde;">';
+        echo '<h3 style="margin:0 0 12px;color:#2271b1;"><span class="dashicons dashicons-chart-area" style="font-size:18px;margin-right:6px;"></span>' . esc_html__('Google Analytics 4 (GA4)', 'fp-dms') . '</h3>';
+        echo '<p style="margin:0 0 12px;"><strong>' . esc_html__('Cosa serve:', 'fp-dms') . '</strong> ' . esc_html__('Service Account JSON e Property ID', 'fp-dms') . '</p>';
+        echo '<ol style="margin:0 0 12px;padding-left:24px;">';
+        echo '<li>' . esc_html__('Vai alla Google Cloud Console (console.cloud.google.com)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Crea un nuovo progetto o selezionane uno esistente', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Vai su "API e servizi" > "Credenziali" > "Crea credenziali" > "Account di servizio"', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Dai un nome (es. "FP DMS Analytics") e crea l\'account', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Vai su "Chiavi" > "Aggiungi chiave" > "Crea nuova chiave" > Seleziona JSON', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Scarica il file JSON - contiene tutte le credenziali necessarie', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Abilita la "Google Analytics Data API" nella libreria API', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('In Google Analytics 4, vai su Admin > Accesso proprietà > Aggiungi utenti', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Incolla l\'email del service account (dal file JSON, campo "client_email") e assegna il ruolo "Visualizzatore"', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Copia il Property ID da Admin > Impostazioni proprietà (es: 123456789)', 'fp-dms') . '</li>';
+        echo '</ol>';
+        echo '<p style="margin:0;color:#646970;font-size:13px;"><strong>💡 Suggerimento:</strong> ' . esc_html__('Per maggiore sicurezza, puoi salvare il JSON in wp-config.php come costante invece di incollarlo nel form.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
+        // Google Search Console (GSC)
+        echo '<div style="margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid #dcdcde;">';
+        echo '<h3 style="margin:0 0 12px;color:#2271b1;"><span class="dashicons dashicons-search" style="font-size:18px;margin-right:6px;"></span>' . esc_html__('Google Search Console (GSC)', 'fp-dms') . '</h3>';
+        echo '<p style="margin:0 0 12px;"><strong>' . esc_html__('Cosa serve:', 'fp-dms') . '</strong> ' . esc_html__('Service Account JSON e URL del sito', 'fp-dms') . '</p>';
+        echo '<ol style="margin:0 0 12px;padding-left:24px;">';
+        echo '<li>' . esc_html__('Segui gli stessi passi 1-6 di GA4 per creare un Service Account JSON', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Abilita la "Google Search Console API" nella libreria API di Google Cloud', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('In Google Search Console, vai su Impostazioni > Utenti e autorizzazioni', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Aggiungi l\'email del service account con permesso "Completo" o "Limitato"', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Copia l\'URL esatto della proprietà (es: https://www.example.com/ oppure sc-domain:example.com)', 'fp-dms') . '</li>';
+        echo '</ol>';
+        echo '<p style="margin:0;color:#646970;font-size:13px;"><strong>⚠️ Attenzione:</strong> ' . esc_html__('L\'URL deve corrispondere esattamente a quello configurato in Search Console (con o senza www, con trailing slash).', 'fp-dms') . '</p>';
+        echo '</div>';
+        
+        // Google Ads
+        echo '<div style="margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid #dcdcde;">';
+        echo '<h3 style="margin:0 0 12px;color:#2271b1;"><span class="dashicons dashicons-megaphone" style="font-size:18px;margin-right:6px;"></span>' . esc_html__('Google Ads', 'fp-dms') . '</h3>';
+        echo '<p style="margin:0 0 12px;"><strong>' . esc_html__('Cosa serve:', 'fp-dms') . '</strong> ' . esc_html__('Developer Token, OAuth credentials e Customer ID', 'fp-dms') . '</p>';
+        echo '<ol style="margin:0 0 12px;padding-left:24px;">';
+        echo '<li>' . esc_html__('Vai su Google Ads > Tools > API Center', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Richiedi un Developer Token (può richiedere approvazione Google - usa livello "test" per iniziare)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Vai alla Google Cloud Console e crea un progetto OAuth 2.0', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Vai su "Credenziali" > "Crea credenziali" > "ID client OAuth"', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Tipo: "Applicazione desktop" - salva Client ID e Client Secret', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Usa lo strumento OAuth Playground (developers.google.com/oauthplayground) o uno script per ottenere il Refresh Token', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('In Google Ads, copia il Customer ID (formato: 123-456-7890, senza trattini: 1234567890)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Se usi un account Manager (MCC), inserisci anche il Login Customer ID', 'fp-dms') . '</li>';
+        echo '</ol>';
+        echo '<p style="margin:0;color:#646970;font-size:13px;"><strong>🔐 Nota:</strong> ' . esc_html__('Il Refresh Token è la parte più complessa - consulta la documentazione ufficiale Google Ads API per generarlo.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
+        // Meta Ads (Facebook/Instagram)
+        echo '<div style="margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid #dcdcde;">';
+        echo '<h3 style="margin:0 0 12px;color:#2271b1;"><span class="dashicons dashicons-facebook" style="font-size:18px;margin-right:6px;"></span>' . esc_html__('Meta Ads (Facebook/Instagram)', 'fp-dms') . '</h3>';
+        echo '<p style="margin:0 0 12px;"><strong>' . esc_html__('Cosa serve:', 'fp-dms') . '</strong> ' . esc_html__('Access Token e Ad Account ID', 'fp-dms') . '</p>';
+        echo '<ol style="margin:0 0 12px;padding-left:24px;">';
+        echo '<li>' . esc_html__('Vai su Meta for Developers (developers.facebook.com)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Crea una nuova App (Tipo: Business)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Aggiungi il prodotto "Marketing API"', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Vai su Tools > Access Token Tool', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Genera un "User Access Token" con permessi: ads_read, read_insights', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Converti il token in Long-Lived Token (durata 60 giorni) usando il Token Debugger', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('In Facebook Business Manager, vai su Impostazioni business > Account pubblicitari', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Copia l\'Ad Account ID (formato: act_123456789)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('(Opzionale) Copia anche il Pixel ID se vuoi tracciare conversioni', 'fp-dms') . '</li>';
+        echo '</ol>';
+        echo '<p style="margin:0;color:#646970;font-size:13px;"><strong>⏰ Importante:</strong> ' . esc_html__('I token Meta scadono dopo 60 giorni - dovrai rigenerarli periodicamente.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
+        // Microsoft Clarity
+        echo '<div style="margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid #dcdcde;">';
+        echo '<h3 style="margin:0 0 12px;color:#2271b1;"><span class="dashicons dashicons-analytics" style="font-size:18px;margin-right:6px;"></span>' . esc_html__('Microsoft Clarity', 'fp-dms') . '</h3>';
+        echo '<p style="margin:0 0 12px;"><strong>' . esc_html__('Cosa serve:', 'fp-dms') . '</strong> ' . esc_html__('API Key e Project ID', 'fp-dms') . '</p>';
+        echo '<ol style="margin:0 0 12px;padding-left:24px;">';
+        echo '<li>' . esc_html__('Vai su clarity.microsoft.com e accedi con il tuo account Microsoft', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Seleziona il progetto esistente o creane uno nuovo', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Vai su Settings > API', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Genera una nuova API Key e copiala', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Copia il Project ID dalla dashboard del progetto (visibile nell\'URL)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('(Opzionale) Configura un webhook URL per ricevere notifiche real-time', 'fp-dms') . '</li>';
+        echo '</ol>';
+        echo '<p style="margin:0;color:#646970;font-size:13px;"><strong>🎯 Funzionalità:</strong> ' . esc_html__('Clarity traccia rage clicks, dead clicks e heatmaps - ottimo per UX insights.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
+        // CSV Generico
+        echo '<div style="margin-bottom:20px;">';
+        echo '<h3 style="margin:0 0 12px;color:#2271b1;"><span class="dashicons dashicons-media-spreadsheet" style="font-size:18px;margin-right:6px;"></span>' . esc_html__('CSV Generico (Import manuale)', 'fp-dms') . '</h3>';
+        echo '<p style="margin:0 0 12px;"><strong>' . esc_html__('Cosa serve:', 'fp-dms') . '</strong> ' . esc_html__('Un file CSV con i tuoi dati', 'fp-dms') . '</p>';
+        echo '<ol style="margin:0 0 12px;padding-left:24px;">';
+        echo '<li>' . esc_html__('Prepara un file CSV con le tue metriche (Excel, Google Sheets, ecc.)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('La prima riga deve contenere i nomi delle colonne (headers)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Colonne riconosciute: date, users, sessions, clicks, impressions, conversions, cost, spend, revenue, rage_clicks, dead_clicks', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Puoi usare alias (es: "visits" = "sessions", "impr" = "impressions")', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Salva il file come CSV (separatore virgola)', 'fp-dms') . '</li>';
+        echo '<li>' . esc_html__('Carica il file tramite il form sopra', 'fp-dms') . '</li>';
+        echo '</ol>';
+        echo '<p style="margin:0 0 8px;color:#646970;font-size:13px;"><strong>📊 Esempio CSV valido:</strong></p>';
+        echo '<pre style="background:#f6f7f7;padding:12px;border-radius:4px;font-size:12px;overflow-x:auto;">date,users,sessions,clicks,conversions,revenue
+2024-01-01,150,200,350,12,450.50
+2024-01-02,180,220,380,15,520.00</pre>';
+        echo '</div>';
+        
+        // FAQ e troubleshooting
+        echo '<div style="background:#fff9e6;border-left:4px solid #f0b849;padding:16px;margin-top:24px;">';
+        echo '<h3 style="margin:0 0 12px;font-size:15px;">' . esc_html__('❓ Domande frequenti e risoluzione problemi', 'fp-dms') . '</h3>';
+        echo '<ul style="margin:0;padding-left:24px;">';
+        echo '<li style="margin-bottom:8px;"><strong>' . esc_html__('Il test di connessione fallisce:', 'fp-dms') . '</strong> ' . esc_html__('Verifica che le credenziali siano corrette, che la API sia abilitata e che l\'account service/app abbia i permessi necessari.', 'fp-dms') . '</li>';
+        echo '<li style="margin-bottom:8px;"><strong>' . esc_html__('Non vedo dati dopo la sincronizzazione:', 'fp-dms') . '</strong> ' . esc_html__('Controlla che il periodo selezionato contenga effettivamente dati. Alcune API hanno limiti di date retroattive.', 'fp-dms') . '</li>';
+        echo '<li style="margin-bottom:8px;"><strong>' . esc_html__('Errore "Permission denied":', 'fp-dms') . '</strong> ' . esc_html__('L\'account service o l\'app non ha accesso alla risorsa. Aggiungi i permessi necessari nella console della piattaforma.', 'fp-dms') . '</li>';
+        echo '<li style="margin-bottom:8px;"><strong>' . esc_html__('Dove trovo più aiuto?:', 'fp-dms') . '</strong> ' . esc_html__('Consulta la documentazione ufficiale di ogni piattaforma - i link alle guide sono disponibili nei blocchi Step 2 sopra il form.', 'fp-dms') . '</li>';
+        echo '</ul>';
+        echo '</div>';
+        
+        echo '</div>'; // Chiude il contenuto del details
+        echo '</details>';
+        echo '</div>';
+    }
+
     /**
      * @param array<int,DataSource> $dataSources
      */
     private static function renderList(array $dataSources, array $definitions, int $clientId): void
     {
         echo '<h2 style="margin-top:40px;">' . esc_html__('Configured data sources', 'fp-dms') . '</h2>';
-        echo '<table class="widefat striped">';
+        echo '<p class="description" style="margin-top:8px;">' . esc_html__('Use the "Sync Data Sources" button in the Overview page to fetch the latest metrics from all connected platforms.', 'fp-dms') . '</p>';
+        
+        echo '<table class="widefat striped" style="margin-top:12px;">';
         echo '<thead><tr><th>' . esc_html__('Type', 'fp-dms') . '</th><th>' . esc_html__('Status', 'fp-dms') . '</th><th>' . esc_html__('Details', 'fp-dms') . '</th><th>' . esc_html__('Actions', 'fp-dms') . '</th></tr></thead><tbody>';
 
         if (empty($dataSources)) {
@@ -513,12 +709,11 @@ class DataSourcesPage
                 $credentialSource = isset($_POST['auth']['credential_source']) ? Wp::sanitizeTextField($_POST['auth']['credential_source']) : 'manual';
                 $serviceAccount = isset($_POST['auth']['service_account']) ? trim((string) Wp::unslash($_POST['auth']['service_account'])) : '';
                 $serviceAccountConstant = isset($_POST['auth']['service_account_constant']) ? Wp::sanitizeTextField($_POST['auth']['service_account_constant']) : '';
-                $siteUrl = esc_url_raw($_POST['config']['site_url'] ?? '');
-                if ($siteUrl === '') {
-                    return new WP_Error('fpdms_datasource_missing', __('Service account JSON and site URL are required for Google Search Console.', 'fp-dms'));
-                }
+                $siteUrlRaw = isset($_POST['config']['site_url']) ? trim((string) $_POST['config']['site_url']) : '';
 
                 $auth['credential_source'] = $credentialSource === 'constant' ? 'constant' : 'manual';
+                
+                // Verifica service account PRIMA del site URL
                 if ($auth['credential_source'] === 'constant') {
                     if ($serviceAccountConstant === '') {
                         return new WP_Error('fpdms_datasource_missing', __('Provide the name of the wp-config constant that stores the Search Console service account JSON.', 'fp-dms'));
@@ -533,9 +728,30 @@ class DataSourcesPage
                     $auth['service_account_constant'] = $serviceAccountConstant;
                 } else {
                     if ($serviceAccount === '') {
-                        return new WP_Error('fpdms_datasource_missing', __('Service account JSON and site URL are required for Google Search Console.', 'fp-dms'));
+                        return new WP_Error('fpdms_datasource_missing', __('Service account JSON is required for Google Search Console.', 'fp-dms'));
                     }
                     $auth['service_account'] = $serviceAccount;
+                }
+
+                // Normalizza Site URL per Google Search Console
+                if ($siteUrlRaw === '') {
+                    return new WP_Error('fpdms_datasource_missing', __('Site URL is required for Google Search Console.', 'fp-dms'));
+                }
+                
+                // Gestisce sia URL normali (https://example.com/) che domain properties (sc-domain:example.com)
+                if (strpos($siteUrlRaw, 'sc-domain:') === 0) {
+                    // Domain property - mantieni il formato esatto
+                    $siteUrl = $siteUrlRaw;
+                } else {
+                    // URL property - normalizza
+                    // Aggiungi https:// se mancante
+                    if (!preg_match('/^https?:\/\//i', $siteUrlRaw)) {
+                        $siteUrlRaw = 'https://' . $siteUrlRaw;
+                    }
+                    // Sanitizza e normalizza
+                    $siteUrl = esc_url_raw($siteUrlRaw);
+                    // Rimuovi trailing slash (GSC non lo vuole per URL properties)
+                    $siteUrl = rtrim($siteUrl, '/') . '/';
                 }
 
                 $config['site_url'] = $siteUrl;
@@ -911,6 +1127,9 @@ class DataSourcesPage
             .fpdms-guidance-block li{margin-bottom:6px;line-height:1.4;}
             .fpdms-guided-save-note{margin-top:12px;font-weight:600;}
             body.fpdms-has-guided-picker .fpdms-datasource-select-row{display:none;}
+            #fpdms-sync-datasources .dashicons{animation:none;}
+            #fpdms-sync-datasources.is-syncing .dashicons{animation:rotation 1s infinite linear;}
+            @keyframes rotation{from{transform:rotate(0deg);}to{transform:rotate(359deg);}}
         </style>';
     }
 

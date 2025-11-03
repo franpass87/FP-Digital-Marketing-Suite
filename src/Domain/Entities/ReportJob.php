@@ -16,6 +16,10 @@ class ReportJob
         public string $status,
         public ?string $storagePath,
         public array $meta,
+        public string $reviewStatus,
+        public ?string $reviewNotes,
+        public ?string $reviewedAt,
+        public ?int $reviewedBy,
         public string $createdAt,
         public string $updatedAt,
     ) {
@@ -34,6 +38,10 @@ class ReportJob
             (string) ($row['status'] ?? ''),
             isset($row['storage_path']) ? (string) $row['storage_path'] : null,
             self::decodeMeta($row['meta'] ?? '[]'),
+            (string) ($row['review_status'] ?? 'pending'),
+            isset($row['review_notes']) ? (string) $row['review_notes'] : null,
+            isset($row['reviewed_at']) ? (string) $row['reviewed_at'] : null,
+            isset($row['reviewed_by']) ? (int) $row['reviewed_by'] : null,
             (string) ($row['created_at'] ?? ''),
             (string) ($row['updated_at'] ?? ''),
         );
@@ -52,6 +60,10 @@ class ReportJob
             'status' => $this->status,
             'storage_path' => $this->storagePath,
             'meta' => Wp::jsonEncode($this->meta) ?: '[]',
+            'review_status' => $this->reviewStatus,
+            'review_notes' => $this->reviewNotes,
+            'reviewed_at' => $this->reviewedAt,
+            'reviewed_by' => $this->reviewedBy,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
         ];

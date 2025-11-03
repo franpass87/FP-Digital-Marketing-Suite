@@ -6,6 +6,7 @@ namespace FP\DMS\Admin\Pages;
 
 use FP\DMS\Admin\Pages\Dashboard\ComponentRenderer;
 use FP\DMS\Admin\Pages\Dashboard\DashboardDataService;
+use FP\DMS\Admin\Pages\Shared\Breadcrumbs;
 use FP\DMS\Domain\Repos\SchedulesRepo;
 
 use function add_action;
@@ -60,8 +61,16 @@ class DashboardPage
             return;
         }
 
-        echo '<div class="wrap fpdms-dashboard-wrap">';
-        echo '<h1>' . esc_html__('Dashboard', 'fp-dms') . '</h1>';
+        echo '<div class="wrap fpdms-admin-page">';
+        
+        // Breadcrumbs
+        Breadcrumbs::render(Breadcrumbs::getStandardItems('dashboard'));
+        
+        // Header moderno
+        echo '<div class="fpdms-page-header">';
+        echo '<h1><span class="dashicons dashicons-dashboard" style="margin-right:12px;"></span>' . esc_html__('Dashboard', 'fp-dms') . '</h1>';
+        echo '<p>' . esc_html__('Monitora lo stato delle operazioni di reporting e accedi rapidamente alle aree che richiedono attenzione.', 'fp-dms') . '</p>';
+        echo '</div>';
 
         try {
             // Fetch data
@@ -72,9 +81,6 @@ class DashboardPage
 
             $scheduleRepo = new SchedulesRepo();
             $nextSchedule = $scheduleRepo->nextScheduledRun();
-
-            // Render page intro
-            echo '<p class="fpdms-dashboard-intro">' . esc_html__('Monitor the health of your reporting operations and jump into the areas that need attention.', 'fp-dms') . '</p>';
 
             // Render sections using modular components
             ComponentRenderer::renderSummary($stats);

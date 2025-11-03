@@ -32,7 +32,7 @@ class TemplateCustomizationHandler
         $this->verifyNonce();
 
         $templateId = sanitize_text_field($_POST['template_id'] ?? '');
-        $customizations = $_POST['customizations'] ?? [];
+        $customizations = $this->sanitizeArrayRecursive($_POST['customizations'] ?? []);
 
         if (empty($templateId)) {
             wp_send_json_error(['message' => 'Template ID richiesto.']);
@@ -58,7 +58,7 @@ class TemplateCustomizationHandler
     {
         $this->verifyNonce();
 
-        $template = $_POST['template'] ?? [];
+        $template = $this->sanitizeArrayRecursive($_POST['template'] ?? []);
         $userId = get_current_user_id();
 
         if (empty($template)) {
@@ -205,5 +205,25 @@ class TemplateCustomizationHandler
         if (!current_user_can('manage_options')) {
             wp_send_json_error(['message' => 'Permessi insufficienti.']);
         }
+    }
+
+    /**
+     * Sanitize array recursively to prevent XSS/injection.
+     *
+     * @param mixed $data
+     * @return mixed
+     */
+    private function sanitizeArrayRecursive($data)
+    {
+        if (is_array($data)) {
+            return array_map([$this, 'sanitizeArrayRecursive'], $data);
+        }
+
+        if (is_string($data)) {
+            return sanitize_text_field($data);
+        }
+
+        // Return other types as-is (int, bool, null, etc.)
+        return $data;
     }
 }

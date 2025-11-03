@@ -13,6 +13,7 @@ use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Domain\Repos\ReportsRepo;
 use FP\DMS\Infra\Queue;
 use FP\DMS\Services\Anomalies\Detector;
+use FP\DMS\Services\Overview\AIInsightsService;
 use FP\DMS\Services\Overview\Assembler;
 use FP\DMS\Services\Overview\Cache;
 use FP\DMS\Services\Overview\Presenter;
@@ -146,6 +147,30 @@ class OverviewRoutes
                 'to' => [
                     'required' => false,
                     'sanitize_callback' => [Wp::class, 'sanitizeTextField'],
+                ],
+            ],
+        ]);
+
+        register_rest_route('fpdms/v1', '/overview/ai-insights', [
+            'methods' => 'GET',
+            'callback' => [self::class, 'handleAIInsights'],
+            'permission_callback' => [self::class, 'checkPermissions'],
+            'args' => [
+                'client_id' => [
+                    'required' => true,
+                    'validate_callback' => static fn($value): bool => is_numeric($value) && (int) $value > 0,
+                ],
+                'from' => [
+                    'required' => false,
+                    'sanitize_callback' => [Wp::class, 'sanitizeTextField'],
+                ],
+                'to' => [
+                    'required' => false,
+                    'sanitize_callback' => [Wp::class, 'sanitizeTextField'],
+                ],
+                'preset' => [
+                    'required' => false,
+                    'sanitize_callback' => [Wp::class, 'sanitizeKey'],
                 ],
             ],
         ]);
@@ -458,6 +483,66 @@ class OverviewRoutes
                 'to' => $evaluationPeriod->end->format('Y-m-d'),
             ],
         ]);
+    }
+
+    public static function handleAIInsights(WP_REST_Request $request): WP_REST_Response|WP_Error
+    {
+        if (! self::verifyNonce($request)) {
+            return new WP_Error('rest_forbidden', __('Invalid or missing nonce.', 'fp-dms'), ['status' => 403]);
+        }
+
+        $rateLimit = self::enforceRateLimit('ai_insights');
+        if ($rateLimit instanceof WP_Error) {
+            return $rateLimit;
+        }
+
+        $clientId = (int) $request->get_param('client_id');
+        $clients = new ClientsRepo();
+        $client = $clients->find($clientId);
+        if (! $client) {
+            return new WP_Error('rest_not_found', __('Client not found.', 'fp-dms'), ['status' => 404]);
+        }
+
+        $presetParam = $request->get_param('preset');
+        $preset = $presetParam ? Wp::sanitizeKey($presetParam) : 'last7';
+        $range = self::resolveRange($request, $client->timezone ?: Wp::timezoneString(), $preset);
+        if ($range instanceof WP_Error) {
+            return $range;
+        }
+
+        // Check cache first
+        $cache = new Cache();
+        $context = [
+            'from' => $range['range']['from'],
+            'to' => $range['range']['to'],
+            'preset' => $range['preset'],
+        ];
+        $cached = $cache->get($clientId, 'ai_insights', $context);
+        if (is_array($cached)) {
+            return new WP_REST_Response($cached);
+        }
+
+        // Generate AI insights
+        $aiInsightsService = new AIInsightsService();
+        
+        try {
+            $insights = $aiInsightsService->generateInsights($clientId, $range['range']);
+        } catch (Throwable $exception) {
+            error_log('[AI Insights] Error: ' . $exception->getMessage());
+            return new WP_Error('rest_server_error', __('Unable to generate AI insights.', 'fp-dms'), ['status' => 500]);
+        }
+
+        $payload = [
+            'client_id' => $clientId,
+            'range' => $range['range'],
+            'insights' => $insights,
+            'generated_at' => Wp::date('c'),
+        ];
+
+        // Cache for 10 minutes (AI insights are expensive)
+        $cache->set($clientId, 'ai_insights', $payload, 600, $context);
+
+        return new WP_REST_Response($payload);
     }
 
     /**

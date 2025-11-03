@@ -3,7 +3,7 @@
  * Plugin Name: FP Digital Marketing Suite
  * Plugin URI: https://francescopasseri.com
  * Description: Automates marketing performance reporting, anomaly detection, and multi-channel alerts for private WordPress operations.
- * Version: 0.1.1
+ * Version: 0.9.0
  * Requires at least: 6.4
  * Requires PHP: 8.1
  * Author: Francesco Passeri
@@ -16,9 +16,10 @@
 declare(strict_types=1);
 
 use FP\DMS\Admin\Menu;
+use FP\DMS\Admin\Ajax\TemplatePreviewHandler;
+use FP\DMS\Admin\Ajax\ReportReviewHandler;
 use FP\DMS\Admin\Support\Ajax\TestConnector;
 use FP\DMS\Cli\Commands;
-use FP\DMS\ConnectionWizardIntegration;
 use FP\DMS\Http\Routes;
 use FP\DMS\Infra\Activator;
 use FP\DMS\Infra\Cron;
@@ -36,7 +37,7 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-const FP_DMS_VERSION = '0.1.1';
+const FP_DMS_VERSION = '0.9.1';
 const FP_DMS_PLUGIN_FILE = __FILE__;
 const FP_DMS_PLUGIN_DIR = __DIR__;
 
@@ -55,13 +56,24 @@ spl_autoload_register(static function (string $class): void {
     }
 });
 
-// Inizializzazione delle classi principali
-Cron::bootstrap();
-Mailer::bootstrap();
-Routes::register();
-add_action('fpdms_cron_tick', [Queue::class, 'tick']);
-add_action('fpdms/health/force_tick', [Queue::class, 'tick']);
-Commands::register();
+// Inizializzazione condizionale per ottimizzare le performance su hosting condivisi
+// Cron e Mailer vengono caricati solo quando necessario (wp_doing_cron o WP-CLI)
+if (wp_doing_cron() || (defined('WP_CLI') && WP_CLI)) {
+    Cron::bootstrap();
+    Mailer::bootstrap();
+    add_action('fpdms_cron_tick', [Queue::class, 'tick']);
+    add_action('fpdms/health/force_tick', [Queue::class, 'tick']);
+}
+
+// Routes vengono registrate solo per richieste admin o REST
+if (is_admin() || (defined('REST_REQUEST') && REST_REQUEST)) {
+    Routes::register();
+}
+
+// WP-CLI commands sempre disponibili se WP-CLI è attivo
+if (defined('WP_CLI') && WP_CLI) {
+    Commands::register();
+}
 
 function fp_dms_load_textdomain(): void
 {
@@ -87,9 +99,25 @@ function fp_dms_bootstrap(): void
         return;
     }
 
+    // Security notice sempre registrato
     Security::registerAdminNotice();
-    TestConnector::register();
-    Menu::init();
-    ConnectionWizardIntegration::init();
+    
+    // Ajax handlers solo se DOING_AJAX
+    if (defined('DOING_AJAX') && DOING_AJAX) {
+        TestConnector::register();
+        TemplatePreviewHandler::register();
+        ReportReviewHandler::register();
+    }
 }
 add_action('init', 'fp_dms_bootstrap');
+
+// Menu caricato su hook admin_menu (lazy loading)
+function fp_dms_admin_menu(): void
+{
+    if (! is_admin()) {
+        return;
+    }
+    
+    Menu::init();
+}
+add_action('admin_menu', 'fp_dms_admin_menu', 5);

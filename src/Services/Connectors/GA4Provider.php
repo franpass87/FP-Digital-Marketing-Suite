@@ -27,9 +27,18 @@ class GA4Provider extends BaseGoogleProvider implements DataSourceProviderInterf
                 return ConnectionResult::failure(__('Missing service account or property ID.', 'fp-dms'));
             }
 
-            $decoded = json_decode((string) $json, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new ConnectorException(__('Invalid JSON in service account: ', 'fp-dms') . json_last_error_msg());
+            // Handle both string JSON and already-decoded array
+            if (is_array($json)) {
+                $decoded = $json;
+            } else {
+                $decoded = json_decode((string) $json, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    // Try unescaping first in case of double-escaping
+                    $decoded = json_decode(stripslashes((string) $json), true);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        throw new ConnectorException(__('Invalid JSON in service account: ', 'fp-dms') . json_last_error_msg());
+                    }
+                }
             }
 
             if (! is_array($decoded) || empty($decoded['client_email']) || empty($decoded['private_key'])) {

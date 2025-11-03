@@ -6,6 +6,8 @@ namespace FP\DMS\Admin\Pages;
 
 use FP\DMS\Admin\Pages\Overview\OverviewConfigService;
 use FP\DMS\Admin\Pages\Overview\OverviewRenderer;
+use FP\DMS\Admin\Pages\Shared\Breadcrumbs;
+use FP\DMS\Admin\Pages\Shared\HelpIcon;
 
 use function add_action;
 use function add_query_arg;
@@ -41,6 +43,14 @@ class OverviewPage
 
             self::enqueueAssets();
         });
+        
+        // Add type="module" to overview.js script tag
+        add_filter('script_loader_tag', static function($tag, $handle) {
+            if ($handle === 'fpdms-overview') {
+                $tag = str_replace(' src=', ' type="module" src=', $tag);
+            }
+            return $tag;
+        }, 10, 2);
     }
 
     /**
@@ -50,11 +60,49 @@ class OverviewPage
     {
         $mainUrl = plugins_url('assets/css/main.css', FP_DMS_PLUGIN_FILE);
         $styleUrl = plugins_url('assets/css/overview.css', FP_DMS_PLUGIN_FILE);
+        $modernStyleUrl = plugins_url('assets/css/overview-modern.css', FP_DMS_PLUGIN_FILE);
         $scriptUrl = plugins_url('assets/js/overview.js', FP_DMS_PLUGIN_FILE);
+        $syncScriptUrl = plugins_url('assets/js/datasources-sync.js', FP_DMS_PLUGIN_FILE);
 
         wp_enqueue_style('fpdms-main', $mainUrl, [], FP_DMS_VERSION);
         wp_enqueue_style('fpdms-overview', $styleUrl, ['fpdms-main'], FP_DMS_VERSION);
+        wp_enqueue_style('fpdms-overview-modern', $modernStyleUrl, ['fpdms-overview'], FP_DMS_VERSION);
         wp_enqueue_script('fpdms-overview', $scriptUrl, [], FP_DMS_VERSION, true);
+        
+        // Enqueue sync script for the sync button
+        wp_enqueue_script(
+            'fpdms-datasources-sync-overview',
+            $syncScriptUrl,
+            ['jquery'],
+            FP_DMS_VERSION,
+            true
+        );
+        
+        wp_localize_script('fpdms-datasources-sync-overview', 'fpdmsSyncData', [
+            'nonce' => wp_create_nonce('wp_rest'),
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'restUrl' => rest_url('fpdms/v1/sync/datasources'),
+        ]);
+        
+        // Enqueue metrics customizer script
+        $customizerUrl = plugins_url('assets/js/overview-metrics-customizer.js', FP_DMS_PLUGIN_FILE);
+        wp_enqueue_script(
+            'fpdms-overview-metrics-customizer',
+            $customizerUrl,
+            [],
+            FP_DMS_VERSION,
+            true
+        );
+        
+        // Enqueue KPI tooltips
+        $kpiTooltipsUrl = plugins_url('assets/js/kpi-tooltips.js', FP_DMS_PLUGIN_FILE);
+        wp_enqueue_script(
+            'fpdms-kpi-tooltips',
+            $kpiTooltipsUrl,
+            [],
+            FP_DMS_VERSION,
+            true
+        );
     }
 
     /**
@@ -69,7 +117,18 @@ class OverviewPage
         $clients = OverviewConfigService::getClientOptions();
 
         echo '<div class="wrap fpdms-overview-wrap" id="fpdms-overview-root">';
-        echo '<h1>' . esc_html__('Overview', 'fp-dms') . '</h1>';
+        
+        // Breadcrumbs
+        Breadcrumbs::render(Breadcrumbs::getStandardItems('overview'));
+        
+        echo '<div class="fpdms-page-header" style="margin-bottom:24px;">';
+        echo '<h1 style="margin:0;display:flex;align-items:center;">';
+        echo '<span class="dashicons dashicons-chart-line" style="margin-right:12px;"></span>';
+        echo esc_html__('Overview', 'fp-dms');
+        HelpIcon::render(HelpIcon::getCommonHelp('overview'));
+        echo '</h1>';
+        echo '<p style="margin:8px 0 0 0;color:rgba(255,255,255,0.9);">' . esc_html__('Dashboard interattiva con metriche in tempo reale da tutte le tue sorgenti dati.', 'fp-dms') . '</p>';
+        echo '</div>';
 
         // Empty state
         if (empty($clients)) {
@@ -86,6 +145,7 @@ class OverviewPage
         OverviewRenderer::renderSummarySection();
         OverviewRenderer::renderTrendSection();
         OverviewRenderer::renderAnomaliesSection();
+        OverviewRenderer::renderAIInsightsSection();
         OverviewRenderer::renderStatusSection();
         OverviewRenderer::renderJobsSection();
         OverviewRenderer::renderReportsSection();

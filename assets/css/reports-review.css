@@ -1,0 +1,733 @@
+/* ============================================
+   Reports Review - Modern Interface
+   ============================================ */
+
+.fpdms-reports-page {
+    padding: 20px;
+}
+
+/* ============================================
+   Stats Cards
+   ============================================ */
+
+.fpdms-stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.fpdms-stat-card {
+    background: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.fpdms-stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.fpdms-stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f1;
+    flex-shrink: 0;
+}
+
+.fpdms-stat-icon .dashicons {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: #2271b1;
+}
+
+.fpdms-stat-content {
+    flex: 1;
+}
+
+.fpdms-stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1d2327;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.fpdms-stat-label {
+    font-size: 13px;
+    color: #646970;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Stat card variants */
+.fpdms-stat-pending .fpdms-stat-icon {
+    background: #fff3cd;
+}
+
+.fpdms-stat-pending .fpdms-stat-icon .dashicons {
+    color: #856404;
+}
+
+.fpdms-stat-approved .fpdms-stat-icon {
+    background: #d1e7dd;
+}
+
+.fpdms-stat-approved .fpdms-stat-icon .dashicons {
+    color: #0f5132;
+}
+
+.fpdms-stat-rejected .fpdms-stat-icon {
+    background: #f8d7da;
+}
+
+.fpdms-stat-rejected .fpdms-stat-icon .dashicons {
+    color: #842029;
+}
+
+/* ============================================
+   Filters
+   ============================================ */
+
+.fpdms-filters {
+    background: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.fpdms-filters form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.fpdms-filters select {
+    min-width: 180px;
+    height: 36px;
+}
+
+.fpdms-filters .button {
+    height: 36px;
+    line-height: 36px;
+    padding: 0 20px;
+}
+
+/* ============================================
+   Reports Table
+   ============================================ */
+
+.fpdms-reports-table-container {
+    background: #fff;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.fpdms-reports-table {
+    margin: 0;
+    border: none;
+}
+
+.fpdms-reports-table thead th {
+    background: #f9fafb;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: #646970;
+    padding: 15px 12px;
+    border-bottom: 2px solid #e1e4e8;
+}
+
+.fpdms-reports-table tbody td {
+    padding: 15px 12px;
+    vertical-align: middle;
+}
+
+.fpdms-reports-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.fpdms-reports-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* ============================================
+   Status Badges
+   ============================================ */
+
+.fpdms-status-badge,
+.fpdms-review-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Generation Status */
+.fpdms-status-badge.status-success {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.fpdms-status-badge.status-queued {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.fpdms-status-badge.status-running {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.fpdms-status-badge.status-failed {
+    background: #f8d7da;
+    color: #842029;
+}
+
+/* Review Status */
+.fpdms-review-badge.fpdms-review-pending {
+    background: #fff3cd;
+    color: #664d03;
+}
+
+.fpdms-review-badge.fpdms-review-in-review {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+.fpdms-review-badge.fpdms-review-approved {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.fpdms-review-badge.fpdms-review-rejected {
+    background: #f8d7da;
+    color: #842029;
+}
+
+/* ============================================
+   Report Actions
+   ============================================ */
+
+.fpdms-report-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.fpdms-report-actions .button {
+    padding: 4px 8px;
+    min-width: auto;
+    height: auto;
+}
+
+.fpdms-report-actions .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+/* ============================================
+   Review Form (Expandable Row)
+   ============================================ */
+
+.fpdms-review-row td {
+    background: #f9fafb;
+    border-top: 1px solid #e1e4e8 !important;
+}
+
+.fpdms-review-form {
+    padding: 20px;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #e1e4e8;
+}
+
+.fpdms-review-info {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #e8f4f8;
+    border-left: 3px solid #2271b1;
+    border-radius: 4px;
+}
+
+.fpdms-review-info p {
+    margin: 0;
+    font-size: 13px;
+    color: #1d2327;
+}
+
+.fpdms-review-notes-wrapper {
+    margin-bottom: 15px;
+}
+
+.fpdms-review-notes-wrapper label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1d2327;
+}
+
+.fpdms-review-notes-wrapper textarea {
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #dcdcde;
+    padding: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.fpdms-review-notes-wrapper textarea:focus {
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.fpdms-review-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.fpdms-review-actions .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.fpdms-review-actions .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+}
+
+/* ============================================
+   No Reports State
+   ============================================ */
+
+.fpdms-no-reports {
+    text-align: center;
+    padding: 60px 20px;
+    color: #646970;
+}
+
+.fpdms-no-reports .dashicons {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    opacity: 0.3;
+    margin-bottom: 15px;
+}
+
+.fpdms-no-reports p {
+    font-size: 16px;
+    margin: 0;
+}
+
+/* ============================================
+   Loading & Feedback States
+   ============================================ */
+
+.fpdms-report-row.is-loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.fpdms-review-form.is-loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 782px) {
+    .fpdms-stats-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .fpdms-filters form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .fpdms-filters select,
+    .fpdms-filters .button {
+        width: 100%;
+    }
+
+    .fpdms-reports-table {
+        font-size: 13px;
+    }
+
+    .fpdms-reports-table thead {
+        display: none;
+    }
+
+    .fpdms-reports-table tbody tr {
+        display: block;
+        margin-bottom: 15px;
+        border: 1px solid #e1e4e8;
+        border-radius: 6px;
+    }
+
+    .fpdms-reports-table tbody td {
+        display: block;
+        padding: 10px;
+        border: none !important;
+    }
+
+    .fpdms-reports-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        display: block;
+        margin-bottom: 5px;
+        color: #646970;
+        font-size: 11px;
+        text-transform: uppercase;
+    }
+
+    .fpdms-report-actions {
+        justify-content: flex-start;
+    }
+
+    .fpdms-review-actions {
+        flex-wrap: wrap;
+    }
+
+    .fpdms-review-actions .button {
+        flex: 1 1 calc(50% - 5px);
+        justify-content: center;
+    }
+}
+
+/* ============================================
+   Animation
+   ============================================ */
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fpdms-review-row[style*="display: table-row"] {
+    animation: slideDown 0.3s ease;
+}
+
+/* ============================================
+   Editor Modal
+   ============================================ */
+
+.fpdms-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100000;
+}
+
+.fpdms-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(2px);
+}
+
+.fpdms-modal-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 1400px;
+    max-height: 90vh;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.fpdms-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e1e4e8;
+}
+
+.fpdms-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.fpdms-modal-close {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    color: #646970;
+    transition: color 0.2s;
+}
+
+.fpdms-modal-close:hover {
+    color: #d63638;
+}
+
+.fpdms-modal-close .dashicons {
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+}
+
+.fpdms-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.fpdms-modal-footer {
+    padding: 15px 25px;
+    border-top: 1px solid #e1e4e8;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    background: #f9fafb;
+}
+
+body.fpdms-modal-open {
+    overflow: hidden;
+}
+
+/* ============================================
+   Editor Tabs
+   ============================================ */
+
+.fpdms-editor-tabs {
+    display: flex;
+    border-bottom: 1px solid #e1e4e8;
+    background: #f9fafb;
+    padding: 0 25px;
+}
+
+.fpdms-editor-tab {
+    background: none;
+    border: none;
+    padding: 15px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #646970;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fpdms-editor-tab:hover {
+    color: #2271b1;
+    background: rgba(34, 113, 177, 0.05);
+}
+
+.fpdms-editor-tab.active {
+    color: #2271b1;
+    border-bottom-color: #2271b1;
+    background: #fff;
+}
+
+.fpdms-editor-tab .dashicons {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+}
+
+/* ============================================
+   Editor Content
+   ============================================ */
+
+.fpdms-editor-content {
+    position: relative;
+}
+
+.fpdms-editor-pane {
+    display: none;
+    padding: 25px;
+}
+
+.fpdms-editor-pane.active {
+    display: block;
+}
+
+.fpdms-editor-toolbar {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fpdms-editor-toolbar .description {
+    margin: 0;
+    color: #646970;
+}
+
+/* HTML/Code Editor */
+.fpdms-code-editor {
+    width: 100%;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 15px;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    background: #f9fafb;
+    color: #1d2327;
+    resize: vertical;
+}
+
+.fpdms-code-editor:focus {
+    outline: none;
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px #2271b1;
+    background: #fff;
+}
+
+/* Preview Container */
+.fpdms-preview-container {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 20px;
+    background: #fff;
+    min-height: 400px;
+    overflow-y: auto;
+}
+
+.fpdms-preview-placeholder {
+    text-align: center;
+    color: #646970;
+    font-size: 14px;
+    padding: 60px 20px;
+}
+
+.fpdms-preview-container img {
+    max-width: 100%;
+    height: auto;
+}
+
+.fpdms-preview-container table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 15px 0;
+}
+
+.fpdms-preview-container table th,
+.fpdms-preview-container table td {
+    border: 1px solid #dcdcde;
+    padding: 8px 12px;
+}
+
+/* TinyMCE Wrapper */
+#wp-fpdms_report_content-wrap {
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+
+@media print {
+    .fpdms-filters,
+    .fpdms-report-actions,
+    .fpdms-review-actions {
+        display: none !important;
+    }
+
+    .fpdms-reports-table {
+        border: 1px solid #000;
+    }
+
+    .fpdms-reports-table tbody tr:hover {
+        background-color: transparent;
+    }
+
+    .fpdms-modal {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   Responsive Modal
+   ============================================ */
+
+@media (max-width: 782px) {
+    .fpdms-modal-container {
+        width: 95%;
+        max-height: 95vh;
+    }
+
+    .fpdms-editor-tabs {
+        padding: 0 10px;
+        overflow-x: auto;
+    }
+
+    .fpdms-editor-tab {
+        padding: 12px 15px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .fpdms-editor-pane {
+        padding: 15px;
+    }
+
+    .fpdms-modal-header,
+    .fpdms-modal-footer {
+        padding: 15px;
+    }
+
+    .fpdms-modal-footer {
+        flex-wrap: wrap;
+    }
+
+    .fpdms-modal-footer .button {
+        flex: 1 1 100%;
+    }
+}
+

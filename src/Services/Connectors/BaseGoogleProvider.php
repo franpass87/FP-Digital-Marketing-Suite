@@ -30,7 +30,39 @@ abstract class BaseGoogleProvider implements DataSourceProviderInterface
             return is_string($value) ? $value : '';
         }
 
-        $serviceAccount = (string) ($this->auth['service_account'] ?? '');
+        $serviceAccount = $this->auth['service_account'] ?? '';
+        
+        // Normalizza il service account: potrebbe essere già un array decodificato
+        if (is_array($serviceAccount)) {
+            // Se è un array, ri-codificalo come stringa JSON
+            $serviceAccount = json_encode($serviceAccount);
+            if ($serviceAccount === false) {
+                return '';
+            }
+        } else {
+            $serviceAccount = trim((string) $serviceAccount);
+            
+            // AUTO-FIX: Se mancano le parentesi graffe esterne, aggiungile
+            if ($serviceAccount !== '') {
+                if (!str_starts_with($serviceAccount, '{')) {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log('[BaseGoogleProvider] Service Account senza parentesi iniziale, aggiungo {');
+                    }
+                    $serviceAccount = '{' . $serviceAccount;
+                }
+                if (!str_ends_with($serviceAccount, '}')) {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log('[BaseGoogleProvider] Service Account senza parentesi finale, aggiungo }');
+                    }
+                    $serviceAccount = $serviceAccount . '}';
+                }
+                
+                // Se sembra essere double-escaped, prova a pulirlo
+                if (strpos($serviceAccount, '\\"') !== false) {
+                    $serviceAccount = stripslashes($serviceAccount);
+                }
+            }
+        }
 
         /**
          * Allow developers to customize service account sourcing.

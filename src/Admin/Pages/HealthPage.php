@@ -23,25 +23,36 @@ class HealthPage
         $nextSchedule = (new SchedulesRepo())->nextScheduledRun();
         $status = self::determineStatus($lastTick);
 
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html(I18n::__('System Health')) . '</h1>';
+        echo '<div class="wrap fpdms-admin-page">';
+        
+        // Header moderno
+        echo '<div class="fpdms-page-header">';
+        echo '<h1><span class="dashicons dashicons-heart" style="margin-right:12px;"></span>' . esc_html__('Salute Sistema', 'fp-dms') . '</h1>';
+        echo '<p>' . esc_html__('Monitora lo stato di salute del sistema, cron jobs e pianificazioni attive.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
         settings_errors('fpdms_health');
 
-        echo '<table class="widefat striped" style="max-width:600px">';
+        echo '<div class="fpdms-card" style="max-width:700px;">';
+        echo '<table class="fpdms-table">';
         echo '<tbody>';
-        echo '<tr><th>' . esc_html__('Last Tick', 'fp-dms') . '</th><td>' . esc_html(self::formatTimestamp($lastTick)) . '</td></tr>';
-        echo '<tr><th>' . esc_html__('Status', 'fp-dms') . '</th><td>' . esc_html($status) . '</td></tr>';
+        echo '<tr><th>' . esc_html__('Ultimo Tick', 'fp-dms') . '</th><td>' . esc_html(self::formatTimestamp($lastTick)) . '</td></tr>';
+        echo '<tr><th>' . esc_html__('Stato', 'fp-dms') . '</th><td>' . esc_html($status) . '</td></tr>';
         $nextRun = $nextSchedule && $nextSchedule->nextRunAt
             ? self::formatDateTime($nextSchedule->nextRunAt)
-            : I18n::__('Not scheduled');
-        echo '<tr><th>' . esc_html__('Next Scheduled Run', 'fp-dms') . '</th><td>' . esc_html($nextRun) . '</td></tr>';
+            : 'Non pianificato';
+        echo '<tr><th>' . esc_html__('Prossima Esecuzione', 'fp-dms') . '</th><td>' . esc_html($nextRun) . '</td></tr>';
         echo '</tbody></table>';
+        echo '</div>';
 
-        echo '<form method="post" style="margin-top:20px;">';
+        echo '<div class="fpdms-card" style="max-width:700px;margin-top:24px;">';
+        echo '<form method="post">';
         wp_nonce_field('fpdms_health_action', 'fpdms_health_nonce');
         echo '<input type="hidden" name="fpdms_health_action" value="force_tick">';
-        submit_button(I18n::__('Force Tick Now'), 'secondary');
+        submit_button('Forza Tick Manuale', 'primary fpdms-button-success');
         echo '</form>';
+        echo '</div>';
+        
         echo '</div>';
     }
 

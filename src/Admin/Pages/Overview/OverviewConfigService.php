@@ -30,15 +30,35 @@ class OverviewConfigService
      * @var array<string, string>
      */
     public const KPI_LABELS = [
+        // GA4 Metriche
         'users' => 'Users',
         'sessions' => 'Sessions',
+        'pageviews' => 'Pageviews',
+        'events' => 'Events',
+        'total_users' => 'Total Users',
+        'new_users' => 'New Users',
+        // Google Search Console
+        'gsc_clicks' => 'GSC Clicks',
+        'gsc_impressions' => 'GSC Impressions',
+        'ctr' => 'CTR (%)',
+        'position' => 'Avg Position',
+        // Google Ads
+        'google_clicks' => 'Google Ads Clicks',
+        'google_impressions' => 'Google Ads Impressions',
+        'google_cost' => 'Google Ads Cost',
+        'google_conversions' => 'Google Ads Conversions',
+        // Meta Ads
+        'meta_clicks' => 'Meta Ads Clicks',
+        'meta_impressions' => 'Meta Ads Impressions',
+        'meta_cost' => 'Meta Ads Cost',
+        'meta_conversions' => 'Meta Ads Conversions',
+        'meta_revenue' => 'Meta Ads Revenue',
+        // Generiche (fallback per provider misti)
         'clicks' => 'Clicks',
         'impressions' => 'Impressions',
         'cost' => 'Cost',
         'conversions' => 'Conversions',
         'revenue' => 'Revenue',
-        'gsc_clicks' => 'GSC Clicks',
-        'gsc_impressions' => 'GSC Impressions',
     ];
 
     /**
@@ -122,6 +142,7 @@ class OverviewConfigService
                 'trend' => esc_url_raw(rest_url('fpdms/v1/overview/trend')),
                 'status' => esc_url_raw(rest_url('fpdms/v1/overview/status')),
                 'anomalies' => esc_url_raw(rest_url('fpdms/v1/overview/anomalies')),
+                'ai_insights' => esc_url_raw(rest_url('fpdms/v1/overview/ai-insights')),
                 'reports' => esc_url_raw(rest_url('fpdms/v1/reports')),
                 'reportHtml' => esc_url_raw(rest_url('fpdms/v1/report/')),
                 'reportDownload' => esc_url_raw(rest_url('fpdms/v1/report/')),

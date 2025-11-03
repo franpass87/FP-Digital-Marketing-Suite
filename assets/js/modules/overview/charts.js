@@ -18,16 +18,26 @@ export class ChartsRenderer {
             return;
         }
 
-        const max = Math.max(...values);
-        const min = Math.min(...values);
+        // Filter out NaN, null, undefined values
+        const cleanValues = values.filter(value => 
+            typeof value === 'number' && !isNaN(value) && isFinite(value)
+        );
+
+        if (cleanValues.length === 0) {
+            this._renderNoData(svg);
+            return;
+        }
+
+        const max = Math.max(...cleanValues);
+        const min = Math.min(...cleanValues);
         const range = max - min || 1;
         const height = 40;
         const width = 100;
 
-        const points = values.map((value, index) => {
-            const x = values.length === 1 
+        const points = cleanValues.map((value, index) => {
+            const x = cleanValues.length === 1 
                 ? width 
-                : (width / (values.length - 1)) * index;
+                : (width / (cleanValues.length - 1)) * index;
             const normalized = (value - min) / range;
             const y = height - (normalized * 32 + 4);
             
@@ -53,7 +63,10 @@ export class ChartsRenderer {
         const d = points
             .map((point, index) => {
                 const command = index === 0 ? 'M' : 'L';
-                return `${command}${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+                // Fix NaN values - use 0 if NaN
+                const x = isNaN(point.x) ? 0 : point.x;
+                const y = isNaN(point.y) ? 0 : point.y;
+                return `${command}${x.toFixed(2)} ${y.toFixed(2)}`;
             })
             .join(' ');
 

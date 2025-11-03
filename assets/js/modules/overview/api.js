@@ -90,6 +90,11 @@ export class OverviewAPI {
         return this.request(this.endpoints.anomalies, params);
     }
 
+    async fetchAIInsights(params) {
+        const url = this.endpoints.ai_insights || '/wp-json/fpdms/v1/overview/ai-insights';
+        return this.request(url, params);
+    }
+
     async runReport(payload) {
         const url = this.config.actions?.run || this.endpoints.run;
         return this.postRequest(url, payload);

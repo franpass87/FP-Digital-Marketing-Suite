@@ -43,6 +43,7 @@ class DB
                 logo_id BIGINT UNSIGNED NULL,
                 timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
                 notes LONGTEXT NULL,
+                description LONGTEXT NULL,
                 ga4_property_id VARCHAR(32) NULL,
                 ga4_stream_id VARCHAR(32) NULL,
                 ga4_measurement_id VARCHAR(32) NULL,
@@ -85,10 +86,15 @@ class DB
                 status VARCHAR(16) NOT NULL,
                 storage_path VARCHAR(255) NULL,
                 meta LONGTEXT NULL,
+                review_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+                review_notes LONGTEXT NULL,
+                reviewed_at DATETIME NULL,
+                reviewed_by BIGINT UNSIGNED NULL,
                 created_at DATETIME NOT NULL,
                 updated_at DATETIME NOT NULL,
                 PRIMARY KEY  (id),
-                KEY client_id (client_id)
+                KEY client_id (client_id),
+                KEY review_status (review_status)
             ) $charset;",
             self::anomaliesTableSql($charset),
             "CREATE TABLE " . self::table('templates') . " (
@@ -116,6 +122,36 @@ class DB
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         $charset = $wpdb->get_charset_collate();
         dbDelta(self::anomaliesTableSql($charset));
+    }
+
+    /**
+     * Migrate reports table to add review fields
+     */
+    public static function migrateReportsReview(): void
+    {
+        global $wpdb;
+        $table = self::table('reports');
+        
+        // Check if columns already exist
+        $columns = $wpdb->get_results("DESCRIBE {$table}", ARRAY_A);
+        $columnNames = array_column($columns, 'Field');
+        
+        if (!in_array('review_status', $columnNames, true)) {
+            $wpdb->query("ALTER TABLE {$table} ADD COLUMN review_status VARCHAR(20) NOT NULL DEFAULT 'pending' AFTER meta");
+            $wpdb->query("ALTER TABLE {$table} ADD INDEX review_status (review_status)");
+        }
+        
+        if (!in_array('review_notes', $columnNames, true)) {
+            $wpdb->query("ALTER TABLE {$table} ADD COLUMN review_notes LONGTEXT NULL AFTER review_status");
+        }
+        
+        if (!in_array('reviewed_at', $columnNames, true)) {
+            $wpdb->query("ALTER TABLE {$table} ADD COLUMN reviewed_at DATETIME NULL AFTER review_notes");
+        }
+        
+        if (!in_array('reviewed_by', $columnNames, true)) {
+            $wpdb->query("ALTER TABLE {$table} ADD COLUMN reviewed_by BIGINT UNSIGNED NULL AFTER reviewed_at");
+        }
     }
 
     private static function anomaliesTableSql(string $charset): string

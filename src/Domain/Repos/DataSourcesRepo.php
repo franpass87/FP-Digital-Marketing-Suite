@@ -22,6 +22,23 @@ class DataSourcesRepo
     /**
      * @return DataSource[]
      */
+    public function all(): array
+    {
+        global $wpdb;
+        $sql = "SELECT * FROM {$this->table} ORDER BY id DESC";
+
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+
+        if (! is_array($rows)) {
+            return [];
+        }
+
+        return array_map(static fn(array $row): DataSource => DataSource::fromRow($row), $rows);
+    }
+
+    /**
+     * @return DataSource[]
+     */
     public function forClient(int $clientId): array
     {
         global $wpdb;

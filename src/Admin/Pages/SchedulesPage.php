@@ -7,6 +7,8 @@ namespace FP\DMS\Admin\Pages;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
+use FP\DMS\Admin\Pages\Shared\Breadcrumbs;
+use FP\DMS\Admin\Pages\Shared\HelpIcon;
 use FP\DMS\Admin\Support\NoticeStore;
 use FP\DMS\Domain\Repos\ClientsRepo;
 use FP\DMS\Domain\Repos\SchedulesRepo;
@@ -47,8 +49,21 @@ class SchedulesPage
             $templatesMap[$template->id ?? 0] = $template;
         }
 
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html__('Schedules', 'fp-dms') . '</h1>';
+        echo '<div class="wrap fpdms-admin-page">';
+        
+        // Breadcrumbs
+        Breadcrumbs::render(Breadcrumbs::getStandardItems('schedules'));
+        
+        // Header moderno
+        echo '<div class="fpdms-page-header">';
+        echo '<h1>';
+        echo '<span class="dashicons dashicons-calendar-alt" style="margin-right:12px;"></span>';
+        echo esc_html__('Pianificazioni Report', 'fp-dms');
+        HelpIcon::render(HelpIcon::getCommonHelp('schedules'));
+        echo '</h1>';
+        echo '<p>' . esc_html__('Automatizza l\'invio dei report ai tuoi clienti con pianificazioni giornaliere, settimanali o mensili.', 'fp-dms') . '</p>';
+        echo '</div>';
+        
         NoticeStore::flash('fpdms_schedules');
         settings_errors('fpdms_schedules');
 
